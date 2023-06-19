@@ -1,7 +1,7 @@
 ## Interface: 100100
-## Version: 0.0.1
+## Version: 1.0.0
 ## Title: |cff00ccffNemesis Chat|r
-## IconTexture: Interface\ICONS\spell_nature_bloodlust.blp
+## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp
 ## Notes: Talk smack to your friends :)
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB
