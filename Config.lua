@@ -661,7 +661,7 @@ function NemesisChat:GetMinimumTime(info)
 	return core.db.profile.minimumTime
 end
 
-function NemesisChat:SetGlobalChance(info, value)
+function NemesisChat:SetMinimumTime(info, value)
 	core.db.profile.minimumTime = value
 end
 
