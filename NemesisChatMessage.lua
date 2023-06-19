@@ -328,5 +328,17 @@ function NemesisChat:InstantiateMsg()
         ["LT"] = function(val1, val2)
             return val1 < val2
         end,
+        
+        -- Details! API 
+        ["NEMESIS_DPS"] = function()
+            if NemesisChat.DETAILS and NemesisChat.Details["NEMESIS_DPS"] then
+                return NemesisChat.DETAILS["NEMESIS_DPS"]()
+            end
+        end,
+        ["MY_DPS"] = function()
+            if NemesisChat.DETAILS and NemesisChat.Details["MY_DPS"] then
+                return NemesisChat.DETAILS["MY_DPS"]()
+            end
+        end,
     }
 end

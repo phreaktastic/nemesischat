@@ -203,6 +203,27 @@ core.messageConditions = {
     }
 }
 
+if Details ~= nil then
+    local conditions = {
+        {
+            label = "Nemesis DPS",
+            value = "NEMESIS_DPS",
+            operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+            type = "INPUT"
+        },
+        {
+            label = "My DPS",
+            value = "MY_DPS",
+            operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+            type = "INPUT"
+        }
+    }
+
+    for key, val in pairs(conditions) do
+        table.insert(core.messageConditions, val)
+    end
+end
+
 -- This is what the configuration screen is built from.
 core.configTree = {
     ["BOSS"] = {

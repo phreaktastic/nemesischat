@@ -631,6 +631,35 @@ function NemesisChat:ToggleDetailsAPI(info, value)
         return
     end
 	core.db.profile.detailsAPI = value
+
+    if value == false then
+        return
+    end
+
+    local AceGUI = LibStub("AceGUI-3.0")
+    local frame = AceGUI:Create("Frame")
+    frame:SetTitle("Reload Required")
+    -- frame:SetStatusText("Please reload your UI in order to load the changes you just made.")
+    frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
+    frame:SetLayout("List")
+    frame:SetWidth(300)
+    frame:SetHeight(300)
+
+    local desc = AceGUI:Create("Label")
+    desc:SetText("Enabling the Details! API requires a reload. If you choose not to reload, functionality will absolutely be unexpected and may even cause LUA errors to be thrown. It is highly recommended to reload now, ensuring smooth gameplay without thrown errors.")
+    desc:SetFullWidth(true)
+    frame:AddChild(desc)
+
+    local padding = AceGUI:Create("Label")
+    padding:SetText(" ")
+    padding:SetFullWidth(true)
+    frame:AddChild(padding)
+
+    local button = AceGUI:Create("Button")
+    button:SetText("Reload Now")
+    button:SetFullWidth(true)
+    button:SetCallback("OnClick", function() ReloadUI() end)
+    frame:AddChild(button)
 end
 
 function NemesisChat:IsAI(info)

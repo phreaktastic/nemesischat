@@ -30,6 +30,15 @@ function NemesisChat:DETAILS_REPLACEMENTS()
     NCMessage:AddCustomReplacement("%[DPSOVERALL%]", overallPlayer .. "K")
     NCMessage:AddCustomReplacement("%[DEMESISDPSOVERALL%]", overallNemesis .. "K")
 
+    NemesisChat.DETAILS = {
+        ["NEMESIS_DPS"] = function()
+            return GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT)
+        end,
+        ["MY_DPS"] = function()
+            return GetDPS(UnitName("player"), DETAILS_SEGMENTID_CURRENT)
+        end
+    }
+
     local function GetDPS(player, segment)
         local combat = Details:GetCurrentCombat()
         local player = Details:GetActor(segment, DETAILS_ATTRIBUTE_DAMAGE, player)
