@@ -10,9 +10,4 @@
 -----------------------------------------------------
 local _, core = ...;
 
------------------------------------------------------
--- Old DB wipe. Pre-release so no need to migrate.
------------------------------------------------------
-if core.db.profile.messages ~= nil then
-    core.db.profile.messages = nil
-end
+-- No migrations yet.
