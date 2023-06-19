@@ -1,0 +1,33 @@
+## Interface: 100100
+## Version: 0.0.1
+## Title: |cff00ccffNemesis Chat|r
+## IconTexture: Interface\ICONS\spell_nature_bloodlust.blp
+## Notes: Talk smack to your friends :)
+## Author: Phreaktastic
+## SavedVariables: NemesisChatDB
+## OptionalDeps: Ace3
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+
+Init.lua
+Config.lua
+Helpers.lua
+AI.lua
+NemesisChatBoss.lua
+NemesisChatDungeon.lua
+NemesisChatEvent.lua
+NemesisChatMessage.lua
+NemesisChatSpell.lua
+BaseEvents.lua
+CustomEvents.lua
+SlashCommands.lua
+DetailsAPI.lua
+Core.lua

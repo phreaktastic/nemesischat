@@ -1,0 +1,6 @@
+-- Layers:
+-- BACKGROUND
+-- BORDER
+-- ARTWORK
+-- OVERLAY
+-- HIGHLIGHT
