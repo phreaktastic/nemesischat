@@ -165,6 +165,8 @@ The above example would retrieve a player-configured message for a nemesis dying
 
 APIs, such as the Details! API, can have a bit of extra logic. For example, we'll drop in custom replacements on `NCMessage` for `[DPS]` and `[NEMESISDPS]`. Beyond that, APIs do not offer a tremendous amount more functionality (yet?). I'm currently digging in to find a good way to leverage APIs for detecting standing in swirlies, not popping defensives, etc. That'll be some juicy smack talk!
 
+There is one thing to note about APIs in general, and the Details! API specifically. When replacing text for messages, it'll give us a formatted value, such as `78.31k` for DPS. When _comparing_ via the conditions feature, however, it will return a rounded value, such as `78310`. Future APIs must ensure that the comparison function is not formatted, and as such, may be compared to numbers.
+
 ## Step 4: String replacement and message sending
 
 Finally, we'll take all core and custom replacement strings, and replace them with appropriate values within the game.
