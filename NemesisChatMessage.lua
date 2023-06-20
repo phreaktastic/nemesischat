@@ -78,14 +78,6 @@ function NemesisChat:InstantiateMsg()
             return ""
         end
 
-        if core.db.profile.detailsAPI == true then
-            if NemesisChat:DETAILS_REPLACEMENTS() == false then
-                NemesisChat:Print("ERROR: Details API is enabled, but an error occurred when attempting to pull data from it! Please ensure Details is enabled.")
-                NCEvent:Initialize()
-                return
-            end
-        end
-
         -- We have a base list of replacements that will be available (mostly) everywhere. Some events
         -- will have custom replacements, such as API-based replacements (DPS numbers with Details! for example)
         local msg = input
@@ -181,11 +173,18 @@ function NemesisChat:InstantiateMsg()
             return
         end
 
-        local matchConditions = core.db.profile.matchConditions
         local profileMessages = core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()]
 
         if profileMessages == nil then
             return
+        end
+
+        if core.db.profile.detailsAPI == true then
+            if NemesisChat:DETAILS_REPLACEMENTS() == false then
+                NemesisChat:Print("ERROR: Details API is enabled, but an error occurred when attempting to pull data from it! Please ensure Details is enabled.")
+                NCEvent:Initialize()
+                return
+            end
         end
 
         local msg = ""
