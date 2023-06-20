@@ -1,0 +1,3 @@
+Date:	Tue Jun 20 12:29:38 2023 -0600
+
+QoL enhancements on configuration screen. Adding a message will now select the newly created message. Fixed a LUA error when switching selected messages.

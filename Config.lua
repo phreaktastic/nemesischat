@@ -907,6 +907,8 @@ function NemesisChat:SetConfiguredMessage(info, value)
     messageChance = msg.chance
     messageLabel = msg.label
     messageConditions = msg.conditions
+
+    selectedCondition = ""
 end
 
 function NemesisChat:ConfiguredMessagesDisabled()
@@ -1289,12 +1291,11 @@ function StoreMessage()
     saveMessage.conditions = messageConditions
 
     if selectedConfiguredMessage ~= "" then
-        saveMessage.conditions = {}
         core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] = saveMessage
-
-        NemesisChat:SetConfiguredMessage(nil, #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] .. "")
     else
+        saveMessage.conditions = {}
         table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], saveMessage)
+        NemesisChat:SetConfiguredMessage(nil, #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] .. "")
     end
 end
 
