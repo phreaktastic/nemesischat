@@ -55,7 +55,9 @@ NCMessage:AddCustomReplacement("%[DPSOVERALL%]", FormatDPS(overallPlayer))
 NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL%]", FormatDPS(overallNemesis))
 ```
 
-The above illustrates adding custom text replacements for `[DPS]`, `[NEMESISDPS]`, `[DPSOVERALL]`, and `NEMESISDPSOVERALL`. These will be replaced with the values we receive from Details! on a per-event cadence.
+The above illustrates adding custom text replacements for `[DPS]`, `[NEMESISDPS]`, `[DPSOVERALL]`, and `[NEMESISDPSOVERALL]`. These will be replaced with the values we receive from Details! on a per-event cadence.
+
+Any other APIs will follow the same pattern for custom replacements. The replacements, however, **must use escaped brackets** (as you can see in the above examples).
 
 > **Ephemeral Objects**
 >
