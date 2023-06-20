@@ -115,9 +115,14 @@ function NemesisChat:InstantiateMsg()
         for k, v in pairs(NCMessage.customReplacements) do
             -- First check for condition specific replacements
             msg = msg:gsub(k, v)
+        end
 
-            -- Fallback for custom replacements which do not have a condition-specific replacement
-            msg = msg:gsub("_CONDITION%]", "]"):gsub(k, v)
+        -- Remove condition-specific replacement text
+        msg = msg:gsub("_CONDITION%]", "]")
+
+        -- One more pass without condition replacement text, as a fallback
+        for k, v in pairs(NCMessage.customReplacements) do
+            msg = msg:gsub(k, v)
         end
 
         -- Format the message
