@@ -1,3 +1,0 @@
-# Tue Jun 20 13:10:07 2023 -0600
-
-> More bug fixes on the configuration screen.

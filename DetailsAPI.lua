@@ -28,7 +28,7 @@ function NemesisChat:DETAILS_REPLACEMENTS()
     NCMessage:AddCustomReplacement("%[DPS%]", FormatDPS(currentPlayer))
     NCMessage:AddCustomReplacement("%[DEMESISDPS%]", FormatDPS(currentNemesis))
     NCMessage:AddCustomReplacement("%[DPSOVERALL%]", FormatDPS(overallPlayer))
-    NCMessage:AddCustomReplacement("%[DEMESISDPSOVERALL%]", FormatDPS(overallNemesis))
+    NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL%]", FormatDPS(overallNemesis))
 
     NemesisChat.DETAILS = {
         ["NEMESIS_DPS"] = function()
