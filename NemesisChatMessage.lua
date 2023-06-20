@@ -111,16 +111,21 @@ function NemesisChat:InstantiateMsg()
             replacements["spell"] = NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or "Spell"
         end
 
+        -- Custom replacements, example: Details API [DPS] and [NEMESISDPS], this comes first as overrides are possible
+        for k, v in pairs(NCMessage.customReplacements) do
+            -- First check for condition specific replacements
+            msg = msg:gsub(k, v)
+
+            -- Fallback for custom replacements which do not have a condition-specific replacement
+            msg = msg:gsub("_CONDITION%]", "]"):gsub(k, v)
+        end
+
         -- Format the message
         for k, v in pairs(core.supportedReplacements) do
             if (k ~= nil and v ~= nil and replacements[v] ~= nil) then
-                msg = msg:gsub(k, replacements[v])
+                -- Strip any _CONDITION occurrences as they will not exist in core supported replacements
+                msg = msg:gsub("_CONDITION%]", "]"):gsub(k, replacements[v])
             end
-        end
-
-        -- Custom replacements, example: Details API [DPS] and [NEMESISDPS]
-        for k, v in pairs(NCMessage.customReplacements) do
-            msg = msg:gsub(k, v)
         end
 
         return msg
@@ -264,7 +269,7 @@ function NemesisChat:InstantiateMsg()
 
     function NCMessage:CheckCondition(condition)
         local val1 = NCMessage.Condition[condition.left]()
-        local val2 = NCMessage:GetReplacedString(condition.right)
+        local val2 = NCMessage:GetReplacedString(condition.right:gsub("%[([A-Z_]*)%]", "[%1_CONDITION]")) -- Set this to a condition-specific replacement, non-formatted, ie [NEMESIS_DPS] -> [NEMESIS_DPS_CONDITION]
         local operator = condition.operator
 
         return NCMessage.Condition[operator](val1, val2)
@@ -322,10 +327,10 @@ function NemesisChat:InstantiateMsg()
             return val1 ~= val2
         end,
         ["GT"] = function(val1, val2)
-            return val1 > val2
+            return tonumber(val1) > tonumber(val2)
         end,
         ["LT"] = function(val1, val2)
-            return val1 < val2
+            return tonumber(val1) < tonumber(val2)
         end,
         
         -- Details! API 

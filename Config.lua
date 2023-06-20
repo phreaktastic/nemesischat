@@ -1260,9 +1260,34 @@ function NemesisChat:UpdateMessagePreview()
         spellLink = GetSpellLink(382427)
     end
 
-    local chatMsg = message:gsub("%[TARGET%]", "Rabid Wombat"):gsub("%[SELF%]", UnitName("player")):gsub("%[NEMESIS%]", nemesis):gsub("%[NEMESISDEATHS%]", math.random(1,16)):gsub("%[KILLS%]", math.random(1,968)):gsub("%[NEMESISKILLS%]", math.random(1,967)):gsub("%[DUNGEONTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 844))):gsub("%[KEYSTONELEVEL%]", math.random(2,28)):gsub("%[BOSSTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 276))):gsub("%[BOSSNAME%]", "Magmorax"):gsub("%[SPELL%]", spellLink):gsub("%[BYSTANDER%]", NemesisChat:GetRandomPartyBystander() or "DouglasQuaid")
+    if HasConditions() then
+        for key, val in pairs(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions) do
+            if val.left == "SPELL_ID" and val.operator == "IS" then
+                spellLink = GetSpellLink(tonumber(val.right))
+            end
+
+            if val.left == "SPELL_NAME" and val.operator == "IS" then
+                spellLink = GetSpellLink(tonumber(val.right))
+            end
+        end
+    end
+
+    -- This is on the refactor list
+    local chatMsg = message:gsub("%[TARGET%]", "Rabid Wombat"):gsub("%[SELF%]", UnitName("player")):gsub("%[NEMESIS%]", nemesis):gsub("%[NEMESISDEATHS%]", math.random(1,16)):gsub("%[KILLS%]", math.random(1,968)):gsub("%[NEMESISKILLS%]", math.random(1,967)):gsub("%[DUNGEONTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 844))):gsub("%[KEYSTONELEVEL%]", math.random(2,28)):gsub("%[BOSSTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 276))):gsub("%[BOSSNAME%]", "Magmorax"):gsub("%[SPELL%]", spellLink):gsub("%[BYSTANDER%]", NemesisChat:GetRandomPartyBystander() or "DouglasQuaid"):gsub("%[NEMESISDPS%]", "44.82k"):gsub("%[NEMESISDPSOVERALL%]", "48.33k"):gsub("%[DPS%]", "155.93k"):gsub("%[DPSOVERALL%]", "141.46k")
 
     messagePreview = color .. UnitName("player") .. spacer .. chatMsg .. "|r"
+end
+
+function HasConditions()
+    if selectedCategory == nil or selectedEvent == nil or selectedTarget == nil or selectedConfiguredMessage == nil then
+        return false
+    end
+
+    if core.db.profile.messages[selectedCategory] == nil or core.db.profile.messages[selectedCategory][selectedEvent] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] == nil then
+        return false
+    end
+
+    return (#core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions or 0) > 0
 end
 
 function GetEventIndex()
