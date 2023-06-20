@@ -998,12 +998,16 @@ function NemesisChat:DiscardChanges()
         messageChance = msg.chance
         messageLabel = msg.label
         messageConditions = msg.conditions
+
+        selectedCondition = ""
     else
         message = ""
         messageChannel = ""
         messageChance = ""
         messageLabel = ""
         messageConditions = ""
+
+        selectedCondition = ""
     end
 end
 
@@ -1015,15 +1019,12 @@ function NemesisChat:GetConditions()
     local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)]
     local conditions = {}
 
-    if msg == nil or msg.conditions == nil or msg.conditions == {} then
+    if msg == nil or msg.conditions == nil or #msg.conditions == 0 then
         return {}
     end
 
     for key, val in pairs(msg.conditions) do
         local leftFormatted = GetConditionLabel(val.left)
-
-        self:Print("KEY, leftFormatted, val.operator, GetOperatorFormatted(), val.right, GetConditionRight()")
-        self:Print(key, leftFormatted, val.operator, GetOperatorFormatted(val.operator), val.right, GetConditionRight(val.left, val.right))
 
         conditions[key .. ""] = leftFormatted .. " " .. GetOperatorFormatted(val.operator) .. " " .. GetConditionRight(val.left, val.right)
     end
@@ -1168,7 +1169,11 @@ function NemesisChat:ConditionIsSelect()
 end
 
 function NemesisChat:AddCondition()
-    condition = DeepCopy(core.runtimeDefaults.messageCondition)
+    local condition = DeepCopy(core.runtimeDefaults.messageCondition)
+
+    if type(messageConditions) ~= "table" then
+        messageConditions = {}
+    end
 
     table.insert(messageConditions, condition)
 
@@ -1273,17 +1278,7 @@ function StoreMessage()
         return
     end
 
-    if core.db.profile.messages[selectedCategory] == nil then
-        core.db.profile.messages[selectedCategory] = {}
-    end
-
-    if core.db.profile.messages[selectedCategory][selectedEvent] == nil then
-        core.db.profile.messages[selectedCategory][selectedEvent] = {}
-    end
-
-    if core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil then
-        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] = {}
-    end
+    BuildStorePath()
 
     local saveMessage = {}
 
@@ -1294,9 +1289,26 @@ function StoreMessage()
     saveMessage.conditions = messageConditions
 
     if selectedConfiguredMessage ~= "" then
+        saveMessage.conditions = {}
         core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] = saveMessage
+
+        NemesisChat:SetConfiguredMessage(nil, #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] .. "")
     else
         table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], saveMessage)
+    end
+end
+
+function BuildStorePath()
+    if core.db.profile.messages[selectedCategory] == nil then
+        core.db.profile.messages[selectedCategory] = {}
+    end
+
+    if core.db.profile.messages[selectedCategory][selectedEvent] == nil then
+        core.db.profile.messages[selectedCategory][selectedEvent] = {}
+    end
+
+    if core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil then
+        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] = {}
     end
 end
 

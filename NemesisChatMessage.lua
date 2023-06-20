@@ -330,13 +330,23 @@ function NemesisChat:InstantiateMsg()
         
         -- Details! API 
         ["NEMESIS_DPS"] = function()
-            if NemesisChat.DETAILS and NemesisChat.Details["NEMESIS_DPS"] then
+            if NemesisChat.DETAILS and NemesisChat.Details["NEMESIS_DPS"] ~= nil then
                 return NemesisChat.DETAILS["NEMESIS_DPS"]()
             end
         end,
         ["MY_DPS"] = function()
-            if NemesisChat.DETAILS and NemesisChat.Details["MY_DPS"] then
+            if NemesisChat.DETAILS and NemesisChat.Details["MY_DPS"] ~= nil then
                 return NemesisChat.DETAILS["MY_DPS"]()
+            end
+        end,
+        ["NEMESIS_DPS_OVERALL"] = function()
+            if NemesisChat.DETAILS and NemesisChat.Details["NEMESIS_DPS_OVERALL"] ~= nil then
+                return NemesisChat.DETAILS["NEMESIS_DPS_OVERALL"]()
+            end
+        end,
+        ["MY_DPS_OVERALL"] = function()
+            if NemesisChat.DETAILS and NemesisChat.Details["MY_DPS_OVERALL"] ~= nil then
+                return NemesisChat.DETAILS["MY_DPS_OVERALL"]()
             end
         end,
     }

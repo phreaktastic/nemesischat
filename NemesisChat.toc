@@ -1,5 +1,5 @@
 ## Interface: 100100
-## Version: 1.0.3
+## Version: 1.0.5
 ## Title: |cff00ccffNemesis Chat|r
 ## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp
 ## Notes: Talk smack to your friends :)

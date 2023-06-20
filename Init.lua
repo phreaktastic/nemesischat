@@ -206,17 +206,29 @@ core.messageConditions = {
 if Details ~= nil then
     local conditions = {
         {
-            label = "Nemesis DPS",
+            label = "Nemesis DPS (Current)",
             value = "NEMESIS_DPS",
-            operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+            operators = core.constants.EXTENDED_OPERATORS,
             type = "INPUT"
         },
         {
-            label = "My DPS",
+            label = "My DPS (Current)",
             value = "MY_DPS",
-            operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+            operators = core.constants.EXTENDED_OPERATORS,
             type = "INPUT"
-        }
+        },
+        {
+            label = "Nemesis DPS (Overall)",
+            value = "NEMESIS_DPS_OVERALL",
+            operators = core.constants.EXTENDED_OPERATORS,
+            type = "INPUT"
+        },
+        {
+            label = "My DPS (Overall)",
+            value = "MY_DPS_OVERALL",
+            operators = core.constants.EXTENDED_OPERATORS,
+            type = "INPUT"
+        },
     }
 
     for key, val in pairs(conditions) do

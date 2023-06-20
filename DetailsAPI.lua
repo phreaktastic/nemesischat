@@ -16,27 +16,33 @@ function NemesisChat:DETAILS_REPLACEMENTS()
         return false
     end
 
-    local currentPlayer = GetDPS(UnitName("player"), DETAILS_SEGMENTID_CURRENT)
+    local currentPlayer = GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT)
     local currentNemesis = GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT)
-    local overallPlayer = GetDPS(UnitName("player"), DETAILS_SEGMENTID_OVERALL)
+    local overallPlayer = GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL)
     local overallNemesis = GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_OVERALL)
 
     if currentPlayer == nil or currentNemesis == nil or overallPlayer == nil or overallNemesis == nil then
         return false
     end
 
-    NCMessage:AddCustomReplacement("%[DPS%]", currentPlayer .. "K")
-    NCMessage:AddCustomReplacement("%[DEMESISDPS%]", currentNemesis .. "K")
-    NCMessage:AddCustomReplacement("%[DPSOVERALL%]", overallPlayer .. "K")
-    NCMessage:AddCustomReplacement("%[DEMESISDPSOVERALL%]", overallNemesis .. "K")
+    NCMessage:AddCustomReplacement("%[DPS%]", FormatDPS(currentPlayer))
+    NCMessage:AddCustomReplacement("%[DEMESISDPS%]", FormatDPS(currentNemesis))
+    NCMessage:AddCustomReplacement("%[DPSOVERALL%]", FormatDPS(overallPlayer))
+    NCMessage:AddCustomReplacement("%[DEMESISDPSOVERALL%]", FormatDPS(overallNemesis))
 
     NemesisChat.DETAILS = {
         ["NEMESIS_DPS"] = function()
             return GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT)
         end,
         ["MY_DPS"] = function()
-            return GetDPS(UnitName("player"), DETAILS_SEGMENTID_CURRENT)
-        end
+            return GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT)
+        end,
+        ["NEMESIS_DPS_OVERALL"] = function()
+            return GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_OVERALL)
+        end,
+        ["MY_DPS_OVERALL"] = function()
+            return GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL)
+        end,
     }
 
     local function GetDPS(player, segment)
@@ -49,9 +55,13 @@ function NemesisChat:DETAILS_REPLACEMENTS()
     
         local combatTime = combat:GetCombatTime()
         local playerDamage = player.total
-        local playerDps = math.floor(playerDamage / combatTime / 10) / 100 -- Round to 2 digits, ie 74.86k
+        local playerDps = math.floor(playerDamage / combatTime)
 
         return playerDps
+    end
+
+    local function FormatDPS(dps)
+        return dps / 10 / 100 .. "k"
     end
 
     return true
