@@ -8,6 +8,57 @@ The first line in every event: `NCEvent:Initialize()` is called, which initializ
 
 ## Step 2: Proper objects are hydrated
 
+**All Events**: 
+
+`NCEvent` is initialized with the following:
+
+```
+ncEvent = {
+    category = "",
+    event = "",
+    target = "SELF",
+    nemesis = "",
+    bystander = "",
+},
+```
+
+`NCMessage` is initialized with the following:
+
+```
+ncMessage = {
+    channel = "SAY",
+    message = "",
+    target = "",
+    customReplacements = {},
+},
+```
+
+`NCSpell` is initialized with the following:
+
+```
+ncSpell = {
+    active = false,
+    source = "",
+    target = "",
+    spellId = 0,
+    spellName = "",
+    extraSpellId = 0,
+},
+```
+
+Based on the event, the above objects will be hydrated with per-event data. If APIs are enabled (currently, only Details! is supported), they will add custom replacements to `NCMessage.customReplacements` via the helper methods. Here's one example of this in action:
+
+```
+NCMessage:AddCustomReplacement("%[DPS%]", FormatDPS(currentPlayer))
+NCMessage:AddCustomReplacement("%[DEMESISDPS%]", FormatDPS(currentNemesis))
+NCMessage:AddCustomReplacement("%[DPSOVERALL%]", FormatDPS(overallPlayer))
+NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL%]", FormatDPS(overallNemesis))
+```
+
+The above illustrates adding custom text replacements for `[DPS]`, `[NEMESISDPS]`, `[DPSOVERALL]`, and `[NEMESISDPSOVERALL]`. These will be replaced with the values we receive from Details! on a per-event cadence.
+
+Any other APIs will follow the same pattern for custom replacements. The replacements, however, **must use escaped brackets** (as you can see in the above examples).
+
 > **Ephemeral Objects**
 >
 >It is important to note that all objects below are ephemeral in the scope of any `PLAYER_ENTERING_WORLD` events. That said, `NCDungeon` and `NCBoss` will be destroyed when a player leaves a dungeon or reloads their UI. 
