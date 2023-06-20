@@ -1295,7 +1295,7 @@ function StoreMessage()
     else
         saveMessage.conditions = {}
         table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], saveMessage)
-        NemesisChat:SetConfiguredMessage(nil, #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] .. "")
+        NemesisChat:SetConfiguredMessage(nil, #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] .. "")
     end
 end
 
