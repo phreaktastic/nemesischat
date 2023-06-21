@@ -92,6 +92,16 @@ core.constants.EXTENDED_OPERATORS = {
         value = "LT"
     }
 }
+core.constants.NC_OPERATORS = {
+    {
+        label = "is a Nemesis",
+        value = "IS_NEMESIS"
+    },
+    {
+        label = "NOT a Nemesis",
+        value = "NOT_NEMESIS"
+    }
+}
 core.events = {
     env = {
         {
@@ -153,6 +163,11 @@ core.events = {
             value = "REFEAST",
             options = core.constants.STANDARD
         },
+        {
+            label = "Heal",
+            value = "HEAL",
+            options = core.constants.STANDARD
+        },
     }
 }
 core.roles = {
@@ -192,7 +207,7 @@ core.messageConditions = {
     {
         label = "Spell Target",
         value = "SPELL_TARGET",
-        operators = core.constants.OPERATORS,
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NC_OPERATORS),
         type = "INPUT",
     },
     {
@@ -200,7 +215,13 @@ core.messageConditions = {
         value = "GROUP_COUNT",
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
         type = "INPUT"
-    }
+    },
+    {
+        label = "Nemeses In Group",
+        value = "NEMESES_COUNT",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "INPUT"
+    },
 }
 
 if Details ~= nil then

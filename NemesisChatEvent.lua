@@ -119,7 +119,7 @@ function NemesisChat:InstantiateEvent()
         NCSpell:Interrupt(source, dest, spellId, spellName, extraSpellId)
     end
 
-    -- Set the event's Category, Event, and Target for a spell (feast) event
+    -- Set the event's Category, Event, and Target for a spell event
     -- TODO: Modularize
     function NCEvent:Spell(source, dest, spellId, spellName)
         local feast = core.feastIDs[spellId]
@@ -154,6 +154,14 @@ function NemesisChat:InstantiateEvent()
         end
 
         NCSpell:Feast(source, spellId)
+    end
+
+    -- Set the event's Category, Event, and Target for a group enemy heal event
+    function NCEvent:Heal(source, dest, spellId, spellName)
+        NCEvent:SetEvent("HEAL")
+        NCEvent:SetTargetFromSource(source)
+
+        NCSpell:Spell(source, dest, spellId, spellName)
     end
 
     -- Set the event's Category, Event, and Target for a group enemy kill event

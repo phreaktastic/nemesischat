@@ -389,8 +389,8 @@ core.options = {
                     values = "GetConditionValues",
                     get = "GetConditionValue",
                     set = "SetConditionValue",
-                    hidden = "ConditionIsInput",
-                    disabled = "ConditionIsInput",
+                    hidden = function() return NemesisChat:ConditionIsInput() or IsNcOperator() end,
+                    disabled = function() return NemesisChat:ConditionIsInput() or IsNcOperator() end,
                 },
                 conditionValueInput = {
                     order = 33,
@@ -400,8 +400,8 @@ core.options = {
                     -- width = "full",
                     get = "GetConditionValue",
                     set = "SetConditionValue",
-                    hidden = "ConditionIsSelect",
-                    disabled = "ConditionIsSelect",
+                    hidden = function() return NemesisChat:ConditionIsSelect() or IsNcOperator() end,
+                    disabled = function() return NemesisChat:ConditionIsSelect() or IsNcOperator() end,
                 },
                 conditionsPaddingSaveDiscard = {
                     order = 34,
@@ -1027,8 +1027,13 @@ function NemesisChat:GetConditions()
 
     for key, val in pairs(msg.conditions) do
         local leftFormatted = GetConditionLabel(val.left)
+        local displayText = leftFormatted .. " " .. (GetOperatorFormatted(val.operator) or "?")
 
-        conditions[key .. ""] = leftFormatted .. " " .. GetOperatorFormatted(val.operator) .. " " .. GetConditionRight(val.left, val.right)
+        if GetIsNcOperator(val) == false then
+            displayText = displayText  .. " " .. GetConditionRight(val.left, val.right)
+        end
+
+        conditions[key .. ""] = displayText
     end
 
     return conditions
@@ -1074,6 +1079,9 @@ function NemesisChat:SetConditionSubject(info, value)
     local condition = messageConditions[tonumber(selectedCondition)]
 
     condition.left = value
+
+    local operatorKey, _ = next(NemesisChat:GetConditionOperators())
+    NemesisChat:SetConditionOperator(nil, operatorKey)
 end
 
 function NemesisChat:GetConditionOperators()
@@ -1110,6 +1118,18 @@ function NemesisChat:SetConditionOperator(info, value)
     local condition = messageConditions[tonumber(selectedCondition)]
 
     condition.operator = value
+
+    if NemesisChat:ConditionIsSelect() then
+        local valueKey, _ = next(NemesisChat:GetConditionSubjects())
+
+        NemesisChat:SetConditionValue(nil, valueKey)
+    else
+        if GetIsNcOperator(value) then
+            NemesisChat:SetConditionValue(nil, "123")
+        else
+            NemesisChat:SetConditionValue(nil, "")
+        end
+    end
 end
 
 function NemesisChat:GetConditionValues()
@@ -1144,6 +1164,11 @@ function NemesisChat:SetConditionValue(info, value)
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
+
+    if (condition.operator == "LT" or condition.operator == "GT") and tonumber(value) == nil then
+        PopUp("Invalid Value", "You input a value of '" .. value .. "', which is not a number and thus cannot be compared with '" .. GetOperatorFormatted(condition.operator) .. "'! Please set the value to a number.")
+        return
+    end
 
     condition.right = value
 end
@@ -1338,6 +1363,22 @@ function BuildStorePath()
     end
 end
 
+function IsNcOperator()
+    local condition = messageConditions[tonumber(selectedCondition)]
+
+    return GetIsNcOperator(condition)
+end
+
+function GetIsNcOperator(condition)
+    for key, val in pairs(ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS)) do
+        if condition.operator == val.value then
+            return false
+        end
+    end
+
+    return true
+end
+
 function GetCondition(conditionValue)
     if conditionValue == nil or conditionValue == "" then
         return ""
@@ -1379,9 +1420,24 @@ function GetOperatorFormatted(operatorValue)
         return ""
     end
 
-    for key, val in pairs(ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS)) do
+    for key, val in pairs(ArrayMerge(ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS), core.constants.NC_OPERATORS)) do
         if val.value == operatorValue then
             return val.label
         end
     end
+end
+
+function PopUp(title, text)
+    local AceGUI = LibStub("AceGUI-3.0")
+    local frame = AceGUI:Create("Frame")
+    frame:SetTitle(title)
+    frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
+    frame:SetLayout("Fill")
+    frame:SetWidth(300)
+    frame:SetHeight(128)
+
+    local desc = AceGUI:Create("Label")
+    desc:SetText(text)
+    desc:SetFullWidth(true)
+    frame:AddChild(desc)
 end

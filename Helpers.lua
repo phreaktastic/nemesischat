@@ -80,6 +80,8 @@ function NemesisChat:InitializeHelpers()
             NCEvent:Interrupt(sourceName, destName, spellId, spellName, extraSpellId)
         elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, spellId, spellName)
+        elseif subEvent == "SPELL_HEAL" then
+            NCEvent:Heal(sourceName, destName, spellId, spellName)
         elseif subEvent == "PARTY_KILL" then
             NCEvent:Kill(sourceName, destName)
         elseif subEvent == "UNIT_DIED" then
@@ -151,6 +153,10 @@ function NemesisChat:InitializeHelpers()
         return partyBystanders[NemesisChat:GetRandomKey(partyBystanders)]
     end
 
+    function NemesisChat:GetPartyNemesesCount()
+        return NemesisChat:GetLength(NemesisChat:GetPartyNemeses())
+    end
+
     function NemesisChat:GetPartyNemeses()
         local nemeses = {}
 
@@ -197,7 +203,13 @@ function NemesisChat:InitializeHelpers()
 
     -- We have to do a bit of trickery to get the total number of elements
     function NemesisChat:GetLength(myTable)
+        local next = next
         local count = 0
+
+        if type(myTable) ~= "table" or next(myTable) == nil then
+            return 0
+        end
+
         for k in pairs(myTable) do count = count + 1 end
         return count
     end

@@ -310,11 +310,13 @@ function NemesisChat:InstantiateMsg()
 
     -- Condition methods
     NCMessage.Condition = {
+        -- Subjects
         ["NEMESIS_ROLE"] = function()
             return core.runtime.groupRoster[NCEvent:GetNemesis()].role
         end,
         ["SPELL_ID"] = function()
-            return NCSpell:GetSpellId()
+            -- Return as string so input comparisons work properly
+            return NCSpell:GetSpellId() .. ""
         end,
         ["SPELL_NAME"] = function()
             return NCSpell:GetSpellName()
@@ -325,6 +327,12 @@ function NemesisChat:InstantiateMsg()
         ["GROUP_COUNT"] = function()
             return #core.runtime.groupRoster or 0
         end,
+        ["NEMESES_COUNT"] = function()
+            -- Return as string so input comparisons work properly
+            return NemesisChat:GetPartyNemesesCount() .. ""
+        end,
+
+        -- Operators
         ["IS"] = function(val1, val2)
             return val1 == val2
         end,
@@ -332,10 +340,24 @@ function NemesisChat:InstantiateMsg()
             return val1 ~= val2
         end,
         ["GT"] = function(val1, val2)
-            return tonumber(val1) > tonumber(val2)
+            return (tonumber(val1) or 0) > (tonumber(val2) or 0)
         end,
         ["LT"] = function(val1, val2)
-            return tonumber(val1) < tonumber(val2)
+            return (tonumber(val1) or 0) < (tonumber(val2) or 0)
+        end,
+        ["IS_NEMESIS"] = function(val1, val2)
+            if core.runtime.groupRoster[val1] == nil then
+                return false
+            end
+
+            return core.runtime.groupRoster[val1].isNemesis
+        end,
+        ["NOT_NEMESIS"] = function(val1, val2)
+            if core.runtime.groupRoster[val1] == nil then
+                return true
+            end
+
+            return core.runtime.groupRoster[val1].isNemesis == false
         end,
         
         -- Details! API 
