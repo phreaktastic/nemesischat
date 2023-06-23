@@ -196,7 +196,7 @@ core.messageConditions = {
         label = "Spell ID",
         value = "SPELL_ID",
         operators = core.constants.OPERATORS,
-        type = "INPUT",
+        type = "NUMBER", 
     },
     {
         label = "Spell Name",
@@ -214,13 +214,13 @@ core.messageConditions = {
         label = "Players In Group",
         value = "GROUP_COUNT",
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
-        type = "INPUT"
+        type = "NUMBER", 
     },
     {
         label = "Nemeses In Group",
         value = "NEMESES_COUNT",
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
-        type = "INPUT"
+        type = "NUMBER", 
     },
 }
 

@@ -363,7 +363,7 @@ core.options = {
                     order = 31,
                     type = "select",
                     name = "Condition",
-                    -- width = "full",
+                    width = 0.83,
                     values = "GetConditionSubjects",
                     get = "GetConditionSubject",
                     set = "SetConditionSubject",
@@ -374,7 +374,7 @@ core.options = {
                     order = 32,
                     type = "select",
                     name = "Operator",
-                    width = "half",
+                    width = 0.83,
                     values = "GetConditionOperators",
                     get = "GetConditionOperator",
                     set = "SetConditionOperator",
@@ -385,7 +385,7 @@ core.options = {
                     order = 33,
                     type = "select",
                     name = "Value",
-                    -- width = "full",
+                    width = 0.83,
                     values = "GetConditionValues",
                     get = "GetConditionValue",
                     set = "SetConditionValue",
@@ -397,7 +397,7 @@ core.options = {
                     type = "input",
                     name = "Value",
                     desc = "Replacements (such as |c00ffcc00[NEMESIS]|r) are allowed here. Please refer to the Reference tab for a list of available replacements.",
-                    -- width = "full",
+                    width = 0.83,
                     get = "GetConditionValue",
                     set = "SetConditionValue",
                     hidden = function() return NemesisChat:ConditionIsSelect() or IsNcOperator() end,
@@ -485,6 +485,31 @@ core.options = {
                     type = "description",
                     fontSize = "medium",
                     name = "Chance is tricky for a multitude of reasons. Firstly, messages are chosen at random when an appropriate trigger event fires. That in consideration, having one message with a chance of 80% and another with a chance of 20% does NOT mean there will be a 100% chance for one of them to fire. Secondly, missing a roll means a phrase will not be sent at all. Finally, the real math behind a chance would be |c00ffcc00(1 / x) * (y / 100)|r with |c00ffcc00x|r being the number of phrases for this event, and |c00ffcc00y|r being the individual phrase's chance. So with 2 phrases for one triggered event, you have a 50% chance to get a particular phrase. If the chosen phrase's chance is 50%, that means the overall chance to send that particular phrase is 25%. Please keep this in mind!\n\nThe NC algorithm is designed with spam prevention in mind, not with weighted phrase chance accuracy. Setting a chance below 100% is useful for preventing a phrase from sending every time a particular event fires.",
+                    width = "full",
+                },
+                infoChancePaddingBottom = {
+                    order = 9,
+                    type = "description",
+                    fontSize = "large",
+                    name = " ",
+                },
+                infoNemesisHeader = {
+                    order = 10,
+                    type = "description",
+                    fontSize = "large",
+                    name = "Conditions: is Nemesis vs. is [NEMESIS]",
+                },
+                infoNemesisPaddingTop = {
+                    order = 11,
+                    type = "description",
+                    fontSize = "large",
+                    name = " ",
+                },
+                infoNemesis = {
+                    order = 12,
+                    type = "description",
+                    fontSize = "medium",
+                    name = "As you may have noticed above, [NEMESIS] will refer to the Nemesis which fired the event, or a random Nemesis in the party. This is useful for an event where a Nemesis casts a spell on themself, for example. However, what if you wanted to ensure that a spell was cast on a Nemesis, but it was not a self-cast? That's where the 'is Nemesis' operator comes in handy -- it will simply check if the target of the spell is in fact a Nemesis.",
                     width = "full",
                 },
             }
@@ -895,7 +920,7 @@ end
 function NemesisChat:SetConfiguredMessage(info, value)
     selectedConfiguredMessage = value
 
-    local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(value)]
+    local msg = DeepCopy(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(value)])
 
     if msg == nil then
         selectedConfiguredMessage = ""
@@ -1164,9 +1189,10 @@ function NemesisChat:SetConditionValue(info, value)
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
+    local baseCondition = GetCondition(condition.left)
 
-    if (condition.operator == "LT" or condition.operator == "GT") and tonumber(value) == nil then
-        PopUp("Invalid Value", "You input a value of '" .. value .. "', which is not a number and thus cannot be compared with '" .. GetOperatorFormatted(condition.operator) .. "'! Please set the value to a number.")
+    if (condition.operator == "LT" or condition.operator == "GT" or baseCondition.type == "NUMBER") and tonumber(value) == nil then
+        PopUp("Invalid Value", "Invalid value input! Please set the value to a number.")
         return
     end
 
@@ -1181,7 +1207,7 @@ function NemesisChat:ConditionIsInput()
     local condition = messageConditions[tonumber(selectedCondition)]
     local baseCondition = GetCondition(condition.left)
 
-    return baseCondition.type == "INPUT"
+    return baseCondition.type == "INPUT" or baseCondition.type == "NUMBER"
 end
 
 function NemesisChat:ConditionIsSelect()
@@ -1402,7 +1428,7 @@ end
 function GetConditionRight(conditionValue, rightValue)
     local condition = GetCondition(conditionValue)
 
-    if condition.type == "INPUT" then
+    if condition.type == "INPUT" or condition.type == "NUMBER" then
         return rightValue
     end
 
