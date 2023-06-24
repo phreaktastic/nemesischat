@@ -135,7 +135,7 @@ function NemesisChat:InstantiateDungeon()
         NCDungeon:SetInactive()
         NCDungeon:SetComplete(true)
         NCDungeon:SetEndTime(GetTime())
-        NCDungeon:SetSucces(onTime)
+        NCDungeon:SetSuccess(onTime)
         NCDungeon:SetTotalTime(totalTime)
 
         NCEvent:EndChallenge(onTime)

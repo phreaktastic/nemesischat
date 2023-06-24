@@ -16,6 +16,8 @@ function NemesisChat:DETAILS_REPLACEMENTS()
         return false
     end
 
+    NemesisChat:DETAILS_METHODS()
+
     local currentPlayer = GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT)
     local currentNemesis = GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT)
     local overallPlayer = GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL)
@@ -37,20 +39,29 @@ function NemesisChat:DETAILS_REPLACEMENTS()
 
     NemesisChat.DETAILS = {
         ["NEMESIS_DPS"] = function()
+            NemesisChat:DETAILS_METHODS()
             return GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT)
         end,
         ["MY_DPS"] = function()
+            NemesisChat:DETAILS_METHODS()
             return GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT)
         end,
         ["NEMESIS_DPS_OVERALL"] = function()
+            NemesisChat:DETAILS_METHODS()
             return GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_OVERALL)
         end,
         ["MY_DPS_OVERALL"] = function()
+            NemesisChat:DETAILS_METHODS()
             return GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL)
         end,
     }
 
-    local function GetDPS(player, segment)
+    return true
+end
+
+-- These will not always be available, they'll need to be declared as used.
+function NemesisChat:DETAILS_METHODS()
+    function GetDPS(player, segment)
         local combat = Details:GetCurrentCombat()
         local player = Details:GetActor(segment, DETAILS_ATTRIBUTE_DAMAGE, player)
     
@@ -65,9 +76,7 @@ function NemesisChat:DETAILS_REPLACEMENTS()
         return playerDps
     end
 
-    local function FormatDPS(dps)
+    function FormatDPS(dps)
         return dps / 10 / 100 .. "k"
     end
-
-    return true
 end

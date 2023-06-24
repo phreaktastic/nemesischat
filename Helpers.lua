@@ -400,7 +400,7 @@ function NemesisChat:InitializeHelpers()
     function NemesisChat:Roll(chance)
         local roll = math.random()
 
-        if roll <= chance then
+        if roll <= tonumber(chance) then
             return true
         end
 
