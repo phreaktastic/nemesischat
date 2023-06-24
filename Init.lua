@@ -291,8 +291,8 @@ core.reference = {
         ["[SPELL]"] = "The spell which was cast or interrupted. Can be used to link feasts in feast events. Usable on |c00ffcc00Interrupt|r and |c00ffcc00Feast|r triggers.",
         ["[NEMESIS]"] = "The nemesis which was used for an event. In the case of triggers like |c00ffcc00Death|r, it'll be the |c00ffcc00Nemesis|r who died. In other cases, a random |c00ffcc00Nemesis|r will be chosen if more than one are in your party.",
         ["[SELF]"] = "Your character's name. Usable on all triggers.",
-        ["[NEMESISDEATHS"] = "The number of deaths a |c00ffcc00Nemesis|r has. In the case of triggers like |c00ffcc00Death|r, it'll be the |c00ffcc00Nemesis|r who died. In other cases, a random |c00ffcc00Nemesis|r will be chosen if more than one are in your party. Usable on all triggers which do not ignore |c00ffcc00Unit|r.",
-        ["[NEMESISKILLS"] = "The number of units a |c00ffcc00Nemesis|r has killed. In the case of triggers like |c00ffcc00Death|r, it'll be the |c00ffcc00Nemesis|r who died. In other cases, a random |c00ffcc00Nemesis|r will be chosen if more than one are in your party. Usable on all triggers which do not ignore |c00ffcc00Unit|r.",
+        ["[NEMESISDEATHS]"] = "The number of deaths a |c00ffcc00Nemesis|r has. In the case of triggers like |c00ffcc00Death|r, it'll be the |c00ffcc00Nemesis|r who died. In other cases, a random |c00ffcc00Nemesis|r will be chosen if more than one are in your party. Usable on all triggers which do not ignore |c00ffcc00Unit|r.",
+        ["[NEMESISKILLS]"] = "The number of units a |c00ffcc00Nemesis|r has killed. In the case of triggers like |c00ffcc00Death|r, it'll be the |c00ffcc00Nemesis|r who died. In other cases, a random |c00ffcc00Nemesis|r will be chosen if more than one are in your party. Usable on all triggers which do not ignore |c00ffcc00Unit|r.",
         ["[DEATHS]"] = "The number of deaths you have. Usable on all triggers.",
         ["[KILLS]"] = "The number of units you have killed. Usable on all triggers.",
         ["[KEYSTONELEVEL]"] = "The level of the Mythic+ Keystone. Usable on all triggers, but may not be available.",
@@ -330,6 +330,19 @@ core.supportedReplacements = {
     ["%[BOSSNAME%]"] = "bossName",
     ["%[DUNGEONTIME%]"] = "dungeonTime",
     ["%[BYSTANDER%]"] = "bystander",
+}
+
+-- Numeric value replacements, for number validation
+core.numericReplacements = {
+    ["[NEMESISDEATHS]"] = 1,
+    ["[NEMESISKILLS]"] = 1,
+    ["[DEATHS]"] = 1,
+    ["[KILLS]"] = 1,
+    ["[KEYSTONELEVEL]"] = 1,
+    ["[NEMESISDPS]"] = 1,
+    ["[DPS]"] = 1,
+    ["[NEMESISDPSOVERALL]"] = 1,
+    ["[DPSOVERALL]"] = 1,
 }
 
 function NemesisChat:GetReplacementTooltip()

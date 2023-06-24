@@ -17,6 +17,10 @@ core.defaults = {
         dbg = false,
         detailsAPI = false,
         ai = true,
+        aiConfig = {
+            selected = "taunts",
+            overrides = {}
+        },
         useGlobalChance = false,
         globalChance = 0.5,
         minimumTime = 1,
@@ -56,7 +60,7 @@ core.options = {
                     order = 2,
                     type = "toggle",
                     name = "Details API",
-                    desc = "Enable/disable Details API -- data driven smack talking! If you out-DPS someone, talk smack. If they out-DPS you, talk smack.",
+                    desc = "Enable/disable Details API. This enables additional replacements, such as [DPS], [NEMESISDPS], etc.",
                     get = "IsDetailsAPI",
                     set = "ToggleDetailsAPI",
                 },
@@ -1191,7 +1195,7 @@ function NemesisChat:SetConditionValue(info, value)
     local condition = messageConditions[tonumber(selectedCondition)]
     local baseCondition = GetCondition(condition.left)
 
-    if (condition.operator == "LT" or condition.operator == "GT" or baseCondition.type == "NUMBER") and tonumber(value) == nil then
+    if (condition.operator == "LT" or condition.operator == "GT" or baseCondition.type == "NUMBER") and tonumber(value) == nil and IsValidReplacement(value) == false then
         PopUp("Invalid Value", "Invalid value input! Please set the value to a number.")
         return
     end
@@ -1466,4 +1470,8 @@ function PopUp(title, text)
     desc:SetText(text)
     desc:SetFullWidth(true)
     frame:AddChild(desc)
+end
+
+function IsValidReplacement(value)
+    return core.numericReplacements[value] == 1
 end
