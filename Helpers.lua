@@ -69,7 +69,7 @@ function NemesisChat:InitializeHelpers()
 
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
-        local timeStamp, subEvent, _, _, sourceName, _, _, destGuid, destName, _, _, spellId, spellName, _, extraSpellId = CombatLogGetCurrentEventInfo()
+        local timeStamp, subEvent, _, _, sourceName, _, _, destGuid, destName, _, _, misc1, misc2, misc3, misc4 = CombatLogGetCurrentEventInfo()
 
         NemesisChat:SetMyName()
         NCEvent:Initialize()
@@ -77,11 +77,11 @@ function NemesisChat:InitializeHelpers()
 
         -- This could be more modular, the only problem is feasts...
         if subEvent == "SPELL_INTERRUPT" then
-            NCEvent:Interrupt(sourceName, destName, spellId, spellName, extraSpellId)
+            NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "SPELL_CAST_SUCCESS" or subEvent == "SPELL_CAST_START" then
-            NCEvent:Spell(sourceName, destName, spellId, spellName)
+            NCEvent:Spell(sourceName, destName, misc1, misc2)
         elseif subEvent == "SPELL_HEAL" then
-            NCEvent:Heal(sourceName, destName, spellId, spellName)
+            NCEvent:Heal(sourceName, destName, misc1, misc2)
         elseif subEvent == "PARTY_KILL" then
             NCEvent:Kill(sourceName, destName)
         elseif subEvent == "UNIT_DIED" then
@@ -90,6 +90,12 @@ function NemesisChat:InitializeHelpers()
             end
 
             NCEvent:Death(destName)
+        elseif NCEvent:IsDamageEvent(subEvent, destName) then
+            local damage = tonumber(misc4) or 0
+
+            if GTFO and GTFO.SpellID[misc1] then
+                NCDungeon:AddAvoidableDamage(damage, destName)
+            end
         else
             -- Something unsupported.
         end
@@ -354,6 +360,10 @@ function NemesisChat:InitializeHelpers()
         if core.db.profile.detailsAPI == true and Details == nil then
             self:Print("Details API is enabled, but Details cannot be found! Please enable Details.")
         end
+
+        if core.db.profile.gtfoAPI == true and GTFO == nil then
+            self:Print("GTFO API is enabled, but GTFO cannot be found! Please enable GTFO.")
+        end
     end
 
     -- Check the roster and (un)subscribe events appropriately
@@ -386,6 +396,8 @@ function NemesisChat:InitializeHelpers()
             NemesisChat:RegisterEvent("CHALLENGE_MODE_COMPLETED")
             NemesisChat:RegisterEvent("ENCOUNTER_START")
             NemesisChat:RegisterEvent("ENCOUNTER_END")
+            NemesisChat:RegisterEvent("PLAYER_REGEN_DISABLED")
+            NemesisChat:RegisterEvent("PLAYER_REGEN_ENABLED")
         else
             NCStatus = "Inactive"
             NemesisChat:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -393,6 +405,8 @@ function NemesisChat:InitializeHelpers()
             NemesisChat:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
             NemesisChat:UnregisterEvent("ENCOUNTER_START")
             NemesisChat:UnregisterEvent("ENCOUNTER_END")
+            NemesisChat:UnregisterEvent("PLAYER_REGEN_DISABLED")
+            NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
         end
     end
 

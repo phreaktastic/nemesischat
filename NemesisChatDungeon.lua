@@ -119,13 +119,27 @@ function NemesisChat:InstantiateDungeon()
         local level, _, _ = C_ChallengeMode.GetActiveKeystoneInfo()
         
         NCDungeon:Initialize()
-        NCDungeon:SetActive()
+        NCDungeon:InitAvoidableDamage()
         NCDungeon:SetLevel(level)
         NCDungeon:SetStartTime(GetTime())
+        NCDungeon:SetActive()
 
         NCEvent:StartChallenge()
 
         core.runtime.NCDungeon = NCDungeon
+    end
+
+    -- Helper for initializing the avoidable damage table
+    function NCDungeon:InitAvoidableDamage()
+        local dungeon = core.runtime.NCDungeon
+
+        dungeon.avoidableDamage = {}
+
+        for playerName, data in pairs(core.runtime.groupRoster) do
+            dungeon.avoidableDamage[playerName] = 0
+        end
+
+        dungeon.avoidableDamage[core.runtime.myName] = 0
     end
 
     -- Helper for a dungeon end event
@@ -141,5 +155,23 @@ function NemesisChat:InstantiateDungeon()
         NCEvent:EndChallenge(onTime)
 
         core.runtime.NCDungeon = nil
+    end
+
+    -- Adding avoidable damage for a player
+    function NCDungeon:AddAvoidableDamage(damage, dest)
+        if core.runtime.NCDungeon.avoidableDamage[dest] == nil then
+            core.runtime.NCDungeon.avoidableDamage[dest] = damage
+        else
+            core.runtime.NCDungeon.avoidableDamage[dest] = core.runtime.NCDungeon.avoidableDamage[dest] + damage
+        end
+    end
+
+    -- Get avoidable damage for a player
+    function NCDungeon:GetAvoidableDamage(player)
+        if core.runtime.NCDungeon.avoidableDamage == nil or core.runtime.NCDungeon.avoidableDamage[player] == nil then
+            return 0
+        end
+
+        return core.runtime.NCDungeon.avoidableDamage[player]
     end
 end

@@ -43,5 +43,7 @@ function NemesisChat:OnDisable()
     NemesisChat:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
     NemesisChat:UnregisterEvent("ENCOUNTER_START")
     NemesisChat:UnregisterEvent("ENCOUNTER_END")
+    NemesisChat:UnregisterEvent("PLAYER_REGEN_DISABLED")
+    NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
 end
 

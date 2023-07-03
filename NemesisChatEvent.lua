@@ -278,4 +278,21 @@ function NemesisChat:InstantiateEvent()
 
         return availableMessages ~= nil and #availableMessages > 0
     end
+
+    -- A player within the party has taken damage
+    function NCEvent:IsDamageEvent(event, dest)
+        return (event == "SPELL_PERIODIC_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_INSTAKILL" or event == "SWING_DAMAGE") and core.runtime.groupRoster[dest] ~= nil and core.runtime.groupRoster[dest] ~= ""
+    end
+
+    function NCEvent:CombatStart()
+        NCEvent:SetCategory("COMBATLOG")
+        NCEvent:SetEvent("COMBAT_START")
+        NCEvent:SetEvent("NA")
+    end
+
+    function NCEvent:CombatEnd()
+        NCEvent:SetCategory("COMBATLOG")
+        NCEvent:SetEvent("COMBAT_END")
+        NCEvent:SetEvent("NA")
+    end
 end

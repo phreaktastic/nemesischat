@@ -16,6 +16,8 @@ core.defaults = {
 		enabled = true,
         dbg = false,
         detailsAPI = false,
+        gtfoAPI = false,
+        nonCombatMode = false,
         ai = true,
         aiConfig = {
             selected = "taunts",
@@ -52,7 +54,7 @@ core.options = {
                     order = 1,
                     type = "toggle",
                     name = "Enable",
-                    desc = "Enable/disable Nemesis Chat",
+                    desc = "Toggle Nemesis Chat",
                     get = "IsEnabled",
                     set = "EnableDisable",
                 },
@@ -60,15 +62,31 @@ core.options = {
                     order = 2,
                     type = "toggle",
                     name = "Details API",
-                    desc = "Enable/disable Details API. This enables additional replacements, such as [DPS], [NEMESISDPS], etc.",
+                    desc = "Toggle Details API. This enables additional replacements (such as [DPS], [NEMESISDPS], etc.) and events.",
                     get = "IsDetailsAPI",
                     set = "ToggleDetailsAPI",
+                },
+                gtfoAPI = {
+                    order = 3,
+                    type = "toggle",
+                    name = "GTFO API",
+                    desc = "Toggle GTFO API. This enables additional replacements (such as [AVOIDABLEDAMAGE], [NEMESISAVOIDABLEDAMAGE], etc.) and events.",
+                    get = "IsGtfoAPI",
+                    set = "ToggleGtfoAPI",
+                },
+                nonCombatMode = {
+                    order = 3,
+                    type = "toggle",
+                    name = "Non-Combat Mode",
+                    desc = "Toggle Non-Combat Mode. This restricts Nemesis Chat from messaging while in combat.",
+                    get = "IsNonCombatMode",
+                    set = "ToggleNonCombatMode",
                 },
                 ai = {
                     order = 3,
                     type = "toggle",
                     name = "AI Phrases",
-                    desc = "Enable/disable AI Generated Phrases. This allows you to run NC without configuring any phrases.",
+                    desc = "Toggle AI Generated Phrases. This allows you to run NC without configuring any phrases.",
                     get = "IsAI",
                     set = "ToggleAI",
                 },
@@ -76,7 +94,7 @@ core.options = {
                     order = 4,
                     type = "toggle",
                     name = "Use Global Chance",
-                    desc = "Enable/disable Global Chance. This allows you to ensure that messages will only be sent a percentage of the time.",
+                    desc = "Toggle Global Chance. This allows you to ensure that messages will only be sent a percentage of the time.",
                     get = "IsUseGlobalChance",
                     set = "ToggleUseGlobalChance",
                 },
@@ -650,13 +668,14 @@ function NemesisChat:ToggleDebug(info, value)
     end
 end
 
-function NemesisChat:IsDetailsAPI(info)
+function NemesisChat:IsDetailsAPI()
 	return core.db.profile.detailsAPI
 end
 
 function NemesisChat:ToggleDetailsAPI(info, value)
     if value == true and Details == nil then
         self:Print("Cannot enable Details API: Details could not be found! Please ensure it is enabled and functional.")
+        ShowApiErrorPopup("Details!")
         return
     end
 	core.db.profile.detailsAPI = value
@@ -665,7 +684,34 @@ function NemesisChat:ToggleDetailsAPI(info, value)
         return
     end
 
-    ShowReloadPopup("Toggling the Details! API requires a reload. If you choose not to reload, functionality will absolutely be unexpected and may even cause LUA errors to be thrown. It is highly recommended to reload now, ensuring smooth gameplay without thrown errors.")
+    ShowTogglePopup("Details! API")
+end
+
+function NemesisChat:IsGtfoAPI()
+    return core.db.profile.gtfoAPI
+end
+
+function NemesisChat:ToggleGtfoAPI(info, value)
+    if value == true and Details == nil then
+        self:Print("Cannot enable GTFO API: GTFO could not be found! Please ensure it is enabled and functional.")
+        ShowApiErrorPopup("GTFO")
+        return
+    end
+	core.db.profile.gtfoAPI = value
+
+    if value == false then
+        return
+    end
+
+    ShowTogglePopup("GTFO API")
+end
+
+function NemesisChat:IsNonCombatMode()
+    return core.db.profile.nonCombatMode
+end
+
+function NemesisChat:ToggleNonCombatMode(info, value)
+    core.db.profile.nonCombatMode = value
 end
 
 function NemesisChat:IsAI(info)
@@ -675,7 +721,7 @@ end
 function NemesisChat:ToggleAI(info, value)
 	core.db.profile.ai = value
 
-    ShowReloadPopup("Toggling AI requires a reload. If you choose not to reload, functionality will absolutely be unexpected and may even cause LUA errors to be thrown. It is highly recommended to reload now, ensuring smooth gameplay without thrown errors.")
+    ShowTogglePopup("AI")
 end
 
 function NemesisChat:IsUseGlobalChance(info)
@@ -1455,10 +1501,17 @@ function IsValidReplacement(value)
     return core.numericReplacements[value] == 1
 end
 
-function ShowReloadPopup(text)
+function ShowPopup(text, showReloadButton, title)
     local AceGUI = LibStub("AceGUI-3.0")
     local frame = AceGUI:Create("Frame")
-    frame:SetTitle("Reload Required")
+
+    if title then
+        frame:SetTitle(title)
+    else
+        frame:SetTitle("Reload Required")
+    end
+
+    
     -- frame:SetStatusText("Please reload your UI in order to load the changes you just made.")
     frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
     frame:SetLayout("List")
@@ -1475,9 +1528,23 @@ function ShowReloadPopup(text)
     padding:SetFullWidth(true)
     frame:AddChild(padding)
 
-    local button = AceGUI:Create("Button")
-    button:SetText("Reload Now")
-    button:SetFullWidth(true)
-    button:SetCallback("OnClick", function() ReloadUI() end)
-    frame:AddChild(button)
+    if showReloadButton then
+        local button = AceGUI:Create("Button")
+        button:SetText("Reload Now")
+        button:SetFullWidth(true)
+        button:SetCallback("OnClick", function() ReloadUI() end)
+        frame:AddChild(button)
+    end
+end
+
+function ShowReloadPopup(text)
+    ShowPopup(text, true)
+end
+
+function ShowTogglePopup(feature)
+    ShowReloadPopup("Toggling " .. feature .. " requires a reload. If you choose not to reload, functionality will absolutely be unexpected and may even cause LUA errors to be thrown. It is highly recommended to reload now, ensuring smooth gameplay without thrown errors.")
+end
+
+function ShowApiErrorPopup(api)
+    ShowPopup("Cannot enable " .. api .. " API: " .. api .. " could not be found! Please ensure it is enabled and functional.", false, "Error!")
 end

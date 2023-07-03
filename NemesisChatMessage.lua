@@ -183,9 +183,17 @@ function NemesisChat:InstantiateMsg()
             return
         end
 
+        -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
+        -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
+        if core.db.profile.nonCombatMode and core.runtime.inCombat and NCEvent:GetCategory() ~= "BOSS" and NCEvent:GetEvent() ~= "START" then
+            NCEvent:Initialize()
+            return
+        end
+
         local profileMessages = core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()]
 
         if profileMessages == nil then
+            NCEvent:Initialize()
             return
         end
 
@@ -380,6 +388,14 @@ function NemesisChat:InstantiateMsg()
             if NemesisChat.DETAILS and NemesisChat.DETAILS["MY_DPS_OVERALL"] ~= nil then
                 return NemesisChat.DETAILS["MY_DPS_OVERALL"]()
             end
+        end,
+
+        -- GTFO API
+        ["NEMESIS_AD"] = function()
+            return NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis())
+        end,
+        ["MY_AD"] = function()
+            return NCDungeon:GetAvoidableDamage(core.runtime.myName)
         end,
     }
 end

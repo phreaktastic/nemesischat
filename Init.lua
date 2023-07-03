@@ -168,6 +168,16 @@ core.events = {
             value = "HEAL",
             options = core.constants.STANDARD
         },
+        {
+            label = "Combat Start",
+            value = "COMBAT_START",
+            options = core.constants.NA
+        },
+        {
+            label = "Combat End",
+            value = "COMBAT_END",
+            options = core.constants.NA
+        },
     }
 }
 core.roles = {
@@ -230,25 +240,46 @@ if Details ~= nil then
             label = "Nemesis DPS (Current)",
             value = "NEMESIS_DPS",
             operators = core.constants.EXTENDED_OPERATORS,
-            type = "INPUT"
+            type = "NUMBER"
         },
         {
             label = "My DPS (Current)",
             value = "MY_DPS",
             operators = core.constants.EXTENDED_OPERATORS,
-            type = "INPUT"
+            type = "NUMBER"
         },
         {
             label = "Nemesis DPS (Overall)",
             value = "NEMESIS_DPS_OVERALL",
             operators = core.constants.EXTENDED_OPERATORS,
-            type = "INPUT"
+            type = "NUMBER"
         },
         {
             label = "My DPS (Overall)",
             value = "MY_DPS_OVERALL",
             operators = core.constants.EXTENDED_OPERATORS,
-            type = "INPUT"
+            type = "NUMBER"
+        },
+    }
+
+    for key, val in pairs(conditions) do
+        table.insert(core.messageConditions, val)
+    end
+end
+
+if GTFO ~= nil then
+    local conditions = {
+        {
+            label = "Nemesis Avoidable Damage",
+            value = "NEMESIS_AD",
+            operators = core.constants.EXTENDED_OPERATORS,
+            type = "NUMBER"
+        },
+        {
+            label = "My Avoidable Damage",
+            value = "MY_AD",
+            operators = core.constants.EXTENDED_OPERATORS,
+            type = "NUMBER"
         },
     }
 
@@ -410,6 +441,7 @@ core.runtimeDefaults = {
     myName = "",
     lastFeast = 0,
     lastMessage = 0,
+    inCombat = false,
     replacements = {},
     deathCounter = {},
     killCounter = {},
@@ -437,6 +469,7 @@ core.runtimeDefaults = {
         success = false,
         deathCounter = {},
         killCounter = {},
+        avoidableDamage = {},
     },
     ncBoss = {
         active = false,
@@ -452,6 +485,10 @@ core.runtimeDefaults = {
         spellId = 0,
         spellName = "",
         extraSpellId = 0,
+    },
+    ncCombat = {
+        interrupts = {}, -- key = string (player name), value = integer (number of interrupts)
+        avoidableDamage = {}, -- key = string (player name), value = integer (avoidable damage taken)
     },
     configuredMessage = {
         label = "",
@@ -472,3 +509,4 @@ NCMessage = {}
 NCDungeon = {}
 NCBoss = {}
 NCSpell = {}
+NCCombat = {}
