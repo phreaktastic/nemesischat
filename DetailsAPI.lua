@@ -13,46 +13,61 @@ local _, core = ...;
 
 function NemesisChat:DETAILS_REPLACEMENTS()
     if Details == nil then
+        self:Print("Details not found.")
         return false
     end
 
-    NemesisChat:DETAILS_METHODS()
+    if NCDetailsAPI == nil then
+        NemesisChat:DETAILS_METHODS()
+    end
 
-    local currentPlayer = GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT)
-    local currentNemesis = GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT)
-    local overallPlayer = GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL)
-    local overallNemesis = GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_OVERALL)
+    local currentPlayer = NCDetailsAPI:GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT) or 0
+    local currentNemesis = NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT) or 0
+    local overallPlayer = NCDetailsAPI:GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL) or 0
+    local overallNemesis = NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_OVERALL) or 0
 
     if currentPlayer == nil or currentNemesis == nil or overallPlayer == nil or overallNemesis == nil then
         return false
     end
 
-    NCMessage:AddCustomReplacement("%[DPS%]", FormatDPS(currentPlayer))
-    NCMessage:AddCustomReplacement("%[DEMESISDPS%]", FormatDPS(currentNemesis))
-    NCMessage:AddCustomReplacement("%[DPSOVERALL%]", FormatDPS(overallPlayer))
-    NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL%]", FormatDPS(overallNemesis))
+    NCMessage:AddCustomReplacement("%[DPS%]", NCDetailsAPI:FormatDPS(currentPlayer))
+    NCMessage:AddCustomReplacement("%[NEMESISDPS%]", NCDetailsAPI:FormatDPS(currentNemesis))
+    NCMessage:AddCustomReplacement("%[DPSOVERALL%]", NCDetailsAPI:FormatDPS(overallPlayer))
+    NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL%]", NCDetailsAPI:FormatDPS(overallNemesis))
 
     NCMessage:AddCustomReplacement("%[DPS_CONDITION%]", currentPlayer)
-    NCMessage:AddCustomReplacement("%[DEMESISDPS_CONDITION%]", currentNemesis)
+    NCMessage:AddCustomReplacement("%[NEMESISDPS_CONDITION%]", currentNemesis)
     NCMessage:AddCustomReplacement("%[DPSOVERALL_CONDITION%]", overallPlayer)
     NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL_CONDITION%]", overallNemesis)
 
     NemesisChat.DETAILS = {
         ["NEMESIS_DPS"] = function()
-            NemesisChat:DETAILS_METHODS()
-            return GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT)
+            if NCDetailsAPI == nil then
+                NemesisChat:DETAILS_METHODS()
+            end
+
+            return NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT)
         end,
         ["MY_DPS"] = function()
-            NemesisChat:DETAILS_METHODS()
-            return GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT)
+            if NCDetailsAPI == nil then
+                NemesisChat:DETAILS_METHODS()
+            end
+            
+            return NCDetailsAPI:GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT)
         end,
         ["NEMESIS_DPS_OVERALL"] = function()
-            NemesisChat:DETAILS_METHODS()
-            return GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_OVERALL)
+            if NCDetailsAPI == nil then
+                NCDetailsAPI:DETAILS_METHODS()
+            end
+            
+            return DetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_OVERALL)
         end,
         ["MY_DPS_OVERALL"] = function()
-            NemesisChat:DETAILS_METHODS()
-            return GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL)
+            if NCDetailsAPI == nil then
+                NCDetailsAPI:DETAILS_METHODS()
+            end
+            
+            return NCDetailsAPI:GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL)
         end,
     }
 
@@ -61,12 +76,14 @@ end
 
 -- These will not always be available, they'll need to be declared as used.
 function NemesisChat:DETAILS_METHODS()
-    function GetDPS(player, segment)
+    NCDetailsAPI = {}
+
+    function NCDetailsAPI:GetDPS(player, segment)
         local combat = Details:GetCurrentCombat()
         local player = Details:GetActor(segment, DETAILS_ATTRIBUTE_DAMAGE, player)
     
         if player == nil then
-            return nil
+            return 0
         end
     
         local combatTime = combat:GetCombatTime()
@@ -76,7 +93,7 @@ function NemesisChat:DETAILS_METHODS()
         return playerDps
     end
 
-    function FormatDPS(dps)
+    function NCDetailsAPI:FormatDPS(dps)
         return dps / 10 / 100 .. "k"
     end
 end

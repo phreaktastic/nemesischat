@@ -78,7 +78,7 @@ function NemesisChat:InitializeHelpers()
         -- This could be more modular, the only problem is feasts...
         if subEvent == "SPELL_INTERRUPT" then
             NCEvent:Interrupt(sourceName, destName, spellId, spellName, extraSpellId)
-        elseif subEvent == "SPELL_CAST_SUCCESS" then
+        elseif subEvent == "SPELL_CAST_SUCCESS" or subEvent == "SPELL_CAST_START" then
             NCEvent:Spell(sourceName, destName, spellId, spellName)
         elseif subEvent == "SPELL_HEAL" then
             NCEvent:Heal(sourceName, destName, spellId, spellName)

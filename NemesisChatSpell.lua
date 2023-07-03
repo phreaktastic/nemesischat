@@ -104,12 +104,12 @@ function NemesisChat:InstantiateSpell()
 
     -- Helper for setting Interrupt event properties
     function NCSpell:Interrupt(source, target, spellId, spellName, extraSpellId)
-        NCSpell:SetActive()
         NCSpell:SetSource(source)
         NCSpell:SetTarget(target)
         NCSpell:SetSpellId(spellId)
         NCSpell:SetSpellName(spellName)
         NCSpell:SetExtraSpellId(extraSpellId)
+        NCSpell:SetActive()
     end
 
     -- Helper for setting Feast event properties

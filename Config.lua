@@ -513,7 +513,7 @@ core.options = {
                     order = 12,
                     type = "description",
                     fontSize = "medium",
-                    name = "As you may have noticed above, [NEMESIS] will refer to the Nemesis which fired the event, or a random Nemesis in the party. This is useful for an event where a Nemesis casts a spell on themself, for example. However, what if you wanted to ensure that a spell was cast on a Nemesis, but it was not a self-cast? That's where the 'is Nemesis' operator comes in handy -- it will simply check if the target of the spell is in fact a Nemesis.",
+                    name = "As you may have noticed above, [NEMESIS] will refer to the Nemesis which fired the event, or a random Nemesis in the party. In essence, this replacement is for the Nemesis that is explicitly set as the Nemesis for the event itself, either by firing it or being chosen. This is useful for an event where a Nemesis casts a spell on themself, for example. However, what if you wanted to ensure that a spell was cast on a Nemesis, but it was not a self-cast? That's where the 'is Nemesis' operator comes in handy -- it will simply check if the target of the spell is in fact a Nemesis.",
                     width = "full",
                 },
             }
@@ -665,30 +665,7 @@ function NemesisChat:ToggleDetailsAPI(info, value)
         return
     end
 
-    local AceGUI = LibStub("AceGUI-3.0")
-    local frame = AceGUI:Create("Frame")
-    frame:SetTitle("Reload Required")
-    -- frame:SetStatusText("Please reload your UI in order to load the changes you just made.")
-    frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
-    frame:SetLayout("List")
-    frame:SetWidth(300)
-    frame:SetHeight(300)
-
-    local desc = AceGUI:Create("Label")
-    desc:SetText("Enabling the Details! API requires a reload. If you choose not to reload, functionality will absolutely be unexpected and may even cause LUA errors to be thrown. It is highly recommended to reload now, ensuring smooth gameplay without thrown errors.")
-    desc:SetFullWidth(true)
-    frame:AddChild(desc)
-
-    local padding = AceGUI:Create("Label")
-    padding:SetText(" ")
-    padding:SetFullWidth(true)
-    frame:AddChild(padding)
-
-    local button = AceGUI:Create("Button")
-    button:SetText("Reload Now")
-    button:SetFullWidth(true)
-    button:SetCallback("OnClick", function() ReloadUI() end)
-    frame:AddChild(button)
+    ShowReloadPopup("Toggling the Details! API requires a reload. If you choose not to reload, functionality will absolutely be unexpected and may even cause LUA errors to be thrown. It is highly recommended to reload now, ensuring smooth gameplay without thrown errors.")
 end
 
 function NemesisChat:IsAI(info)
@@ -697,6 +674,8 @@ end
 
 function NemesisChat:ToggleAI(info, value)
 	core.db.profile.ai = value
+
+    ShowReloadPopup("Toggling AI requires a reload. If you choose not to reload, functionality will absolutely be unexpected and may even cause LUA errors to be thrown. It is highly recommended to reload now, ensuring smooth gameplay without thrown errors.")
 end
 
 function NemesisChat:IsUseGlobalChance(info)
@@ -1474,4 +1453,31 @@ end
 
 function IsValidReplacement(value)
     return core.numericReplacements[value] == 1
+end
+
+function ShowReloadPopup(text)
+    local AceGUI = LibStub("AceGUI-3.0")
+    local frame = AceGUI:Create("Frame")
+    frame:SetTitle("Reload Required")
+    -- frame:SetStatusText("Please reload your UI in order to load the changes you just made.")
+    frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
+    frame:SetLayout("List")
+    frame:SetWidth(300)
+    frame:SetHeight(300)
+
+    local desc = AceGUI:Create("Label")
+    desc:SetText(text)
+    desc:SetFullWidth(true)
+    frame:AddChild(desc)
+
+    local padding = AceGUI:Create("Label")
+    padding:SetText(" ")
+    padding:SetFullWidth(true)
+    frame:AddChild(padding)
+
+    local button = AceGUI:Create("Button")
+    button:SetText("Reload Now")
+    button:SetFullWidth(true)
+    button:SetCallback("OnClick", function() ReloadUI() end)
+    frame:AddChild(button)
 end

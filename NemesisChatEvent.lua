@@ -99,19 +99,19 @@ function NemesisChat:InstantiateEvent()
         end
     end
 
-    -- Set the event's Category and Event for a group join event
+    -- Set the Category and Event for a group join event
     function NCEvent:GroupJoin()
         NCEvent:SetCategory("GROUP")
         NCEvent:SetEvent("JOIN")
     end
 
-    -- Set the event's Category and Event for a group leave event
+    -- Set the Category and Event for a group leave event
     function NCEvent:GroupLeave()
         NCEvent:SetCategory("GROUP")
         NCEvent:SetEvent("LEAVE")
     end
 
-    -- Set the event's Category, Event, and Target for an interrupt event
+    -- Set the Category, Event, and Target for an interrupt event
     function NCEvent:Interrupt(source, dest, spellId, spellName, extraSpellId)
         NCEvent:SetEvent("INTERRUPT")
         NCEvent:SetTargetFromSource(source)
@@ -119,31 +119,29 @@ function NemesisChat:InstantiateEvent()
         NCSpell:Interrupt(source, dest, spellId, spellName, extraSpellId)
     end
 
-    -- Set the event's Category, Event, and Target for a spell event
+    -- Set the Category, Event, and Target for a spell event
     -- TODO: Modularize
     function NCEvent:Spell(source, dest, spellId, spellName)
         local feast = core.feastIDs[spellId]
         local sourceMember = DeepCopy(core.runtime.groupRoster[source])
-        local destMember = DeepCopy(core.runtime.groupRoster[dest])
 
-        if feast == nil then
-            -- We don't care about casts on/from non-grouped players
-            if sourceMember == nil or destMember == nil then
-                NCEvent:Initialize()
-                return
-            end
+        -- We don't care about casts from non-grouped players
+        if sourceMember == nil then
+            NCEvent:Initialize()
+            return
+        end
 
-            NCEvent:SetEvent("SPELL_CAST_SUCCESS")
-            NCEvent:SetTargetFromSource(source)
+        NCEvent:SetEvent("SPELL_CAST_SUCCESS")
+        NCEvent:SetTargetFromSource(source)
 
+        -- Allow defined messages to take priority over feast messages
+        if NCEvent:EventHasMessages() or feast == nil then
             NCSpell:Spell(source, dest, spellId, spellName)
             return
         end
 
         local isReplace = (GetTime() - core.runtime.lastFeast <= 20)
         core.runtime.lastFeast = GetTime()
-
-        NCEvent:SetTargetFromSource(source)
 
         if isReplace then
             NCEvent:SetEvent("REFEAST")
@@ -156,7 +154,7 @@ function NemesisChat:InstantiateEvent()
         NCSpell:Feast(source, spellId)
     end
 
-    -- Set the event's Category, Event, and Target for a group enemy heal event
+    -- Set the Category, Event, and Target for a group enemy heal event
     function NCEvent:Heal(source, dest, spellId, spellName)
         NCEvent:SetEvent("HEAL")
         NCEvent:SetTargetFromSource(source)
@@ -164,7 +162,7 @@ function NemesisChat:InstantiateEvent()
         NCSpell:Spell(source, dest, spellId, spellName)
     end
 
-    -- Set the event's Category, Event, and Target for a group enemy kill event
+    -- Set the Category, Event, and Target for a group enemy kill event
     function NCEvent:Kill(source, dest)
         NCEvent:SetEvent("KILL")
         NCEvent:SetTargetFromSource(source)
@@ -172,7 +170,7 @@ function NemesisChat:InstantiateEvent()
         NemesisChat:IncrementKills(source)
     end
 
-    -- Set the event's Category, Event, and Target for a group member death event
+    -- Set the Category, Event, and Target for a group member death event
     function NCEvent:Death(dest)
         NCEvent:SetEvent("DEATH")
         NCEvent:SetTargetFromSource(dest)
@@ -251,5 +249,33 @@ function NemesisChat:InstantiateEvent()
 
     function NCEvent:IsValidEvent()
         return (NCEvent:GetCategory() ~= "" and NCEvent:GetEvent() ~= "" and NCEvent:GetTarget() ~= "")
+    end
+
+    function NCEvent:EventHasMessages()
+        if NCEvent:GetCategory() == "" or NCEvent:GetEvent() == "" or NCEvent:GetTarget() == "" then
+            return false
+        end
+
+        local category = core.db.profile.messages[NCEvent:GetCategory()]
+
+        if category == nil or #category == 0 then
+            return false
+        end
+
+        local event = category[NCEvent:GetEvent()]
+
+        if event == nil or #event == 0 then
+            return false
+        end
+
+        local profileMessages = event[NCEvent:GetTarget()]
+
+        if profileMessages == nil or #profileMessages == 0 then
+            return false
+        end
+
+        local availableMessages = NCMessage:GetConditionalMessages(profileMessages)
+
+        return availableMessages ~= nil and #availableMessages > 0
     end
 end
