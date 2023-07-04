@@ -151,7 +151,7 @@ _This addition is strictly additive and will not impact any references within pr
 
 ### Core
 
-First we check if AI messages are enabled. If so, we set `NCMessage.message` with an AI message's string. 
+First we check if AI messages are enabled. If so, we set `NCMessage.message` with an AI message's string. Currently, NC only supports taunts, but positive messages are defined and will be released soon.
 
 Then we check if `NCMessage:ValidMessage()` is false, and attempt to get a player configured message for this event.
 
