@@ -79,7 +79,9 @@ Any other APIs will follow the same pattern for custom replacements. The replace
     complete: false,
     success: false,
     deathCounter: {},
-    killCounter: {}
+    killCounter: {},
+    interrupts = {},
+    avoidableDamage = {},
 }
 ```
 
@@ -133,17 +135,27 @@ Any other APIs will follow the same pattern for custom replacements. The replace
 
 ---
 
-**Incoming additions**
+**Combat Start**: On combat start, `NCCombat` will be hydrated with the following properties:
 
-**NCCombat**
+```
+{
+    inCombat = true,
+    interrupts = {}, -- key = string (player name), value = integer (number of interrupts)
+    avoidableDamage = {}, -- key = string (player name), value = integer (avoidable damage taken)
+},
+```
+
+Each time an interrupt fires or avoidable damage is taken (assuming GTFO is installed and the option is enabled in NC), the above tables will be updated. NCDungeon will also be updated. This allows messages to fire based on leaving combat, and finishing a Mythic+ Dungeon.
+
+**Combat End**: On combat end, `inCombat` is updated to `false`. Data will not be wiped until a new combat start event fires.
+
+**NCCombat**:
 
 This object will be hydrated with data reflecting the current in-combat encounter. This can be trash mobs or bosses. So far, properties include `interrupts` and `avoidableDamage`, but this may change as new angles are considered.
 
 The purpose of this object is to store data relating strictly to the current in-combat encounter. This object is re-initlialized every time a player enters combat from a non-combat state, and thus, should not be relied upon for any long-term data. The approach of wiping this data per-encounter is intentional; the goal is to minimize prospective memory usage and keep the addon efficient. There may be adjustments to this, as it is stil in development.
 
 It is currently under consideration to keep a running list of encounters. However, this is not in place currently, and this is unlikely to be published as it serves no general purpose to NC. In order to fully capitalize on the prospective benefits of keeping a running list, it seems the UI / Configuration Flow may be too complex for the average user. If you disagree with this, please message me with your idea(s) and we can make adjustments as necessary.
-
-_This addition is strictly additive and will not impact any references within prior versions._
 
 ---
 
