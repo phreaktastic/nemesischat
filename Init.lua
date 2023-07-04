@@ -239,7 +239,7 @@ core.messageConditions = {
         type = "NUMBER", 
     },
     {
-        label = "Nemesis Interrupts (Combat)",
+        label = "Nem. Interrupts (Combat)",
         value = "NEMESIS_INTERRUPTS",
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
         type = "NUMBER", 
@@ -251,7 +251,7 @@ core.messageConditions = {
         type = "NUMBER", 
     },
     {
-        label = "Nemesis Interrupts (Overall)",
+        label = "Nem. Interrupts (Overall)",
         value = "NEMESIS_INTERRUPTS_OVERALL",
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
         type = "NUMBER", 
@@ -261,7 +261,7 @@ core.messageConditions = {
 if Details ~= nil then
     local conditions = {
         {
-            label = "Nemesis DPS (Current)",
+            label = "Nem. DPS (Current)",
             value = "NEMESIS_DPS",
             operators = core.constants.EXTENDED_OPERATORS,
             type = "NUMBER"
@@ -273,7 +273,7 @@ if Details ~= nil then
             type = "NUMBER"
         },
         {
-            label = "Nemesis DPS (Overall)",
+            label = "Nem. DPS (Overall)",
             value = "NEMESIS_DPS_OVERALL",
             operators = core.constants.EXTENDED_OPERATORS,
             type = "NUMBER"
