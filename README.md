@@ -139,7 +139,7 @@ Any other APIs will follow the same pattern for custom replacements. The replace
 
 This object will be hydrated with data reflecting the current in-combat encounter. This can be trash mods or bosses. So far, it includes `interrupts` and `avoidableDamage`, but this may change as new angles are considered.
 
-The purpose of this object is to store data relating strictly to the current in-combat encounter.
+The purpose of this object is to store data relating strictly to the current in-combat encounter. This object is re-initlialized every time a player enters combat from a non-combat state, and thus. should not be relied upon for any long-term data. The approach of wiping this data per-encounter is intentional; the goal is to minimize prospective memory usage and keep the addon efficient. There may be adjustments to this, as it is stil in development.
 
 ---
 
