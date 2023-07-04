@@ -141,6 +141,8 @@ This object will be hydrated with data reflecting the current in-combat encounte
 
 The purpose of this object is to store data relating strictly to the current in-combat encounter. This object is re-initlialized every time a player enters combat from a non-combat state, and thus, should not be relied upon for any long-term data. The approach of wiping this data per-encounter is intentional; the goal is to minimize prospective memory usage and keep the addon efficient. There may be adjustments to this, as it is stil in development.
 
+It is currently under consideration to keep a running list of encounters. However, this is not in place currently, and this is unlikely to be published as it serves no general purpose to NC. In order to fully capitalize on the prospective benefits of keeping a running list, it seems the UI / Configuration Flow may be too complex for the average user. If you disagree with this, please message me with your idea(s) and we can make adjustments as necessary.
+
 ---
 
 ## Step 3: Message is populated
