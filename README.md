@@ -131,6 +131,12 @@ Any other APIs will follow the same pattern for custom replacements. The replace
 
 *`[...]` denotes properies which are neither updated nor hydrated in `END` events. They **may** not be available in the event of `PLAYER_ENTERING_WORLD` scoped ephemeral data.*
 
+**Incoming additions**
+
+**NCCombat**
+
+This object will be hydrated with data reflecting the current in-combat encounter. This can be trash mods or bosses. So far, it includes `interrupts` and `avoidableDamage`, but this may change as new angles are considered.
+
 ---
 
 ## Step 3: Message is populated
