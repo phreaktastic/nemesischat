@@ -113,10 +113,10 @@ function NemesisChat:InstantiateMsg()
 
         -- We will add these here since there isn't technically an API. Sad.
         if core.db.profile.gtfoAPI and GTFO then
-            replacements["avoidableDamage"] = NCCombat:GetAvoidableDamage(core.runtime.myName)
-            replacements["nemesisAvoidableDamage"] = NCCombat:GetAvoidableDamage(NCEvent:GetNemesis())
-            replacements["avoidableDamageOverall"] = NCDungeon:GetAvoidableDamage(core.runtime.myName)
-            replacements["nemesisAvoidableDamageOverall"] = NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis())
+            replacements["avoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(core.runtime.myName))
+            replacements["nemesisAvoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()))
+            replacements["avoidableDamageOverall"] = NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(core.runtime.myName))
+            replacements["nemesisAvoidableDamageOverall"] = NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()))
         end
 
         -- SpellId will be populated for feasts, while ExtraSpellId will be populated for interrupts
@@ -271,6 +271,19 @@ function NemesisChat:InstantiateMsg()
                 table.insert(returnMessages, value)
             elseif NCMessage:CheckAllConditions(value) then
                 table.insert(returnMessages, value)
+            end
+        end
+
+        -- Keep rolling through Nemeses to see if one does match conditions
+        if #returnMessages == 0 and NCEvent:GetTarget() ~= "NEMESIS" and NemesisChat:GetPartyNemesesCount() > 1 then
+            table.insert(NCMessage.excludedNemeses, NCEvent:GetNemesis())
+
+            local newNemesis = NemesisChat:GetNonExcludedNemesis()
+
+            if newNemesis ~= nil then
+                NCEvent:SetNemesis(newNemesis)
+
+                return NCMessage:GetConditionalMessages(pool)
             end
         end
 

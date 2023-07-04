@@ -75,7 +75,7 @@ core.options = {
                     set = "ToggleGtfoAPI",
                 },
                 nonCombatMode = {
-                    order = 3,
+                    order = 4,
                     type = "toggle",
                     name = "Non-Combat Mode",
                     desc = "Toggle Non-Combat Mode. This restricts Nemesis Chat from messaging while in combat.",
@@ -83,7 +83,7 @@ core.options = {
                     set = "ToggleNonCombatMode",
                 },
                 ai = {
-                    order = 3,
+                    order = 5,
                     type = "toggle",
                     name = "AI Phrases",
                     desc = "Toggle AI Generated Phrases. This allows you to run NC without configuring any phrases.",
@@ -91,7 +91,7 @@ core.options = {
                     set = "ToggleAI",
                 },
                 globalChanceToggle = {
-                    order = 4,
+                    order = 6,
                     type = "toggle",
                     name = "Use Global Chance",
                     desc = "Toggle Global Chance. This allows you to ensure that messages will only be sent a percentage of the time.",
@@ -99,7 +99,7 @@ core.options = {
                     set = "ToggleUseGlobalChance",
                 },
                 globalChanceSlider = {
-                    order = 5,
+                    order = 7,
                     type = "range",
                     min = 0.0,
                     max = 1.0,
@@ -111,7 +111,7 @@ core.options = {
                     disabled = function() return core.db.profile.useGlobalChance ~= true end
                 },
                 minimumTimeSlider = {
-                    order = 6,
+                    order = 8,
                     type = "range",
                     min = 1,
                     max = 300,
@@ -137,7 +137,7 @@ core.options = {
                     order = 1,
                     type = "description",
                     fontSize = "medium",
-                    name = "This is a list of all character names which will be bantered with. |c00ffcc00If this list is empty, no banter will occur.|r",
+                    name = "This is a list of all character names which will be bantered with. |c00ffcc00If this list is empty, no banter will occur.|r\n\nSelecting a name from the list will allow you to edit/remove the name. To add a new name to the list, click Deselect, enter a new name, and Apply.",
                 },
                 nemesesPaddingUpper = {
                     order = 2,
@@ -224,7 +224,7 @@ core.options = {
                 messagesTargets = {
                     order = 13,
                     type = "select",
-                    name = "Target",
+                    name = "Event Triggerer / Source",
                     width = "full",
                     values = "GetTargets",
                     get = "GetTarget",
@@ -584,7 +584,7 @@ core.options = {
                     order = 8,
                     type = "description",
                     fontSize = "medium",
-                    name = "|c00ffcc00Details Finalization|r: Wrapping up on the Details! API. Additional events and banter based on Details data.\n|c00ffcc00More Replacements|r: Additional replacements, such as [INTERRUPTS], [NEMESISINTERRUPTS], etc.\n|c00ffcc00Selection Mode|r: A toggleable mode which will show a non-invasive pop-up to choose phrases. Example, you just finished a M+ and now have a pop-up with phrases to choose from (both from the end trigger AND Details data). This would be useful for scenarios where multiple events may trigger, but you don't want them to spam chat.\n",
+                    name = "|c00ffcc00AI Praise Messages|r: Wrapping up the AI generated message functionality with the ability to select between taunts and praises. Further configuration to allow granular configuration based on who triggers an event.\n|c00ffcc00Selection Mode|r: A toggleable mode which will show a non-invasive pop-up to choose phrases. Example, you just finished a M+ and now have a pop-up with phrases to choose from (both from the end trigger AND Details data). This would be useful for scenarios where multiple events may trigger, but you don't want them to spam chat.\n",
                 },
                 plannedPadding = {
                     order = 9,

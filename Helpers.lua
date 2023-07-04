@@ -79,7 +79,7 @@ function NemesisChat:InitializeHelpers()
         if subEvent == "SPELL_INTERRUPT" then
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
             NCCombat:AddInterrupt(sourceName)
-        elseif subEvent == "SPELL_CAST_SUCCESS" or subEvent == "SPELL_CAST_START" then
+        elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)
         elseif subEvent == "SPELL_HEAL" then
             NCEvent:Heal(sourceName, destName, misc1, misc2)
@@ -139,6 +139,18 @@ function NemesisChat:InitializeHelpers()
 
     function NemesisChat:GetRandomNemesis()
         return NemesisChat:GetRandomKey(NemesisChat:GetNemeses())
+    end
+
+    function NemesisChat:GetNonExcludedNemesis()
+        local nemeses = NemesisChat:GetPartyNemeses()
+
+        for player, _ in pairs(nemeses) do
+            if not tContains(NCMessage.excludedNemeses, player) then
+                return player
+            end
+        end
+
+        return nil
     end
 
     function NemesisChat:GetRandomPartyNemesis()
@@ -421,6 +433,27 @@ function NemesisChat:InitializeHelpers()
         end
 
         return false
+    end
+
+    -- Format a number (827, 8.27k, 82.74k, 827.44k, 8.27m, etc)
+    function NemesisChat:FormatNumber(num)
+        local numberToFormat = tonumber(num)
+
+        if numberToFormat == nil or numberToFormat == 0 then
+            return 0
+        end
+
+        if numberToFormat < 1000 then
+            return numberToFormat .. ""
+        end
+
+        local thousands = math.floor(numberToFormat / 10) / 100
+
+        if thousands < 1000 then
+            return thousands .. "k"
+        end
+
+        return math.floor(numberToFormat / 10) / 100 .. "m"
     end
 end
 

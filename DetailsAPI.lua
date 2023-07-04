@@ -13,7 +13,6 @@ local _, core = ...;
 
 function NemesisChat:DETAILS_REPLACEMENTS()
     if Details == nil then
-        self:Print("Details not found.")
         return false
     end
 
@@ -30,10 +29,10 @@ function NemesisChat:DETAILS_REPLACEMENTS()
         return false
     end
 
-    NCMessage:AddCustomReplacement("%[DPS%]", NCDetailsAPI:FormatDPS(currentPlayer))
-    NCMessage:AddCustomReplacement("%[NEMESISDPS%]", NCDetailsAPI:FormatDPS(currentNemesis))
-    NCMessage:AddCustomReplacement("%[DPSOVERALL%]", NCDetailsAPI:FormatDPS(overallPlayer))
-    NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL%]", NCDetailsAPI:FormatDPS(overallNemesis))
+    NCMessage:AddCustomReplacement("%[DPS%]", NemesisChat:FormatNumber(currentPlayer))
+    NCMessage:AddCustomReplacement("%[NEMESISDPS%]", NemesisChat:FormatNumber(currentNemesis))
+    NCMessage:AddCustomReplacement("%[DPSOVERALL%]", NemesisChat:FormatNumber(overallPlayer))
+    NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL%]", NemesisChat:FormatNumber(overallNemesis))
 
     NCMessage:AddCustomReplacement("%[DPS_CONDITION%]", currentPlayer)
     NCMessage:AddCustomReplacement("%[NEMESISDPS_CONDITION%]", currentNemesis)
@@ -91,9 +90,5 @@ function NemesisChat:DETAILS_METHODS()
         local playerDps = math.floor(playerDamage / combatTime)
 
         return playerDps
-    end
-
-    function NCDetailsAPI:FormatDPS(dps)
-        return dps / 10 / 100 .. "k"
     end
 end
