@@ -565,9 +565,11 @@ core.options = {
                 },
                 reportingDesc = {
                     order = 5,
-                    type = "description",
-                    fontSize = "medium",
-                    name = "I haven't been able to test this extremely thoroughly. I have ran through hundreds of Mythic+ dungeons testing functionality and ensuring NC contains minimal bugs, however, that simply isn't enough considering the scope of the addon.\n\nI haven't setup any means of reporting bugs or submitting suggestions yet. If people actually use this addon I will start a Discord for bug reporting. As it stands, I just made this so I can relentlessly talk smack on friends :)\n\nIf there's interest in submitting pull requests for NC, I'm totally open to that. The design of the codebase should be fairly friendly for building onto it, barring a few relics from past iterations.",
+                    type = "input",
+                    name = "Discord",
+                    desc = "Join the Discord community to request features, get help, and more!",
+                    get = "DiscordLink",
+                    set = function() return end,
                 },
                 reportingPadding = {
                     order = 6,
@@ -584,7 +586,7 @@ core.options = {
                     order = 8,
                     type = "description",
                     fontSize = "medium",
-                    name = "|c00ffcc00AI Praise Messages|r: Wrapping up the AI generated message functionality with the ability to select between taunts and praises. Further configuration to allow granular configuration based on who triggers an event.\n|c00ffcc00Selection Mode|r: A toggleable mode which will show a non-invasive pop-up to choose phrases. Example, you just finished a M+ and now have a pop-up with phrases to choose from (both from the end trigger AND Details data). This would be useful for scenarios where multiple events may trigger, but you don't want them to spam chat.\n",
+                    name = "|c00ffcc00Import/Export|r: The ability to export settings and defined messages as a string. This would allow you to share your setup with others, or import others' handy work.\n|c00ffcc00AI Praise Messages|r: Wrapping up the AI generated message functionality with the ability to select between taunts and praises. Further configuration to allow granular configuration based on who triggers an event.\n|c00ffcc00Selection Mode|r: A toggleable mode which will show a non-invasive pop-up to choose phrases. Example, you just finished a M+ and now have a pop-up with phrases to choose from (both from the end trigger AND Details data). This would be useful for scenarios where multiple events may trigger, but you don't want them to spam chat.\n",
                 },
                 plannedPadding = {
                     order = 9,
@@ -1356,6 +1358,10 @@ function NemesisChat:UpdateMessagePreview()
     local chatMsg = message:gsub("%[TARGET%]", "Rabid Wombat"):gsub("%[SELF%]", UnitName("player")):gsub("%[NEMESIS%]", nemesis):gsub("%[NEMESISDEATHS%]", math.random(1,16)):gsub("%[KILLS%]", math.random(1,968)):gsub("%[NEMESISKILLS%]", math.random(1,967)):gsub("%[DUNGEONTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 844))):gsub("%[KEYSTONELEVEL%]", math.random(2,28)):gsub("%[BOSSTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 276))):gsub("%[BOSSNAME%]", "Magmorax"):gsub("%[SPELL%]", spellLink):gsub("%[BYSTANDER%]", NemesisChat:GetRandomPartyBystander() or "DouglasQuaid"):gsub("%[NEMESISDPS%]", "44.82k"):gsub("%[NEMESISDPSOVERALL%]", "48.33k"):gsub("%[DPS%]", "155.93k"):gsub("%[DPSOVERALL%]", "141.46k")
 
     messagePreview = color .. UnitName("player") .. spacer .. chatMsg .. "|r"
+end
+
+function NemesisChat:DiscordLink()
+    return "https://discord.gg/mqu3vk6csk"
 end
 
 function HasConditions()
