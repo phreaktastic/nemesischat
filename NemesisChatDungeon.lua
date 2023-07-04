@@ -16,6 +16,7 @@ function NemesisChat:InstantiateDungeon()
         NCDungeon = DeepCopy(core.runtimeDefaults.ncDungeon)
 
         NemesisChat:InstantiateDungeon()
+        NCDungeon:InitAvoidableDamage()
     end
 
     function NCDungeon:IsActive()
@@ -119,7 +120,6 @@ function NemesisChat:InstantiateDungeon()
         local level, _, _ = C_ChallengeMode.GetActiveKeystoneInfo()
         
         NCDungeon:Initialize()
-        NCDungeon:InitAvoidableDamage()
         NCDungeon:SetLevel(level)
         NCDungeon:SetStartTime(GetTime())
         NCDungeon:SetActive()
@@ -131,15 +131,13 @@ function NemesisChat:InstantiateDungeon()
 
     -- Helper for initializing the avoidable damage table
     function NCDungeon:InitAvoidableDamage()
-        local dungeon = core.runtime.NCDungeon
-
-        dungeon.avoidableDamage = {}
+        NCDungeon.avoidableDamage = {}
 
         for playerName, data in pairs(core.runtime.groupRoster) do
-            dungeon.avoidableDamage[playerName] = 0
+            NCDungeon.avoidableDamage[playerName] = 0
         end
 
-        dungeon.avoidableDamage[core.runtime.myName] = 0
+        NCDungeon.avoidableDamage[core.runtime.myName] = 0
     end
 
     -- Helper for a dungeon end event
@@ -157,21 +155,51 @@ function NemesisChat:InstantiateDungeon()
         core.runtime.NCDungeon = nil
     end
 
-    -- Adding avoidable damage for a player
+    -- Add avoidable damage for a player
     function NCDungeon:AddAvoidableDamage(damage, dest)
-        if core.runtime.NCDungeon.avoidableDamage[dest] == nil then
-            core.runtime.NCDungeon.avoidableDamage[dest] = damage
-        else
-            core.runtime.NCDungeon.avoidableDamage[dest] = core.runtime.NCDungeon.avoidableDamage[dest] + damage
+        if not UnitInParty(dest) or damage <= 0 then
+            return
         end
+
+        if NCDungeon.avoidableDamage[dest] == nil then
+            NCDungeon.avoidableDamage[dest] = damage
+        else
+            NCDungeon.avoidableDamage[dest] = NCDungeon.avoidableDamage[dest] + damage
+        end
+
+        core.runtime.NCDungeon = NCDungeon
     end
 
     -- Get avoidable damage for a player
     function NCDungeon:GetAvoidableDamage(player)
-        if core.runtime.NCDungeon.avoidableDamage == nil or core.runtime.NCDungeon.avoidableDamage[player] == nil then
-            return 0
+        if NCDungeon.avoidableDamage[player] == nil then
+            NCDungeon.avoidableDamage[player] = 0
         end
 
-        return core.runtime.NCDungeon.avoidableDamage[player]
+        return NCDungeon.avoidableDamage[player]
+    end
+
+    -- Add interrupt for a player
+    function NCDungeon:AddInterrupt(dest)
+        if not UnitInParty(dest) then
+            return
+        end
+
+        if NCDungeon.interrupts[dest] == nil then
+            NCDungeon.interrupts[dest] = 1
+        else
+            NCDungeon.interrupts[dest] = NCDungeon.interrupts[dest] + 1
+        end
+
+        core.runtime.NCDungeon = NCDungeon
+    end
+
+    -- Get interrupts for a player
+    function NCDungeon:GetAvoidableDamage(player)
+        if NCDungeon.interrupts[player] == nil then
+            NCDungeon.interrupts[player] = 0
+        end
+
+        return NCDungeon.interrupts[player]
     end
 end

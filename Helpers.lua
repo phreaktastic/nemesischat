@@ -78,6 +78,7 @@ function NemesisChat:InitializeHelpers()
         -- This could be more modular, the only problem is feasts...
         if subEvent == "SPELL_INTERRUPT" then
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
+            NCCombat:AddInterrupt(sourceName)
         elseif subEvent == "SPELL_CAST_SUCCESS" or subEvent == "SPELL_CAST_START" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)
         elseif subEvent == "SPELL_HEAL" then
@@ -90,11 +91,12 @@ function NemesisChat:InitializeHelpers()
             end
 
             NCEvent:Death(destName)
-        elseif NCEvent:IsDamageEvent(subEvent, destName) then
+        elseif NCEvent:IsDamageEvent(subEvent, destName, misc4) then
             local damage = tonumber(misc4) or 0
 
-            if GTFO and GTFO.SpellID[misc1] then
+            if GTFO and GTFO.SpellID[tostring(misc1)] ~= nil then
                 NCDungeon:AddAvoidableDamage(damage, destName)
+                NCCombat:AddAvoidableDamage(damage, destName)
             end
         else
             -- Something unsupported.
@@ -447,12 +449,5 @@ function NemesisChat:InstantiateCore()
 
     NemesisChat:InstantiateDungeon()
     NemesisChat:InstantiateBoss()
-end
-
-function NemesisChat:NCEvent()
-    return NCEvent
-end
-
-function NemesisChat:NCSpell()
-    return NCSpell
+    NemesisChat:InstantiateCombat()
 end

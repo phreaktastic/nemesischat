@@ -103,10 +103,17 @@ end
 
 -- We leverage this event for entering combat
 function NemesisChat:PLAYER_REGEN_DISABLED()
-    core.runtime.inCombat = true
+    NCEvent:Initialize()
+    NCCombat:Initialize()
+    NCCombat:EnterCombat()
+
+    NemesisChat:HandleEvent()
 end
 
 -- We leverage this event for exiting combat
 function NemesisChat:PLAYER_REGEN_ENABLED()
-    core.runtime.inCombat = false
+    NCEvent:Initialize()
+    NCCombat:LeaveCombat()
+
+    NemesisChat:HandleEvent()
 end

@@ -280,8 +280,8 @@ function NemesisChat:InstantiateEvent()
     end
 
     -- A player within the party has taken damage
-    function NCEvent:IsDamageEvent(event, dest)
-        return (event == "SPELL_PERIODIC_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_INSTAKILL" or event == "SWING_DAMAGE") and core.runtime.groupRoster[dest] ~= nil and core.runtime.groupRoster[dest] ~= ""
+    function NCEvent:IsDamageEvent(event, dest, misc4)
+        return ((event == "SPELL_PERIODIC_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_INSTAKILL" or event == "SWING_DAMAGE") or ((event=="SPELL_AURA_APPLIED" or event=="SPELL_AURA_APPLIED_DOSE" or event=="SPELL_AURA_REFRESH") and misc4=="DEBUFF")) and ((core.runtime.groupRoster[dest] ~= nil and core.runtime.groupRoster[dest] ~= "") or dest == core.runtime.myName)
     end
 
     function NCEvent:CombatStart()

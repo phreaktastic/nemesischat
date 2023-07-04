@@ -232,6 +232,30 @@ core.messageConditions = {
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
         type = "NUMBER", 
     },
+    {
+        label = "My Interrupts (Combat)",
+        value = "INTERRUPTS",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "NUMBER", 
+    },
+    {
+        label = "Nemesis Interrupts (Combat)",
+        value = "NEMESIS_INTERRUPTS",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "NUMBER", 
+    },
+    {
+        label = "My Interrupts (Overall)",
+        value = "INTERRUPTS_OVERALL",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "NUMBER", 
+    },
+    {
+        label = "Nemesis Interrupts (Overall)",
+        value = "NEMESIS_INTERRUPTS_OVERALL",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "NUMBER", 
+    },
 }
 
 if Details ~= nil then
@@ -270,14 +294,26 @@ end
 if GTFO ~= nil then
     local conditions = {
         {
-            label = "Nemesis Avoidable Damage",
+            label = "Nem. Avoidable (Combat)",
             value = "NEMESIS_AD",
             operators = core.constants.EXTENDED_OPERATORS,
             type = "NUMBER"
         },
         {
-            label = "My Avoidable Damage",
+            label = "My Avoidable (Combat)",
             value = "MY_AD",
+            operators = core.constants.EXTENDED_OPERATORS,
+            type = "NUMBER"
+        },
+        {
+            label = "Nem. Avoidable (Overall)",
+            value = "NEMESIS_AD_OVERALL",
+            operators = core.constants.EXTENDED_OPERATORS,
+            type = "NUMBER"
+        },
+        {
+            label = "My Avoidable (Overall)",
+            value = "MY_AD_OVERALL",
             operators = core.constants.EXTENDED_OPERATORS,
             type = "NUMBER"
         },
@@ -335,6 +371,14 @@ core.reference = {
         ["[DPS]"] = "|c00ffcc00Details! API Required|r. Your current DPS.",
         ["[NEMESISDPSOVERALL]"] = "|c00ffcc00Details! API Required|r. The chosen Nemesis's overall DPS.",
         ["[DPSOVERALL]"] = "|c00ffcc00Details! API Required|r. Your overall DPS.",
+        ["[AVOIDABLEDAMAGE]"] = "|c00ffcc00GTFO API Required|r. Your avoidable damage for the duration of combat.",
+        ["[NEMESISAVOIDABLEDAMAGE]"] = "|c00ffcc00GTFO API Required|r. The chosen Nemesis's avoidable damage for the duration of combat.",
+        ["[AVOIDABLEDAMAGEOVERALL]"] = "|c00ffcc00GTFO API Required|r. Your avoidable damage for the entire dungeon / instance.",
+        ["[NEMESISAVOIDABLEDAMAGEOVERALL]"] = "|c00ffcc00GTFO API Required|r. The chosen Nemesis's avoidable damage for the entire dungeon / instance.",
+        ["[INTERRUPTS]"] = "The number of times you have interrupted an enemy for the duration of combat.",
+        ["[INTERRUPTSOVERALL]"] = "The number of times you have interrupted an enemy for the entire dungeon / instance.",
+        ["[NEMESISINTERRUPTS]"] = "The number of times the chosen Nemesis has interrupted an enemy for the duration of combat.",
+        ["[NEMESISINTERRUPTSOVERALL]"] = "The number of times the chosen Nemesis has interrupted an enemy for the entire dungeon / instance.",
     },
     colors = {
         ["SAY"] = "|cffffffff",
@@ -361,6 +405,14 @@ core.supportedReplacements = {
     ["%[BOSSNAME%]"] = "bossName",
     ["%[DUNGEONTIME%]"] = "dungeonTime",
     ["%[BYSTANDER%]"] = "bystander",
+    ["%[AVOIDABLEDAMAGE%]"] = "avoidableDamage",
+    ["%[AVOIDABLEDAMAGEOVERALL%]"] = "avoidableDamageOverall",
+    ["%[NEMESISAVOIDABLEDAMAGE%]"] = "nemesisAvoidableDamage",
+    ["%[NEMESISAVOIDABLEDAMAGEOVERALL%]"] = "nemesisAvoidableDamageOverall", -- Oof, I need to figure out a better tag here...
+    ["%[INTERRUPTS%]"] = "interrupts",
+    ["%[INTERRUPTSOVERALL%]"] = "interruptsOverall",
+    ["%[NEMESISINTERRUPTS%]"] = "nemesisInterrupts",
+    ["%[NEMESISINTERRUPTSOVERALL%]"] = "nemesisInterruptsOverall",
 }
 
 -- Numeric value replacements, for number validation
@@ -374,6 +426,14 @@ core.numericReplacements = {
     ["[DPS]"] = 1,
     ["[NEMESISDPSOVERALL]"] = 1,
     ["[DPSOVERALL]"] = 1,
+    ["[AVOIDABLEDAMAGE]"] = 1,
+    ["[NEMESISAVOIDABLEDAMAGE]"] = 1,
+    ["[AVOIDABLEDAMAGEOVERALL]"] = 1,
+    ["[NEMESISAVOIDABLEDAMAGEOVERALL]"] = 1,
+    ["[INTERRUPTS]"] = 1,
+    ["[INTERRUPTSOVERALL]"] = 1,
+    ["[NEMESISINTERRUPTS]"] = 1,
+    ["[NEMESISINTERRUPTSOVERALL]"] = 1,
 }
 
 function NemesisChat:GetReplacementTooltip()
@@ -441,7 +501,6 @@ core.runtimeDefaults = {
     myName = "",
     lastFeast = 0,
     lastMessage = 0,
-    inCombat = false,
     replacements = {},
     deathCounter = {},
     killCounter = {},
@@ -470,6 +529,7 @@ core.runtimeDefaults = {
         deathCounter = {},
         killCounter = {},
         avoidableDamage = {},
+        interrupts = {},
     },
     ncBoss = {
         active = false,
@@ -487,6 +547,7 @@ core.runtimeDefaults = {
         extraSpellId = 0,
     },
     ncCombat = {
+        inCombat = false,
         interrupts = {}, -- key = string (player name), value = integer (number of interrupts)
         avoidableDamage = {}, -- key = string (player name), value = integer (avoidable damage taken)
     },

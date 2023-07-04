@@ -81,17 +81,22 @@ function NemesisChat:InstantiateMsg()
         -- We have a base list of replacements that will be available (mostly) everywhere. Some events
         -- will have custom replacements, such as API-based replacements (DPS numbers with Details! for example)
         local msg = input
+        local myName = core.runtime.myName
         local replacements = {
-            ["self"] = core.runtime.myName,
+            ["self"] = myName,
             ["nemesis"] = NCEvent:GetNemesis(),
             ["nemesisDeaths"] = NCDungeon:GetDeaths(NCEvent:GetNemesis()) or 0,
             ["nemesisKills"] = NCDungeon:GetKills(NCEvent:GetNemesis()) or 0,
-            ["deaths"] = NCDungeon:GetDeaths(core.runtime.myName) or 0,
-            ["kills"] = NCDungeon:GetKills(core.runtime.myName) or 0,
+            ["deaths"] = NCDungeon:GetDeaths(myName) or 0,
+            ["kills"] = NCDungeon:GetKills(myName) or 0,
             ["dungeonTime"] = NemesisChat:GetDuration(NCDungeon:GetStartTime()),
             ["keystoneLevel"] = NCDungeon:GetLevel(),
             ["bossTime"] = NemesisChat:GetDuration(NCBoss:GetStartTime()),
             ["bossName"] = NCBoss:GetName(),
+            ["interrupts"] = NCCombat:GetInterrupts(myName),
+            ["interruptsOverall"] = NCDungeon:GetInterrupts(myName),
+            ["nemesisInterrupts"] = NCCombat:GetInterrupts(NCEvent:GetNemesis()),
+            ["nemesisInterruptsOverall"] = NCDungeon:GetInterrupts(NCEvent:GetNemesis()),
         }
 
         if NCSpell:GetTarget() then
@@ -104,6 +109,14 @@ function NemesisChat:InstantiateMsg()
             replacements["bystander"] = NCEvent:GetBystander()
         else
             replacements["bystander"] = NemesisChat:GetRandomPartyBystander()
+        end
+
+        -- We will add these here since there isn't technically an API. Sad.
+        if core.db.profile.gtfoAPI and GTFO then
+            replacements["avoidableDamage"] = NCCombat:GetAvoidableDamage(core.runtime.myName)
+            replacements["nemesisAvoidableDamage"] = NCCombat:GetAvoidableDamage(NCEvent:GetNemesis())
+            replacements["avoidableDamageOverall"] = NCDungeon:GetAvoidableDamage(core.runtime.myName)
+            replacements["nemesisAvoidableDamageOverall"] = NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis())
         end
 
         -- SpellId will be populated for feasts, while ExtraSpellId will be populated for interrupts
@@ -149,6 +162,13 @@ function NemesisChat:InstantiateMsg()
             return
         end
 
+        -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
+        -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
+        if core.db.profile.nonCombatMode and NCCombat:InCombat() and NCEvent:GetCategory() ~= "BOSS" and NCEvent:GetEvent() ~= "START" then
+            NCEvent:Initialize()
+            return
+        end
+
         -- Send it to whatever channel we've designated
         if NCMessage.channel ~= "WHISPER" then
             SendChatMessage(NCMessage.message, NCMessage.channel)
@@ -180,13 +200,6 @@ function NemesisChat:InstantiateMsg()
     -- Set values for a random configured message
     function NCMessage:ConfigMessage()
         if core.db.profile.messages[NCEvent:GetCategory()] == nil or core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()] == nil or core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()] == nil then
-            return
-        end
-
-        -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
-        -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
-        if core.db.profile.nonCombatMode and core.runtime.inCombat and NCEvent:GetCategory() ~= "BOSS" and NCEvent:GetEvent() ~= "START" then
-            NCEvent:Initialize()
             return
         end
 
@@ -339,6 +352,22 @@ function NemesisChat:InstantiateMsg()
             -- Return as string so input comparisons work properly
             return NemesisChat:GetPartyNemesesCount() .. ""
         end,
+        ["INTERRUPTS"] = function()
+            -- Return as string so input comparisons work properly
+            return NCCombat:GetInterrupts(core.runtime.myName) .. ""
+        end,
+        ["INTERRUPTS_OVERALL"] = function()
+            -- Return as string so input comparisons work properly
+            return NCDungeon:GetInterrupts(core.runtime.myName) .. ""
+        end,
+        ["NEMESIS_INTERRUPTS"] = function()
+            -- Return as string so input comparisons work properly
+            return NCCombat:GetInterrupts(NCEvent:GetNemesis()) .. ""
+        end,
+        ["NEMESIS_INTERRUPTS_OVERALL"] = function()
+            -- Return as string so input comparisons work properly
+            return NCDungeon:GetInterrupts(NCEvent:GetNemesis()) .. ""
+        end,
 
         -- Operators
         ["IS"] = function(val1, val2)
@@ -375,7 +404,7 @@ function NemesisChat:InstantiateMsg()
             end
         end,
         ["MY_DPS"] = function()
-            if NemesisChat.DETAILS and NemesisChat.DETAILS["MY_DPS"] ~= nil then -- What?!
+            if NemesisChat.DETAILS and NemesisChat.DETAILS["MY_DPS"] ~= nil then
                 return NemesisChat.DETAILS["MY_DPS"]()
             end
         end,
@@ -392,10 +421,16 @@ function NemesisChat:InstantiateMsg()
 
         -- GTFO API
         ["NEMESIS_AD"] = function()
-            return NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis())
+            return NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()) .. ""
         end,
         ["MY_AD"] = function()
-            return NCDungeon:GetAvoidableDamage(core.runtime.myName)
+            return NCCombat:GetAvoidableDamage(core.runtime.myName) .. ""
+        end,
+        ["NEMESIS_AD_OVERALL"] = function()
+            return NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()) .. ""
+        end,
+        ["MY_AD_OVERALL"] = function()
+            return NCDungeon:GetAvoidableDamage(core.runtime.myName) .. ""
         end,
     }
 end
