@@ -385,7 +385,7 @@ core.options = {
                     order = 31,
                     type = "select",
                     name = "Condition",
-                    width = 0.83,
+                    width = 0.96,
                     values = "GetConditionSubjects",
                     get = "GetConditionSubject",
                     set = "SetConditionSubject",
@@ -396,7 +396,7 @@ core.options = {
                     order = 32,
                     type = "select",
                     name = "Operator",
-                    width = 0.83,
+                    width = 0.7,
                     values = "GetConditionOperators",
                     get = "GetConditionOperator",
                     set = "SetConditionOperator",
@@ -534,6 +534,31 @@ core.options = {
                     name = "As you may have noticed above, [NEMESIS] will refer to the Nemesis which fired the event, or a random Nemesis in the party. In essence, this replacement is for the Nemesis that is explicitly set as the Nemesis for the event itself, either by firing it or being chosen. This is useful for an event where a Nemesis casts a spell on themself, for example. However, what if you wanted to ensure that a spell was cast on a Nemesis, but it was not a self-cast? That's where the 'is Nemesis' operator comes in handy -- it will simply check if the target of the spell is in fact a Nemesis.",
                     width = "full",
                 },
+                infoNemesisPaddingBottom = {
+                    order = 13,
+                    type = "description",
+                    fontSize = "large",
+                    name = " ",
+                },
+                infoConditionsHeader = {
+                    order = 14,
+                    type = "description",
+                    fontSize = "large",
+                    name = "Conditional Messages Flow",
+                },
+                infoConditionsPaddingTop = {
+                    order = 15,
+                    type = "description",
+                    fontSize = "large",
+                    name = " ",
+                },
+                infoConditions = {
+                    order = 16,
+                    type = "description",
+                    fontSize = "medium",
+                    name = "Generally speaking, Nemesis Chat will have two separate flows for messages. For events that have triggerers, that triggerer will always be the target of messages. Example, a Nemesis casts a spell and you have a message setup for that event: the Nemesis will be the subject of the message because they triggered the event. For non-triggered events, such as killing a boss or leaving combat, a Nemesis will be chosen at random.\n\nThat said, there is one exception to the rules: Conditional messages may have such specificity that a random Nemesis does not suffice. For example, consider a scenario where you're in a group with 3 friends, all of which are defined as Nemeses. Let's say one is a tank, another is DPS, and the last is a healer. If you have a message setup for talking smack to the DPS based on damage dealt in a combat segment, realistically you'd only see this happen 33% of the time. That in mind, if a randomly chosen Nemesis does not meet conditional criteria for a pool of messages, a new Nemesis will be chosen until either all Nemeses are checked against conditions, or a valid pool of messages are found. This allows you do define granular conditions and ensure a message will fire as expected.",
+                    width = "full",
+                },
             }
         },
         aboutGroup = {
@@ -563,12 +588,20 @@ core.options = {
                     type = "header",
                     name = "Bug Reporting / Suggestions",
                 },
-                reportingDesc = {
+                discordLink = {
                     order = 5,
                     type = "input",
                     name = "Discord",
                     desc = "Join the Discord community to request features, get help, and more!",
                     get = "DiscordLink",
+                    set = function() return end,
+                },
+                githubLink = {
+                    order = 5,
+                    type = "input",
+                    name = "Github",
+                    desc = "Contribute to NC!",
+                    get = "GithubLink",
                     set = function() return end,
                 },
                 reportingPadding = {
@@ -1349,19 +1382,42 @@ function NemesisChat:UpdateMessagePreview()
             end
 
             if val.left == "SPELL_NAME" and val.operator == "IS" then
-                spellLink = GetSpellLink(tonumber(val.right))
+                spellLink = GetSpellLink(val.right)
             end
         end
     end
 
     -- This is on the refactor list
-    local chatMsg = message:gsub("%[TARGET%]", "Rabid Wombat"):gsub("%[SELF%]", UnitName("player")):gsub("%[NEMESIS%]", nemesis):gsub("%[NEMESISDEATHS%]", math.random(1,16)):gsub("%[KILLS%]", math.random(1,968)):gsub("%[NEMESISKILLS%]", math.random(1,967)):gsub("%[DUNGEONTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 844))):gsub("%[KEYSTONELEVEL%]", math.random(2,28)):gsub("%[BOSSTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 276))):gsub("%[BOSSNAME%]", "Magmorax"):gsub("%[SPELL%]", spellLink):gsub("%[BYSTANDER%]", NemesisChat:GetRandomPartyBystander() or "DouglasQuaid"):gsub("%[NEMESISDPS%]", "44.82k"):gsub("%[NEMESISDPSOVERALL%]", "48.33k"):gsub("%[DPS%]", "155.93k"):gsub("%[DPSOVERALL%]", "141.46k")
+    local chatMsg = message:gsub("%[TARGET%]", "Rabid Wombat")
+        :gsub("%[SELF%]", UnitName("player"))
+        :gsub("%[NEMESIS%]", nemesis)
+        :gsub("%[NEMESISDEATHS%]", math.random(1,16))
+        :gsub("%[KILLS%]", math.random(1,968))
+        :gsub("%[NEMESISKILLS%]", math.random(1,967))
+        :gsub("%[DUNGEONTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 844)))
+        :gsub("%[KEYSTONELEVEL%]", math.random(2,28))
+        :gsub("%[BOSSTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 276)))
+        :gsub("%[BOSSNAME%]", "Magmorax")
+        :gsub("%[SPELL%]", spellLink)
+        :gsub("%[BYSTANDER%]", NemesisChat:GetRandomPartyBystander() or "DouglasQuaid")
+        :gsub("%[NEMESISDPS%]", NemesisChat:FormatNumber(math.random(17000,82000)))
+        :gsub("%[NEMESISDPSOVERALL%]", NemesisChat:FormatNumber(math.random(17000,82000)))
+        :gsub("%[DPS%]", NemesisChat:FormatNumber(math.random(57000,122000)))
+        :gsub("%[DPSOVERALL%]", NemesisChat:FormatNumber(math.random(57000,122000)))
+        :gsub("%[AVOIDABLEDAMAGE%]", NemesisChat:FormatNumber(math.random(200000,875000)))
+        :gsub("%[AVOIDABLEDAMAGEOVERALL%]", NemesisChat:FormatNumber(math.random(2000000,8750000)))
+        :gsub("%[NEMESISAVOIDABLEDAMAGE%]", NemesisChat:FormatNumber(math.random(500000,1875000)))
+        :gsub("%[NEMESISAVOIDABLEDAMAGEOVERALL%]", NemesisChat:FormatNumber(math.random(5000000,18750000)))
 
     messagePreview = color .. UnitName("player") .. spacer .. chatMsg .. "|r"
 end
 
 function NemesisChat:DiscordLink()
     return "https://discord.gg/mqu3vk6csk"
+end
+
+function NemesisChat:GithubLink()
+    return "https://github.com/phreaktastic/nemesischat"
 end
 
 function HasConditions()

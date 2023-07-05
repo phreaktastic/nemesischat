@@ -453,7 +453,7 @@ function NemesisChat:InitializeHelpers()
             return thousands .. "k"
         end
 
-        return math.floor(numberToFormat / 10) / 100 .. "m"
+        return math.floor(thousands / 10) / 100 .. "m"
     end
 end
 
