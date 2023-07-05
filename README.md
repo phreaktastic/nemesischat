@@ -157,6 +157,8 @@ The purpose of this object is to store data relating strictly to the current in-
 
 It is currently under consideration to keep a running list of encounters. However, this is not in place currently, and this is unlikely to be published as it serves no general purpose to NC. In order to fully capitalize on the prospective benefits of keeping a running list, it seems the UI / Configuration Flow may be too complex for the average user. If you disagree with this, please message me with your idea(s) and we can make adjustments as necessary.
 
+Currently, it is also considered to house a `deaths` and `kills` table on this object. More per-combat-segment data is likely to be added.
+
 ---
 
 ## Step 3: Message is populated
