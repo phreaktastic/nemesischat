@@ -141,8 +141,7 @@ function NemesisChat:InstantiateMsg()
         -- Format the message
         for k, v in pairs(core.supportedReplacements) do
             if (k ~= nil and v ~= nil and replacements[v] ~= nil) then
-                -- Strip any _CONDITION occurrences as they will not exist in core supported replacements
-                msg = msg:gsub("_CONDITION%]", "]"):gsub(k, replacements[v])
+                msg = msg:gsub(k, replacements[v])
             end
         end
 
@@ -164,7 +163,7 @@ function NemesisChat:InstantiateMsg()
 
         -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
         -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
-        if core.db.profile.nonCombatMode and NCCombat:InCombat() and NCEvent:GetCategory() ~= "BOSS" and NCEvent:GetEvent() ~= "START" then
+        if core.db.profile.nonCombatMode and NCCombat:InCombat() and (NCEvent:GetCategory() ~= "BOSS" or NCEvent:GetEvent() ~= "START") then
             NCEvent:Initialize()
             return
         end

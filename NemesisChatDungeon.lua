@@ -194,8 +194,7 @@ function NemesisChat:InstantiateDungeon()
         core.runtime.NCDungeon = NCDungeon
     end
 
-    -- Get interrupts for a player
-    function NCDungeon:GetAvoidableDamage(player)
+    function NCDungeon:GetInterrupts(player)
         if NCDungeon.interrupts[player] == nil then
             NCDungeon.interrupts[player] = 0
         end
