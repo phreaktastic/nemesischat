@@ -224,6 +224,7 @@ NC attempts to avoid unnecessary memory bloat with ephemeral objects. This patte
 - `NCMessage`: This will initialize on every event. It holds data specifically purposed for sending messages in-game. It is responsible for sending the message once upstream logic (`NCEvent` and `NCSpell`) has determined where to retrieve the message.
 - `NCDungeon`: This will initialize upon starting a Mythic + dungeon and on any event which triggers the `PLAYER_ENTERING_WORLD` event. It holds data specifically purposed for M+ dungeons, including its own kill count and death count.
 - `NCBoss`: This will initialize upon starting a boss fight and on any event which triggers the `PLAYER_ENTERING_WORLD` event. It holds data specifically purposed for boss fights.
+- `NCCombat`: This will initialize upon entering combat. It holds data specifically purposed for combat segments, like interrupts and avoidable damage.
 
 These objects encompass virtually all Nemesis Chat logic. Events themselves will simply either call helper methods within these objects, or set properties on these objects. In any case, events will not contain logic, but rather normalize data for hydration and processing on/within these objects.
 
