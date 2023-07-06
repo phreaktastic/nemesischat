@@ -201,7 +201,7 @@ Finally, we'll take all core and custom replacement strings, and replace them wi
 
 NC will check to ensure we're not spamming -- there is a hardcoded minimum of 1 second between all messages. There is also a configurable property allowing a user to set the minimum time between messages as they choose. The hardcoded minimum of 1 second will **always** take precedence.
 
-NC will check to ensure that the player is not in combat is `Non-Combat Only` mode is enabled. This prevents messaging during combat, which means all messages will be discarded if the player is currently in combat.
+NC will check to ensure that the player is not in combat if `Non-Combat Only` mode is enabled. This prevents messaging during combat, which means all messages will be discarded if the player is currently in combat. One exception to this is beginning a boss fight, as that event only fires upon entering combat with said boss.
 
 NC will do a quick check to ensure we send the message to the appropriate channel, validate that we do in fact have the proper data (such as `NCMessage.message`, `NCEvent.nemesis`, etc), and send the message.
 
