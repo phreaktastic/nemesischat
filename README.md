@@ -46,7 +46,7 @@ ncSpell = {
 },
 ```
 
-Based on the event, the above objects will be hydrated with per-event data. If APIs are enabled (currently, only Details! is supported), they will add custom replacements to `NCMessage.customReplacements` via the helper methods. Here's one example of this in action:
+Based on the event, the above objects will be hydrated with per-event data. If APIs are enabled (currently, only Details! and GTFO are supported), they will add custom replacements to `NCMessage.customReplacements` via the helper methods. Here's one example of this in action:
 
 ```
 NCMessage:AddCustomReplacement("%[DPS%]", FormatDPS(currentPlayer))
