@@ -230,7 +230,7 @@ These objects encompass virtually all Nemesis Chat logic. Events themselves will
 
 This pattern keeps all events very clean, and allows a quick glance to easily convey logic that is taking place.
 
-**Quick Note**: These objects are *not* designed to be accessible to any other addons. If there is an interest in interacting with NC via other addons, I'd be happy to build an API. It just seems so incredibly niche that I passed on building anything like that.
+**Quick Note**: These objects are *not* designed to be accessible to any other addons. If there is an interest in interacting with NC via other addons, I'd be happy to build an API. It just seems so incredibly niche that I passed on building anything like that. One use-case that I could see being helpful is offering global replacement strings / values. This may be developed just in case there's interest.
 
 ## Extensibility
 
