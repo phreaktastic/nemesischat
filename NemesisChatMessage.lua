@@ -117,6 +117,12 @@ function NemesisChat:InstantiateMsg()
             replacements["nemesisAvoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()))
             replacements["avoidableDamageOverall"] = NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(core.runtime.myName))
             replacements["nemesisAvoidableDamageOverall"] = NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()))
+
+            -- Condition specific, unformatted so they can be compared
+            NCMessage:AddCustomReplacement("%[AVOIDABLEDAMAGE_CONDITION%]", NCCombat:GetAvoidableDamage(core.runtime.myName))
+            NCMessage:AddCustomReplacement("%[AVOIDABLEDAMAGEOVERALL_CONDITION%]", NCDungeon:GetAvoidableDamage(core.runtime.myName))
+            NCMessage:AddCustomReplacement("%[NEMESISAVOIDABLEDAMAGE_CONDITION%]", NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()))
+            NCMessage:AddCustomReplacement("%[NEMESISAVOIDABLEDAMAGEOVERALL_CONDITION%]", NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()))
         end
 
         -- SpellId will be populated for feasts, while ExtraSpellId will be populated for interrupts

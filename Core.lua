@@ -7,15 +7,6 @@
 -----------------------------------------------------
 local _, core = ...;
 
-local AC = LibStub("AceConfig-3.0")
-local ACD = LibStub("AceConfigDialog-3.0")
-
--- Flood prevention
-local lastTime, lastSpellID
-
--- Status monitoring
-local NCStatus
-
 core.runtime = DeepCopy(core.runtimeDefaults)
 
 function NemesisChat:OnInitialize()
