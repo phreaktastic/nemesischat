@@ -33,6 +33,7 @@ NemesisChatEvent.lua
 NemesisChatMessage.lua
 NemesisChatSpell.lua
 NemesisChatCombat.lua
+NemesisChatReport.lua
 BaseEvents.lua
 CustomEvents.lua
 SlashCommands.lua
