@@ -59,6 +59,10 @@ function NemesisChat:InstantiateCombat()
 
     -- Get avoidable damage for a player
     function NCCombat:GetAvoidableDamage(player)
+        if NCCombat.avoidableDamage == nil then
+            NCCombat:InitAvoidableDamage()
+        end
+
         if NCCombat.avoidableDamage[player] == nil then
             NCCombat.avoidableDamage[player] = 0
         end

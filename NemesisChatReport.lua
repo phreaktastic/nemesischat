@@ -44,7 +44,7 @@ function NemesisChat:Report(event)
             segment = DETAILS_SEGMENTID_CURRENT
 
             if event == "BOSS" then
-                NCBoss:GetName()
+                segName = NCBoss:GetName()
             end
         elseif event == "DUNGEON" then
             bucket = NCDungeon
@@ -139,7 +139,12 @@ function NemesisChat:Report(event)
                 botPlayer = core.runtime.myName
             end
 
-            topMsg = "Shout out to " .. topPlayer .. " with the most interrupts for " .. segName .. ", at " .. topVal .. "!"
+            if topVal > 0 then
+                topMsg = "Shout out to " .. topPlayer .. " with the most interrupts for " .. segName .. ", at " .. topVal .. "!"
+            else
+                topMsg = nil
+            end
+            
             botMsg = "Lowest interrupts for " .. segName .. ": " .. botPlayer .. " at " .. botVal .. "."
         end
 
@@ -152,7 +157,7 @@ function NemesisChat:Report(event)
         -- In a raid
         if IsInRaid() then channel = "RAID" end
 
-        if core.db.profile.reportConfig[type]["TOP"] == true then
+        if core.db.profile.reportConfig[type]["TOP"] == true and topMsg ~= nil then
             SendChatMessage("Nemesis Chat: " .. topMsg, channel)
         end
 
