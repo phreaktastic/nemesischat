@@ -380,8 +380,14 @@ function NemesisChat:InitializeHelpers()
         end
     end
 
-    -- Check the roster and (un)subscribe events appropriately
+    -- Check the roster and (un/re)subscribe events appropriately
     function NemesisChat:CheckGroup()
+        if not core.db.profile.enabled then
+            NemesisChat:OnDisable()
+        else
+            NemesisChat:OnEnable()
+        end
+
         core.runtime.groupRoster = {}
         local members = NemesisChat:GetPlayersInGroup()
         local count = 0
@@ -404,7 +410,6 @@ function NemesisChat:InitializeHelpers()
         end
     
         if count > 0 and nemeses > 0 then
-            NCStatus = "Active"
             NemesisChat:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
             NemesisChat:RegisterEvent("CHALLENGE_MODE_START")
             NemesisChat:RegisterEvent("CHALLENGE_MODE_COMPLETED")
@@ -413,14 +418,17 @@ function NemesisChat:InitializeHelpers()
             NemesisChat:RegisterEvent("PLAYER_REGEN_DISABLED")
             NemesisChat:RegisterEvent("PLAYER_REGEN_ENABLED")
         else
-            NCStatus = "Inactive"
+            if not core.db.profile.pugMode then
+                NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
+                NemesisChat:UnregisterEvent("ENCOUNTER_END")
+                NemesisChat:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
+            end
+
             NemesisChat:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
             NemesisChat:UnregisterEvent("CHALLENGE_MODE_START")
-            NemesisChat:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
             NemesisChat:UnregisterEvent("ENCOUNTER_START")
-            NemesisChat:UnregisterEvent("ENCOUNTER_END")
             NemesisChat:UnregisterEvent("PLAYER_REGEN_DISABLED")
-            NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
+            
         end
     end
 

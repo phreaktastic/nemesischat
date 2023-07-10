@@ -32,6 +32,8 @@ function NemesisChat:CHALLENGE_MODE_COMPLETED()
     NCDungeon:End()
 
     NemesisChat:HandleEvent()
+
+    NemesisChat:Report("DUNGEON")
 end
 
 function NemesisChat:ENCOUNTER_START(_, encounterID, encounterName, difficultyID, groupSize, instanceID)
@@ -48,6 +50,8 @@ function NemesisChat:ENCOUNTER_END(_, encounterID, encounterName, difficultyID, 
     NCBoss:End(success)
 
     NemesisChat:HandleEvent()
+
+    NemesisChat:Report("BOSS")
 end
 
 function NemesisChat:GROUP_ROSTER_UPDATE()
@@ -116,4 +120,6 @@ function NemesisChat:PLAYER_REGEN_ENABLED()
     NCCombat:LeaveCombat()
 
     NemesisChat:HandleEvent()
+
+    NemesisChat:Report("COMBAT")
 end

@@ -196,6 +196,7 @@ function NemesisChat:InstantiateMsg()
 
         -- In an instance
         if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then channel = "INSTANCE_CHAT" end
+        
         -- In a raid
         if IsInRaid() then channel = "RAID" end
 
