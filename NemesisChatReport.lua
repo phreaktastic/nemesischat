@@ -1,6 +1,9 @@
 -----------------------------------------------------
 -- REPORT
 -----------------------------------------------------
+-- This file in a POC / WIP. It is not pretty, but a
+-- legitimate report framework will eventually take
+-- its place!
 
 -----------------------------------------------------
 -- Namespaces
