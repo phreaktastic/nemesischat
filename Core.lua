@@ -15,7 +15,7 @@ function NemesisChat:OnInitialize()
     NemesisChat:InitializeHelpers()
 
     NemesisChat:RegisterChatCommand("nc", "SlashCommand")
-	NemesisChat:RegisterChatCommand("nemesischat", "SlashCommand")
+    NemesisChat:RegisterChatCommand("nemesischat", "SlashCommand")
 end
 
 function NemesisChat:OnEnable()
@@ -27,7 +27,7 @@ function NemesisChat:OnEnable()
 end
 
 function NemesisChat:OnDisable()
-	NemesisChat:UnregisterEvent("GROUP_ROSTER_UPDATE")
+    NemesisChat:UnregisterEvent("GROUP_ROSTER_UPDATE")
     NemesisChat:UnregisterEvent("PLAYER_ENTERING_WORLD")
     NemesisChat:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     NemesisChat:UnregisterEvent("CHALLENGE_MODE_START")
