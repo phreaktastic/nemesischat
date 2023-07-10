@@ -17,14 +17,17 @@ function NemesisChat:HandleEvent()
         return 
     end
 
-    -- If AI messages are enabled, use them
-    if core.db.profile.ai then
+    -- Try to pull a configured message first
+    NCMessage:ConfigMessage()
+
+    -- If AI messages are enabled, use them if a configured message couldn't be found
+    if core.db.profile.ai and not NCMessage:ValidMessage() then
         NCMessage:AIMessage()
     end
 
-    -- If we still don't have a message, try getting a configured message instead
+    -- If we still don't have a message, bail
     if not NCMessage:ValidMessage() then
-        NCMessage:ConfigMessage()
+        return
     end
 
     NCMessage:Handle()
