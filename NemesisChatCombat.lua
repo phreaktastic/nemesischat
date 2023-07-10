@@ -81,6 +81,10 @@ function NemesisChat:InstantiateCombat()
 
     -- Get interrupts for a player
     function NCCombat:GetInterrupts(player)
+        if NCCombat.interrupts == nil then
+            NCCombat:InitInterrupts()
+        end
+
         if NCCombat.interrupts[player] == nil then
             NCCombat.interrupts[player] = 0
         end
