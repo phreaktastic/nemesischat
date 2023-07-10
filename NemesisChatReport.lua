@@ -61,16 +61,14 @@ function NemesisChat:Report(event)
             for player, data in pairs(core.runtime.groupRoster) do
                 local dps = NCDetailsAPI:GetDPS(player, segment)
 
-                if data.role ~= "DAMAGER" then
-                    return
-                end
-
-                if dps > topVal then
-                    topVal = dps
-                    topPlayer = player
-                elseif dps < botVal then
-                    botVal = dps
-                    botPlayer = player
+                if data.role == "DAMAGER" then
+                    if dps > topVal then
+                        topVal = dps
+                        topPlayer = player
+                    elseif dps < botVal then
+                        botVal = dps
+                        botPlayer = player
+                    end
                 end
             end
 
