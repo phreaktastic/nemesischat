@@ -79,6 +79,7 @@ function NemesisChat:InitializeHelpers()
         if subEvent == "SPELL_INTERRUPT" then
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
             NCCombat:AddInterrupt(sourceName)
+            NCDungeon:AddInterrupt(sourceName)
         elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)
         elseif subEvent == "SPELL_HEAL" then
