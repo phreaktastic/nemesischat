@@ -154,7 +154,7 @@ function NemesisChat:InstantiateEvent()
         NCSpell:Feast(source, spellId)
     end
 
-    -- Set the Category, Event, and Target for a group enemy heal event
+    -- Set the Category, Event, and Target for a group heal event
     function NCEvent:Heal(source, dest, spellId, spellName)
         NCEvent:SetEvent("HEAL")
         NCEvent:SetTargetFromSource(source)

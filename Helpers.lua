@@ -7,6 +7,16 @@
 -----------------------------------------------------
 local _, core = ...;
 
+local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
+local GetTime = GetTime
+local IsInGroup = IsInGroup
+local IsInRaid = IsInRaid
+local UnitGroupRolesAssigned = UnitGroupRolesAssigned
+local UnitInParty = UnitInParty
+local UnitIsDead = UnitIsDead
+local UnitName = UnitName
+local tContains = tContains
+
 -----------------------------------------------------
 -- Core global helper functions
 -----------------------------------------------------
@@ -199,7 +209,7 @@ function NemesisChat:InitializeHelpers()
             end
         end
 
-        return nemeses
+        return bystanders
     end
 
     function NemesisChat:GetNemeses()
@@ -409,15 +419,18 @@ function NemesisChat:InitializeHelpers()
                 }
             end
         end
+
+        if core.db.profile.pugMode or (count > 0 and nemeses > 0) then
+            NemesisChat:RegisterEvent("PLAYER_REGEN_ENABLED")
+            NemesisChat:RegisterEvent("ENCOUNTER_END")
+            NemesisChat:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+        end
     
         if count > 0 and nemeses > 0 then
             NemesisChat:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
             NemesisChat:RegisterEvent("CHALLENGE_MODE_START")
-            NemesisChat:RegisterEvent("CHALLENGE_MODE_COMPLETED")
             NemesisChat:RegisterEvent("ENCOUNTER_START")
-            NemesisChat:RegisterEvent("ENCOUNTER_END")
             NemesisChat:RegisterEvent("PLAYER_REGEN_DISABLED")
-            NemesisChat:RegisterEvent("PLAYER_REGEN_ENABLED")
         else
             if not core.db.profile.pugMode then
                 NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
