@@ -50,7 +50,7 @@ Based on the event, the above objects will be hydrated with per-event data. If A
 
 ```
 NCMessage:AddCustomReplacement("%[DPS%]", FormatDPS(currentPlayer))
-NCMessage:AddCustomReplacement("%[DEMESISDPS%]", FormatDPS(currentNemesis))
+NCMessage:AddCustomReplacement("%[NEMESISDPS%]", FormatDPS(currentNemesis))
 NCMessage:AddCustomReplacement("%[DPSOVERALL%]", FormatDPS(overallPlayer))
 NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL%]", FormatDPS(overallNemesis))
 ```
@@ -165,9 +165,9 @@ Currently, it is also considered to house a `deaths` and `kills` table on this o
 
 ### Core
 
-First we check if AI messages are enabled. If so, we set `NCMessage.message` with an AI message's string. Currently, NC only supports taunts, but positive messages are defined and will be released soon.
+First, we check for at least one configured message matching the Category, Event, and Target. If so, we check all conditions, and if there are multiple matches, we pick one of them at random. We then set the chosen string to `NCMessage.message`.
 
-Then we check if `NCMessage:ValidMessage()` is false, and attempt to get a player configured message for this event.
+Then we check if AI messages are enabled. If so, and `NCMessage.message` is not populated, we attempt to set `NCMessage.message` with an AI message's string. Currently, NC only supports taunts, but positive messages are defined and will be released soon.
 
 The flow of message retrieval is as follows:
 
