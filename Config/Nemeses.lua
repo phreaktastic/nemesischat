@@ -23,7 +23,7 @@ core.options.args.nemesesGroup = {
             order = 1,
             type = "description",
             fontSize = "medium",
-            name = "This is a list of all character names which will be bantered with. |c00ffcc00If this list is empty, no triggered banter will occur.|r However, reports can still function if |c00ffcc00Pug Mode|r is enabled.",
+            name = "This is a list of all character names which will be flagged as Nemeses.",
         },
         nemesesPaddingUpper = {
             order = 2,

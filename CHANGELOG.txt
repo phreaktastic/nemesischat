@@ -1,0 +1,50 @@
+# Version 1.4.x
+
+## Summary 📢
+
+Nemesis Chat has shifted its paradigm in a big way! Nemeses are now essentially just a feature; everything within the addon will function with or without Nemeses. This means you can simply define triggered messages for Bystanders and yourself, and the addon will function as expected.
+
+## Key Changes 🎯
+
+### Minor Versions
+
+None yet, `1.4.0` is fresh!
+
+### Major Version -- 1.4.0
+
+- Everything will function with/without Nemeses configured / present.
+- Messages with `[NEMESIS]` / `BYSTANDER` replacement tags will be treated as conditional messages requiring at least one Nemesis / Bystander present in the group.
+   - You may define as many messages as you'd like using these tags, and they'll be used only when the above conditions are met.
+- Messages triggered by a Nemesis or Bystander will only fire when a Nemesis / Bystander is present in the group.
+   - This hasn't actually changed, however, it's worth noting with the new approach 😊
+   - You may define as many messages as you'd like with these triggerers, and they'll be used only when appropriate.
+- `PUG Mode` has been removed entirely as it is obsolete. The new approach functions far better, and unlocks far more functionality, without additional configuration / feature toggles.
+- 🐛 Noteworthy bug fixes:
+   - Details API Overall DPS calculations fix (no more 1.4M DPS).
+   - Fixed an issue with (re/un)subscribing to/from events. In some rare cases, Nemesis Chat would not function at all due to unsubscribing from crucial events.
+   - Improvements to Dungeon and Boss recovery: When reloading UI, data is lost. However, Nemesis Chat attempts to retrieve previously set data when possible. This has been improved and as a result, you should almost never experience lost data outside of relogging. 🤞
+   - Reports:
+      - Reports will no longer fire in the case of lost data (from relogging, for example).
+      - If there is a tie, reports will now list all players in shout outs and call outs. Example, 3 players have `0` avoidable damage taken for a boss, the shout out will include all 3 players.
+   - Events:
+      - Fixed an issue preventing self-triggered spellcasts and feasts from firing.
+
+## Coming Soon ⏱️
+
+### Confirmed
+
+- Nemesis configuration within reports:
+   - Exclude Nemeses from shout-outs 😈
+   - Replacements for Nemeses; Example, your Nemesis would get a shout-out for lowest damage dealt -- instead, you set a message that reads, `Shout out to [NEMESIS], who sat around doing nothing and consequently took 0 avoidable damage. Yaaaay.`
+
+### Under Consideration
+
+- Player context menu -- `Add Nemesis` and `Remove Nemesis`:
+   - Major considerations are ensuring this does not break anything else, as hooking into the context menu has a high propensity for this.
+   - One prospective downside is NC is not designed for setting a PUG player as a Nemesis and this could potentially lead to abuse.
+   - On the flip side, the addon itself could always be abused anyway, and one can only realistically provide guard rails for prevention of abuse.
+- UI element for tracking Interrupts and Avoidable Damage.
+   - This will need to be non-intrusive, and configurable / disableable.
+   - Clicking on one would allow sending (customizable) reports.
+- Other potential "leaderboard-esque" UI elements
+   - Same as above -- non-intrusive, etc.

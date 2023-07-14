@@ -18,7 +18,6 @@ core.defaults = {
         detailsAPI = false,
         gtfoAPI = false,
         nonCombatMode = false,
-        pugMode = false,
         ai = true,
         reportConfig = {
             ["DAMAGE"] = {

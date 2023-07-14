@@ -83,7 +83,15 @@ function NemesisChat:InstantiateEvent()
     end
 
     function NCEvent:GetBystander()
+        if NCEvent.bystander == nil then 
+            return ""
+        end
+
         return NCEvent.bystander
+    end
+
+    function NCEvent:HasBystander()
+        return NCEvent:GetBystander() ~= ""
     end
 
     function NCEvent:SetBystander(bystander)
@@ -123,10 +131,9 @@ function NemesisChat:InstantiateEvent()
     -- TODO: Modularize
     function NCEvent:Spell(source, dest, spellId, spellName)
         local feast = core.feastIDs[spellId]
-        local sourceMember = DeepCopy(core.runtime.groupRoster[source])
 
         -- We don't care about casts from non-grouped players
-        if sourceMember == nil then
+        if not UnitInParty(source) then
             NCEvent:Initialize()
             return
         end
@@ -210,7 +217,7 @@ function NemesisChat:InstantiateEvent()
     end
 
     -- Helper for ending a boss encounter
-    function NCEvent:EndBoss()
+    function NCEvent:EndBoss(isSuccess)
         NCEvent:SetCategory("BOSS")
         NCEvent:SetTarget("NA")
         NCEvent:RandomNemesis()
@@ -281,7 +288,7 @@ function NemesisChat:InstantiateEvent()
 
     -- A player within the party has taken damage
     function NCEvent:IsDamageEvent(event, dest, misc4)
-        return ((event == "SPELL_PERIODIC_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_INSTAKILL" or event == "SWING_DAMAGE") or ((event=="SPELL_AURA_APPLIED" or event=="SPELL_AURA_APPLIED_DOSE" or event=="SPELL_AURA_REFRESH") and misc4=="DEBUFF")) and ((core.runtime.groupRoster[dest] ~= nil and core.runtime.groupRoster[dest] ~= "") or dest == core.runtime.myName)
+        return ((event == "SPELL_PERIODIC_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_INSTAKILL" or event == "SWING_DAMAGE") or ((event=="SPELL_AURA_APPLIED" or event=="SPELL_AURA_APPLIED_DOSE" or event=="SPELL_AURA_REFRESH") and misc4=="DEBUFF")) and ((core.runtime.groupRoster[dest] ~= nil and core.runtime.groupRoster[dest] ~= "") or dest == GetMyName())
     end
 
     function NCEvent:CombatStart()

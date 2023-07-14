@@ -104,7 +104,7 @@ function NemesisChat:InstantiateCombat()
             NCCombat.avoidableDamage[playerName] = 0
         end
 
-        NCCombat.avoidableDamage[core.runtime.myName] = 0
+        NCCombat.avoidableDamage[GetMyName()] = 0
     end
 
     -- Helper for initializing the interrupts table
@@ -115,6 +115,6 @@ function NemesisChat:InstantiateCombat()
             NCCombat.interrupts[playerName] = 0
         end
 
-        NCCombat.interrupts[core.runtime.myName] = 0
+        NCCombat.interrupts[GetMyName()] = 0
     end
 end

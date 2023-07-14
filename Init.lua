@@ -47,6 +47,15 @@ function ArrayMerge(tableA, tableB)
 
     return returnTable
 end
+
+function GetMyName()
+    return core.runtime.myName
+end
+
+function IsNCEnabled()
+    return core.db.profile.enabled
+end
+
 -----------------------------------------------------
 -- Core options
 -----------------------------------------------------

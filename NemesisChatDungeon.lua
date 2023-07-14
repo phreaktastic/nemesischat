@@ -13,7 +13,11 @@ local _, core = ...;
 
 function NemesisChat:InstantiateDungeon()
     function NCDungeon:Initialize()
-        NCDungeon = DeepCopy(core.runtimeDefaults.ncDungeon)
+        if core.runtime.NCDungeon ~= nil then
+            NCDungeon = core.runtime.NCDungeon
+        else
+            NCDungeon = DeepCopy(core.runtimeDefaults.ncDungeon)
+        end
 
         NemesisChat:InstantiateDungeon()
         NCDungeon:InitAvoidableDamage()
@@ -137,7 +141,7 @@ function NemesisChat:InstantiateDungeon()
             NCDungeon.avoidableDamage[playerName] = 0
         end
 
-        NCDungeon.avoidableDamage[core.runtime.myName] = 0
+        NCDungeon.avoidableDamage[GetMyName()] = 0
     end
 
     -- Helper for a dungeon end event

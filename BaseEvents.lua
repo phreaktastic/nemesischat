@@ -77,7 +77,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
             end
         end
 
-        NemesisChat:PLAYER_JOINS_GROUP(core.runtime.myName, false)
+        NemesisChat:PLAYER_JOINS_GROUP(GetMyName(), false)
     else
         for key,val in pairs(joins) do
             if val ~= nil then

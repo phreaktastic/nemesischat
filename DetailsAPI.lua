@@ -20,9 +20,9 @@ function NemesisChat:DETAILS_REPLACEMENTS()
         NemesisChat:DETAILS_METHODS()
     end
 
-    local currentPlayer = NCDetailsAPI:GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT) or 0
+    local currentPlayer = NCDetailsAPI:GetDPS(GetMyName(), DETAILS_SEGMENTID_CURRENT) or 0
     local currentNemesis = NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT) or 0
-    local overallPlayer = NCDetailsAPI:GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL) or 0
+    local overallPlayer = NCDetailsAPI:GetDPS(GetMyName(), DETAILS_SEGMENTID_OVERALL) or 0
     local overallNemesis = NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_OVERALL) or 0
 
     if currentPlayer == nil or currentNemesis == nil or overallPlayer == nil or overallNemesis == nil then
@@ -52,7 +52,7 @@ function NemesisChat:DETAILS_REPLACEMENTS()
                 NemesisChat:DETAILS_METHODS()
             end
             
-            return NCDetailsAPI:GetDPS(core.runtime.myName, DETAILS_SEGMENTID_CURRENT)
+            return NCDetailsAPI:GetDPS(GetMyName(), DETAILS_SEGMENTID_CURRENT)
         end,
         ["NEMESIS_DPS_OVERALL"] = function()
             if NCDetailsAPI == nil then
@@ -66,7 +66,7 @@ function NemesisChat:DETAILS_REPLACEMENTS()
                 NCDetailsAPI:DETAILS_METHODS()
             end
             
-            return NCDetailsAPI:GetDPS(core.runtime.myName, DETAILS_SEGMENTID_OVERALL)
+            return NCDetailsAPI:GetDPS(GetMyName(), DETAILS_SEGMENTID_OVERALL)
         end,
     }
 
@@ -78,10 +78,16 @@ function NemesisChat:DETAILS_METHODS()
     NCDetailsAPI = {}
 
     function NCDetailsAPI:GetDPS(player, segment)
-        local combat = Details:GetCurrentCombat()
+        local combat
         local player = Details:GetActor(segment, DETAILS_ATTRIBUTE_DAMAGE, player)
+
+        if segment == DETAILS_SEGMENTID_CURRENT then
+            combat = Details:GetCombat(0)
+        else
+            combat = Details:GetCombat(-1)
+        end
     
-        if player == nil then
+        if player == nil or combat == nil then
             return 0
         end
     

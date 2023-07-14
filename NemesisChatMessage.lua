@@ -81,7 +81,7 @@ function NemesisChat:InstantiateMsg()
         -- We have a base list of replacements that will be available (mostly) everywhere. Some events
         -- will have custom replacements, such as API-based replacements (DPS numbers with Details! for example)
         local msg = input
-        local myName = core.runtime.myName
+        local myName = GetMyName()
         local replacements = {
             ["self"] = myName,
             ["nemesis"] = NCEvent:GetNemesis(),
@@ -113,14 +113,14 @@ function NemesisChat:InstantiateMsg()
 
         -- We will add these here since there isn't technically an API. Sad.
         if core.db.profile.gtfoAPI and GTFO then
-            replacements["avoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(core.runtime.myName))
+            replacements["avoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(GetMyName()))
             replacements["nemesisAvoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()))
-            replacements["avoidableDamageOverall"] = NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(core.runtime.myName))
+            replacements["avoidableDamageOverall"] = NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(GetMyName()))
             replacements["nemesisAvoidableDamageOverall"] = NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()))
 
             -- Condition specific, unformatted so they can be compared
-            NCMessage:AddCustomReplacement("%[AVOIDABLEDAMAGE_CONDITION%]", NCCombat:GetAvoidableDamage(core.runtime.myName))
-            NCMessage:AddCustomReplacement("%[AVOIDABLEDAMAGEOVERALL_CONDITION%]", NCDungeon:GetAvoidableDamage(core.runtime.myName))
+            NCMessage:AddCustomReplacement("%[AVOIDABLEDAMAGE_CONDITION%]", NCCombat:GetAvoidableDamage(GetMyName()))
+            NCMessage:AddCustomReplacement("%[AVOIDABLEDAMAGEOVERALL_CONDITION%]", NCDungeon:GetAvoidableDamage(GetMyName()))
             NCMessage:AddCustomReplacement("%[NEMESISAVOIDABLEDAMAGE_CONDITION%]", NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()))
             NCMessage:AddCustomReplacement("%[NEMESISAVOIDABLEDAMAGEOVERALL_CONDITION%]", NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()))
         end
@@ -273,9 +273,7 @@ function NemesisChat:InstantiateMsg()
         local returnMessages = {}
 
         for key, value in pairs(pool) do
-            if value.conditions == nil or value.conditions == {} or #value.conditions == 0 then
-                table.insert(returnMessages, value)
-            elseif NCMessage:CheckAllConditions(value) then
+            if NCMessage:CheckAllConditions(value) then
                 table.insert(returnMessages, value)
             end
         end
@@ -297,6 +295,17 @@ function NemesisChat:InstantiateMsg()
     end
 
     function NCMessage:CheckAllConditions(message)
+        local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil)
+        local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil)
+
+        if includesNemesis and not NemesisChat:HasPartyNemeses() then
+            return false
+        end
+
+        if includesBystander and not NemesisChat:HasPartyBystanders() then
+            return false
+        end
+
         if message.conditions == nil or #message.conditions == 0 then
             return true
         end
@@ -314,7 +323,7 @@ function NemesisChat:InstantiateMsg()
 
     function NCMessage:CheckCondition(condition)
         local val1 = NCMessage.Condition[condition.left]()
-        local val2 = NCMessage:GetReplacedString(condition.right:gsub("%[([A-Z_]*)%]", "[%1_CONDITION]")) -- Set this to a condition-specific replacement, non-formatted, ie [NEMESIS_DPS] -> [NEMESIS_DPS_CONDITION]
+        local val2 = NCMessage:GetReplacedString(condition.right:gsub("%[([A-Z_]*)%]", "[%1_CONDITION]")) -- Set this to a condition-specific replacement, non-formatted, ie [NEMESISDPS] -> [NEMESISDPS_CONDITION]
         local operator = condition.operator
 
         return NCMessage.Condition[operator](val1, val2)
@@ -373,11 +382,11 @@ function NemesisChat:InstantiateMsg()
         end,
         ["INTERRUPTS"] = function()
             -- Return as string so input comparisons work properly
-            return NCCombat:GetInterrupts(core.runtime.myName) .. ""
+            return NCCombat:GetInterrupts(GetMyName()) .. ""
         end,
         ["INTERRUPTS_OVERALL"] = function()
             -- Return as string so input comparisons work properly
-            return NCDungeon:GetInterrupts(core.runtime.myName) .. ""
+            return NCDungeon:GetInterrupts(GetMyName()) .. ""
         end,
         ["NEMESIS_INTERRUPTS"] = function()
             -- Return as string so input comparisons work properly
@@ -443,13 +452,13 @@ function NemesisChat:InstantiateMsg()
             return NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()) .. ""
         end,
         ["MY_AD"] = function()
-            return NCCombat:GetAvoidableDamage(core.runtime.myName) .. ""
+            return NCCombat:GetAvoidableDamage(GetMyName()) .. ""
         end,
         ["NEMESIS_AD_OVERALL"] = function()
             return NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()) .. ""
         end,
         ["MY_AD_OVERALL"] = function()
-            return NCDungeon:GetAvoidableDamage(core.runtime.myName) .. ""
+            return NCDungeon:GetAvoidableDamage(GetMyName()) .. ""
         end,
     }
 end

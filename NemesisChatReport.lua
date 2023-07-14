@@ -11,6 +11,10 @@
 local _, core = ...;
 
 function NemesisChat:Report(event)
+    if IsNCEnabled() == false then
+        return
+    end
+
     local TYPES = {
         "DAMAGE",
         "AVOIDABLE",
@@ -68,6 +72,8 @@ function NemesisChat:Report(event)
                     if dps > topVal then
                         topVal = dps
                         topPlayer = player
+                    elseif dps == topVal then
+                        topPlayer = topPlayer .. " + " .. player
                     elseif dps < botVal then
                         botVal = dps
                         botPlayer = player
@@ -75,18 +81,29 @@ function NemesisChat:Report(event)
                 end
             end
 
-            local myDps = NCDetailsAPI:GetDPS(core.runtime.myName, segment)
+            local myDps = NCDetailsAPI:GetDPS(GetMyName(), segment)
 
             if myDps > topVal then
                 topVal = myDps
-                topPlayer = core.runtime.myName
+                topPlayer = GetMyName()
+            elseif myDps == topVal then
+                topPlayer = topPlayer .. " + " .. GetMyName()
             elseif myDps < botVal then
                 botVal = myDps
-                botPlayer = core.runtime.myName
+                botPlayer = GetMyName()
             end
 
-            topMsg = "Shout out to " .. topPlayer .. " with the highest DPS for " .. segName .. ", at " .. NemesisChat:FormatNumber(topVal) .. "!"
-            botMsg = "Lowest DPS for " .. segName .. ": " .. botPlayer .. " at " .. NemesisChat:FormatNumber(botVal) .. "."
+            if topVal == 0 then
+                topMsg = nil
+            else
+                topMsg = "Shout out to " .. topPlayer .. " with the highest DPS for " .. segName .. ", at " .. NemesisChat:FormatNumber(topVal) .. "!"
+            end
+
+            if botVal == 99999999 then
+                botMsg = nil
+            else
+                botMsg = "Lowest DPS for " .. segName .. ": " .. botPlayer .. " at " .. NemesisChat:FormatNumber(botVal) .. "."
+            end
         elseif type == "AVOIDABLE" then
             if GTFO == nil or not core.db.profile.gtfoAPI then
                 return
@@ -98,24 +115,39 @@ function NemesisChat:Report(event)
                 if ad > topVal then
                     topVal = ad
                     topPlayer = player
+                elseif ad == topVal then
+                    topPlayer = topPlayer .. " + " .. player
                 elseif ad < botVal then
                     botVal = ad
                     botPlayer = player
+                elseif ad == botVal then
+                    botPlayer = botPlayer .. " + " .. player
                 end
             end
 
-            local myAd = bucket:GetAvoidableDamage(core.runtime.myName)
+            local myAd = bucket:GetAvoidableDamage(GetMyName())
 
             if myAd > topVal then
                 topVal = myAd
-                topPlayer = core.runtime.myName
+                topPlayer = GetMyName()
             elseif myAd < botVal then
                 botVal = myAd
-                botPlayer = core.runtime.myName
+                botPlayer = GetMyName()
+            elseif myAd == botVal then
+                botPlayer = botPlayer .. " + " .. GetMyName()
             end
 
-            botMsg = "Shout out to " .. botPlayer .. " with the lowest avoidable damage taken for " .. segName .. ", at " .. NemesisChat:FormatNumber(botVal) .. "!"
-            topMsg = "Highest avoidable damage taken for " .. segName .. ": " .. topPlayer .. " at " .. NemesisChat:FormatNumber(topVal) .. "."
+            if topVal == 0 then
+                topMsg = nil
+            else
+                topMsg = "Highest avoidable damage taken for " .. segName .. ": " .. topPlayer .. " at " .. NemesisChat:FormatNumber(topVal) .. "."
+            end
+
+            if botVal == 99999999 then
+                botMsg = nil
+            else
+                botMsg = "Shout out to " .. botPlayer .. " with the lowest avoidable damage taken for " .. segName .. ", at " .. NemesisChat:FormatNumber(botVal) .. "!"
+            end
         else
             for player, _ in pairs(core.runtime.groupRoster) do
                 local interrupts = bucket:GetInterrupts(player)
@@ -129,23 +161,23 @@ function NemesisChat:Report(event)
                 end
             end
 
-            local myInterrupts = bucket:GetInterrupts(core.runtime.myName)
+            local myInterrupts = bucket:GetInterrupts(GetMyName())
 
             if myInterrupts > topVal then
                 topVal = myInterrupts
-                topPlayer = core.runtime.myName
+                topPlayer = GetMyName()
             elseif myInterrupts < botVal then
                 botVal = myInterrupts
-                botPlayer = core.runtime.myName
+                botPlayer = GetMyName()
             end
 
             if topVal > 0 then
                 topMsg = "Shout out to " .. topPlayer .. " with the most interrupts for " .. segName .. ", at " .. topVal .. "!"
+                botMsg = "Lowest interrupts for " .. segName .. ": " .. botPlayer .. " at " .. botVal .. "."
             else
                 topMsg = nil
+                botMsg = nil
             end
-            
-            botMsg = "Lowest interrupts for " .. segName .. ": " .. botPlayer .. " at " .. botVal .. "."
         end
 
         -- Default to party chat
@@ -161,7 +193,7 @@ function NemesisChat:Report(event)
             SendChatMessage("Nemesis Chat: " .. topMsg, channel)
         end
 
-        if core.db.profile.reportConfig[type]["BOTTOM"] == true then
+        if core.db.profile.reportConfig[type]["BOTTOM"] == true and botMsg ~= nil then
             SendChatMessage("Nemesis Chat: " .. botMsg, channel)
         end
     end

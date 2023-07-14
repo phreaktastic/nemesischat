@@ -14,12 +14,10 @@ local _, core = ...;
 function NemesisChat:SlashCommand(msg)
 	if not msg or msg:trim() == "" then
 		InterfaceOptionsFrame_OpenToCategory(core.optionsFrame)
-	elseif msg:trim() == "ad" then
-		for player, data in pairs(core.runtime.groupRoster) do
-			self:Print(player, NCCombat:GetAvoidableDamage(player))
+	elseif msg:trim() == "msg" then
+		for key, data in pairs(core.db.profile.messages["GROUP"]["JOIN"]["BYSTANDER"]) do
+			self:Print(data.message)
 		end
-
-		self:Print(core.runtime.myName, NCCombat:GetAvoidableDamage(core.runtime.myName))
 	else
         if core.db.profile.dbg then
             self:Print("Invalid command issued.")

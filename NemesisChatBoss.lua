@@ -13,7 +13,11 @@ local _, core = ...;
 
 function NemesisChat:InstantiateBoss()
     function NCBoss:Initialize()
-        NCBoss = DeepCopy(core.runtimeDefaults.ncBoss)
+        if core.runtime.NCBoss ~= nil then
+            NCBoss = core.runtime.NCBoss
+        else
+            NCBoss = DeepCopy(core.runtimeDefaults.ncBoss)
+        end
 
         NemesisChat:InstantiateBoss()
     end

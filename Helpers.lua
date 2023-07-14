@@ -24,18 +24,18 @@ function NemesisChat:InitializeHelpers()
 
     function NemesisChat:GetMyName()
         NemesisChat:SetMyName()
-        return core.runtime.myName
+        return GetMyName()
     end
 
     function NemesisChat:ShouldExitEventHandler()
         -- Respect disabling of the plugin.
-        if not core.db.profile.enabled then
+        if not IsNCEnabled() then
             return true
         end
 
         -- Improper event data
         if not NCEvent:IsValidEvent() then
-            if core.db.profile.dbg and NCSpell:GetSource() == core.runtime.myName then 
+            if core.db.profile.dbg and NCSpell:GetSource() == GetMyName() then 
                 -- self:Print("Invalid event.")
                 -- NemesisChat:Print("Cat:", NCEvent:GetCategory(), "Event:", NCEvent:GetEvent(), "Target:", NCEvent:GetTarget())
             end
@@ -50,13 +50,13 @@ function NemesisChat:InitializeHelpers()
             return true
         end
 
-        -- Configs are not setup, exit
-        if not NemesisChat:HasNemeses() or (not NemesisChat:HasMessages() and not core.db.profile.ai) then
-            if core.db.profile.dbg then 
-                self:Print("Invalid config.")
-            end
-            return true
-        end
+        -- Configs are not setup, exit (DISABLED)
+        -- if not NemesisChat:HasNemeses() or (not NemesisChat:HasMessages() and not core.db.profile.ai) then
+        --     if core.db.profile.dbg then 
+        --         self:Print("Invalid config.")
+        --     end
+        --     return true
+        -- end
 
         -- Unit is/has cast(ing) a spell, but are not in the party
         if NCSpell:IsValidSpell() and not UnitInParty(NCSpell:GetSource()) then
@@ -66,13 +66,13 @@ function NemesisChat:InitializeHelpers()
             return true
         end
 
-        -- We don't have a nemesis, exit
-        if not NCEvent:HasNemesis() then
-            if core.db.profile.dbg then 
-                self:Print("No nemesis.")
-            end
-            return true
-        end
+        -- We don't have a nemesis, exit (DISABLED)
+        -- if not NCEvent:HasNemesis() then
+        --     if core.db.profile.dbg then 
+        --         self:Print("No nemesis.")
+        --     end
+        --     return true
+        -- end
 
         return false
     end
@@ -228,6 +228,14 @@ function NemesisChat:InitializeHelpers()
         return NemesisChat:GetNemesesLength() > 0
     end
 
+    function NemesisChat:HasPartyNemeses()
+        return NemesisChat:GetLength(NemesisChat:GetPartyNemeses()) > 0
+    end
+
+    function NemesisChat:HasPartyBystanders()
+        return (NemesisChat:GetLength(NemesisChat:GetPartyBystanders()) > 0)
+    end
+
     function NemesisChat:HasMessages()
         return NemesisChat:GetMessagesLength() > 0
     end
@@ -375,7 +383,7 @@ function NemesisChat:InitializeHelpers()
 
     -- If the player's name isn't set (or is set to a pre-load value), set it
     function NemesisChat:SetMyName()
-        if core.runtime.myName == nil or core.runtime.myName == "" or core.runtime.myName == UNKNOWNOBJECT then
+        if GetMyName() == nil or GetMyName() == "" or GetMyName() == UNKNOWNOBJECT then
             core.runtime.myName = UnitName("player")
         end
     end
@@ -393,7 +401,7 @@ function NemesisChat:InitializeHelpers()
 
     -- Check the roster and (un/re)subscribe events appropriately
     function NemesisChat:CheckGroup()
-        if not core.db.profile.enabled then
+        if not IsNCEnabled() then
             NemesisChat:OnDisable()
         else
             NemesisChat:OnEnable()
@@ -420,24 +428,18 @@ function NemesisChat:InitializeHelpers()
             end
         end
 
-        if core.db.profile.pugMode or (count > 0 and nemeses > 0) then
+        if count > 0 then
             NemesisChat:RegisterEvent("PLAYER_REGEN_ENABLED")
             NemesisChat:RegisterEvent("ENCOUNTER_END")
             NemesisChat:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-        end
-    
-        if count > 0 and nemeses > 0 then
             NemesisChat:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
             NemesisChat:RegisterEvent("CHALLENGE_MODE_START")
             NemesisChat:RegisterEvent("ENCOUNTER_START")
             NemesisChat:RegisterEvent("PLAYER_REGEN_DISABLED")
         else
-            if not core.db.profile.pugMode then
-                NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
-                NemesisChat:UnregisterEvent("ENCOUNTER_END")
-                NemesisChat:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
-            end
-
+            NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
+            NemesisChat:UnregisterEvent("ENCOUNTER_END")
+            NemesisChat:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
             NemesisChat:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
             NemesisChat:UnregisterEvent("CHALLENGE_MODE_START")
             NemesisChat:UnregisterEvent("ENCOUNTER_START")

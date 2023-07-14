@@ -54,14 +54,6 @@ core.options.args.generalGroup = {
             get = "IsNonCombatMode",
             set = "ToggleNonCombatMode",
         },
-        pugMode = {
-            order = 5,
-            type = "toggle",
-            name = "PUG Mode",
-            desc = "Toggle PUG Mode. This enables Nemesis Chat functionality while no Nemeses are present. Core functionality (event-driven messages) will NOT function, but other functionality (such as reports) will.",
-            get = "IsPugMode",
-            set = "TogglePugMode",
-        },
         ai = {
             order = 6,
             type = "toggle",
@@ -105,7 +97,7 @@ core.options.args.generalGroup = {
 }
 
 function NemesisChat:IsEnabled(info)
-	return core.db.profile.enabled
+	return IsNCEnabled()
 end
 
 function NemesisChat:EnableDisable(info, value)
@@ -172,16 +164,6 @@ end
 
 function NemesisChat:ToggleNonCombatMode(info, value)
     core.db.profile.nonCombatMode = value
-end
-
-function NemesisChat:IsPugMode()
-    return core.db.profile.pugMode
-end
-
-function NemesisChat:TogglePugMode(info, value)
-    core.db.profile.pugMode = value
-
-    NemesisChat:CheckGroup()
 end
 
 function NemesisChat:IsAI(info)

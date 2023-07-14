@@ -41,7 +41,7 @@ function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
         NCEvent:SetTarget("NEMESIS")
         NCEvent:SetNemesis(playerName)
         NCEvent:RandomBystander()
-    elseif playerName ~= core.runtime.myName then
+    elseif playerName ~= GetMyName() then
         NCEvent:SetTarget("BYSTANDER")
         NCEvent:SetBystander(playerName)
         NCEvent:RandomNemesis()
@@ -62,7 +62,7 @@ function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
         NCEvent:SetTarget("NEMESIS")
         NCEvent:SetNemesis(playerName)
         NCEvent:RandomBystander()
-    elseif playerName ~= core.runtime.myName then
+    elseif playerName ~= GetMyName() then
         NCEvent:SetTarget("BYSTANDER")
         NCEvent:SetBystander(playerName)
         NCEvent:RandomNemesis()
