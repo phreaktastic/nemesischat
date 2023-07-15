@@ -7,6 +7,10 @@
 -----------------------------------------------------
 local _, core = ...;
 
+local UnitGroupRolesAssigned = UnitGroupRolesAssigned
+local UnitIsGroupLeader = UnitIsGroupLeader
+local IsInRaid = IsInRaid
+
 -----------------------------------------------------
 -- Event handling for Blizzard events
 -----------------------------------------------------
@@ -62,32 +66,49 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     -- We left
     if #leaves > 0 and #leaves == NemesisChat:GetLength(core.runtime.groupRoster) then
         core.runtime.groupRoster = {}
-    -- We joined
+    -- We joined, or we invited someone to form a group
     elseif NemesisChat:GetLength(core.runtime.groupRoster) == 0 and #joins > 0 then
         core.runtime.groupRoster = {}
         local members = NemesisChat:GetPlayersInGroup()
+        local isLeader = UnitIsGroupLeader(GetMyName())
 
         for key,val in pairs(members) do
             if val ~= nil then
                 local isNemesis = (core.db.profile.nemeses[val] ~= nil)
     
                 core.runtime.groupRoster[val] = {
-                    isNemesis = isNemesis
+                    isNemesis = isNemesis,
+                    role = UnitGroupRolesAssigned(val),
                 }
+
+                -- We're the leader, fire off some join events
+                if isLeader then
+                    -- Imagine inviting a large group to a raid, we don't want to spam the chat
+                    if #joins <= 3 then
+                        NemesisChat:PLAYER_JOINS_GROUP(val, isNemesis)
+                    end
+                end
             end
         end
 
-        NemesisChat:PLAYER_JOINS_GROUP(GetMyName(), false)
+        -- We joined, fire off OUR join event
+        if not isLeader then
+            NemesisChat:PLAYER_JOINS_GROUP(GetMyName(), false)
+        end
+        
     else
         for key,val in pairs(joins) do
             if val ~= nil then
                 local isNemesis = (core.db.profile.nemeses[val] ~= nil)
     
                 core.runtime.groupRoster[val] = {
-                    isNemesis = isNemesis
+                    isNemesis = isNemesis,
+                    role = UnitGroupRolesAssigned(val),
                 }
     
-                NemesisChat:PLAYER_JOINS_GROUP(val, isNemesis)
+                if #joins <= 3 then
+                    NemesisChat:PLAYER_JOINS_GROUP(val, isNemesis)
+                end
             end
         end
     
@@ -95,7 +116,9 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
             if val ~= nil then
                 local player = core.runtime.groupRoster[val]
     
-                NemesisChat:PLAYER_LEAVES_GROUP(val, player.isNemesis)
+                if #leaves <= 3 then
+                    NemesisChat:PLAYER_LEAVES_GROUP(val, player.isNemesis)
+                end
     
                 core.runtime.groupRoster[val] = nil
             end

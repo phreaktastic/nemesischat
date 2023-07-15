@@ -1,7 +1,7 @@
 -----------------------------------------------------
 -- CONFIGURATION UI
 -----------------------------------------------------
--- About Tab
+-- About Tab 
 -----------------------------------------------------
 
 -----------------------------------------------------
@@ -23,7 +23,7 @@ core.options.args.aboutGroup = {
             order = 1,
             type = "description",
             fontSize = "medium",
-            name = "Nemesis Chat was (poorly) written by Phreaktastic. Features essentially just come as I run M+ dungeons with my guild and new ideas are spawned.\n\nNC is NOT meant to be anything more than friendly banter. Be cool, don't use it to actually berate people. Use it to have fun and banter with your friends!\n\nThe purpose of this addon is to taunt friends while running in groups. I main DPS, so the majority of features are from a DPS player's standpoint. Other features will likely be added in the future (such as detecting if someone used defensives before a death), embracing other roles and functionality they may enjoy.",
+            name = "Nemesis Chat was written by Phreaktastic. I am developing this humble addon solo, and would greatly appreciate your feedback! If you have ideas, questions, comments, or concerns, please join the Discord and voice them. I am always looking for ways to improve the addon, and your feedback is invaluable.\n\nIf you would like to support the development of Nemesis Chat, please consider donating via PayPal. Any amount is greatly appreciated!",
         },
         generalPadding = {
             order = 3,
@@ -52,37 +52,16 @@ core.options.args.aboutGroup = {
             get = "GithubLink",
             set = function() return end,
         },
-        reportingPadding = {
+        donateLink = {
             order = 6,
-            type = "description",
-            fontSize = "large",
-            name = " ",
+            type = "input",
+            name = "Donate",
+            desc = "Support the development of NC!",
+            get = function() return "https://www.paypal.com/cgi-bin/webscr?return=https://www.curseforge.com/wow/addons/nemesis-chat&cn=Add+special+instructions+to+the+addon+author()&business=nate%40myl.io&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHosted&cancel_return=https://www.curseforge.com/wow/addons/nemesis-chat&lc=US&item_name=Nemesis+Chat+(from+www.curseforge.com)&cmd=_donations&rm=1&no_shipping=1&currency_code=USD" end,
+            set = function() return end,
         },
-        plannedHeader = {
+        reportingPadding = {
             order = 7,
-            type = "header",
-            name = "Potential Features, Enhancements, & Fixes",
-        },
-        plannedDesc = {
-            order = 8,
-            type = "description",
-            fontSize = "medium",
-            name = "|c00ffcc00Import/Export|r: The ability to export settings and defined messages as a string. This would allow you to share your setup with others, or import others' handy work.\n|c00ffcc00AI Praise Messages|r: Wrapping up the AI generated message functionality with the ability to select between taunts and praises. Further configuration to allow granular configuration based on who triggers an event.\n|c00ffcc00Selection Mode|r: A toggleable mode which will show a non-invasive pop-up to choose phrases. Example, you just finished a M+ and now have a pop-up with phrases to choose from (both from the end trigger AND Details data). This would be useful for scenarios where multiple events may trigger, but you don't want them to spam chat.\n",
-        },
-        plannedPadding = {
-            order = 9,
-            type = "description",
-            fontSize = "large",
-            name = " ",
-        },
-        plannedDisclaimer = {
-            order = 10,
-            type = "description",
-            fontSize = "large",
-            name = "Disclaimer: None of the features, enhancements, or fixes listed above are guaranteed. I have provided a general roadmap as a guide to what is currently on the radar and being considered. It is not meant as a list of priorities or work that is in progress.",
-        },
-        plannedDisclaimerPadding = {
-            order = 11,
             type = "description",
             fontSize = "large",
             name = " ",

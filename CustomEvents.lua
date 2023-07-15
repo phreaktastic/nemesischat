@@ -34,7 +34,12 @@ function NemesisChat:HandleEvent()
 end
 
 function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
-    NCEvent:SetCategory("GROUP")
+    if IsInRaid() then
+        NCEvent:SetCategory("RAID")
+    else
+        NCEvent:SetCategory("GROUP")
+    end
+
     NCEvent:SetEvent("JOIN")
 
     if isNemesis then
@@ -55,7 +60,12 @@ function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
 end
 
 function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
-    NCEvent:SetCategory("GROUP")
+    if IsInRaid() then
+        NCEvent:SetCategory("RAID")
+    else
+        NCEvent:SetCategory("GROUP")
+    end
+
     NCEvent:SetEvent("LEAVE")
 
     if isNemesis then

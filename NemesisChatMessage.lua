@@ -78,6 +78,10 @@ function NemesisChat:InstantiateMsg()
             return ""
         end
 
+        if NCEvent:GetBystander() == nil then
+            NCEvent:RandomBystander()
+        end
+
         -- We have a base list of replacements that will be available (mostly) everywhere. Some events
         -- will have custom replacements, such as API-based replacements (DPS numbers with Details! for example)
         local msg = input
@@ -97,6 +101,8 @@ function NemesisChat:InstantiateMsg()
             ["interruptsOverall"] = NCDungeon:GetInterrupts(myName),
             ["nemesisInterrupts"] = NCCombat:GetInterrupts(NCEvent:GetNemesis()),
             ["nemesisInterruptsOverall"] = NCDungeon:GetInterrupts(NCEvent:GetNemesis()),
+            ["nemesisRole"] = GetRole(NCEvent:GetNemesis()),
+            ["role"] = GetRole(),
         }
 
         if NCSpell:GetTarget() then
@@ -106,9 +112,8 @@ function NemesisChat:InstantiateMsg()
         -- When we have explicitly set a bystander, we'll use that. Otherwise, there are times where
         -- we just want a random Bystander from the party.
         if NCEvent:GetBystander() ~= "" then 
-            replacements["bystander"] = NCEvent:GetBystander()
-        else
-            replacements["bystander"] = NemesisChat:GetRandomPartyBystander()
+            replacements["bystander"] = "someone"
+            replacements["bystanderRole"] = "party animal"
         end
 
         -- We will add these here since there isn't technically an API. Sad.
@@ -156,13 +161,13 @@ function NemesisChat:InstantiateMsg()
 
     function NCMessage:Send()
         -- Anti-spam, hardcoded to prevent setting it to 0
-        if GetTime() - core.runtime.lastMessage < 1 then
+        if GetTime() - core.runtime.lastMessage < 1 and not NCMessage:IsMinTimeException() then
             NCEvent:Initialize()
             return
         end
 
         -- Config driven minimum time between messages
-        if GetTime() - core.runtime.lastMessage < core.db.profile.minimumTime then
+        if GetTime() - core.runtime.lastMessage < core.db.profile.minimumTime and not NCMessage:IsMinTimeException() then
             NCEvent:Initialize()
             return
         end
@@ -183,6 +188,11 @@ function NemesisChat:InstantiateMsg()
         end
 
         core.runtime.lastMessage = GetTime()
+    end
+
+    -- Group join events are an exception to the minimum time rule
+    function NCMessage:IsMinTimeException()
+        return NCEvent:GetCategory() == "GROUP" and (NCEvent:GetEvent() == "JOIN" or NCEvent:GetEvent() == "LEAVE")
     end
 
     -- If `channel` is `GROUP`, we need to set it to `PARTY`, `INSTANCE_CHAT`, or `RAID`

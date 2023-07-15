@@ -56,6 +56,24 @@ function IsNCEnabled()
     return core.db.profile.enabled
 end
 
+function GetRole(player)
+    local role 
+
+    if player == nil or player == GetMyName() then
+        role = UnitGroupRolesAssigned("player")
+    else
+        role = core.runtime.groupRoster[player].role
+    end
+
+    for key, val in pairs(core.roles) do
+        if val.value == role then
+            return val.label
+        end
+    end
+
+    return "party animal"
+end
+
 -----------------------------------------------------
 -- Core options
 -----------------------------------------------------
@@ -347,6 +365,10 @@ core.configTree = {
         label = "Group",
         events = DeepCopy(core.events.group)
     },
+    ["RAID"] = {
+        label = "Raid",
+        events = DeepCopy(core.events.group)
+    },
     ["CHALLENGE"] = {
         label = "Mythic+ Dungeon",
         events = DeepCopy(core.events.env)
@@ -388,6 +410,9 @@ core.reference = {
         ["[INTERRUPTSOVERALL]"] = "The number of times you have interrupted an enemy for the entire dungeon / instance.",
         ["[NEMESISINTERRUPTS]"] = "The number of times the chosen Nemesis has interrupted an enemy for the duration of combat.",
         ["[NEMESISINTERRUPTSOVERALL]"] = "The number of times the chosen Nemesis has interrupted an enemy for the entire dungeon / instance.",
+        ["[BYSTANDERROLE]"] = "The/a Bystander's role (Tank | Healer | DPS).",
+        ["[NEMESISROLE]"] = "The/a Nemesis's role (Tank | Healer | DPS).",
+        ["[ROLE]"] = "Your role (Tank | Healer | DPS).",
     },
     colors = {
         ["SAY"] = "|cffffffff",
@@ -422,6 +447,9 @@ core.supportedReplacements = {
     ["%[INTERRUPTSOVERALL%]"] = "interruptsOverall",
     ["%[NEMESISINTERRUPTS%]"] = "nemesisInterrupts",
     ["%[NEMESISINTERRUPTSOVERALL%]"] = "nemesisInterruptsOverall",
+    ["%[BYSTANDERROLE%]"] = "bystanderRole",
+    ["%[NEMESISROLE%]"] = "nemesisRole",
+    ["%[ROLE%]"] = "role",
 }
 
 -- Numeric value replacements, for number validation

@@ -1,16 +1,34 @@
-# Version 1.4.x
+# 🎯 Key Changes
 
-## Summary 📢
+## 📢 Summary
 
-Nemesis Chat has shifted its paradigm in a big way! Nemeses are now essentially just a feature; everything within the addon will function with or without Nemeses. This means you can simply define triggered messages for Bystanders and yourself, and the addon will function as expected.
+**1.5.x**: Group and raid join/leave events have been split for a higher degree of granularity. More replacements added. Group and raid join/leave events will be exempt from the message interval limit, however it will be capped at 3 per trigger (imagine inviting large groups into a raid and firing off join messages for each player 🤢).
 
-## Key Changes 🎯
+**1.4.x**: Nemesis Chat has shifted its paradigm in a big way! Nemeses are now essentially just a feature; everything within the addon will function with or without Nemeses. This means you can simply define triggered messages for Bystanders and yourself, and the addon will function as expected.
 
-### Minor Versions
+## 🩹 Patches
 
-None yet, `1.4.0` is fresh!
+None yet -- `1.5.0` is fresh!
 
-### Major Version -- 1.4.0
+## ⭐ Latest Versions
+
+### 1.5.0
+
+- Refined `SELF` join events versus inviting a player and forming a group. No configuration updates are necessary.
+- Group `JOIN` and `LEAVE` events are now exclusive to non-raid groups.
+- Added raid `JOIN` and `LEAVE` events to allow for more granular configuration.
+- Group/raid `JOIN` and `LEAVE` events are now exempt from the minimum message interval.
+   - There is a hardcoded cap of 3 to guardrail against spam.
+- Added the following replacement tags:
+   - `[ROLE]`: Your role
+   - `[BYSTANDERROLE]`: The/a Bystander's role (on events triggered by a Bystander, that'll be the triggering Bystander, otherwise a random one is chosen)
+      - Keep in mind random Bystanders are chosen once so all Bystander replacement tags will refer to a singular Nemesis.
+   - `[NEMESISROLE]`: The/a Nemesis's role (on events triggered by a Nemesis, that'll be the triggering Nemesis, otherwise a random one is chosen)
+      - Keep in mind random Nemeses are chosen once so all Nemesis replacement tags will refer to a singular Nemesis.
+      - As always, these are described in the `Reference` tab of the NC Configuration screen.
+- Minor updates to information presented in some configuration screens, such as `About`.
+
+### 1.4.0
 
 - Everything will function with/without Nemeses configured / present.
 - Messages with `[NEMESIS]` / `BYSTANDER` replacement tags will be treated as conditional messages requiring at least one Nemesis / Bystander present in the group.
@@ -29,15 +47,17 @@ None yet, `1.4.0` is fresh!
    - Events:
       - Fixed an issue preventing self-triggered spellcasts and feasts from firing.
 
-## Coming Soon ⏱️
+# ⏱️ Coming Soon
 
-### Confirmed
+## ✅ Confirmed
 
 - Nemesis configuration within reports:
    - Exclude Nemeses from shout-outs 😈
    - Replacements for Nemeses; Example, your Nemesis would get a shout-out for lowest damage dealt -- instead, you set a message that reads, `Shout out to [NEMESIS], who sat around doing nothing and consequently took 0 avoidable damage. Yaaaay.`
 
-### Under Consideration
+## 💭 Under Consideration
+
+> **Note:** If you think any of the following features would be beneficial, *please* reach out in Discord and voice your opinion! I am a solo developer, and there is no possible way I can think of all scenarios. Your input would be greatly appreciated 😁
 
 - Player context menu -- `Add Nemesis` and `Remove Nemesis`:
    - Major considerations are ensuring this does not break anything else, as hooking into the context menu has a high propensity for this.
@@ -48,3 +68,7 @@ None yet, `1.4.0` is fresh!
    - Clicking on one would allow sending (customizable) reports.
 - Other potential "leaderboard-esque" UI elements
    - Same as above -- non-intrusive, etc.
+- AI configuration screen
+   - Granular control over which (praise | taunt) messages to send based on whether it's a Bystander or Nemesis, and based on event.
+   - Custom overrides
+   - More AI choices (possibly a scale, 1-10, from taunt (1) to praise (10))
