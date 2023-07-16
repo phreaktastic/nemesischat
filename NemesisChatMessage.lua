@@ -103,6 +103,8 @@ function NemesisChat:InstantiateMsg()
             ["nemesisInterruptsOverall"] = NCDungeon:GetInterrupts(NCEvent:GetNemesis()),
             ["nemesisRole"] = GetRole(NCEvent:GetNemesis()),
             ["role"] = GetRole(),
+            ["bystander"] = NCEvent:GetBystander(),
+            ["bystanderRole"] = GetRole(NCEvent:GetBystander()),
         }
 
         if NCSpell:GetTarget() then
