@@ -8,6 +8,11 @@
 
 ## 🩹 Patches
 
+### 1.5.2
+
+- Fixed dynamic targeting for whispers. In the past, this was hardcoded to _always_ whisper a Nemesis. With the new approach, this will be set based on who triggered the event.
+- Fixed a Bystander replacements bug.
+
 ### 1.5.1
 
 - Typo fixes

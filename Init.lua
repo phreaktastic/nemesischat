@@ -62,6 +62,10 @@ function GetRole(player)
     if player == nil or player == GetMyName() then
         role = UnitGroupRolesAssigned("player")
     else
+        if core.runtime.groupRoster[player] == nil then
+            return "party animal"
+        end
+        
         role = core.runtime.groupRoster[player].role
     end
 
@@ -380,7 +384,13 @@ core.channels = {
     ["SAY"] = "Say",
     ["EMOTE"] = "Emote",
     ["YELL"] = "Yell",
-    ["WHISPER"] = "Whisper Nemesis",
+}
+core.channelsExtended = {
+    ["WHISPER"] = "Whisper Nemesis (|c00ff0000May be unavailable|r)",
+}
+core.channelsExplicit = {
+    ["WHISPER_NEMESIS"] = "Whisper Nemesis (|c00ff0000May be unavailable|r)",
+    ["WHISPER_BYSTANDER"] = "Whisper Bystander (|c00ff0000May be unavailable|r)",
 }
 
 core.reference = {

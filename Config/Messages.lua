@@ -480,7 +480,27 @@ function NemesisChat:IsMessageHidden()
 end
 
 function NemesisChat:GetChannels()
-    return DeepCopy(core.channels)
+    local coreChannels = DeepCopy(core.channels)
+    local extended = DeepCopy(core.channelsExtended)
+    local explicit = DeepCopy(core.channelsExplicit)
+
+    if selectedTarget == "BYSTANDER" or selectedTarget == "NEMESIS" then
+        local label = "Whisper Nemesis"
+        local otherLabel = "Whisper Bystander (|c00ff0000May be unavailable|r)"
+        local otherKey = "WHISPER_BYSTANDER"
+
+        if selectedTarget == "BYSTANDER" then
+            label = "Whisper Bystander"
+            otherLabel = "Whisper Nemesis (|c00ff0000May be unavailable|r)"
+        end
+
+        extended["WHISPER"] = label
+        extended[otherKey] = otherLabel
+
+        return ArrayMerge(coreChannels, extended)
+    end
+
+    return ArrayMerge(coreChannels, explicit)
 end
 
 function NemesisChat:GetChannel()

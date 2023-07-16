@@ -111,7 +111,7 @@ function NemesisChat:InstantiateMsg()
 
         -- When we have explicitly set a bystander, we'll use that. Otherwise, there are times where
         -- we just want a random Bystander from the party.
-        if NCEvent:GetBystander() ~= "" then 
+        if NCEvent:GetBystander() == "" then 
             replacements["bystander"] = "someone"
             replacements["bystanderRole"] = "party animal"
         end
@@ -244,6 +244,9 @@ function NemesisChat:InstantiateMsg()
             end
         end
 
+        -- Channel must be set prior to checking conditions
+        NCMessage:SetChannel(msg.channel)
+
         -- Ensure conditions are met on all messages
         local availableMessages = NCMessage:GetConditionalMessages(profileMessages)
 
@@ -267,11 +270,22 @@ function NemesisChat:InstantiateMsg()
             return
         end
 
-        NCMessage:SetChannel(msg.channel)
         NCMessage:SetMessage(msg.message)
 
-        -- Always set the target to the Nemesis to prevent potentially whispering randoms in groups.
-        NCMessage:SetTarget(NCEvent:GetNemesis())
+        -- Dynamically set the target
+        if NCMessage:GetChannel() == "WHISPER_NEMESIS" then
+            NCMessage:SetChannel("WHISPER")
+            NCMessage:SetTarget(NCEvent:GetNemesis())
+        elseif NCMessage:GetChannel() == "WHISPER_BYSTANDER" then
+            NCMessage:SetChannel("WHISPER")
+            NCMessage:SetTarget(NCEvent:GetBystander())
+        else
+            if NCEvent:GetTarget() ~= "BYSTANDER" then
+                NCMessage:SetTarget(NCEvent:GetNemesis())
+            else
+                NCMessage:SetTarget(NCEvent:GetBystander())
+            end
+        end
     end
 
     -- Get a pool of conditional messages pertaining to the current scenarios
@@ -305,8 +319,8 @@ function NemesisChat:InstantiateMsg()
     end
 
     function NCMessage:CheckAllConditions(message)
-        local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil)
-        local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil)
+        local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil) or (NCMessage:GetChannel() == "WHISPER" and NCEvent:GetTarget() == "SELF")
+        local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil) or (NCMessage:GetChannel() == "WHISPER" and NCEvent:GetTarget() == "SELF")
 
         if includesNemesis and not NemesisChat:HasPartyNemeses() then
             return false
