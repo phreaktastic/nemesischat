@@ -497,10 +497,10 @@ function NemesisChat:GetChannels()
         extended["WHISPER"] = label
         extended[otherKey] = otherLabel
 
-        return ArrayMerge(coreChannels, extended)
+        return MapMerge(coreChannels, extended)
     end
 
-    return ArrayMerge(coreChannels, explicit)
+    return MapMerge(coreChannels, explicit)
 end
 
 function NemesisChat:GetChannel()

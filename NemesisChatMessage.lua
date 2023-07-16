@@ -111,14 +111,14 @@ function NemesisChat:InstantiateMsg()
             replacements["target"] = NCSpell:GetTarget()
         end
 
-        -- When we have explicitly set a bystander, we'll use that. Otherwise, there are times where
-        -- we just want a random Bystander from the party.
+        -- We have no Bystander, and shouldn't actually ever reach this due to treating this as a failed condition.
         if NCEvent:GetBystander() == "" then 
             replacements["bystander"] = "someone"
             replacements["bystanderRole"] = "party animal"
         end
 
         -- We will add these here since there isn't technically an API. Sad.
+        -- To be refactored nonetheless. This shouldn't live here.
         if core.db.profile.gtfoAPI and GTFO then
             replacements["avoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(GetMyName()))
             replacements["nemesisAvoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()))

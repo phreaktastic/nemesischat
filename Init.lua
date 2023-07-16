@@ -48,6 +48,22 @@ function ArrayMerge(tableA, tableB)
     return returnTable
 end
 
+function MapMerge(map1, map2)
+    local mergedMap = {}
+    
+    -- Merge values from map1
+    for key, value in pairs(map1) do
+        mergedMap[key] = value
+    end
+    
+    -- Merge values from map2, overriding existing values
+    for key, value in pairs(map2) do
+        mergedMap[key] = value
+    end
+    
+    return mergedMap
+end
+
 function GetMyName()
     return core.runtime.myName
 end
@@ -65,7 +81,7 @@ function GetRole(player)
         if core.runtime.groupRoster[player] == nil then
             return "party animal"
         end
-        
+
         role = core.runtime.groupRoster[player].role
     end
 

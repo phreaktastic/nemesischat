@@ -8,6 +8,10 @@
 
 ## 🩹 Patches
 
+### 1.5.4
+
+- Configuration update with explicit breakouts for whisper targets.
+
 ### 1.5.3
 
 - Another fix on Bystander replacements.
