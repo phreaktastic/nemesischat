@@ -8,7 +8,10 @@
 
 ## 🩹 Patches
 
-None yet -- `1.5.0` is fresh!
+### 1.5.1
+
+- Typo fixes
+- Properly updating the version of the addon
 
 ## ⭐ Latest Versions
 
@@ -22,7 +25,7 @@ None yet -- `1.5.0` is fresh!
 - Added the following replacement tags:
    - `[ROLE]`: Your role
    - `[BYSTANDERROLE]`: The/a Bystander's role (on events triggered by a Bystander, that'll be the triggering Bystander, otherwise a random one is chosen)
-      - Keep in mind random Bystanders are chosen once so all Bystander replacement tags will refer to a singular Nemesis.
+      - Keep in mind random Bystanders are chosen once so all Bystander replacement tags will refer to a singular Bystander.
    - `[NEMESISROLE]`: The/a Nemesis's role (on events triggered by a Nemesis, that'll be the triggering Nemesis, otherwise a random one is chosen)
       - Keep in mind random Nemeses are chosen once so all Nemesis replacement tags will refer to a singular Nemesis.
       - As always, these are described in the `Reference` tab of the NC Configuration screen.

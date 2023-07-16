@@ -1,5 +1,5 @@
 ## Interface: 100150
-## Version: 1.4.0
+## Version: 1.5.1
 ## Title: |cff00ccffNemesis Chat|r
 ## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp
 ## Notes: The event-driven, targeted message framework.
