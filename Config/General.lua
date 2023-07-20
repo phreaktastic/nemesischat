@@ -30,24 +30,8 @@ core.options.args.generalGroup = {
             get = "IsEnabled",
             set = "EnableDisable",
         },
-        detailsAPI = {
-            order = 2,
-            type = "toggle",
-            name = "Details API",
-            desc = "Toggle Details API. This enables additional replacements (such as [DPS], [NEMESISDPS], etc.) and events.",
-            get = "IsDetailsAPI",
-            set = "ToggleDetailsAPI",
-        },
-        gtfoAPI = {
-            order = 3,
-            type = "toggle",
-            name = "GTFO API",
-            desc = "Toggle GTFO API. This enables additional replacements (such as [AVOIDABLEDAMAGE], [NEMESISAVOIDABLEDAMAGE], etc.) and events.",
-            get = "IsGtfoAPI",
-            set = "ToggleGtfoAPI",
-        },
         nonCombatMode = {
-            order = 4,
+            order = 2,
             type = "toggle",
             name = "Non-Combat Mode",
             desc = "Toggle Non-Combat Mode. This restricts Nemesis Chat from messaging while in combat.",
@@ -55,7 +39,7 @@ core.options.args.generalGroup = {
             set = "ToggleNonCombatMode",
         },
         ai = {
-            order = 6,
+            order = 3,
             type = "toggle",
             name = "AI Phrases",
             desc = "Toggle AI Generated Phrases. This allows you to run NC without configuring any phrases. NOTE: This will only taunt Nemeses currently. More functionality is on the way!",
@@ -63,7 +47,7 @@ core.options.args.generalGroup = {
             set = "ToggleAI",
         },
         globalChanceToggle = {
-            order = 7,
+            order = 4,
             type = "toggle",
             name = "Use Global Chance",
             desc = "Toggle Global Chance. This allows you to ensure that messages will only be sent a percentage of the time. NOTE: This does not apply for reports.",
@@ -71,7 +55,7 @@ core.options.args.generalGroup = {
             set = "ToggleUseGlobalChance",
         },
         globalChanceSlider = {
-            order = 8,
+            order = 5,
             type = "range",
             min = 0.0,
             max = 1.0,
@@ -83,7 +67,7 @@ core.options.args.generalGroup = {
             disabled = function() return core.db.profile.useGlobalChance ~= true end
         },
         minimumTimeSlider = {
-            order = 9,
+            order = 6,
             type = "range",
             min = 1,
             max = 300,
@@ -92,6 +76,13 @@ core.options.args.generalGroup = {
             desc = "The minimum time (in seconds) between messages. NOTE: This does not apply for reports.",
             get = "GetMinimumTime",
             set = "SetMinimumTime",
+        },
+        apis = {
+            order = 7,
+            type = "group",
+            name = "APIs",
+            inline = false,
+            hidden = function() return core.apiConfigOptions == {} end,
         },
     }
 }

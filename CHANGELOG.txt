@@ -8,6 +8,16 @@
 
 ## 🩹 Patches
 
+### 1.5.5
+
+- Refactored API functionality.
+   - Most of this is under the hood and just allows for much easier, cleaner definitions of APIs. Everything relating to APIs has been refactored, with replacements and subjects being extremely easy to add now.
+   - The Reference section in configuration now lists Core and API references separately.
+   - The General section in configuration now has a sub-menu for enabling all APIs.
+   - Other addons can also easily tie into the reference and API configuration screens.
+- Added Bystander replacements for the GTFO and Details! APIs.
+- More replacements and subjects in conditions to come! This release makes it tremendously easier to add/mantain them.
+
 ### 1.5.4
 
 - Configuration update with explicit breakouts for whisper targets.

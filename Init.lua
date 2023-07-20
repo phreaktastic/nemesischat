@@ -97,6 +97,7 @@ end
 -----------------------------------------------------
 -- Core options
 -----------------------------------------------------
+core.apiConfigOptions = {}
 core.units = {
     {
         label = "N/A",
@@ -305,72 +306,6 @@ core.messageConditions = {
     },
 }
 
-if Details ~= nil then
-    local conditions = {
-        {
-            label = "Nem. DPS (Current)",
-            value = "NEMESIS_DPS",
-            operators = core.constants.EXTENDED_OPERATORS,
-            type = "NUMBER"
-        },
-        {
-            label = "My DPS (Current)",
-            value = "MY_DPS",
-            operators = core.constants.EXTENDED_OPERATORS,
-            type = "NUMBER"
-        },
-        {
-            label = "Nem. DPS (Overall)",
-            value = "NEMESIS_DPS_OVERALL",
-            operators = core.constants.EXTENDED_OPERATORS,
-            type = "NUMBER"
-        },
-        {
-            label = "My DPS (Overall)",
-            value = "MY_DPS_OVERALL",
-            operators = core.constants.EXTENDED_OPERATORS,
-            type = "NUMBER"
-        },
-    }
-
-    for key, val in pairs(conditions) do
-        table.insert(core.messageConditions, val)
-    end
-end
-
-if GTFO ~= nil then
-    local conditions = {
-        {
-            label = "Nem. Avoidable (Combat)",
-            value = "NEMESIS_AD",
-            operators = core.constants.EXTENDED_OPERATORS,
-            type = "NUMBER"
-        },
-        {
-            label = "My Avoidable (Combat)",
-            value = "MY_AD",
-            operators = core.constants.EXTENDED_OPERATORS,
-            type = "NUMBER"
-        },
-        {
-            label = "Nem. Avoidable (Overall)",
-            value = "NEMESIS_AD_OVERALL",
-            operators = core.constants.EXTENDED_OPERATORS,
-            type = "NUMBER"
-        },
-        {
-            label = "My Avoidable (Overall)",
-            value = "MY_AD_OVERALL",
-            operators = core.constants.EXTENDED_OPERATORS,
-            type = "NUMBER"
-        },
-    }
-
-    for key, val in pairs(conditions) do
-        table.insert(core.messageConditions, val)
-    end
-end
-
 -- This is what the configuration screen is built from.
 core.configTree = {
     ["BOSS"] = {
@@ -424,14 +359,6 @@ core.reference = {
         ["[BOSSNAME]"] = "The name of the boss. Usable on all triggers, but may not be available.",
         ["[DUNGEONTIME]"] = "The amount of time in a Mythic+ dungeon. Usable on all triggers, but may not be available.",
         ["[BYSTANDER]"] = "Name of a random bystander (non-nemesis) in the group. Usable on all triggers. Will be the player triggering any Bystander triggers.",
-        ["[NEMESISDPS]"] = "|caa99cceeDetails! API Required|r. The chosen Nemesis's current DPS.",
-        ["[DPS]"] = "|caa99cceeDetails! API Required|r. Your current DPS.",
-        ["[NEMESISDPSOVERALL]"] = "|caa99cceeDetails! API Required|r. The chosen Nemesis's overall DPS.",
-        ["[DPSOVERALL]"] = "|caa99cceeDetails! API Required|r. Your overall DPS.",
-        ["[AVOIDABLEDAMAGE]"] = "|caa99cceeGTFO API Required|r. Your avoidable damage for the duration of combat.",
-        ["[NEMESISAVOIDABLEDAMAGE]"] = "|caa99cceeGTFO API Required|r. The chosen Nemesis's avoidable damage for the duration of combat.",
-        ["[AVOIDABLEDAMAGEOVERALL]"] = "|caa99cceeGTFO API Required|r. Your avoidable damage for the entire dungeon / instance.",
-        ["[NEMESISAVOIDABLEDAMAGEOVERALL]"] = "|caa99cceeGTFO API Required|r. The chosen Nemesis's avoidable damage for the entire dungeon / instance.",
         ["[INTERRUPTS]"] = "The number of times you have interrupted an enemy for the duration of combat.",
         ["[INTERRUPTSOVERALL]"] = "The number of times you have interrupted an enemy for the entire dungeon / instance.",
         ["[NEMESISINTERRUPTS]"] = "The number of times the chosen Nemesis has interrupted an enemy for the duration of combat.",
@@ -479,25 +406,19 @@ core.supportedReplacements = {
 }
 
 -- Numeric value replacements, for number validation
-core.numericReplacements = {
+core.numericReplacementsCore = {
     ["[NEMESISDEATHS]"] = 1,
     ["[NEMESISKILLS]"] = 1,
     ["[DEATHS]"] = 1,
     ["[KILLS]"] = 1,
     ["[KEYSTONELEVEL]"] = 1,
-    ["[NEMESISDPS]"] = 1,
-    ["[DPS]"] = 1,
-    ["[NEMESISDPSOVERALL]"] = 1,
-    ["[DPSOVERALL]"] = 1,
-    ["[AVOIDABLEDAMAGE]"] = 1,
-    ["[NEMESISAVOIDABLEDAMAGE]"] = 1,
-    ["[AVOIDABLEDAMAGEOVERALL]"] = 1,
-    ["[NEMESISAVOIDABLEDAMAGEOVERALL]"] = 1,
     ["[INTERRUPTS]"] = 1,
     ["[INTERRUPTSOVERALL]"] = 1,
     ["[NEMESISINTERRUPTS]"] = 1,
     ["[NEMESISINTERRUPTSOVERALL]"] = 1,
 }
+
+core.numericReplacements = {}
 
 function NemesisChat:GetReplacementTooltip()
     local tip = ""
@@ -615,6 +536,61 @@ core.runtimeDefaults = {
         interrupts = {}, -- key = string (player name), value = integer (number of interrupts)
         avoidableDamage = {}, -- key = string (player name), value = integer (avoidable damage taken)
     },
+    ncApi = {
+        friendlyName = "",
+        configOptions = {
+            -- {
+            --     name = "Details! API",
+            --     value = "detailsApi",
+            --     description = "Enable the Details! API for use in messages."
+            -- }
+        },
+        compatibilityChecks = {
+            -- {
+            --     configCheck = true, -- This must be true for config checks, otherwise we will not be able to enable it
+            --     exec = function()
+            --         if not core.db.profile.API[self.configOptions[1].value] then
+            --             return false, "GTFO API is not enabled."
+            --         end
+            
+            --         return true, nil
+            --     end,
+            -- },
+            -- {
+            --     configCheck = false, -- This must be true, otherwise it will not be checked when enabling
+            --     exec = function() 
+            --         if GTFO == nil then
+            --             return false, "GTFO is not installed."
+            --         end
+            
+            --         return true, nil
+            --     end,
+            -- }
+        },
+        preMessageHooks = {},
+        postMessageHooks = {},
+        subjects = {
+            -- {
+            --     label = "Nemesis DPS",
+            --     value = "NEMESIS_DPS",
+            --     exec = function() return 0 end,
+            --     operators = core.constants.EXTENDED_OPERATORS,
+            --     type = "NUMBER",
+            -- }
+        },
+        operators = {},
+        replacements = {
+            -- {
+            --     label = "Nemesis DPS",
+            --     value = "NEMESISDPS",
+            --     exec = function() return 0 end,
+            --     description = "The DPS of the Nemesis for the current fight."
+            --     isNumeric = true,
+            -- }
+        },
+        subjectMethods = {},
+        replacementMethods = {},
+    },
     configuredMessage = {
         label = "",
         channel = "GROUP",
@@ -626,7 +602,7 @@ core.runtimeDefaults = {
         left = "NEMESIS_ROLE",
         operator = "IS",
         right = "DAMAGER",
-    }
+    },
 }
 
 NCEvent = {}

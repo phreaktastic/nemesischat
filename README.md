@@ -1,3 +1,30 @@
+![Nemesis Chat](NCLogo-transparent-text.png "Nemesis Chat Logo")
+
+# Index
+
+- [Basic Flow](#basic-flow)
+    - [Step 1: An event fires](#step-1-an-event-fires)
+    - [Step 2: Proper objects are hydrated](#step-2-proper-objects-are-hydrated)
+        - [All Events](#all-events)
+        - [M+ Dungeon Start](#m-dungeon-start)
+        - [M+ Dungeon End](#m-dungeon-end)
+        - [Boss Fight Start](#boss-fight-start)
+        - [Boss Fight End](#boss-fight-end)
+        - [Combat Start](#combat-start)
+        - [Combat End](#combat-end)
+        - [NCCombat](#nccombat)
+    - [Step 3: Message is populated](#step-3-message-is-populated)
+    - [Step 4: String replacement and message sending](#step-4-string-replacement-and-message-sending)
+- [General Concepts](#general-concepts)
+    - [Efficiency](#efficiency)
+        - [Events](#events)
+        - [Logic Flow](#logic-flow)
+    - [Extensibility](#extensibility)
+        - [Core](#core)
+        - [UI / Configuration](#ui--configuration)
+        - [APIs](#apis)
+- [Contributing](#contributing)
+
 # Basic Flow
 
 Nemesis Chat works in a fairly simple manner from a high level. However, the intricacies can be somewhat daunting and complex due to the layers of abstraction.
@@ -8,7 +35,7 @@ The first line in every event: `NCEvent:Initialize()` is called, which initializ
 
 ## Step 2: Proper objects are hydrated
 
-**All Events**: 
+### All Events: 
 
 `NCEvent` is initialized with the following:
 
@@ -46,18 +73,7 @@ ncSpell = {
 },
 ```
 
-Based on the event, the above objects will be hydrated with per-event data. If APIs are enabled (currently, only Details! and GTFO are supported), they will add custom replacements to `NCMessage.customReplacements` via the helper methods. Here's one example of this in action:
-
-```
-NCMessage:AddCustomReplacement("%[DPS%]", FormatDPS(currentPlayer))
-NCMessage:AddCustomReplacement("%[NEMESISDPS%]", FormatDPS(currentNemesis))
-NCMessage:AddCustomReplacement("%[DPSOVERALL%]", FormatDPS(overallPlayer))
-NCMessage:AddCustomReplacement("%[NEMESISDPSOVERALL%]", FormatDPS(overallNemesis))
-```
-
-The above illustrates adding custom text replacements for `[DPS]`, `[NEMESISDPS]`, `[DPSOVERALL]`, and `[NEMESISDPSOVERALL]`. These will be replaced with the values we receive from Details! on a per-event cadence.
-
-Any other APIs will follow the same pattern for custom replacements. The replacements, however, **must use escaped brackets** (as you can see in the above examples).
+Based on the event, the above objects will be hydrated with per-event data. If APIs are enabled (currently, only Details! and GTFO are supported), they will add custom replacements to `NCMessage.customReplacements` via the helper methods.
 
 > **Ephemeral Objects**
 >
@@ -67,7 +83,9 @@ Any other APIs will follow the same pattern for custom replacements. The replace
 
 ---
 
-**M+ Dungeon Start**: On start, `NCDungeon` will be hydrated with the following properties:
+### M+ Dungeon Start: 
+
+On start, `NCDungeon` will be hydrated with the following properties:
 
 ```
 {
@@ -87,7 +105,9 @@ Any other APIs will follow the same pattern for custom replacements. The replace
 
 ---
 
-**M+ Dungeon End**: On end, `NCDungeon` will be updated / hydrated with the following properties:
+### M+ Dungeon End: 
+
+On end, `NCDungeon` will be updated / hydrated with the following properties:
 
 ```
 {
@@ -106,7 +126,9 @@ Any other APIs will follow the same pattern for custom replacements. The replace
 
 ---
 
-**Boss Fight Start**: On start, `NCBoss` will be hydrated with the following properties:
+### Boss Fight Start: 
+
+On start, `NCBoss` will be hydrated with the following properties:
 
 ```
 {
@@ -120,7 +142,9 @@ Any other APIs will follow the same pattern for custom replacements. The replace
 
 ---
 
-**Boss Fight End**: On end, `NCBoss` will be updated / hydrated with the following properties:
+### Boss Fight End: 
+
+On end, `NCBoss` will be updated / hydrated with the following properties:
 
 ```
 {
@@ -135,7 +159,9 @@ Any other APIs will follow the same pattern for custom replacements. The replace
 
 ---
 
-**Combat Start**: On combat start, `NCCombat` will be hydrated with the following properties:
+### Combat Start: 
+
+On combat start, `NCCombat` will be hydrated with the following properties:
 
 ```
 {
@@ -147,9 +173,11 @@ Any other APIs will follow the same pattern for custom replacements. The replace
 
 Each time an interrupt fires or avoidable damage is taken (assuming GTFO is installed and the option is enabled in NC), the above tables will be updated. NCDungeon will also be updated. This allows messages to fire based on leaving combat, and finishing a Mythic+ Dungeon.
 
-**Combat End**: On combat end, `inCombat` is updated to `false`. Data will not be wiped until a new combat start event fires.
+### Combat End: 
 
-**NCCombat**:
+On combat end, `inCombat` is updated to `false`. Data will not be wiped until a new combat start event fires.
+
+### NCCombat:
 
 This object will be hydrated with data reflecting the current in-combat encounter. This can be trash mobs or bosses. So far, properties include `interrupts` and `avoidableDamage`, but this may change as new angles are considered.
 
@@ -158,8 +186,6 @@ The purpose of this object is to store data relating strictly to the current in-
 It is currently under consideration to keep a running list of encounters. However, this is not in place currently, and this is unlikely to be published as it serves no general purpose to NC. In order to fully capitalize on the prospective benefits of keeping a running list, it seems the UI / Configuration Flow may be too complex for the average user. If you disagree with this, please message me with your idea(s) and we can make adjustments as necessary.
 
 Currently, it is also considered to house a `deaths` and `kills` table on this object. More per-combat-segment data is likely to be added.
-
----
 
 ## Step 3: Message is populated
 
@@ -188,12 +214,6 @@ core.db.profile.messages["BOSS"]["DEATH"]["NEMESIS"]
 ```
 
 The above example would retrieve a player-configured message for a nemesis dying in a boss encounter.
-
-### APIs
-
-APIs, such as the Details! API, can have a bit of extra logic. For example, we'll drop in custom replacements on `NCMessage` for `[DPS]` and `[NEMESISDPS]`. Beyond that, APIs do not offer a tremendous amount more functionality (yet?). I'm currently digging in to find a good way to leverage APIs for detecting standing in swirlies, not popping defensives, etc. That'll be some juicy smack talk!
-
-There is one thing to note about APIs in general, and the Details! API specifically. When replacing text for messages, it'll give us a formatted value, such as `78.31k` for DPS. When _comparing_ via the conditions feature, however, it will return a rounded value, such as `78310`. Future APIs must ensure that the comparison function is not formatted, and as such, may be compared to numbers.
 
 ## Step 4: String replacement and message sending
 
@@ -251,6 +271,95 @@ WeakAuras tends to lean into configurability and versatility, but still maintain
 However, some things are pretty easy and scalable. Adding new conditions is as easy as tossing them into the `core.messageConditions` object in `Init.lua`. They'll immediately appear in the configuration screen. The only other dependency would be creating the function matching the condition's value. These functions live in `NemesisChatMessage.lua`, near the end of the file, under `NCMessage.Condition`. For example, the condition for checking the Nemesis's role has a value of `NEMESIS_ROLE`. Inside `NCMessage.Condition`, you'll notice `["NEMESIS_ROLE"] = function() [...]` This function simply retrieves the name of the nemesis. Any new conditions will need to follow this same pattern.
 
 Overall, a good number of changes would likely only take a few minutes after gaining familiarity with the codebase. I've tried to keep things as painless as possible for extension, but there are (sadly) still a few relics that will be rewritten in the future.
+
+### APIs
+
+APIs are extremely easy to tie in with the `NemesisChatAPI` model. There are two examples in the code already, but we will focus on the Details! API:
+
+First, we call `NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")`, which will return the newly created API. This newly created API will also have helper functions available on it, and will allow us to chain method calls. Immediately following the instantiation of the API, we chain on several methods:
+
+```
+:AddConfigOption({
+    label = "Details! API",
+    value = "ENABLED", -- This will read in config options as NCDETAILS_ENABLED
+    description = "Enable the Details! API for use in messages.",
+})
+```
+
+This adds a configuration toggle to Nemesis Chat's `General->APIs` section. Under the hood, it will reference/set `core.db.profile.APIS["NC_DETAILS"].NC_DETAILS_ENABLED` for this toggle. It can be checked / referenced / set at any time.
+
+```
+:AddCompatibilityCheck({
+    configCheck = false,
+    exec = function() 
+        if Details == nil then
+            return false, "Details! is not installed."
+        end
+
+        return true, nil
+    end
+})
+```
+
+This method call is adding a compatibility check which will be run in core logic to ensure everything works as intended. The `configCheck` property allows for different checks to be performed at different times. Setting it to `false` ensures that we can perform this check when toggling the above added configuration toggle. Setting it to `true` would cause this to be ignored when toggling the config option. Here is an example of that:
+
+```
+:AddCompatibilityCheck({
+    configCheck = true,
+    exec = function() 
+        if not core.db.profile.API["NC_DETAILS" .. NemesisChatAPI:GetAPI("NC_DETAILS").configOptions[1].value] then
+            return false, "Details! API is not enabled."
+        end
+
+        return true, nil
+    end
+})
+```
+
+This compability check will not run when toggling config options, as it checks if the API is enabled. This will only be run in core logic.
+
+```
+:AddSubject({
+    label = "Nem. DPS (Current)",
+    value = "NEMESIS_DPS",
+    exec = function() return NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT) end,
+    operators = core.constants.EXTENDED_OPERATORS,
+    type = "NUMBER",
+})
+```
+
+This method call is adding a new subject to conditions labeled `Nem. DPS (Current)`. The `exec` property is a function which will retrieve the value immediately prior to comparison. You may add any operators you want, but they must follow the standardized operators structure. Here, we just want our `EXTENDED_OPERATORS`, which are for comparing numeric values.
+
+```
+:AddReplacement({
+    label = "Nemesis DPS",
+    value = "NEMESISDPS",
+    exec = function() return NemesisChat:FormatNumber(NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT)) end,
+    description = "The DPS of the Nemesis for the current fight.",
+    isNumeric = true,
+})
+```
+
+This method call is adding a text replacement tag. The `label` and `description` properties will be used in the Reference section of the configuration screen -- if they are not set, they will not be presented in the Reference section. The `value` property defines the tag -- in this example, the tag will be `[NEMESISDPS]` (**do not** include the square brackets!). Like the previous example, `exec` is a function which will be used to pull the proper value for messages. `isNumeric` will allow this replacement tag to be used in numeric comparisons -- if it is false, it will be treated as a non-numeric value and will throw an error if used in a numeric conparison. For comparisons, we override the comparison with a non-formatted (`3600` instead of `3.6k` for example) value for obvious reasons. You can see that below:
+
+```
+:AddReplacement({
+    value = "NEMESISDPS_CONDITION",
+    exec = function() return NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT) end,
+})
+```
+
+This is another replacement, and it is for the same thing. However, it is not formatted, has no `label` or `description`, and the value is `NEMESISDPS_CONDITION`. Nemesis Chat will first look for tags with `_CONDITION` appended for all comparisons, allowing an easy differentiation between what could go in messages (`141.23K DPS`) versus what could be compared in conditions (`141236`).
+
+Instantiating an API is possible in other addons, but was not tested / vetted. If you do instantiate an API, it is required to call the following method after all logic:
+
+```
+NemesisChatAPI:SetAPIConfigOptions()
+```
+
+This method populates all config options, including reference text and condition subjects. If it is not called, you will not see config options, reference text, or condition subjects. If it is called too early, you will see varying results. It should only be called once as it is fairly heavy, and should only be called after all data is set on the API.
+
+If you only add replacements, this call is not necessary and should not be used due to it being heavy. Replacements are pulled in per-message, and the login defined in `exec` will only be ran if the replacement tag is used within a message.
 
 # Contributing
 

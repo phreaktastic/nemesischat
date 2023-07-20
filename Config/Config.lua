@@ -15,8 +15,6 @@ core.defaults = {
 	profile = {
 		enabled = true,
         dbg = false,
-        detailsAPI = false,
-        gtfoAPI = false,
         nonCombatMode = false,
         ai = true,
         reportConfig = {
@@ -51,6 +49,7 @@ core.defaults = {
         minimumTime = 1,
         nemeses = {},
         messages = {},
+        API = {},
 	},
 }
 

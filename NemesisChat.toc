@@ -1,5 +1,5 @@
 ## Interface: 100150
-## Version: 1.5.4
+## Version: 1.5.5
 ## Title: |cff00ccffNemesis Chat|r
 ## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp
 ## Notes: The event-driven, targeted message framework.
@@ -27,15 +27,17 @@ Config\Reference.lua
 Config\About.lua
 Helpers.lua
 AI.lua
-NemesisChatBoss.lua
-NemesisChatDungeon.lua
-NemesisChatEvent.lua
-NemesisChatMessage.lua
-NemesisChatSpell.lua
-NemesisChatCombat.lua
-NemesisChatReport.lua
-BaseEvents.lua
-CustomEvents.lua
+Models\Boss.lua
+Models\Dungeon.lua
+Models\Event.lua
+Models\Message.lua
+Models\Spell.lua
+Models\Combat.lua
+Models\Report.lua
+Events\BaseEvents.lua
+Events\CustomEvents.lua
 SlashCommands.lua
-DetailsAPI.lua
+API.lua
+APIs\Details.lua
+APIs\GTFO.lua
 Core.lua

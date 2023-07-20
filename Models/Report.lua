@@ -1,7 +1,7 @@
 -----------------------------------------------------
 -- REPORT
 -----------------------------------------------------
--- This file in a POC / WIP. It is not pretty, but a
+-- This file is a POC / WIP. It is not pretty, but a
 -- legitimate report framework will eventually take
 -- its place!
 
@@ -57,12 +57,8 @@ function NemesisChat:Report(event)
         end
 
         if type == "DAMAGE" then
-            if Details == nil or not core.db.profile.detailsAPI then
+            if Details == nil or NCDetailsAPI == nil or NCDetailsAPI.GetDPS == nil then
                 return
-            end
-
-            if NCDetailsAPI == nil then
-                NemesisChat:DETAILS_METHODS()
             end
 
             for player, data in pairs(core.runtime.groupRoster) do

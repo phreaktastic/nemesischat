@@ -51,29 +51,37 @@ core.options.args.referenceGroup = {
             type = "group",
             name = "Text Replacements",
             args = {
-                infoReplacementHeader = {
+                coreReplacements = {
                     order = 0,
-                    type = "description",
-                    fontSize = "large",
-                    name = "Text Replacements",
-                },
-                infoReplacementPaddingTop = {
-                    order = 1,
-                    type = "description",
-                    fontSize = "large",
-                    name = " ",
-                },
-                infoReplacements = {
-                    order = 2,
-                    type = "description",
-                    fontSize = "medium",
-                    name = function() return NemesisChat:GetReplacementTooltip() end,
-                },
-                infoReplacementPaddingBottom = {
-                    order = 3,
-                    type = "description",
-                    fontSize = "large",
-                    name = " ",
+                    type = "group",
+                    name = "Core Replacements",
+                    inline = true,
+                    args = {
+                        infoReplacementHeader = {
+                            order = 0,
+                            type = "description",
+                            fontSize = "large",
+                            name = "Text Replacements - Nemesis Chat",
+                        },
+                        infoReplacementPaddingTop = {
+                            order = 1,
+                            type = "description",
+                            fontSize = "large",
+                            name = " ",
+                        },
+                        infoReplacements = {
+                            order = 2,
+                            type = "description",
+                            fontSize = "medium",
+                            name = function() return NemesisChat:GetReplacementTooltip() end,
+                        },
+                        infoReplacementPaddingBottom = {
+                            order = 3,
+                            type = "description",
+                            fontSize = "large",
+                            name = " ",
+                        },
+                    }
                 },
             }
         },

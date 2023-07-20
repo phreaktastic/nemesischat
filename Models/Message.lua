@@ -84,77 +84,64 @@ function NemesisChat:InstantiateMsg()
 
         -- We have a base list of replacements that will be available (mostly) everywhere. Some events
         -- will have custom replacements, such as API-based replacements (DPS numbers with Details! for example)
+        --
+        -- These are all set as functions so we don't hydrate all the replacements (inefficient), but rather only
+        -- hydrate the ones we need, when we need them.
         local msg = input
-        local myName = GetMyName()
         local replacements = {
-            ["self"] = myName,
-            ["nemesis"] = NCEvent:GetNemesis(),
-            ["nemesisDeaths"] = NCDungeon:GetDeaths(NCEvent:GetNemesis()) or 0,
-            ["nemesisKills"] = NCDungeon:GetKills(NCEvent:GetNemesis()) or 0,
-            ["deaths"] = NCDungeon:GetDeaths(myName) or 0,
-            ["kills"] = NCDungeon:GetKills(myName) or 0,
-            ["dungeonTime"] = NemesisChat:GetDuration(NCDungeon:GetStartTime()),
-            ["keystoneLevel"] = NCDungeon:GetLevel(),
-            ["bossTime"] = NemesisChat:GetDuration(NCBoss:GetStartTime()),
-            ["bossName"] = NCBoss:GetName(),
-            ["interrupts"] = NCCombat:GetInterrupts(myName),
-            ["interruptsOverall"] = NCDungeon:GetInterrupts(myName),
-            ["nemesisInterrupts"] = NCCombat:GetInterrupts(NCEvent:GetNemesis()),
-            ["nemesisInterruptsOverall"] = NCDungeon:GetInterrupts(NCEvent:GetNemesis()),
-            ["nemesisRole"] = GetRole(NCEvent:GetNemesis()),
-            ["role"] = GetRole(),
-            ["bystander"] = NCEvent:GetBystander(),
-            ["bystanderRole"] = GetRole(NCEvent:GetBystander()),
+            ["self"] = function() return GetMyName() end,
+            ["nemesis"] = function() return NCEvent:GetNemesis() end,
+            ["nemesisDeaths"] = function() return NCDungeon:GetDeaths(NCEvent:GetNemesis()) or 0 end,
+            ["nemesisKills"] = function() return NCDungeon:GetKills(NCEvent:GetNemesis()) or 0 end,
+            ["deaths"] = function() return NCDungeon:GetDeaths(GetMyName()) or 0 end,
+            ["kills"] = function() return NCDungeon:GetKills(GetMyName()) or 0 end,
+            ["dungeonTime"] = function() return NemesisChat:GetDuration(NCDungeon:GetStartTime()) end,
+            ["keystoneLevel"] = function() return NCDungeon:GetLevel() end,
+            ["bossTime"] = function() return NemesisChat:GetDuration(NCBoss:GetStartTime()) end,
+            ["bossName"] = function() return NCBoss:GetName() end,
+            ["interrupts"] = function() return NCCombat:GetInterrupts(GetMyName()) end,
+            ["interruptsOverall"] = function() return NCDungeon:GetInterrupts(GetMyName()) end,
+            ["nemesisInterrupts"] = function() return NCCombat:GetInterrupts(NCEvent:GetNemesis()) end,
+            ["nemesisInterruptsOverall"] = function() return NCDungeon:GetInterrupts(NCEvent:GetNemesis()) end,
+            ["nemesisRole"] = function() return GetRole(NCEvent:GetNemesis()) end,
+            ["role"] = function() return GetRole() end,
+            ["bystander"] = function() return NCEvent:GetBystander() end,
+            ["bystanderRole"] = function() return GetRole(NCEvent:GetBystander()) end,
         }
 
         if NCSpell:GetTarget() then
-            replacements["target"] = NCSpell:GetTarget()
+            replacements["target"] = function() return NCSpell:GetTarget() end
         end
 
         -- We have no Bystander, and shouldn't actually ever reach this due to treating this as a failed condition.
         if NCEvent:GetBystander() == "" then 
-            replacements["bystander"] = "someone"
-            replacements["bystanderRole"] = "party animal"
-        end
-
-        -- We will add these here since there isn't technically an API. Sad.
-        -- To be refactored nonetheless. This shouldn't live here.
-        if core.db.profile.gtfoAPI and GTFO then
-            replacements["avoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(GetMyName()))
-            replacements["nemesisAvoidableDamage"] = NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()))
-            replacements["avoidableDamageOverall"] = NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(GetMyName()))
-            replacements["nemesisAvoidableDamageOverall"] = NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()))
-
-            -- Condition specific, unformatted so they can be compared
-            NCMessage:AddCustomReplacement("%[AVOIDABLEDAMAGE_CONDITION%]", NCCombat:GetAvoidableDamage(GetMyName()))
-            NCMessage:AddCustomReplacement("%[AVOIDABLEDAMAGEOVERALL_CONDITION%]", NCDungeon:GetAvoidableDamage(GetMyName()))
-            NCMessage:AddCustomReplacement("%[NEMESISAVOIDABLEDAMAGE_CONDITION%]", NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()))
-            NCMessage:AddCustomReplacement("%[NEMESISAVOIDABLEDAMAGEOVERALL_CONDITION%]", NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()))
+            replacements["bystander"] = function() return "someone" end
+            replacements["bystanderRole"] = function() return "party animal" end
         end
 
         -- SpellId will be populated for feasts, while ExtraSpellId will be populated for interrupts
         if NCSpell:IsValidSpell() then
-            replacements["spell"] = NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or "Spell"
+            replacements["spell"] = function() return NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or "Spell" end
         end
 
         -- Custom replacements, example: Details API [DPS] and [NEMESISDPS], this comes first as overrides are possible
         for k, v in pairs(NCMessage.customReplacements) do
             -- First check for condition specific replacements
-            msg = msg:gsub(k, v)
+            msg = msg:gsub(k, v())
         end
 
         -- Remove condition-specific replacement text
         msg = msg:gsub("_CONDITION%]", "]")
 
-        -- One more pass without condition replacement text, as a fallback
+        -- One more pass on custom replacements, without condition replacement text, as a fallback
         for k, v in pairs(NCMessage.customReplacements) do
-            msg = msg:gsub(k, v)
+            msg = msg:gsub(k, v())
         end
 
         -- Format the message
         for k, v in pairs(core.supportedReplacements) do
             if (k ~= nil and v ~= nil and replacements[v] ~= nil) then
-                msg = msg:gsub(k, replacements[v])
+                msg = msg:gsub(k, replacements[v]())
             end
         end
 
@@ -199,6 +186,21 @@ function NemesisChat:InstantiateMsg()
 
     -- If `channel` is `GROUP`, we need to set it to `PARTY`, `INSTANCE_CHAT`, or `RAID`
     function NCMessage:CheckChannel()
+        -- Dynamically set the target
+        if NCMessage:GetChannel() == "WHISPER_NEMESIS" then
+            NCMessage:SetChannel("WHISPER")
+            NCMessage:SetTarget(NCEvent:GetNemesis())
+        elseif NCMessage:GetChannel() == "WHISPER_BYSTANDER" then
+            NCMessage:SetChannel("WHISPER")
+            NCMessage:SetTarget(NCEvent:GetBystander())
+        else
+            if NCEvent:GetTarget() ~= "BYSTANDER" then
+                NCMessage:SetTarget(NCEvent:GetNemesis())
+            else
+                NCMessage:SetTarget(NCEvent:GetBystander())
+            end
+        end
+        
         if NCMessage.channel ~= "GROUP" then
             return
         end
@@ -228,13 +230,13 @@ function NemesisChat:InstantiateMsg()
             return
         end
 
-        if core.db.profile.detailsAPI == true then
-            if NemesisChat:DETAILS_REPLACEMENTS() == false then
-                NemesisChat:Print("ERROR: Details API is enabled, but an error occurred when attempting to pull data from it! Please ensure Details is enabled.")
-                NCEvent:Initialize()
-                return
-            end
-        end
+        -- if core.db.profile.detailsAPI == true then
+        --     if NemesisChat:DETAILS_REPLACEMENTS() == false then
+        --         NemesisChat:Print("ERROR: Details API is enabled, but an error occurred when attempting to pull data from it! Please ensure Details is enabled.")
+        --         NCEvent:Initialize()
+        --         return
+        --     end
+        -- end
 
         local msg = ""
 
@@ -273,21 +275,6 @@ function NemesisChat:InstantiateMsg()
         end
 
         NCMessage:SetMessage(msg.message)
-
-        -- Dynamically set the target
-        if NCMessage:GetChannel() == "WHISPER_NEMESIS" then
-            NCMessage:SetChannel("WHISPER")
-            NCMessage:SetTarget(NCEvent:GetNemesis())
-        elseif NCMessage:GetChannel() == "WHISPER_BYSTANDER" then
-            NCMessage:SetChannel("WHISPER")
-            NCMessage:SetTarget(NCEvent:GetBystander())
-        else
-            if NCEvent:GetTarget() ~= "BYSTANDER" then
-                NCMessage:SetTarget(NCEvent:GetNemesis())
-            else
-                NCMessage:SetTarget(NCEvent:GetBystander())
-            end
-        end
     end
 
     -- Get a pool of conditional messages pertaining to the current scenarios
@@ -348,7 +335,20 @@ function NemesisChat:InstantiateMsg()
     end
 
     function NCMessage:CheckCondition(condition)
-        local val1 = NCMessage.Condition[condition.left]()
+        local subjectFunc = NCMessage.Condition[condition.left]
+
+        if subjectFunc == nil then
+            for k, api in pairs(core.apis) do
+                local tempSubjectFunc = api.replacementMethods[condition.left]
+
+                if tempSubjectFunc ~= nil then
+                    subjectFunc = tempSubjectFunc
+                    break
+                end
+            end
+        end
+
+        local val1 = subjectFunc()
         local val2 = NCMessage:GetReplacedString(condition.right:gsub("%[([A-Z_]*)%]", "[%1_CONDITION]")) -- Set this to a condition-specific replacement, non-formatted, ie [NEMESISDPS] -> [NEMESISDPS_CONDITION]
         local operator = condition.operator
 
@@ -374,9 +374,14 @@ function NemesisChat:InstantiateMsg()
             return
         end
 
+        -- Custom replacements / hooks from APIs
+        NemesisChatAPI:InitPreMessage()
+
         NCMessage:ReplaceStrings()
         NCMessage:CheckChannel()
         NCMessage:Send()
+
+        NemesisChatAPI:InitPostMessage()
     end
 
     function NCMessage:ValidMessage()
@@ -449,42 +454,6 @@ function NemesisChat:InstantiateMsg()
             end
 
             return core.runtime.groupRoster[val1].isNemesis == false
-        end,
-        
-        -- Details! API 
-        ["NEMESIS_DPS"] = function()
-            if NemesisChat.DETAILS and NemesisChat.DETAILS["NEMESIS_DPS"] ~= nil then
-                return NemesisChat.DETAILS["NEMESIS_DPS"]()
-            end
-        end,
-        ["MY_DPS"] = function()
-            if NemesisChat.DETAILS and NemesisChat.DETAILS["MY_DPS"] ~= nil then
-                return NemesisChat.DETAILS["MY_DPS"]()
-            end
-        end,
-        ["NEMESIS_DPS_OVERALL"] = function()
-            if NemesisChat.DETAILS and NemesisChat.DETAILS["NEMESIS_DPS_OVERALL"] ~= nil then
-                return NemesisChat.DETAILS["NEMESIS_DPS_OVERALL"]()
-            end
-        end,
-        ["MY_DPS_OVERALL"] = function()
-            if NemesisChat.DETAILS and NemesisChat.DETAILS["MY_DPS_OVERALL"] ~= nil then
-                return NemesisChat.DETAILS["MY_DPS_OVERALL"]()
-            end
-        end,
-
-        -- GTFO API
-        ["NEMESIS_AD"] = function()
-            return NCCombat:GetAvoidableDamage(NCEvent:GetNemesis()) .. ""
-        end,
-        ["MY_AD"] = function()
-            return NCCombat:GetAvoidableDamage(GetMyName()) .. ""
-        end,
-        ["NEMESIS_AD_OVERALL"] = function()
-            return NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis()) .. ""
-        end,
-        ["MY_AD_OVERALL"] = function()
-            return NCDungeon:GetAvoidableDamage(GetMyName()) .. ""
         end,
     }
 end
