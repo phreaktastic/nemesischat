@@ -32,7 +32,7 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
     :AddCompatibilityCheck({
         configCheck = true,
         exec = function() 
-            if not core.db.profile.API["NC_GTFO" .. NemesisChatAPI:GetAPI("NC_GTFO").configOptions[1].value] then
+            if not core.db.profile.API["NC_GTFO_" .. NemesisChatAPI:GetAPI("NC_GTFO").configOptions[1].value] then
                 return false, "GTFO API is not enabled."
             end
     

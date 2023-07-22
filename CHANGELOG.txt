@@ -17,6 +17,7 @@
    - Other addons can also easily tie into the reference and API configuration screens.
 - Added Bystander replacements for the GTFO and Details! APIs.
 - More replacements and subjects in conditions to come! This release makes it tremendously easier to add/mantain them.
+- Fixed whispers.
 
 ### 1.5.4
 

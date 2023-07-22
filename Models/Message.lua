@@ -173,7 +173,7 @@ function NemesisChat:InstantiateMsg()
             SendChatMessage(NCMessage.message, NCMessage.channel)
         -- It's a whisper, it requires a third argument
         else
-            SendChatMessage(NCMessage.message, NCMessage.channel, NCMessage.target)
+            SendChatMessage(NCMessage.message, NCMessage.channel, nil, NCMessage.target)
         end
 
         core.runtime.lastMessage = GetTime()
@@ -248,9 +248,6 @@ function NemesisChat:InstantiateMsg()
             end
         end
 
-        -- Channel must be set prior to checking conditions
-        NCMessage:SetChannel(msg.channel)
-
         -- Ensure conditions are met on all messages
         local availableMessages = NCMessage:GetConditionalMessages(profileMessages)
 
@@ -274,6 +271,7 @@ function NemesisChat:InstantiateMsg()
             return
         end
 
+        NCMessage:SetChannel(msg.channel)
         NCMessage:SetMessage(msg.message)
     end
 
@@ -308,8 +306,8 @@ function NemesisChat:InstantiateMsg()
     end
 
     function NCMessage:CheckAllConditions(message)
-        local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil) or (NCMessage:GetChannel() == "WHISPER" and NCEvent:GetTarget() == "SELF")
-        local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil) or (NCMessage:GetChannel() == "WHISPER" and NCEvent:GetTarget() == "SELF")
+        local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_NEMESIS" and NCEvent:GetTarget() == "SELF")
+        local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_BYSTANDER" and NCEvent:GetTarget() == "SELF")
 
         if includesNemesis and not NemesisChat:HasPartyNemeses() then
             return false
@@ -339,13 +337,25 @@ function NemesisChat:InstantiateMsg()
 
         if subjectFunc == nil then
             for k, api in pairs(core.apis) do
-                local tempSubjectFunc = api.replacementMethods[condition.left]
+                local tempSubjectFunc
+
+                for i, subject in pairs(api.subjects) do
+                    if subject.value == condition.left then
+                        tempSubjectFunc = subject.exec
+                        break
+                    end
+                end
 
                 if tempSubjectFunc ~= nil then
                     subjectFunc = tempSubjectFunc
                     break
                 end
             end
+        end
+
+        if subjectFunc == nil then
+            NemesisChat:Print("ERROR: Condition subject function not found for " .. condition.left .. "!")
+            return false
         end
 
         local val1 = subjectFunc()

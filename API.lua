@@ -91,7 +91,7 @@ function NemesisChatAPI:AddAPI(name, friendlyName)
         return true
     end
 
-    -- This checks if hte API can be ran / referenced
+    -- This checks if the API can be ran / referenced
     core.apis[name].CheckRunCompatibility = function(self)
         local checks = NemesisChatAPI:GetCompatibilityChecks(name)
 
@@ -154,6 +154,10 @@ function NemesisChatAPI:AddConfigOption(name, configOption)
         return
     end
 
+    if not core.apis[name].configOptions then
+        core.apis[name].configOptions = {}
+    end
+
     table.insert(core.apis[name].configOptions, configOption)
 
     return NemesisChatAPI
@@ -190,6 +194,10 @@ function NemesisChatAPI:AddPreMessageHook(name, func)
         return
     end
 
+    if not core.apis[name].preMessageHooks then
+        core.apis[name].preMessageHooks = {}
+    end
+
     table.insert(core.apis[name].preMessageHooks, func)
 
     return NemesisChatAPI
@@ -206,6 +214,10 @@ end
 function NemesisChatAPI:AddPostMessageHook(name, func)
     if not NemesisChatAPI:HasAPI(name) then
         return
+    end
+
+    if not core.apis[name].postMessageHooks then
+        core.apis[name].postMessageHooks = {}
     end
 
     table.insert(core.apis[name].postMessageHooks, func)
@@ -230,6 +242,10 @@ function NemesisChatAPI:AddSubject(name, subject)
         return
     end
 
+    if not core.apis[name].subjects then
+        core.apis[name].subjects = {}
+    end
+
     table.insert(core.apis[name].subjects, subject)
 
     return NemesisChatAPI
@@ -252,6 +268,10 @@ function NemesisChatAPI:AddOperator(name, operator)
         return
     end
 
+    if not core.apis[name].operators then
+        core.apis[name].operators = {}
+    end
+
     table.insert(core.apis[name].operators, operator)
 
     return NemesisChatAPI
@@ -270,12 +290,15 @@ function NemesisChatAPI:AddReplacement(name, replacement)
         return
     end
 
-    if not replacement.label or not replacement.value or not replacement.exec then
+    if not replacement.value or not replacement.exec then
         return
     end
 
-    table.insert(core.apis[name].replacements, replacement)
+    if not core.apis[name].replacements then
+        core.apis[name].replacements = {}
+    end
 
+    table.insert(core.apis[name].replacements, replacement)
     return NemesisChatAPI
 end
 
@@ -305,8 +328,8 @@ function NemesisChatAPI:GetAPIConfigOptions()
                     order = configOrder,
                     type = "toggle",
                     name = configOption.label,
-                    get = function() return core.db.profile.API[name] end,
-                    set = function(_, value) core.db.profile.API[name] = value end,
+                    get = function() return core.db.profile.API[name .. "_" .. configOption.value] end,
+                    set = function(_, value) core.db.profile.API[name .. "_" .. configOption.value] = value end,
                     disabled = function() return not success end,
                 }
 
@@ -401,7 +424,7 @@ function NemesisChatAPI:SetAPIConfigOptions()
 end
 
 function NemesisChatAPI:InitPreMessage()
-    if not core.apis or #core.apis == 0 then
+    if not core.apis or type(core.apis) ~= "table" then
         return
     end
 
@@ -434,12 +457,12 @@ function NemesisChatAPI:InitPreMessage()
 end
 
 function NemesisChatAPI:InitPostMessage()
-    if not core.apis or #core.apis == 0 then
+    if not core.apis or type(core.apis) ~= "table" then
         return
     end
 
     for name, api in pairs(core.apis) do
-        for _, hook in pairs(api.preMessageHooks) do
+        for _, hook in pairs(api.postMessageHooks) do
             hook()
         end
     end

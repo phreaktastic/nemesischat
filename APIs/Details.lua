@@ -14,7 +14,7 @@ local _, core = ...;
 NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddConfigOption({
         label = "Details! API",
-        value = "ENABLED", -- This will read in config options as NCDETAILS_ENABLED
+        value = "ENABLED", -- This will read in config options as NC_DETAILS_ENABLED
         description = "Enable the Details! API for use in messages.",
     })
     :AddCompatibilityCheck({
@@ -30,7 +30,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddCompatibilityCheck({
         configCheck = true,
         exec = function() 
-            if not core.db.profile.API["NC_DETAILS" .. NemesisChatAPI:GetAPI("NC_DETAILS").configOptions[1].value] then
+            if not core.db.profile.API["NC_DETAILS_" .. NemesisChatAPI:GetAPI("NC_DETAILS").configOptions[1].value] then
                 return false, "Details! API is not enabled."
             end
     

@@ -374,6 +374,8 @@ core.reference = {
         ["PARTY"] = "|cffaaaaff",
         ["YELL"] = "|cffff4040",
         ["WHISPER"] = "|cffff80ff",
+        ["WHISPER_NEMESIS"] = "|cffff80ff",
+        ["WHISPER_BYSTANDER"] = "|cffff80ff",
     }
 }
 
