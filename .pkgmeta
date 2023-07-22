@@ -1,3 +1,6 @@
 manual-changelog:
   filename: CHANGELOG.txt
   markup-type: markdown
+
+ignore:
+  - NCLogo-transparent-text.png
