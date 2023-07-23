@@ -31,7 +31,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddCompatibilityCheck({
         configCheck = true,
         exec = function() 
-            if not core.db.profile.API["NC_DETAILS_" .. NemesisChatAPI:GetAPI("NC_DETAILS").configOptions[1].value] then
+            if not NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() then
                 return false, "Details! API is not enabled."
             end
     
