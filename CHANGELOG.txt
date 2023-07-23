@@ -8,6 +8,14 @@
 
 ## 🩹 Patches
 
+### 1.5.7
+
+- Config options for APIs fully migrated over to new system.
+
+### 1.5.6
+
+- Removed README logo from game package.
+
 ### 1.5.5
 
 - Refactored API functionality.
