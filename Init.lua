@@ -545,6 +545,7 @@ core.runtimeDefaults = {
             --     name = "Details! API",
             --     value = "detailsApi",
             --     description = "Enable the Details! API for use in messages."
+            --     primary = true, -- Flags the config option as the primary toggle for the API
             -- }
         },
         compatibilityChecks = {

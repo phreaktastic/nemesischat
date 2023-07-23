@@ -16,6 +16,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
         label = "Details! API",
         value = "ENABLED", -- This will read in config options as NC_DETAILS_ENABLED
         description = "Enable the Details! API for use in messages.",
+        primary = true,
     })
     :AddCompatibilityCheck({
         configCheck = false,

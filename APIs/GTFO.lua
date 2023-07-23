@@ -18,6 +18,7 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
         label = "GTFO API",
         value = "ENABLED", -- This will read in config options as NCGTFO_ENABLED
         description = "Enable the GTFO API for use in messages.",
+        primary = true,
     })
     :AddCompatibilityCheck({
         configCheck = false,

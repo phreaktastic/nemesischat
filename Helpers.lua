@@ -388,17 +388,6 @@ function NemesisChat:InitializeHelpers()
         end
     end
 
-    -- Check compatibility with enabled APIs
-    function NemesisChat:CheckAPICompatibility()
-        if core.db.profile.detailsAPI == true and Details == nil then
-            self:Print("Details API is enabled, but Details cannot be found! Please enable Details.")
-        end
-
-        if core.db.profile.gtfoAPI == true and GTFO == nil then
-            self:Print("GTFO API is enabled, but GTFO cannot be found! Please enable GTFO.")
-        end
-    end
-
     -- Check the roster and (un/re)subscribe events appropriately
     function NemesisChat:CheckGroup()
         if not IsNCEnabled() then

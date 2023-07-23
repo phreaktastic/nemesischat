@@ -111,44 +111,6 @@ function NemesisChat:ToggleDebug(info, value)
     end
 end
 
-function NemesisChat:IsDetailsAPI()
-	return core.db.profile.detailsAPI
-end
-
-function NemesisChat:ToggleDetailsAPI(info, value)
-    if value == true and Details == nil then
-        self:Print("Cannot enable Details API: Details could not be found! Please ensure it is enabled and functional.")
-        ShowApiErrorPopup("Details!")
-        return
-    end
-	core.db.profile.detailsAPI = value
-
-    if value == false then
-        return
-    end
-
-    ShowTogglePopup("Details! API")
-end
-
-function NemesisChat:IsGtfoAPI()
-    return core.db.profile.gtfoAPI
-end
-
-function NemesisChat:ToggleGtfoAPI(info, value)
-    if value == true and Details == nil then
-        self:Print("Cannot enable GTFO API: GTFO could not be found! Please ensure it is enabled and functional.")
-        ShowApiErrorPopup("GTFO")
-        return
-    end
-	core.db.profile.gtfoAPI = value
-
-    if value == false then
-        return
-    end
-
-    ShowTogglePopup("GTFO API")
-end
-
 function NemesisChat:IsNonCombatMode()
     return core.db.profile.nonCombatMode
 end

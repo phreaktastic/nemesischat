@@ -57,7 +57,7 @@ function NemesisChat:Report(event)
         end
 
         if type == "DAMAGE" then
-            if Details == nil or NCDetailsAPI == nil or NCDetailsAPI.GetDPS == nil then
+            if Details == nil or NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or NCDetailsAPI == nil or NCDetailsAPI.GetDPS == nil then
                 return
             end
 
@@ -101,7 +101,7 @@ function NemesisChat:Report(event)
                 botMsg = "Lowest DPS for " .. segName .. ": " .. botPlayer .. " at " .. NemesisChat:FormatNumber(botVal) .. "."
             end
         elseif type == "AVOIDABLE" then
-            if GTFO == nil or not core.db.profile.gtfoAPI then
+            if GTFO == nil or not NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() then
                 return
             end
 

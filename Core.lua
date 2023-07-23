@@ -24,7 +24,6 @@ function NemesisChat:OnEnable()
     NemesisChat:RegisterEvent("PLAYER_ENTERING_WORLD")
 
     NemesisChat:SetMyName()
-    NemesisChat:CheckAPICompatibility()
 end
 
 function NemesisChat:OnDisable()

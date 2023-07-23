@@ -33,7 +33,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting the highest damage dealt",
             get = function() return core.db.profile.reportConfig["DAMAGE"]["TOP"] end,
             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["TOP"] = value end,
-            disabled = function() return core.db.profile.detailsAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false end,
         },
         bottomDamageToggle = {
             order = 3,
@@ -42,7 +42,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting the lowest damage dealt",
             get = function() return core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] end,
             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] = value end,
-            disabled = function() return core.db.profile.detailsAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false end,
         },
         combatDmgToggle = {
             order = 4,
@@ -51,7 +51,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting damage after all combat segments",
             get = function() return core.db.profile.reportConfig["DAMAGE"]["COMBAT"] end,
             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["COMBAT"] = value end,
-            disabled = function() return core.db.profile.detailsAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false end,
         },
         bossDmgToggle = {
             order = 5,
@@ -60,7 +60,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting damage after bosses",
             get = function() return core.db.profile.reportConfig["DAMAGE"]["BOSS"] end,
             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOSS"] = value end,
-            disabled = function() return core.db.profile.detailsAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false end,
         },
         dungeonDmgToggle = {
             order = 6,
@@ -69,7 +69,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting damage after M+ completion",
             get = function() return core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] end,
             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] = value end,
-            disabled = function() return core.db.profile.detailsAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false end,
         },
         damagePaddingBottom = {
             order = 7,
@@ -97,7 +97,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting the highest amount of avoidable damage taken",
             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["TOP"] end,
             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["TOP"] = value end,
-            disabled = function() return core.db.profile.gtfoAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false end,
         },
         bottomAdToggle = {
             order = 11,
@@ -106,7 +106,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting the lowest amount of avoidable damage taken",
             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] end,
             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] = value end,
-            disabled = function() return core.db.profile.gtfoAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false end,
         },
         combatAdToggle = {
             order = 12,
@@ -115,7 +115,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting avoidable damage after all combat segments",
             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] end,
             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] = value end,
-            disabled = function() return core.db.profile.gtfoAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false end,
         },
         bossAdToggle = {
             order = 13,
@@ -124,7 +124,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting avoidable damage after bosses",
             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] end,
             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] = value end,
-            disabled = function() return core.db.profile.gtfoAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false end,
         },
         dungeonAdToggle = {
             order = 14,
@@ -133,7 +133,7 @@ core.options.args.reportsGroup = {
             desc = "Toggle reporting avoidable damage after M+ completion",
             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] end,
             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] = value end,
-            disabled = function() return core.db.profile.gtfoAPI == false end,
+            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false end,
         },
         adPaddingBottom = {
             order = 15,
