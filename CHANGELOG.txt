@@ -2,50 +2,32 @@
 
 ## 📢 Summary
 
+**1.6.x**: Lots of new replacement tags and condition subjects. Added a `Flag Friends as Nemeses` option -- if anyone in your group is on your friends list, they'll be flagged as a Nemesis.
+
 **1.5.x**: Group and raid join/leave events have been split for a higher degree of granularity. More replacements added. Group and raid join/leave events will be exempt from the message interval limit, however it will be capped at 3 per trigger (imagine inviting large groups into a raid and firing off join messages for each player 🤢).
 
 **1.4.x**: Nemesis Chat has shifted its paradigm in a big way! Nemeses are now essentially just a feature; everything within the addon will function with or without Nemeses. This means you can simply define triggered messages for Bystanders and yourself, and the addon will function as expected.
 
 ## 🩹 Patches
 
-### 1.5.7
-
-- Config options for APIs fully migrated over to new system.
-
-### 1.5.6
-
-- Removed README logo from game package.
-
-### 1.5.5
-
-- Refactored API functionality.
-   - Most of this is under the hood and just allows for much easier, cleaner definitions of APIs. Everything relating to APIs has been refactored, with replacements and subjects being extremely easy to add now.
-   - The Reference section in configuration now lists Core and API references separately.
-   - The General section in configuration now has a sub-menu for enabling all APIs.
-   - Other addons can also easily tie into the reference and API configuration screens.
-- Added Bystander replacements for the GTFO and Details! APIs.
-- More replacements and subjects in conditions to come! This release makes it tremendously easier to add/mantain them.
-- Fixed whispers.
-
-### 1.5.4
-
-- Configuration update with explicit breakouts for whisper targets.
-
-### 1.5.3
-
-- Another fix on Bystander replacements.
-
-### 1.5.2
-
-- Fixed dynamic targeting for whispers. In the past, this was hardcoded to _always_ whisper a Nemesis. With the new approach, this will be set based on who triggered the event.
-- Fixed a Bystander replacements bug.
-
-### 1.5.1
-
-- Typo fixes
-- Properly updating the version of the addon
+None yet, 1.6.0 is fresh!
 
 ## ⭐ Latest Versions
+
+### 1.6.0
+
+- Added new option, `Flag Friends as Nemeses`: When enabled, anyone in your group who is on your friends list will be flagged as a Nemesis.
+- Normalized all replacement tags by adding missing Bystander replacement tags
+- New condition subjects
+   - Nemesis
+   - Bystander
+   - Boss Name
+   - Keystone Level
+- New condition operators:
+   - Is friend (currently only available on Bystander, Nemesis, and Spell Target)
+   - NOT friend (currently only available on Bystander, Nemesis, and Spell Target)
+- Migration from hardcoded core functionality to new API flow
+- UI clean up
 
 ### 1.5.0
 

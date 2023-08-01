@@ -38,8 +38,16 @@ core.options.args.generalGroup = {
             get = "IsNonCombatMode",
             set = "ToggleNonCombatMode",
         },
-        ai = {
+        flagFriendsAsNemeses = {
             order = 3,
+            type = "toggle",
+            name = "Flag Friends as Nemeses",
+            desc = "If a person within your group is on your friends list, they will be flagged as a Nemesis.",
+            get = function() return core.db.profile.flagFriendsAsNemeses end,
+            set = function(_, value) core.db.profile.flagFriendsAsNemeses = value end,
+        },
+        ai = {
+            order = 4,
             type = "toggle",
             name = "AI Phrases",
             desc = "Toggle AI Generated Phrases. This allows you to run NC without configuring any phrases. NOTE: This will only taunt Nemeses currently. More functionality is on the way!",
@@ -47,7 +55,7 @@ core.options.args.generalGroup = {
             set = "ToggleAI",
         },
         globalChanceToggle = {
-            order = 4,
+            order = 5,
             type = "toggle",
             name = "Use Global Chance",
             desc = "Toggle Global Chance. This allows you to ensure that messages will only be sent a percentage of the time. NOTE: This does not apply for reports.",
@@ -55,7 +63,7 @@ core.options.args.generalGroup = {
             set = "ToggleUseGlobalChance",
         },
         globalChanceSlider = {
-            order = 5,
+            order = 6,
             type = "range",
             min = 0.0,
             max = 1.0,
@@ -67,7 +75,7 @@ core.options.args.generalGroup = {
             disabled = function() return core.db.profile.useGlobalChance ~= true end
         },
         minimumTimeSlider = {
-            order = 6,
+            order = 7,
             type = "range",
             min = 1,
             max = 300,
@@ -78,7 +86,7 @@ core.options.args.generalGroup = {
             set = "SetMinimumTime",
         },
         apis = {
-            order = 7,
+            order = 8,
             type = "group",
             name = "APIs",
             inline = false,

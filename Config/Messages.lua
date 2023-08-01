@@ -214,8 +214,8 @@ core.options.args.messagesGroup = {
         conditionSubject = {
             order = 23,
             type = "select",
-            name = "Condition",
-            width = 0.96,
+            name = "Subject",
+            width = 0.90,
             values = "GetConditionSubjects",
             get = "GetConditionSubject",
             set = "SetConditionSubject",
@@ -814,16 +814,6 @@ end
 
 function NemesisChat:GetRefReplacementText()
     return core.reference.replacements[selectedRefReplacement]
-end
-
-function NemesisChat:GetReplacementTooltip()
-    local tip = ""
-
-    for key, value in pairs(core.reference.replacements) do 
-        tip = tip .. "|c00ffcc00" .. key .. "|r: " .. value .. "\n"
-    end
-
-    return tip
 end
 
 function NemesisChat:UpdateMessagePreview()

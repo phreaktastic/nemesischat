@@ -50,40 +50,7 @@ core.options.args.referenceGroup = {
             order = 1,
             type = "group",
             name = "Text Replacements",
-            args = {
-                coreReplacements = {
-                    order = 0,
-                    type = "group",
-                    name = "Core Replacements",
-                    inline = true,
-                    args = {
-                        infoReplacementHeader = {
-                            order = 0,
-                            type = "description",
-                            fontSize = "large",
-                            name = "Text Replacements - Nemesis Chat",
-                        },
-                        infoReplacementPaddingTop = {
-                            order = 1,
-                            type = "description",
-                            fontSize = "large",
-                            name = " ",
-                        },
-                        infoReplacements = {
-                            order = 2,
-                            type = "description",
-                            fontSize = "medium",
-                            name = function() return NemesisChat:GetReplacementTooltip() end,
-                        },
-                        infoReplacementPaddingBottom = {
-                            order = 3,
-                            type = "description",
-                            fontSize = "large",
-                            name = " ",
-                        },
-                    }
-                },
-            }
+            args = {}
         },
         messageChance = {
             order = 2,

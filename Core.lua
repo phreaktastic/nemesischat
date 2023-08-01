@@ -17,6 +17,7 @@ function NemesisChat:OnInitialize()
 
     NemesisChat:RegisterChatCommand("nc", "SlashCommand")
     NemesisChat:RegisterChatCommand("nemesischat", "SlashCommand")
+    NemesisChat:PopulateFriends()
 end
 
 function NemesisChat:OnEnable()
@@ -24,6 +25,7 @@ function NemesisChat:OnEnable()
     NemesisChat:RegisterEvent("PLAYER_ENTERING_WORLD")
 
     NemesisChat:SetMyName()
+    NemesisChat:PopulateFriends()
 end
 
 function NemesisChat:OnDisable()

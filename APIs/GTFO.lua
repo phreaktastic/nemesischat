@@ -11,12 +11,10 @@ local _, core = ...;
 -- GTFO functions for altering event responses
 -----------------------------------------------------
 
-NCGTFOAPI = {}
-
 NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
     :AddConfigOption({
-        label = "GTFO API",
-        value = "ENABLED", -- This will read in config options as NCGTFO_ENABLED
+        label = "Enable GTFO API",
+        value = "ENABLED", -- This will read in config options as NC_GTFO_ENABLED
         description = "Enable the GTFO API for use in messages.",
         primary = true,
     })

@@ -403,7 +403,7 @@ function NemesisChat:InitializeHelpers()
     
         for key,val in pairs(members) do
             if val ~= nil then
-                local isNemesis = (core.db.profile.nemeses[val] ~= nil)
+                local isNemesis = (core.db.profile.nemeses[val] ~= nil or (core.runtime.friends[val] ~= nil and core.db.profile.flagFriendsAsNemeses))
                 count = count + 1
     
                 if isNemesis then
@@ -411,6 +411,7 @@ function NemesisChat:InitializeHelpers()
                 end
     
                 core.runtime.groupRoster[val] = {
+                    isFriend = (core.runtime.friends[val] ~= nil),
                     isNemesis = isNemesis,
                     role = UnitGroupRolesAssigned(val),
                 }
@@ -467,6 +468,36 @@ function NemesisChat:InitializeHelpers()
         end
 
         return math.floor(thousands / 10) / 100 .. "m"
+    end
+
+    -- Populate friends map with currently online friends
+    function NemesisChat:PopulateFriends()
+        if GetTime() - core.runtime.lastFriendCheck < 60 then
+            return
+        end
+
+        local _, onlineBnetFriends = BNGetNumFriends()
+
+        core.runtime.friends = {}
+
+        for i = 1, onlineBnetFriends do
+            local info = C_BattleNet.GetFriendAccountInfo(i)
+            if info and info.gameAccountInfo then
+                local character, client = info.gameAccountInfo.characterName, info.gameAccountInfo.clientProgram or ""
+
+                -- Only add WoW characters
+                if character and client == BNET_CLIENT_WOW then
+                    -- Account for realm names, since our roster does as well
+                    if info.gameAccountInfo.realmName and info.gameAccountInfo.realmName ~= GetNormalizedRealmName() then
+                        character = character .. "-" .. info.gameAccountInfo.realmName
+                    end
+
+                    core.runtime.friends[character] = 1
+                end
+            end
+        end
+
+        core.runtime.lastFriendCheck = GetTime()
     end
 end
 

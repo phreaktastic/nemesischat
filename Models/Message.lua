@@ -88,41 +88,6 @@ function NemesisChat:InstantiateMsg()
         -- These are all set as functions so we don't hydrate all the replacements (inefficient), but rather only
         -- hydrate the ones we need, when we need them.
         local msg = input
-        local replacements = {
-            ["self"] = function() return GetMyName() end,
-            ["nemesis"] = function() return NCEvent:GetNemesis() end,
-            ["nemesisDeaths"] = function() return NCDungeon:GetDeaths(NCEvent:GetNemesis()) or 0 end,
-            ["nemesisKills"] = function() return NCDungeon:GetKills(NCEvent:GetNemesis()) or 0 end,
-            ["deaths"] = function() return NCDungeon:GetDeaths(GetMyName()) or 0 end,
-            ["kills"] = function() return NCDungeon:GetKills(GetMyName()) or 0 end,
-            ["dungeonTime"] = function() return NemesisChat:GetDuration(NCDungeon:GetStartTime()) end,
-            ["keystoneLevel"] = function() return NCDungeon:GetLevel() end,
-            ["bossTime"] = function() return NemesisChat:GetDuration(NCBoss:GetStartTime()) end,
-            ["bossName"] = function() return NCBoss:GetName() end,
-            ["interrupts"] = function() return NCCombat:GetInterrupts(GetMyName()) end,
-            ["interruptsOverall"] = function() return NCDungeon:GetInterrupts(GetMyName()) end,
-            ["nemesisInterrupts"] = function() return NCCombat:GetInterrupts(NCEvent:GetNemesis()) end,
-            ["nemesisInterruptsOverall"] = function() return NCDungeon:GetInterrupts(NCEvent:GetNemesis()) end,
-            ["nemesisRole"] = function() return GetRole(NCEvent:GetNemesis()) end,
-            ["role"] = function() return GetRole() end,
-            ["bystander"] = function() return NCEvent:GetBystander() end,
-            ["bystanderRole"] = function() return GetRole(NCEvent:GetBystander()) end,
-        }
-
-        if NCSpell:GetTarget() then
-            replacements["target"] = function() return NCSpell:GetTarget() end
-        end
-
-        -- We have no Bystander, and shouldn't actually ever reach this due to treating this as a failed condition.
-        if NCEvent:GetBystander() == "" then 
-            replacements["bystander"] = function() return "someone" end
-            replacements["bystanderRole"] = function() return "party animal" end
-        end
-
-        -- SpellId will be populated for feasts, while ExtraSpellId will be populated for interrupts
-        if NCSpell:IsValidSpell() then
-            replacements["spell"] = function() return NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or "Spell" end
-        end
 
         -- Custom replacements, example: Details API [DPS] and [NEMESISDPS], this comes first as overrides are possible
         for k, v in pairs(NCMessage.customReplacements) do
@@ -136,13 +101,6 @@ function NemesisChat:InstantiateMsg()
         -- One more pass on custom replacements, without condition replacement text, as a fallback
         for k, v in pairs(NCMessage.customReplacements) do
             msg = msg:gsub(k, v())
-        end
-
-        -- Format the message
-        for k, v in pairs(core.supportedReplacements) do
-            if (k ~= nil and v ~= nil and replacements[v] ~= nil) then
-                msg = msg:gsub(k, replacements[v]())
-            end
         end
 
         return msg
@@ -464,6 +422,20 @@ function NemesisChat:InstantiateMsg()
             end
 
             return core.runtime.groupRoster[val1].isNemesis == false
+        end,
+        ["IS_FRIEND"] = function(val1, val2)
+            if core.runtime.groupRoster[val1] == nil then
+                return false
+            end
+
+            return core.runtime.groupRoster[val1].isFriend
+        end,
+        ["NOT_FRIEND"] = function(val1, val2)
+            if core.runtime.groupRoster[val1] == nil then
+                return true
+            end
+
+            return not core.runtime.groupRoster[val1].isFriend
         end,
     }
 end

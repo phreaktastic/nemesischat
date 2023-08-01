@@ -13,7 +13,7 @@ local _, core = ...;
 
 NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddConfigOption({
-        label = "Details! API",
+        label = "Enable Details! API",
         value = "ENABLED", -- This will read in config options as NC_DETAILS_ENABLED
         description = "Enable the Details! API for use in messages.",
         primary = true,
@@ -147,6 +147,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
         exec = function() return NCDetailsAPI:GetDPS(GetMyName(), DETAILS_SEGMENTID_OVERALL) end,
     })
 
+-- This is a good example of reusable functionality while leveraging the NC API
 NCDetailsAPI = {}
 
 function NCDetailsAPI:GetDPS(player, segment)

@@ -283,10 +283,11 @@ First, we call `NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")`, which will
     label = "Details! API",
     value = "ENABLED", -- This will read in config options as NCDETAILS_ENABLED
     description = "Enable the Details! API for use in messages.",
+    primary = true,
 })
 ```
 
-This adds a configuration toggle to Nemesis Chat's `General->APIs` section. Under the hood, it will reference/set `core.db.profile.APIS["NC_DETAILS"].NC_DETAILS_ENABLED` for this toggle. It can be checked / referenced / set at any time.
+This adds a configuration toggle to Nemesis Chat's `General->APIs` section. Under the hood, it will reference/set `core.db.profile.APIS["NC_DETAILS"].NC_DETAILS_ENABLED` for this toggle. It can be checked / referenced / set at any time. The `primary` property allows this to function as the toggle for enabling / disabling the API. If multiple config toggles are set with `primary = true`, unexpected results will ensue. ONLY set this to `true` for the primary enable/disable toggle for the API.
 
 ```
 :AddCompatibilityCheck({

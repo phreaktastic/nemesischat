@@ -148,7 +148,15 @@ core.constants.NC_OPERATORS = {
     {
         label = "NOT a Nemesis",
         value = "NOT_NEMESIS"
-    }
+    },
+    {
+        label = "is a friend",
+        value = "IS_FRIEND",
+    },
+    {
+        label = "NOT a friend",
+        value = "NOT_FRIEND",
+    },
 }
 core.events = {
     env = {
@@ -345,28 +353,6 @@ core.channelsExplicit = {
 }
 
 core.reference = {
-    replacements = {
-        ["[TARGET]"] = "The target of an event. Usable on Interrupt and Unit Killed.",
-        ["[SPELL]"] = "The spell which was cast or interrupted. Can be used to link feasts in feast events. Usable on Interrupt and Feast triggers.",
-        ["[NEMESIS]"] = "The nemesis which was used for an event. In the case of triggers like Death, it'll be the Nemesis who died. In other cases, a random Nemesis will be chosen if more than one are in your party.",
-        ["[SELF]"] = "Your character's name. Usable on all triggers.",
-        ["[NEMESISDEATHS]"] = "The number of deaths a Nemesis has. In the case of triggers like Death, it'll be the Nemesis who died. In other cases, a random Nemesis will be chosen if more than one are in your party. Usable on all triggers which do not ignore Unit.",
-        ["[NEMESISKILLS]"] = "The number of units a Nemesis has killed. In the case of triggers like Death, it'll be the Nemesis who died. In other cases, a random Nemesis will be chosen if more than one are in your party. Usable on all triggers which do not ignore Unit.",
-        ["[DEATHS]"] = "The number of deaths you have. Usable on all triggers.",
-        ["[KILLS]"] = "The number of units you have killed. Usable on all triggers.",
-        ["[KEYSTONELEVEL]"] = "The level of the Mythic+ Keystone. Usable on all triggers, but may not be available.",
-        ["[BOSSTIME]"] = "The duration of a boss fight in the format '|c00ffcc00X|rmin |c00ffcc00Y|rsec'. Usable on all triggers, but may not be available.",
-        ["[BOSSNAME]"] = "The name of the boss. Usable on all triggers, but may not be available.",
-        ["[DUNGEONTIME]"] = "The amount of time in a Mythic+ dungeon. Usable on all triggers, but may not be available.",
-        ["[BYSTANDER]"] = "Name of a random bystander (non-nemesis) in the group. Usable on all triggers. Will be the player triggering any Bystander triggers.",
-        ["[INTERRUPTS]"] = "The number of times you have interrupted an enemy for the duration of combat.",
-        ["[INTERRUPTSOVERALL]"] = "The number of times you have interrupted an enemy for the entire dungeon / instance.",
-        ["[NEMESISINTERRUPTS]"] = "The number of times the chosen Nemesis has interrupted an enemy for the duration of combat.",
-        ["[NEMESISINTERRUPTSOVERALL]"] = "The number of times the chosen Nemesis has interrupted an enemy for the entire dungeon / instance.",
-        ["[BYSTANDERROLE]"] = "The/a Bystander's role (Tank | Healer | DPS).",
-        ["[NEMESISROLE]"] = "The/a Nemesis's role (Tank | Healer | DPS).",
-        ["[ROLE]"] = "Your role (Tank | Healer | DPS).",
-    },
     colors = {
         ["SAY"] = "|cffffffff",
         ["EMOTE"] = "|cffff8040",
@@ -379,58 +365,9 @@ core.reference = {
     }
 }
 
--- This is janky, and is a relic from the very first iteration. To be refactored later.
-core.supportedReplacements = {
-    ["%[TARGET%]"] = "target",
-    ["%[SPELL%]"] = "spell",
-    ["%[NEMESIS%]"] = "nemesis",
-    ["%[SELF%]"] = "self",
-    ["%[NEMESISDEATHS%]"] = "nemesisDeaths",
-    ["%[NEMESISKILLS%]"] = "nemesisKills",
-    ["%[KILLS%]"] = "kills",
-    ["%[DEATHS%]"] = "deaths",
-    ["%[KEYSTONELEVEL%]"] = "keystoneLevel",
-    ["%[BOSSTIME%]"] = "bossTime",
-    ["%[BOSSNAME%]"] = "bossName",
-    ["%[DUNGEONTIME%]"] = "dungeonTime",
-    ["%[BYSTANDER%]"] = "bystander",
-    ["%[AVOIDABLEDAMAGE%]"] = "avoidableDamage",
-    ["%[AVOIDABLEDAMAGEOVERALL%]"] = "avoidableDamageOverall",
-    ["%[NEMESISAVOIDABLEDAMAGE%]"] = "nemesisAvoidableDamage",
-    ["%[NEMESISAVOIDABLEDAMAGEOVERALL%]"] = "nemesisAvoidableDamageOverall", -- Oof, I need to figure out a better tag here...
-    ["%[INTERRUPTS%]"] = "interrupts",
-    ["%[INTERRUPTSOVERALL%]"] = "interruptsOverall",
-    ["%[NEMESISINTERRUPTS%]"] = "nemesisInterrupts",
-    ["%[NEMESISINTERRUPTSOVERALL%]"] = "nemesisInterruptsOverall",
-    ["%[BYSTANDERROLE%]"] = "bystanderRole",
-    ["%[NEMESISROLE%]"] = "nemesisRole",
-    ["%[ROLE%]"] = "role",
-}
-
 -- Numeric value replacements, for number validation
-core.numericReplacementsCore = {
-    ["[NEMESISDEATHS]"] = 1,
-    ["[NEMESISKILLS]"] = 1,
-    ["[DEATHS]"] = 1,
-    ["[KILLS]"] = 1,
-    ["[KEYSTONELEVEL]"] = 1,
-    ["[INTERRUPTS]"] = 1,
-    ["[INTERRUPTSOVERALL]"] = 1,
-    ["[NEMESISINTERRUPTS]"] = 1,
-    ["[NEMESISINTERRUPTSOVERALL]"] = 1,
-}
-
+core.numericReplacementsCore = {}
 core.numericReplacements = {}
-
-function NemesisChat:GetReplacementTooltip()
-    local tip = ""
-
-    for key, value in pairs(core.reference.replacements) do 
-        tip = tip .. "|c00ffcc00" .. key .. "|r: " .. value .. "\n"
-    end
-
-    return tip
-end
 
 -- Credit for feast IDs goes to: Addon "FeastDrop" -- Original addon from Morsker (Dinnerbell) updated by Kyrgune
 -- NemesisChat modifications: Setting old xpac feasts to 0, current to 1. Allows for taunting people when they drop old feasts :)
@@ -486,6 +423,7 @@ core.feastIDs = {
 core.runtimeDefaults = {
     myName = "",
     lastFeast = 0,
+    lastFriendCheck = 0,
     lastMessage = 0,
     replacements = {},
     deathCounter = {},
@@ -539,6 +477,7 @@ core.runtimeDefaults = {
         avoidableDamage = {}, -- key = string (player name), value = integer (avoidable damage taken)
     },
     ncApi = {
+        -- Sample values provided as reference for API
         friendlyName = "",
         configOptions = {
             -- {
@@ -593,6 +532,11 @@ core.runtimeDefaults = {
         },
         subjectMethods = {},
         replacementMethods = {},
+    },
+    friends = {
+        -- A simple cache for any online friends, with their character names as the key. Allows for
+        -- different interactions with friends, such as whispering them when they join a group.
+        -- ["CharacterName"] = 1,
     },
     configuredMessage = {
         label = "",

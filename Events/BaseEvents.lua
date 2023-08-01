@@ -74,9 +74,10 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
         for key,val in pairs(members) do
             if val ~= nil then
-                local isNemesis = (core.db.profile.nemeses[val] ~= nil)
+                local isNemesis = (core.db.profile.nemeses[val] ~= nil or (core.runtime.friends[val] ~= nil and core.db.profile.flagFriendsAsNemeses))
     
                 core.runtime.groupRoster[val] = {
+                    isFriend = (core.runtime.friends[val] ~= nil),
                     isNemesis = isNemesis,
                     role = UnitGroupRolesAssigned(val),
                 }
@@ -99,9 +100,10 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     else
         for key,val in pairs(joins) do
             if val ~= nil then
-                local isNemesis = (core.db.profile.nemeses[val] ~= nil)
+                local isNemesis = (core.db.profile.nemeses[val] ~= nil or (core.runtime.friends[val] ~= nil and core.db.profile.flagFriendsAsNemeses))
     
                 core.runtime.groupRoster[val] = {
+                    isFriend = (core.runtime.friends[val] ~= nil),
                     isNemesis = isNemesis,
                     role = UnitGroupRolesAssigned(val),
                 }

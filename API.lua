@@ -24,6 +24,7 @@ function NemesisChatAPI:AddAPI(name, friendlyName)
     core.apis[name].friendlyName = friendlyName
 
     -- Add callable functions to the individual API for ease of use
+    -- Still considering inheritence here, but I'm not sure if it's worth it
     core.apis[name].AddConfigOption = function(self, configOption)
         NemesisChatAPI:AddConfigOption(name, configOption)
 
@@ -325,33 +326,67 @@ function NemesisChatAPI:GetAPIConfigOptions()
     local configOrder = 0
     local refText = {}
     local refTextOrder = 2
-    local refGroupOrder = 1
+    local refGroupOrder = 0
     local subjects = {}
     local numericReplacements = {}
 
     for name, api in pairs(core.apis) do
         if api.configOptions then
             local success, message = core.apis[name]:CheckConfigCompatibility()
+            local tempConfigOptions = {}
+            local tempConfigOrder = 1
+            local replacementCount = 0
+            local subjectCount = 0
 
-            for _, configOption in pairs(api.configOptions) do
-                configOptions[name .. "_" .. configOption.value] = {
-                    order = configOrder,
+            for _, configOption in ipairs(api.configOptions) do
+                tempConfigOptions[name .. "_" .. configOption.value] = {
+                    order = tempConfigOrder,
                     type = "toggle",
                     name = configOption.label,
+                    descStyle = "inline",
+                    width = "full",
                     get = function() return core.db.profile.API[name .. "_" .. configOption.value] end,
                     set = function(_, value) core.db.profile.API[name .. "_" .. configOption.value] = value end,
                     disabled = function() return not success end,
                 }
 
-                if configOption.description then
-                    if success then
-                        configOptions[name .. "_" .. configOption.value].desc = configOption.description
-                    else
-                        configOptions[name .. "_" .. configOption.value].desc = message
+                if success then
+                    tempConfigOptions[name .. "_" .. configOption.value].desc = configOption.description
+                elseif configOption.description then
+                    tempConfigOptions[name .. "_" .. configOption.value].desc = message
+                end
+
+                tempConfigOrder = tempConfigOrder + 1
+            end
+
+            if tempConfigOrder > 1 then
+                if api.replacements then
+                    for _, replacement in ipairs(api.replacements) do
+                        replacementCount = replacementCount + 1
                     end
                 end
 
-                configOrder = configOrder + 1
+                if api.subjects then
+                    for _, subject in ipairs(api.subjects) do
+                        subjectCount = subjectCount + 1
+                    end
+                end
+
+                tempConfigOptions[name .. "_SUMMARY"] = {
+                    order = 0,
+                    type = "description",
+                    fontSize = "medium",
+                    width = "full",
+                    name = api.friendlyName .. " enables |c00ffcc00" .. replacementCount .. "|r text replacement tags and |c00ffcc00" .. subjectCount .. "|r condition subjects.",
+                }
+
+                configOptions[name] = {
+                    order = configOrder,
+                    type = "group",
+                    name = api.friendlyName,
+                    inline = true,
+                    args = tempConfigOptions,
+                }
             end
         end
 
@@ -359,7 +394,7 @@ function NemesisChatAPI:GetAPIConfigOptions()
             local shouldAdd = false
             local groupItems = {}
 
-            for _, replacement in pairs(api.replacements) do
+            for _, replacement in ipairs(api.replacements) do
                 if replacement.label and replacement.description then
                     groupItems[replacement.value] = {
                         order = refTextOrder,
