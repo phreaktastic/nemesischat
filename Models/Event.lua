@@ -11,6 +11,25 @@ local _, core = ...;
 -- Event getters, setters, and helper methods
 -----------------------------------------------------
 
+local UnitIsUnconscious = UnitIsUnconscious
+local CombatLogGetCurrentEventInfo =  CombatLogGetCurrentEventInfo
+local UnitThreatSituation = UnitThreatSituation
+local IsInGroup = IsInGroup
+local IsInInstance = IsInInstance
+local UnitInParty = UnitInParty
+local UnitGroupRolesAssigned = UnitGroupRolesAssigned
+local UnitClassification = UnitClassification
+local UnitName = UnitName
+local UnitHealth = UnitHealth
+local UnitHealthMax = UnitHealthMax
+local UnitPower = UnitPower
+local UnitPowerMax = UnitPowerMax
+local UnitPowerType = UnitPowerType
+local GetTime = GetTime
+local SendChatMessage = SendChatMessage
+local IsInGroup = IsInGroup
+local IsInRaid = IsInRaid
+
 function NemesisChat:InstantiateEvent()
     function NCEvent:Initialize()
         NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
@@ -125,6 +144,8 @@ function NemesisChat:InstantiateEvent()
         NCEvent:SetEvent("INTERRUPT")
         NCEvent:SetTargetFromSource(source)
 
+        NCSegment:GlobalAddInterrupt(source)
+
         NCSpell:Interrupt(source, dest, spellId, spellName, extraSpellId)
     end
 
@@ -148,8 +169,8 @@ function NemesisChat:InstantiateEvent()
             return
         end
 
-        local isReplace = (GetTime() - core.runtime.lastFeast <= 20)
-        core.runtime.lastFeast = GetTime()
+        local isReplace = (GetTime() - NCRuntime:GetLastFeast() <= 20)
+        NCRuntime:UpdateLastFeast()
 
         if isReplace then
             NCEvent:SetEvent("REFEAST")
@@ -163,9 +184,13 @@ function NemesisChat:InstantiateEvent()
     end
 
     -- Set the Category, Event, and Target for a group heal event
-    function NCEvent:Heal(source, dest, spellId, spellName)
+    function NCEvent:Heal(source, dest, spellId, spellName, healAmount)
         NCEvent:SetEvent("HEAL")
         NCEvent:SetTargetFromSource(source)
+
+        NCSegment:GlobalAddHeals(healAmount, source, dest)
+
+        NemesisChat:SetLastHealPlayerState(source, dest)
 
         NCSpell:Spell(source, dest, spellId, spellName)
     end
@@ -175,7 +200,7 @@ function NemesisChat:InstantiateEvent()
         NCEvent:SetEvent("KILL")
         NCEvent:SetTargetFromSource(source)
 
-        NemesisChat:IncrementKills(source)
+        NCSegment:GlobalAddKill(source)
     end
 
     -- Set the Category, Event, and Target for a group member death event
@@ -183,54 +208,10 @@ function NemesisChat:InstantiateEvent()
         NCEvent:SetEvent("DEATH")
         NCEvent:SetTargetFromSource(dest)
 
-        NemesisChat:IncrementDeaths(dest)
+        NCSegment:GlobalAddDeath(dest)
 
         if NCBoss:IsActive() then
             NCEvent:SetCategory("BOSS")
-        end
-    end
-
-    -- Helper for starting a M+ dungeon
-    function NCEvent:StartChallenge()
-        NCEvent:SetCategory("CHALLENGE")
-        NCEvent:SetEvent("START")
-        NCEvent:SetTarget("NA")
-        NCEvent:RandomNemesis()
-        NCEvent:RandomBystander()
-    end
-
-    -- Helper for ending a M+ dungeon
-    function NCEvent:EndChallenge(onTime)
-        NCEvent:SetCategory("CHALLENGE")
-        if onTime then NCEvent:SetEvent("SUCCESS") else NCEvent:SetEvent("FAIL") end
-        NCEvent:SetTarget("NA")
-        NCEvent:RandomNemesis()
-        NCEvent:RandomBystander()
-    end
-
-    -- Helper for starting a boss encounter
-    function NCEvent:StartBoss()
-        NCEvent:SetCategory("BOSS")
-        NCEvent:SetEvent("START")
-        NCEvent:SetTarget("NA")
-        NCEvent:RandomNemesis()
-        NCEvent:RandomBystander()
-    end
-
-    -- Helper for ending a boss encounter
-    function NCEvent:EndBoss(isSuccess)
-        NCEvent:SetCategory("BOSS")
-        NCEvent:SetTarget("NA")
-        NCEvent:RandomNemesis()
-        NCEvent:RandomBystander()
-
-        if NemesisChat:IsWipe() then 
-            NCEvent:SetEvent("FAIL") 
-        elseif isSuccess == false then
-            -- Boss reset, not a wipe
-        else 
-            -- Boss killed
-            NCEvent:SetEvent("SUCCESS") 
         end
     end
 

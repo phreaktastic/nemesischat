@@ -17,7 +17,13 @@ core.defaults = {
         dbg = false,
         nonCombatMode = false,
         ai = true,
+        flagFriendsAsNemeses = false,
+        flagGuildmatesAsNemeses = false,
         reportConfig = {
+            channel = "GROUP",
+            excludeNemeses = false,
+            reportLowPerformersOnWipe = false,
+            reportLowPerformersOnDungeonFail = false,
             ["DAMAGE"] = {
                 ["TOP"] = false,
                 ["BOTTOM"] = false,
@@ -39,6 +45,41 @@ core.defaults = {
                 ["BOSS"] = false,
                 ["DUNGEON"] = false,
             },
+            ["DEATHS"] = {
+                ["TOP"] = false,
+                ["BOTTOM"] = false,
+                ["COMBAT"] = false,
+                ["BOSS"] = false,
+                ["DUNGEON"] = false,
+            },
+            ["OFFHEALS"] = {
+                ["TOP"] = false,
+                ["BOTTOM"] = false,
+                ["COMBAT"] = false,
+                ["BOSS"] = false,
+                ["DUNGEON"] = false,
+            },
+            ["PULLS"] = {
+                ["TOP"] = false,
+                ["BOTTOM"] = false,
+                ["COMBAT"] = false,
+                ["BOSS"] = false,
+                ["DUNGEON"] = false,
+                ["REALTIME"] = false,
+            },
+            ["NEGLECTEDHEALS"] = {
+                ["REALTIME"] = false,
+            },
+            ["AFFIXES"] = {
+                ["CASTSTART"] = false,
+                ["CASTINTERRUPTED"] = false,
+                ["CASTSUCCESS"] = false,
+                ["MARKERS"] = false,
+                ["TOP"] = false,
+                ["BOTTOM"] = false,
+                ["BOSS"] = false,
+                ["DUNGEON"] = false,
+            }
         },
         aiConfig = {
             selected = "taunts",

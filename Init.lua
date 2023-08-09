@@ -78,11 +78,11 @@ function GetRole(player)
     if player == nil or player == GetMyName() then
         role = UnitGroupRolesAssigned("player")
     else
-        if core.runtime.groupRoster[player] == nil then
+        if NCRuntime:GetGroupRosterPlayer(player) == nil then
             return "party animal"
         end
 
-        role = core.runtime.groupRoster[player].role
+        role = NCRuntime:GetGroupRosterPlayer(player).role
     end
 
     for key, val in pairs(core.roles) do
@@ -157,6 +157,14 @@ core.constants.NC_OPERATORS = {
         label = "NOT a friend",
         value = "NOT_FRIEND",
     },
+    {
+        label = "is a guildmate",
+        value = "IS_GUILDMATE",
+    },
+    {
+        label = "NOT a guildmate",
+        value = "NOT_GUILDMATE",
+    }
 }
 core.events = {
     env = {
@@ -415,7 +423,25 @@ core.feastIDs = {
 	[382427] = 1, -- Grand Banquet of the Kalu'ak (DF)
 	[382423] = 1, -- Yusa's Hearty Stew (DF)
 	[383063] = 1, -- Hoard of Draconic Delicacies (DF)
-}	
+}
+
+core.affixMobs = {
+    "Spiteful Shade",
+    "Incorporeal",
+    "Afflicted Soul",
+}
+
+core.affixMobsMarker = {
+    "Incorporeal",
+    "Afflicted Soul",
+}
+
+core.markers = {
+    1,
+    5,
+    7,
+    8,
+}
 
 -----------------------------------------------------
 -- Core tracking initialization
@@ -425,10 +451,16 @@ core.runtimeDefaults = {
     lastFeast = 0,
     lastFriendCheck = 0,
     lastMessage = 0,
-    replacements = {},
-    deathCounter = {},
-    killCounter = {},
+    currentMarkerIndex = 0,
     groupRoster = {},
+    pulledUnits = {},
+    playerStates = {},
+    friends = {
+        -- A simple cache for any online friends, with their character names as the key. Allows for
+        -- different interactions with friends, such as whispering them when they join a group.
+        -- ["CharacterName"] = 1,
+    },
+    petOwners = {},
     ncEvent = {
         category = "",
         event = "",
@@ -449,7 +481,6 @@ core.runtimeDefaults = {
         startTime = 0,
         completeTime = 0,
         totalTime = 0,
-        complete = false,
         success = false,
         deathCounter = {},
         killCounter = {},
@@ -460,7 +491,6 @@ core.runtimeDefaults = {
         active = false,
         startTime = 0,
         name = "",
-        complete = false,
         success = false,
     },
     ncSpell = {
@@ -532,11 +562,6 @@ core.runtimeDefaults = {
         },
         subjectMethods = {},
         replacementMethods = {},
-    },
-    friends = {
-        -- A simple cache for any online friends, with their character names as the key. Allows for
-        -- different interactions with friends, such as whispering them when they join a group.
-        -- ["CharacterName"] = 1,
     },
     configuredMessage = {
         label = "",

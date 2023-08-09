@@ -30,7 +30,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Boss Name",
         value = "BOSS_NAME",
-        exec = function() return NCBoss:GetName() end,
+        exec = function() return NCBoss:GetIdentifier() end,
         operators = core.constants.OPERATORS,
         type = "INPUT",
     })
@@ -44,7 +44,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Boss Name",
         value = "BOSSNAME",
-        exec = function() return NCBoss:GetName() end,
+        exec = function() return NCBoss:GetIdentifier() end,
         description = "The boss's name.",
         isNumeric = false,
     })

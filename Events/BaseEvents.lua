@@ -24,16 +24,16 @@ function NemesisChat:COMBAT_LOG_EVENT_UNFILTERED()
     NemesisChat:PopulateCombatEventDetails()
 end
 
-function NemesisChat:CHALLENGE_MODE_START(_)
+function NemesisChat:CHALLENGE_MODE_START()
     NCEvent:Initialize()
     NCDungeon:Start()
-
     NemesisChat:HandleEvent()
 end
 
 function NemesisChat:CHALLENGE_MODE_COMPLETED()
+    local _, level, totalTime, onTime = C_ChallengeMode.GetCompletionInfo()
     NCEvent:Initialize()
-    NCDungeon:End()
+    NCDungeon:Finish(onTime)
 
     NemesisChat:HandleEvent()
 
@@ -42,19 +42,14 @@ end
 
 function NemesisChat:ENCOUNTER_START(_, encounterID, encounterName, difficultyID, groupSize, instanceID)
     NCEvent:Initialize()
-
-    NCBoss:Start(encounterName)
-
+    NCBoss:Reset(encounterName, true)
     NemesisChat:HandleEvent()
 end
 
 function NemesisChat:ENCOUNTER_END(_, encounterID, encounterName, difficultyID, groupSize, success, fightTime)
     NCEvent:Initialize()
-
-    NCBoss:End(success)
-
+    NCBoss:Finish(success)
     NemesisChat:HandleEvent()
-
     NemesisChat:Report("BOSS")
 end
 
@@ -64,23 +59,27 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     local joins,leaves = NemesisChat:GetRosterDelta()
 
     -- We left
-    if #leaves > 0 and #leaves == NemesisChat:GetLength(core.runtime.groupRoster) then
-        core.runtime.groupRoster = {}
+    if #leaves > 0 and #leaves == NemesisChat:GetLength(NCRuntime:GetGroupRoster()) then
+        NCRuntime:ClearGroupRoster()
     -- We joined, or we invited someone to form a group
-    elseif NemesisChat:GetLength(core.runtime.groupRoster) == 0 and #joins > 0 then
-        core.runtime.groupRoster = {}
+    elseif NemesisChat:GetLength(NCRuntime:GetGroupRoster()) == 0 and #joins > 0 then
+        NCRuntime:ClearGroupRoster()
         local members = NemesisChat:GetPlayersInGroup()
         local isLeader = UnitIsGroupLeader(GetMyName())
 
         for key,val in pairs(members) do
             if val ~= nil then
-                local isNemesis = (core.db.profile.nemeses[val] ~= nil or (core.runtime.friends[val] ~= nil and core.db.profile.flagFriendsAsNemeses))
+                local isInGuild = UnitIsInMyGuild(val) ~= nil
+                local isNemesis = (core.db.profile.nemeses[val] ~= nil or (NCRuntime:GetFriend(val) ~= nil and core.db.profile.flagFriendsAsNemeses) or (isInGuild and core.db.profile.flagGuildiesAsNemeses))
     
-                core.runtime.groupRoster[val] = {
-                    isFriend = (core.runtime.friends[val] ~= nil),
+                local newPlayer = {
+                    isGuildmate = isInGuild,
+                    isFriend = NCRuntime:IsFriend(val),
                     isNemesis = isNemesis,
                     role = UnitGroupRolesAssigned(val),
                 }
+
+                NCRuntime:AddGroupRosterPlayer(val, newPlayer)
 
                 -- We're the leader, fire off some join events
                 if isLeader then
@@ -100,13 +99,17 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     else
         for key,val in pairs(joins) do
             if val ~= nil then
-                local isNemesis = (core.db.profile.nemeses[val] ~= nil or (core.runtime.friends[val] ~= nil and core.db.profile.flagFriendsAsNemeses))
+                local isInGuild = UnitIsInMyGuild(val) ~= nil
+                local isNemesis = (core.db.profile.nemeses[val] ~= nil or (NCRuntime:GetFriend(val) ~= nil and core.db.profile.flagFriendsAsNemeses) or (isInGuild and core.db.profile.flagGuildiesAsNemeses))
     
-                core.runtime.groupRoster[val] = {
-                    isFriend = (core.runtime.friends[val] ~= nil),
+                local newPlayer = {
+                    isGuildmate = isInGuild,
+                    isFriend = NCRuntime:IsFriend(val),
                     isNemesis = isNemesis,
                     role = UnitGroupRolesAssigned(val),
                 }
+
+                NCRuntime:AddGroupRosterPlayer(val, newPlayer)
     
                 if #joins <= 3 then
                     NemesisChat:PLAYER_JOINS_GROUP(val, isNemesis)
@@ -116,13 +119,13 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     
         for key,val in pairs(leaves) do
             if val ~= nil then
-                local player = core.runtime.groupRoster[val]
+                local player = NCRuntime:GetGroupRosterPlayer(val)
     
                 if #leaves <= 3 then
                     NemesisChat:PLAYER_LEAVES_GROUP(val, player.isNemesis)
                 end
     
-                core.runtime.groupRoster[val] = nil
+                NCRuntime:RemoveGroupRosterPlayer(val)
             end
         end
     end
@@ -133,18 +136,23 @@ end
 -- We leverage this event for entering combat
 function NemesisChat:PLAYER_REGEN_DISABLED()
     NCEvent:Initialize()
-    NCCombat:Initialize()
-    NCCombat:EnterCombat()
-
+    NCCombat:Reset()
+    NCCombat:Start()
+    
+    NCRuntime:ClearPlayerStates()
     NemesisChat:HandleEvent()
 end
 
 -- We leverage this event for exiting combat
 function NemesisChat:PLAYER_REGEN_ENABLED()
     NCEvent:Initialize()
-    NCCombat:LeaveCombat()
+    NCCombat:Finish()
 
     NemesisChat:HandleEvent()
 
     NemesisChat:Report("COMBAT")
+end
+
+function NemesisChat:PLAYER_ROLES_ASSIGNED()
+    NemesisChat:CheckGroup()
 end

@@ -108,20 +108,20 @@ function NemesisChat:InstantiateMsg()
 
     function NCMessage:Send()
         -- Anti-spam, hardcoded to prevent setting it to 0
-        if GetTime() - core.runtime.lastMessage < 1 and not NCMessage:IsMinTimeException() then
+        if GetTime() - NCRuntime:GetLastMessage() < 1 and not NCMessage:IsMinTimeException() then
             NCEvent:Initialize()
             return
         end
 
         -- Config driven minimum time between messages
-        if GetTime() - core.runtime.lastMessage < core.db.profile.minimumTime and not NCMessage:IsMinTimeException() then
+        if GetTime() - NCRuntime:GetLastMessage() < core.db.profile.minimumTime and not NCMessage:IsMinTimeException() then
             NCEvent:Initialize()
             return
         end
 
         -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
         -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
-        if core.db.profile.nonCombatMode and NCCombat:InCombat() and (NCEvent:GetCategory() ~= "BOSS" or NCEvent:GetEvent() ~= "START") then
+        if core.db.profile.nonCombatMode and NCCombat:IsActive() and (NCEvent:GetCategory() ~= "BOSS" or NCEvent:GetEvent() ~= "START") then
             NCEvent:Initialize()
             return
         end
@@ -134,7 +134,7 @@ function NemesisChat:InstantiateMsg()
             SendChatMessage(NCMessage.message, NCMessage.channel, nil, NCMessage.target)
         end
 
-        core.runtime.lastMessage = GetTime()
+        NCRuntime:UpdateLastMessage()
     end
 
     -- Group join events are an exception to the minimum time rule
@@ -158,21 +158,8 @@ function NemesisChat:InstantiateMsg()
                 NCMessage:SetTarget(NCEvent:GetBystander())
             end
         end
-        
-        if NCMessage.channel ~= "GROUP" then
-            return
-        end
 
-        -- Default to party chat
-        local channel = "PARTY"
-
-        -- In an instance
-        if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then channel = "INSTANCE_CHAT" end
-        
-        -- In a raid
-        if IsInRaid() then channel = "RAID" end
-
-        NCMessage:SetChannel(channel)
+        NCMessage:SetChannel(NemesisChat:GetChannel(NCMessage:GetChannel()))
     end
 
     -- Set values for a random configured message
@@ -360,7 +347,7 @@ function NemesisChat:InstantiateMsg()
     NCMessage.Condition = {
         -- Subjects
         ["NEMESIS_ROLE"] = function()
-            return core.runtime.groupRoster[NCEvent:GetNemesis()].role
+            return NCRuntime:GetGroupRosterPlayer(NCEvent:GetNemesis()).role
         end,
         ["SPELL_ID"] = function()
             -- Return as string so input comparisons work properly
@@ -373,7 +360,7 @@ function NemesisChat:InstantiateMsg()
             return NCSpell:GetTarget()
         end,
         ["GROUP_COUNT"] = function()
-            return #core.runtime.groupRoster or 0
+            return #NCRuntime:GetGroupRoster() or 0
         end,
         ["NEMESES_COUNT"] = function()
             -- Return as string so input comparisons work properly
@@ -410,32 +397,46 @@ function NemesisChat:InstantiateMsg()
             return (tonumber(val1) or 0) < (tonumber(val2) or 0)
         end,
         ["IS_NEMESIS"] = function(val1, val2)
-            if core.runtime.groupRoster[val1] == nil then
+            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
                 return false
             end
 
-            return core.runtime.groupRoster[val1].isNemesis
+            return NCRuntime:GetGroupRosterPlayer(val1).isNemesis
         end,
         ["NOT_NEMESIS"] = function(val1, val2)
-            if core.runtime.groupRoster[val1] == nil then
+            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
                 return true
             end
 
-            return core.runtime.groupRoster[val1].isNemesis == false
+            return NCRuntime:GetGroupRosterPlayer(val1).isNemesis == false
         end,
         ["IS_FRIEND"] = function(val1, val2)
-            if core.runtime.groupRoster[val1] == nil then
+            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
                 return false
             end
 
-            return core.runtime.groupRoster[val1].isFriend
+            return NCRuntime:GetGroupRosterPlayer(val1).isFriend
         end,
         ["NOT_FRIEND"] = function(val1, val2)
-            if core.runtime.groupRoster[val1] == nil then
+            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
                 return true
             end
 
-            return not core.runtime.groupRoster[val1].isFriend
+            return not NCRuntime:GetGroupRosterPlayer(val1).isFriend
+        end,
+        ["IS_GUILDMATE"] = function(val1, val2)
+            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+                return false
+            end
+
+            return NCRuntime:GetGroupRosterPlayer(val1).isGuildmate
+        end,
+        ["NOT_GUILDMATE"] = function(val1, val2)
+            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+                return true
+            end
+
+            return not NCRuntime:GetGroupRosterPlayer(val1).isGuildmate
         end,
     }
 end

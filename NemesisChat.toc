@@ -1,5 +1,5 @@
 ## Interface: 100150
-## Version: 1.6.0
+## Version: 1.7.0
 ## Title: |cff00ccffNemesis Chat|r
 ## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp
 ## Notes: The event-driven, targeted message framework.
@@ -17,6 +17,8 @@ Libs\AceConsole-3.0\AceConsole-3.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 
+Models\Config.lua
+Models\Runtime.lua
 Init.lua
 Config\Config.lua
 Config\General.lua
@@ -27,6 +29,7 @@ Config\Reference.lua
 Config\About.lua
 Helpers.lua
 AI.lua
+Models\Segment.lua
 Models\Boss.lua
 Models\Dungeon.lua
 Models\Event.lua

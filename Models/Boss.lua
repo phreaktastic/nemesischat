@@ -11,77 +11,56 @@ local _, core = ...;
 -- Boss getters, setters, etc.
 -----------------------------------------------------
 
-function NemesisChat:InstantiateBoss()
-    function NCBoss:Initialize()
-        if core.runtime.NCBoss ~= nil then
-            NCBoss = core.runtime.NCBoss
-        else
-            NCBoss = DeepCopy(core.runtimeDefaults.ncBoss)
-        end
+NCBoss = NCSegment:New()
 
-        NemesisChat:InstantiateBoss()
+function NCBoss:StartCallback()
+    NCEvent:SetCategory("BOSS")
+    NCEvent:SetEvent("START")
+    NCEvent:SetTarget("NA")
+    NCEvent:RandomNemesis()
+    NCEvent:RandomBystander()
+
+    core.runtime.NCBoss = NCBoss
+end
+
+function NCBoss:FinishCallback()
+    NCEvent:SetCategory("BOSS")
+    NCEvent:SetEvent("FAIL")
+    NCEvent:SetTarget("NA")
+    NCEvent:RandomNemesis()
+    NCEvent:RandomBystander()
+
+    if success then
+        NCEvent:SetEvent("SUCCESS")
     end
 
-    function NCBoss:IsActive()
-        return NCBoss.active
-    end
+    core.runtime.NCBoss = nil
+end
 
-    function NCBoss:SetActive(active)
-        NCBoss.active = active
-    end
+function NCBoss:ResetCallback()
+    core.runtime.NCBoss = nil
+end
 
-    function NCBoss:GetStartTime()
-        return NCBoss.startTime
-    end
+function NCBoss:AddAvoidableDamageCallback()
+    core.runtime.NCBoss = NCBoss
+end
 
-    function NCBoss:SetStartTime(startTime)
-        NCBoss.startTime = startTime
-    end
+function NCBoss:AddDeathCallback()
+    core.runtime.NCBoss = NCBoss
+end
 
-    function NCBoss:GetName()
-        return NCBoss.name
-    end
+function NCBoss:AddHealsCallback()
+    core.runtime.NCBoss = NCBoss
+end
 
-    function NCBoss:SetName(name)
-        NCBoss.name = name
-    end
+function NCBoss:AddOffHealsCallback()
+    core.runtime.NCBoss = NCBoss
+end
 
-    function NCBoss:IsComplete()
-        return NCBoss.complete
-    end
+function NCBoss:AddInterruptCallback()
+    core.runtime.NCBoss = NCBoss
+end
 
-    function NCBoss:SetComplete(complete)
-        NCBoss.complete = complete
-    end
-
-    function NCBoss:IsSuccess()
-        return NCBoss.success
-    end
-
-    function NCBoss:SetSuccess(success)
-        NCBoss.success = success
-    end
-
-    function NCBoss:Start(bossName)
-        NCBoss:Initialize()
-        NCBoss.active = true
-        NCBoss.startTime = GetTime()
-        NCBoss.name = bossName
-        NCBoss.complete = false
-        NCBoss.success = false
-
-        NCEvent:StartBoss()
-
-        core.runtime.NCBoss = NCBoss
-    end
-
-    function NCBoss:End(isSuccess)
-        NCBoss.active = false
-        NCBoss.complete = true
-        NCBoss.success = isSuccess
-
-        NCEvent:EndBoss()
-
-        core.runtime.NCBoss = nil
-    end
+function NCBoss:AddKillCallback()
+    core.runtime.NCBoss = NCBoss
 end
