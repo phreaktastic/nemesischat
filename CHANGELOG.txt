@@ -10,7 +10,9 @@
 
 ## 🩹 Patches
 
-- **1.7.2**: Updated Affix logic to be more reliable. It's still in beta, but reports should be a bit more reliable now. WIP.
+- **1.7.2**: 
+   - Updated Affix logic to be more reliable. It's still in beta, but reports should be a bit more reliable now. WIP.
+   - Refactored reports logic. It's not as clean as I'd prefer, but we're getting there.
 - **1.7.1**: Fixed an issue with some configurations being incorrect.
 
 ## ⭐ Latest Versions
