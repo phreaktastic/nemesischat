@@ -661,6 +661,10 @@ function NemesisChat:InitializeHelpers()
         state.power = UnitPower(player)
         state.powerPercent = math.floor((UnitPower(player) / UnitPowerMax(player)) * 10000) / 100 -- Round to 2 digit %
         state.powerType = UnitPowerType(player)
+
+        if state.healthPercent >= 0.6 then
+            state.lastHeal = GetTime()
+        end
     end
 
     function NemesisChat:CheckLastHealDelta(playerName)
@@ -841,7 +845,27 @@ function NemesisChat:InitializeHelpers()
 
         local _,event,_,sguid,sname,_,_,dguid,dname = CombatLogGetCurrentEventInfo()
 
-        return string.find(event, "SPELL") and tContains(core.affixMobsMarker, dname) and (UnitIsUnconscious(dguid) or UnitIsDead(dguid)), sname, dguid
+        if NCRuntime:GetGroupRosterPlayer(sname) == nil and sname ~= GetMyName() then
+            return false
+        end
+
+        local isHandled = false
+
+        if UnitIsUnconscious(dguid) or UnitIsDead(dguid) or string.find(event, "INSTAKILL") then
+            return true, sname, dguid
+        end
+
+        if core.affixMobsHandles[dname] ~= nil then
+            for _, eventSubstr in core.affixMobsHandles[dname] do
+                if string.find(event, eventSubstr) then
+                    isHandled = true
+                    break
+                end
+            end
+        end
+
+
+        return isHandled, sname, dguid
     end
 
     function NemesisChat:CheckIsAffix()

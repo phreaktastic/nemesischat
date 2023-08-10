@@ -425,17 +425,28 @@ core.feastIDs = {
 	[383063] = 1, -- Hoard of Draconic Delicacies (DF)
 }
 
+-- All affix mobs
 core.affixMobs = {
     "Spiteful Shade",
     "Incorporeal",
     "Afflicted Soul",
 }
 
+-- Affix mobs of interest
 core.affixMobsMarker = {
     "Incorporeal",
     "Afflicted Soul",
 }
 
+-- Ways to handle affix mobs
+core.affixMobsHandles = {
+    ["Afflicted Soul"] = {
+        "HEAL",
+        "DISPEL",
+    },
+}
+
+-- Raid markers to use for affix mobs (currently unused)
 core.markers = {
     1,
     5,
