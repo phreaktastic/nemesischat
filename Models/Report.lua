@@ -34,6 +34,38 @@ function NemesisChat:Report(event)
         "BOSS",
         "DUNGEON",
     }
+    local typeData = {
+        ["DAMAGE"] = {
+            exec = function(player, segment) return NCDetailsAPI:GetDPS(player, segment) end,
+            topMsg = "Shout out to %s with the highest DPS for %s, at %s!",
+            botMsg = "Lowest DPS for %s: %s at %s.",
+        },
+        ["AVOIDABLE"] = {
+            exec = function(player) return NCCombat:GetAvoidableDamage(player) end,
+            topMsg = "Highest avoidable damage taken for %s: %s at %s.",
+            botMsg = "Shout out to %s with the lowest avoidable damage taken for %s, at %s!",
+        },
+        ["INTERRUPTS"] = {
+            exec = function(player) return NCCombat:GetInterrupts(player) end,
+            topMsg = "Shout out to %s with the most interrupts for %s, at %s!",
+            botMsg = "Lowest interrupts for %s: %s at %s.",
+        },
+        ["OFFHEALS"] = {
+            exec = function(player) return NCCombat:GetOffHeals(player) end,
+            topMsg = "Shout out to %s with the most off-heals for %s, at %s!",
+            botMsg = "Lowest off-heals for %s: %s at %s.",
+        },
+        ["DEATHS"] = {
+            exec = function(player) return NCCombat:GetDeaths(player) end,
+            topMsg = "Shout out to %s with the lowest deaths for %s, at %s!",
+            botMsg = "Most deaths for %s: %s at %s.",
+        },
+        ["AFFIXES"] = {
+            exec = function(player) return NCDungeon:GetAffixes(player) end,
+            topMsg = "Shout out to %s with the most affixes for %s, at %s!",
+            botMsg = "Lowest affixes for %s: %s at %s.",
+        },
+    }
     
     if not tContains(EVENTS, event) then
         return
@@ -244,9 +276,9 @@ function NemesisChat:Report(event)
                 if lifePercent > 100 then
                     local lifeMultiplier = math.floor(lifePercent / 10) / 10
 
-                    topMsg = "Highest deaths for " .. segName .. ": " .. topPlayer .. " at " .. topVal .. ", with " .. ad .. " avoidable damage taken (" .. lifeMultiplier .. "x their max health)."
+                    topMsg = "Highest deaths for " .. segName .. ": " .. topPlayer .. " at " .. topVal .. ", with " .. adFormatted .. " avoidable damage taken (" .. lifeMultiplier .. "x their max health)."
                 else
-                    topMsg = "Highest deaths for " .. segName .. ": " .. topPlayer .. " at " .. topVal .. ", with " .. ad .. " avoidable damage taken."
+                    topMsg = "Highest deaths for " .. segName .. ": " .. topPlayer .. " at " .. topVal .. ", with " .. adFormatted .. " avoidable damage taken."
                 end
             else
                 topMsg = nil
