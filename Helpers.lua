@@ -662,7 +662,7 @@ function NemesisChat:InitializeHelpers()
         state.powerPercent = math.floor((UnitPower(player) / UnitPowerMax(player)) * 10000) / 100 -- Round to 2 digit %
         state.powerType = UnitPowerType(player)
 
-        if state.healthPercent >= 0.6 then
+        if state.healthPercent >= 60 or state.health == 0 then
             state.lastHeal = GetTime()
         end
     end
