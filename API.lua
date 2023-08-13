@@ -346,7 +346,15 @@ function NemesisChatAPI:GetAPIConfigOptions()
                     descStyle = "inline",
                     width = "full",
                     get = function() return core.db.profile.API[name .. "_" .. configOption.value] end,
-                    set = function(_, value) core.db.profile.API[name .. "_" .. configOption.value] = value end,
+                    set = function(_, value) 
+                        if value then
+                            NemesisChat:Print(api.friendlyName .. " enabled.")
+                        else
+                            NemesisChat:Print(api.friendlyName .. " disabled.")
+                        end
+                        
+                        core.db.profile.API[name .. "_" .. configOption.value] = value 
+                    end,
                     disabled = function() return not success end,
                 }
 
