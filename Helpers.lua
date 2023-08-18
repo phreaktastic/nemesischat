@@ -75,7 +75,6 @@ end
 function NemesisChat:InitializeHelpers()
 
     function NemesisChat:TransmitLeavers()
-        self:Print("Transmitting leavers.")
         if core.db.profile.leavers == nil or NCDungeon:IsActive() then
             return
         end
