@@ -82,15 +82,15 @@ function NemesisChat:InitializeHelpers()
         NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "YELL")
     end
 
-    function NemesisChat:Transmit(prefix, data, channel, target)
-        local serialized = LibSerialize:Serialize(data)
+    function NemesisChat:Transmit(prefix, payload, distribution, target)
+        local serialized = LibSerialize:Serialize(payload)
         local compressed = LibDeflate:CompressDeflate(serialized)
         local encoded = LibDeflate:EncodeForWoWAddonChannel(compressed)
 
-        if target and channel == "WHISPER" then
-            self:SendCommMessage(prefix, encoded, channel, target)
+        if target and distribution == "WHISPER" then
+            self:SendCommMessage(prefix, encoded, distribution, target)
         else
-            self:SendCommMessage(prefix, encoded, channel)
+            self:SendCommMessage(prefix, encoded, distribution)
         end
     end
 
@@ -102,7 +102,9 @@ function NemesisChat:InitializeHelpers()
         local success, data = LibSerialize:Deserialize(decompressed)
         if not success then return end
 
-        if sender == GetMyName() then
+        local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
+
+        if sender == myFullName then
             return
         end
 
@@ -112,7 +114,7 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:ProcessLeavers(leavers)
-        if leavers == nil then
+        if leavers == nil or type(leavers) ~= "table" then
             return
         end
 
