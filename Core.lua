@@ -14,15 +14,18 @@ function NemesisChat:OnInitialize()
     NemesisChatAPI:SetAPIConfigOptions()
     NemesisChat:InitializeConfig()
     NemesisChat:InitializeHelpers()
+    NemesisChat:InitializeTimers()
+    NemesisChat:PopulateFriends()
+    NemesisChat:RegisterPrefixes()
 
     NemesisChat:RegisterChatCommand("nc", "SlashCommand")
     NemesisChat:RegisterChatCommand("nemesischat", "SlashCommand")
-    NemesisChat:PopulateFriends()
 end
 
 function NemesisChat:OnEnable()
     NemesisChat:RegisterEvent("GROUP_ROSTER_UPDATE")
     NemesisChat:RegisterEvent("PLAYER_ENTERING_WORLD")
+    NemesisChat:RegisterEvent("CHAT_MSG_ADDON")
 
     NemesisChat:SetMyName()
     NemesisChat:PopulateFriends()

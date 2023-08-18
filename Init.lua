@@ -12,7 +12,7 @@ core.version = GetAddOnMetadata(addonName, 'Version')
 -----------------------------------------------------
 -- Register global NemesisChat
 -----------------------------------------------------
-NemesisChat = LibStub("AceAddon-3.0"):NewAddon("NemesisChat", "AceConsole-3.0", "AceEvent-3.0")
+NemesisChat = LibStub("AceAddon-3.0"):NewAddon("NemesisChat", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceTimer-3.0")
 
 -----------------------------------------------------
 -- Global functions
@@ -42,7 +42,9 @@ function ArrayMerge(tableA, tableB)
     end
 
     for key, val in pairs(tableB) do
-        table.insert(returnTable, val)
+        if not tContains(returnTable, val) then
+            table.insert(returnTable, val)
+        end
     end
 
     return returnTable

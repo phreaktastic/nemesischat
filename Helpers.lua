@@ -7,6 +7,9 @@
 -----------------------------------------------------
 local addonName, core = ...;
 
+local LibSerialize = LibStub("LibSerialize")
+local LibDeflate = LibStub("LibDeflate")
+
 -----------------------------------------------------
 -- Blizzard functions
 -----------------------------------------------------
@@ -40,6 +43,7 @@ local SetRaidTarget = SetRaidTarget
 local IsInInstance = IsInInstance
 local UnitClassification = UnitClassification
 local UnitGUID = UnitGUID
+local C_ChatInfo = C_ChatInfo
 
 -- APIs
 local GTFO = GTFO
@@ -69,6 +73,88 @@ end
 -- Core global helper functions
 -----------------------------------------------------
 function NemesisChat:InitializeHelpers()
+
+    function NemesisChat:TransmitLeavers()
+        self:Print("Transmitting leavers.")
+        if core.db.profile.leavers == nil or NCDungeon:IsActive() then
+            return
+        end
+
+        NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "YELL")
+    end
+
+    function NemesisChat:Transmit(prefix, data, channel, target)
+        local serialized = LibSerialize:Serialize(data)
+        local compressed = LibDeflate:CompressDeflate(serialized)
+        local encoded = LibDeflate:EncodeForWoWAddonChannel(compressed)
+
+        if target and channel == "WHISPER" then
+            self:SendCommMessage(prefix, encoded, channel, target)
+        else
+            self:SendCommMessage(prefix, encoded, channel)
+        end
+    end
+
+    function NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
+        local decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
+        if not decoded then return end
+        local decompressed = LibDeflate:DecompressDeflate(decoded)
+        if not decompressed then return end
+        local success, data = LibSerialize:Deserialize(decompressed)
+        if not success then return end
+
+        if sender == GetMyName() then
+            self:Print("Just received a comm from myself, yay!")
+            return
+        end
+
+        if prefix == "NC_LEAVERS" then
+            NemesisChat:ProcessLeavers(data)
+        end
+    end
+
+    function NemesisChat:ProcessLeavers(leavers)
+        if leavers == nil then
+            return
+        end
+
+        if core.db.profile.leavers == nil then
+            core.db.profile.leavers = {}
+        end
+
+        local count = 0
+
+        for key,val in pairs(leavers) do
+            count = count + 1
+            if core.db.profile.leavers[key] == nil then
+                core.db.profile.leavers[key] = val
+            else
+                core.db.profile.leavers[key] = ArrayMerge(core.db.profile.leavers[key], val)
+            end
+        end
+
+        self:Print("Successfully synced " .. count .. " leavers.")
+    end
+
+    function NemesisChat:RegisterPrefixes()
+        C_ChatInfo.RegisterAddonMessagePrefix("NC_LEAVERS")
+    end
+
+    function NemesisChat:AddLeaver(guid)
+        if core.db.profile.leavers == nil then
+            core.db.profile.leavers = {}
+        end
+
+        if core.db.profile.leavers[guid] == nil then
+            core.db.profile.leavers[guid] = {}
+        end
+
+        tInsert(core.db.profile.leavers[guid], math.floor(GetTime() / 10) * 10)
+    end
+
+    function NemesisChat:InitializeTimers()
+        self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitLeavers", 60)
+    end
 
     function NemesisChat:GetMyName()
         NemesisChat:SetMyName()
@@ -430,6 +516,7 @@ function NemesisChat:InitializeHelpers()
                 end
     
                 local rosterPlayer = {
+                    guid = UnitGUID(val),
                     isGuildmate = isInGuild,
                     isFriend = NCRuntime:IsFriend(val),
                     isNemesis = isNemesis,
