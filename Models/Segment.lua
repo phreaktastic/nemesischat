@@ -66,8 +66,13 @@ NCSegment = {
     -- Pulls tracker for the segment
     Pulls = {},
 
+    -- Rankings object (NCRankings)
+    Rankings = {},
+
     -- Segment tracker -- array containing all objects which inherited from NCSegment
     Segments = {},
+
+    DetailsSegment = DETAILS_SEGMENTID_CURRENT,
 
     Start = function(self) 
         self.StartTime = GetTime()
@@ -84,6 +89,9 @@ NCSegment = {
         self.Wipe = NemesisChat:IsWipe()
         self:SetInactive()
         self:FinishCallback(success)
+        if self.Rankings and self.Rankings.Calculate then
+            self.Rankings:Calculate()
+        end
     end,
     FinishCallback = function(self, success)
         -- Override me
@@ -352,6 +360,34 @@ NCSegment = {
     AddPullCallback = function(self, player)
         -- Override me
     end,
+    GetStats = function(self, playerName, metric)
+        if metric == "DPS" then
+            self:GetDps(playerName)
+        elseif metric == "Affixes" then
+            self:GetAffixes(playerName)
+        elseif metric == "AvoidableDamage" then
+            self:GetAvoidableDamage(playerName)
+        elseif metric == "Deaths" then
+            self:GetDeaths(playerName)
+        elseif metric == "Interrupts" then
+            self:GetInterrupts(playerName)
+        elseif metric == "OffHeals" then
+            self:GetOffHeals(playerName)
+        elseif metric == "Pulls" then
+            self:GetPulls(playerName)
+        end
+
+        return 0
+    end,
+    GetDps = function(self, playerName)
+        return NCDetailsAPI:GetDPS(playerName, self:GetDetailsSegment())
+    end,
+    GetDetailsSegment = function(self)
+        return self.DetailsSegment
+    end,
+    SetDetailsSegment = function(self, detailsSegment)
+        self.DetailsSegment = detailsSegment
+    end,
     GlobalAddAffix = function(self, player)
         if player == nil then
             return
@@ -434,6 +470,8 @@ NCSegment = {
         local o = {
             Identifier = identifier,
             Segments = nil,
+            Rankings = NCRankings:New(self),
+            Affixes = {},
             AvoidableDamage = {},
             Deaths = {},
             Heals = {},

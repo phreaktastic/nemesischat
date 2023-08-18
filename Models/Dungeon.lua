@@ -21,6 +21,7 @@ function NCDungeon:StartCallback()
     NCEvent:SetTarget("NA")
     NCEvent:RandomNemesis()
     NCEvent:RandomBystander()
+    NCDungeon:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
 
     core.runtime.NCDungeon = NCDungeon
 end
