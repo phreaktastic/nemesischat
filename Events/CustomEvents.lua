@@ -60,12 +60,6 @@ function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
 end
 
 function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
-    local player = NCRuntime:GetGroupRosterPlayer(playerName)
-
-    if NCDungeon:IsActive() then
-        NemesisChat:AddLeaver(player.guid)
-    end
-
     if IsInRaid() then
         NCEvent:SetCategory("RAID")
     else

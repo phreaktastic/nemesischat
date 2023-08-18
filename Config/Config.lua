@@ -91,6 +91,7 @@ core.defaults = {
         nemeses = {},
         messages = {},
         API = {},
+        leavers = {},
 	},
 }
 

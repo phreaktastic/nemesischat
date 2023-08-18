@@ -127,6 +127,10 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                 if #leaves <= 3 then
                     NemesisChat:PLAYER_LEAVES_GROUP(val, player.isNemesis)
                 end
+
+                if NCDungeon:IsActive() and player.guid ~= nil then
+                    NemesisChat:AddLeaver(player.guid)
+                end
     
                 NCRuntime:RemoveGroupRosterPlayer(val)
             end

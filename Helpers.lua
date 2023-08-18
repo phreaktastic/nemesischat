@@ -103,7 +103,6 @@ function NemesisChat:InitializeHelpers()
         if not success then return end
 
         if sender == GetMyName() then
-            self:Print("Just received a comm from myself, yay!")
             return
         end
 
