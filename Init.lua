@@ -463,6 +463,7 @@ core.runtimeDefaults = {
     myName = "",
     lastFeast = 0,
     lastFriendCheck = 0,
+    lastLeaverSyncType = "GUILD",
     lastMessage = 0,
     currentMarkerIndex = 0,
     groupRoster = {},

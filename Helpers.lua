@@ -44,6 +44,7 @@ local IsInInstance = IsInInstance
 local UnitClassification = UnitClassification
 local UnitGUID = UnitGUID
 local C_ChatInfo = C_ChatInfo
+local GetNumGuildMembers = GetNumGuildMembers
 
 -- APIs
 local GTFO = GTFO
@@ -79,7 +80,15 @@ function NemesisChat:InitializeHelpers()
             return
         end
 
-        NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "YELL")
+        local _, online = GetNumGuildMembers()
+
+        if online > 1 and NCRuntime:GetLastLeaverSyncType() ~= "GUILD" then
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "GUILD")
+            NCRuntime:SetLastLeaverSyncType("GUILD")
+        else
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "YELL")
+            NCRuntime:SetLastLeaverSyncType("YELL")
+        end
     end
 
     function NemesisChat:Transmit(prefix, payload, distribution, target)

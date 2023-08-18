@@ -30,6 +30,12 @@ NCRuntime = {
     SetLastFriendCheck = function(self, value)
         core.runtime.lastFriendCheck = value
     end,
+    GetLastLeaverSyncType = function(self)
+        return core.runtime.lastLeaverSyncType
+    end,
+    SetLastLeaverSyncType = function(self, value)
+        core.runtime.lastLeaverSyncType = value
+    end,
     UpdateLastFriendCheck = function(self)
         core.runtime.lastFriendCheck = GetTime()
     end,
