@@ -362,19 +362,19 @@ NCSegment = {
     end,
     GetStats = function(self, playerName, metric)
         if metric == "DPS" then
-            self:GetDps(playerName)
+            return self:GetDps(playerName)
         elseif metric == "Affixes" then
-            self:GetAffixes(playerName)
+            return self:GetAffixes(playerName)
         elseif metric == "AvoidableDamage" then
-            self:GetAvoidableDamage(playerName)
+            return self:GetAvoidableDamage(playerName)
         elseif metric == "Deaths" then
-            self:GetDeaths(playerName)
+            return self:GetDeaths(playerName)
         elseif metric == "Interrupts" then
-            self:GetInterrupts(playerName)
+            return self:GetInterrupts(playerName)
         elseif metric == "OffHeals" then
-            self:GetOffHeals(playerName)
+            return self:GetOffHeals(playerName)
         elseif metric == "Pulls" then
-            self:GetPulls(playerName)
+            return self:GetPulls(playerName)
         end
 
         return 0
