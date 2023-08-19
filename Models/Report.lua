@@ -97,6 +97,8 @@ function NemesisChat:Report(event, success)
         return
     end
 
+    -- This is all deprecated and can be easily pulled from each bucket's calculated data. 
+    -- @TODO: Remove.
     for _, type in pairs(TYPES) do
         local bucket, var, segment, topMsg, botMsg
         local config = core.db.profile.reportConfig[type][event]
