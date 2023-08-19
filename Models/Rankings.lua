@@ -219,7 +219,7 @@ NCRankings = {
                 self.Bottom[metricKey].Player = botPlayer
                 self.Bottom[metricKey].Value = botVal
                 self.Bottom[metricKey].Delta = topVal - botVal
-                self.Bottom[metricKey].DeltaPercent = math.floor((topVal - botVal) / topVal * 100)
+                self.Bottom[metricKey].DeltaPercent = math.floor((topVal - botVal) / topVal) * 100
             end
         end
     end,
