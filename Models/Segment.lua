@@ -380,6 +380,10 @@ NCSegment = {
         return 0
     end,
     GetDps = function(self, playerName)
+        if Details == nil or NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or NCDetailsAPI == nil or NCDetailsAPI.GetDPS == nil then
+            return 0
+        end
+        
         return NCDetailsAPI:GetDPS(playerName, self:GetDetailsSegment())
     end,
     GetDetailsSegment = function(self)

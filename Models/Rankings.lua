@@ -180,7 +180,7 @@ NCRankings = {
 
     ---Get the top, bottom, and delta for all metrics
     Calculate = function(self)
-        for metricKey, metricVal in pairs(self.METRICS) do
+        for metricKey, _ in pairs(self.METRICS) do
             local topVal = 0
             local botVal = 99999999
             local topPlayer = nil
@@ -196,6 +196,8 @@ NCRankings = {
                     topPlayer = playerName
                 elseif val == topVal then
                     topPlayer = topPlayer .. " + " .. playerName
+                elseif val == botVal then
+                    botPlayer = botPlayer .. " + " .. playerName
                 elseif val < botVal then
                     botVal = val
                     botPlayer = playerName
@@ -218,8 +220,14 @@ NCRankings = {
             if botPlayer ~= nil and topPlayer ~= nil then
                 self.Bottom[metricKey].Player = botPlayer
                 self.Bottom[metricKey].Value = botVal
-                self.Bottom[metricKey].Delta = topVal - botVal
-                self.Bottom[metricKey].DeltaPercent = math.floor((topVal - botVal) / topVal) * 100
+
+                if botVal == 0 then
+                    self.Bottom[metricKey].Delta = topVal
+                    self.Bottom[metricKey].DeltaPercent = 100
+                else
+                    self.Bottom[metricKey].Delta = topVal - botVal
+                    self.Bottom[metricKey].DeltaPercent = math.floor(((topVal - botVal) / topVal) * 10000) / 100
+                end
             end
         end
     end,
