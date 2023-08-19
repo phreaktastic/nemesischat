@@ -29,6 +29,7 @@ Config\Reference.lua
 Config\About.lua
 Helpers.lua
 AI.lua
+Models\Rankings.lua
 Models\Segment.lua
 Models\Boss.lua
 Models\Dungeon.lua
