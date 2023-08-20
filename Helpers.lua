@@ -110,10 +110,10 @@ function NemesisChat:InitializeHelpers()
 
         if online > 1 and NCRuntime:GetLastLowPerformerSyncType() ~= "GUILD" then
             NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "GUILD")
-            NCRuntime:SetLastLeaverSyncType("GUILD")
+            NCRuntime:SetLastLowPerformerSyncType("GUILD")
         else
             NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "YELL")
-            NCRuntime:SetLastLeaverSyncType("YELL")
+            NCRuntime:SetLastLowPerformerSyncType("YELL")
         end
     end
 
