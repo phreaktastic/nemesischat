@@ -189,25 +189,21 @@ NCRankings = {
             local botPlayer = nil
 
             for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
-                if (playerData.role ~= "DAMAGER" and metricKey == "DPS") or (playerData.role == "TANK" and metricKey == "Pulls") or (playerData.role == "HEALER" and metricKey == "Offheals") then
-                    goto continue
+                if not ((playerData.role ~= "DAMAGER" and metricKey == "DPS") or (playerData.role == "TANK" and metricKey == "Pulls") or (playerData.role == "HEALER" and metricKey == "Offheals")) then
+                    local val = self._segment:GetStats(playerName, metricKey)
+
+                    if val > topVal then
+                        topVal = val
+                        topPlayer = playerName
+                    elseif val == topVal then
+                        topPlayer = playerName
+                    elseif val < botVal then
+                        botVal = val
+                        botPlayer = playerName
+                    elseif val == botVal then
+                        botPlayer = playerName
+                    end
                 end
-
-                local val = self._segment:GetStats(playerName, metricKey)
-
-                if val > topVal then
-                    topVal = val
-                    topPlayer = playerName
-                elseif val == topVal then
-                    topPlayer = playerName
-                elseif val < botVal then
-                    botVal = val
-                    botPlayer = playerName
-                elseif val == botVal then
-                    botPlayer = playerName
-                end
-
-                ::continue::
             end
             
             local myName = GetMyName()
