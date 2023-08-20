@@ -145,6 +145,8 @@ function NemesisChat:InitializeHelpers()
 
         if prefix == "NC_LEAVERS" then
             NemesisChat:ProcessLeavers(data)
+        elseif prefix == "NC_LOWPERFORMERS" then
+            NemesisChat:ProcessLowPerformers(data)
         end
     end
 
