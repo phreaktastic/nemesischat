@@ -151,49 +151,32 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:ProcessLeavers(leavers)
-        if leavers == nil or type(leavers) ~= "table" then
-            return
-        end
-
-        if core.db.profile.leavers == nil then
-            core.db.profile.leavers = {}
-        end
-
-        local count = 0
-
-        for key,val in pairs(leavers) do
-            count = count + 1
-            if core.db.profile.leavers[key] == nil then
-                core.db.profile.leavers[key] = val
-            else
-                core.db.profile.leavers[key] = ArrayMerge(core.db.profile.leavers[key], val)
-            end
-        end
-
-        self:Print("Successfully synced " .. count .. " leavers.")
+        NemesisChat:ProcessReceivedData("leavers", leavers)
     end
 
     function NemesisChat:ProcessLowPerformers(lowPerformers)
-        if lowPerformers == nil or type(lowPerformers) ~= "table" then
+        NemesisChat:ProcessReceivedData("lowPerformers", lowPerformers)
+    end
+
+    function NemesisChat:ProcessReceivedData(configKey, data)
+        if data == nil or type(data) ~= "table" then
             return
         end
 
-        if core.db.profile.lowPerformers == nil then
-            core.db.profile.lowPerformers = {}
+        if core.db.profile[configKey] == nil then
+            core.db.profile[configKey] = {}
         end
 
         local count = 0
 
-        for key,val in pairs(lowPerformers) do
+        for key,val in pairs(data) do
             count = count + 1
-            if core.db.profile.lowPerformers[key] == nil then
-                core.db.profile.lowPerformers[key] = val
+            if core.db.profile[configKey][key] == nil then
+                core.db.profile[configKey][key] = val
             else
-                core.db.profile.lowPerformers[key] = ArrayMerge(core.db.profile.lowPerformers[key], val)
+                core.db.profile[configKey][key] = ArrayMerge(core.db.profile[configKey][key], val)
             end
         end
-
-        self:Print("Successfully synced " .. count .. " leavers.")
     end
 
     function NemesisChat:RegisterPrefixes()
