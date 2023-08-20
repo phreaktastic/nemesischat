@@ -101,7 +101,7 @@ function NemesisChat:Report(event, success)
             end
         elseif event == "DUNGEON" then
             bucket = NCDungeon
-            segName = "the dungeon"
+            segName = NCDungeon:GetIdentifier()
         end
 
         local data = typeData[type]
