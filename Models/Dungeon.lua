@@ -29,6 +29,7 @@ function NCDungeon:StartCallback()
 
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
+    NCDungeon:SetAffixes(affixIDs)
 
     core.runtime.NCDungeon = NCDungeon
 end
@@ -71,6 +72,14 @@ end
 
 function NCDungeon:SetLevel(level)
     NCDungeon.Level = level
+end
+
+function NCDungeon:SetAffixes(affixes)
+    NCDungeon.Affixes = affixes
+end
+
+function NCDungeon:GetAffixes()
+    return NCDungeon.Affixes
 end
 
 function NCDungeon:AddAvoidableDamageCallback()
