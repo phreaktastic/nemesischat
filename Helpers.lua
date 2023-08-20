@@ -77,8 +77,10 @@ function NemesisChat:InitializeHelpers()
 
     function NemesisChat:TransmitSyncData()
         if NCRuntime:GetLastSyncType() == "" or NCRuntime:GetLastSyncType() == nil or NCRuntime:GetLastSyncType() == "LEAVERS" then
+            NCRuntime:SetLastSyncType("LOWPERFORMERS")
             NemesisChat:TransmitLowPerformers()
         else
+            NCRuntime:SetLastSyncType("LEAVERS")
             NemesisChat:TransmitLeavers()
         end
     end
