@@ -17,6 +17,7 @@ None yet, 1.8.0 is fresh!
 ### 1.8.0
 
 - Nemesis prioritization for scenarios where more than one message is retrieved for an event.
+- Beta features: hardening and optimization -- they're very close to full release state!
 - Enable / disable messages for APIs.
 - M+ early leaver storage and sync
    - Leavers will now be logged in a persistent DB.
