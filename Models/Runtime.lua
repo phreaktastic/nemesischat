@@ -36,6 +36,12 @@ NCRuntime = {
     SetLastLeaverSyncType = function(self, value)
         core.runtime.lastLeaverSyncType = value
     end,
+    GetLastLowPerformerSyncType = function(self)
+        return core.runtime.lastLowPerformerSyncType
+    end,
+    SetLastLowPerformerSyncType = function(self, value)
+        core.runtime.lastLowPerformerSyncType = value
+    end,
     UpdateLastFriendCheck = function(self)
         core.runtime.lastFriendCheck = GetTime()
     end,
@@ -47,6 +53,12 @@ NCRuntime = {
     end,
     UpdateLastMessage = function(self)
         core.runtime.lastMessage = GetTime()
+    end,
+    GetLastSyncType = function(self)
+        return core.runtime.lastSyncType
+    end,
+    SetLastSyncType = function(self, value)
+        core.runtime.lastSyncType = value
     end,
     GetCurrentMarkerIndex = function(self)
         return core.runtime.currentMarkerIndex

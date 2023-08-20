@@ -75,6 +75,14 @@ end
 -----------------------------------------------------
 function NemesisChat:InitializeHelpers()
 
+    function NemesisChat:TransmitSyncData()
+        if NCRuntime:GetLastSyncType() == "" or NCRuntime:GetLastSyncType() == nil or NCRuntime:GetLastSyncType() == "LEAVERS" then
+            NemesisChat:TransmitLowPerformers()
+        else
+            NemesisChat:TransmitLeavers()
+        end
+    end
+
     function NemesisChat:TransmitLeavers()
         if core.db.profile.leavers == nil or NCDungeon:IsActive() then
             return
@@ -87,6 +95,22 @@ function NemesisChat:InitializeHelpers()
             NCRuntime:SetLastLeaverSyncType("GUILD")
         else
             NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "YELL")
+            NCRuntime:SetLastLeaverSyncType("YELL")
+        end
+    end
+
+    function NemesisChat:TransmitLowPerformers()
+        if core.db.profile.lowPerformers == nil or NCDungeon:IsActive() then
+            return
+        end
+
+        local _, online = GetNumGuildMembers()
+
+        if online > 1 and NCRuntime:GetLastLowPerformerSyncType() ~= "GUILD" then
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "GUILD")
+            NCRuntime:SetLastLeaverSyncType("GUILD")
+        else
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "YELL")
             NCRuntime:SetLastLeaverSyncType("YELL")
         end
     end
@@ -145,8 +169,32 @@ function NemesisChat:InitializeHelpers()
         self:Print("Successfully synced " .. count .. " leavers.")
     end
 
+    function NemesisChat:ProcessLowPerformers(lowPerformers)
+        if lowPerformers == nil or type(lowPerformers) ~= "table" then
+            return
+        end
+
+        if core.db.profile.lowPerformers == nil then
+            core.db.profile.lowPerformers = {}
+        end
+
+        local count = 0
+
+        for key,val in pairs(lowPerformers) do
+            count = count + 1
+            if core.db.profile.lowPerformers[key] == nil then
+                core.db.profile.lowPerformers[key] = val
+            else
+                core.db.profile.lowPerformers[key] = ArrayMerge(core.db.profile.lowPerformers[key], val)
+            end
+        end
+
+        self:Print("Successfully synced " .. count .. " leavers.")
+    end
+
     function NemesisChat:RegisterPrefixes()
         C_ChatInfo.RegisterAddonMessagePrefix("NC_LEAVERS")
+        C_ChatInfo.RegisterAddonMessagePrefix("NC_LOWPERFORMERS")
     end
 
     function NemesisChat:AddLeaver(guid)
@@ -161,8 +209,20 @@ function NemesisChat:InitializeHelpers()
         tInsert(core.db.profile.leavers[guid], math.floor(GetTime() / 10) * 10)
     end
 
+    function NemesisChat:AddLowPerformer(guid)
+        if core.db.profile.lowPerformers == nil then
+            core.db.profile.lowPerformers = {}
+        end
+
+        if core.db.profile.lowPerformers[guid] == nil then
+            core.db.profile.lowPerformers[guid] = {}
+        end
+
+        table.insert(core.db.profile.lowPerformers[guid], math.floor(GetTime() / 10) * 10)
+    end
+
     function NemesisChat:InitializeTimers()
-        self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitLeavers", 60)
+        self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitSyncData", 60)
     end
 
     function NemesisChat:GetMyName()

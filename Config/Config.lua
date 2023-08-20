@@ -92,6 +92,7 @@ core.defaults = {
         messages = {},
         API = {},
         leavers = {},
+        lowPerformers = {},
 	},
 }
 

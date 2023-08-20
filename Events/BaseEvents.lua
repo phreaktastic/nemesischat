@@ -27,7 +27,7 @@ end
 
 function NemesisChat:CHALLENGE_MODE_START()
     NCEvent:Initialize()
-    NCDungeon:Start()
+    NCDungeon:Reset("", true)
     NemesisChat:HandleEvent()
 end
 
@@ -129,6 +129,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                 end
 
                 if NCDungeon:IsActive() and player.guid ~= nil then
+                    self:Print("Added leaver to DB:", val)
                     NemesisChat:AddLeaver(player.guid)
                 end
     

@@ -148,19 +148,21 @@ NCRankings = {
         },
     },
 
+    BottomTracker = {},
+
     --- The segment to get rankings for
     ---@type NCSegment
     _segment = nil,
 
-    ---@enum metrics
+    -- Metrics to calculate. If true, top is good. If false, bottom is good.
     METRICS = {
-        Affixes = 1,
-        AvoidableDamage = 2,
-        Deaths = 3,
-        DPS = 4,
-        Interrupts = 5,
-        Offheals = 6,
-        Pulls = 7,
+        Affixes = true,
+        AvoidableDamage = false,
+        Deaths = false,
+        DPS = true,
+        Interrupts = true,
+        Offheals = true,
+        Pulls = false,
     },
 
     ---Instantiate a new Rankings object
@@ -180,28 +182,47 @@ NCRankings = {
 
     ---Get the top, bottom, and delta for all metrics
     Calculate = function(self)
-        for metricKey, _ in pairs(self.METRICS) do
+        for metricKey, metricVal in pairs(self.METRICS) do
             local topVal = 0
             local botVal = 99999999
             local topPlayer = nil
             local botPlayer = nil
 
-            for playerName, _ in pairs(NCRuntime:GetGroupRoster()) do
-                local val
+            for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
+                if (playerData.role ~= "DAMAGER" and metricKey == "DPS") or (playerData.role == "TANK" and metricKey == "Pulls") or (playerData.role == "HEALER" and metricKey == "Offheals") then
+                    goto continue
+                end
 
-                val = self._segment:GetStats(playerName, metricKey)
+                local val = self._segment:GetStats(playerName, metricKey)
 
                 if val > topVal then
                     topVal = val
                     topPlayer = playerName
                 elseif val == topVal then
-                    topPlayer = topPlayer .. " + " .. playerName
-                elseif val == botVal then
-                    botPlayer = botPlayer .. " + " .. playerName
+                    topPlayer = playerName
                 elseif val < botVal then
                     botVal = val
                     botPlayer = playerName
+                elseif val == botVal then
+                    botPlayer = playerName
                 end
+
+                ::continue::
+            end
+            
+            local myName = GetMyName()
+            local myVal = self._segment:GetStats(myName, metricKey)
+
+            if myVal > topVal then
+                topVal = myVal
+                topPlayer = myName
+            elseif myVal == topVal then
+                topPlayer = myName
+            elseif myVal < botVal then
+                botVal = myVal
+                botPlayer = myName
+            elseif myVal == botVal then
+                botPlayer = myName
             end
 
             if topVal == 0 then
@@ -218,18 +239,74 @@ NCRankings = {
             end
 
             if botPlayer ~= nil and topPlayer ~= nil then
+                local delta, deltaPercent
+
                 self.Bottom[metricKey].Player = botPlayer
                 self.Bottom[metricKey].Value = botVal
 
                 if botVal == 0 then
-                    self.Bottom[metricKey].Delta = topVal
-                    self.Bottom[metricKey].DeltaPercent = 100
+                    delta = topVal
+                    deltaPercent = 100
                 else
-                    self.Bottom[metricKey].Delta = topVal - botVal
-                    self.Bottom[metricKey].DeltaPercent = math.floor(((topVal - botVal) / topVal) * 10000) / 100
+                    delta = topVal - botVal
+                    deltaPercent = math.floor(((topVal - botVal) / topVal) * 10000) / 100
+                end
+
+                self.Bottom[metricKey].Delta = delta
+                self.Bottom[metricKey].DeltaPercent = deltaPercent
+                self.Top[metricKey].Delta = delta
+                self.Top[metricKey].DeltaPercent = deltaPercent
+
+                if metricVal then
+                    if self.BottomTracker[botPlayer] == nil then
+                        self.BottomTracker[botPlayer] = 0
+                    end
+
+                    if deltaPercent >= 30 then
+                        self.BottomTracker[botPlayer] = self.BottomTracker[botPlayer] + 1
+                    end
+                else
+                    if self.BottomTracker[topPlayer] == nil then
+                        self.BottomTracker[topPlayer] = 0
+                    end
+
+                    if deltaPercent >= 30 then
+                        self.BottomTracker[topPlayer] = self.BottomTracker[topPlayer] + 1
+                    end
                 end
             end
         end
     end,
 
+    -- Get the lowest performer from the bottom tracker
+    GetLowestPerformer = function(self)
+        for i = 10, 2, -1 do
+            for playerName, playerCount in pairs(self.BottomTracker) do
+                if playerCount == i then
+                    return playerName
+                end
+            end
+        end
+    end,
+
+    -- Get all metrics for a player, looking in self.Top if the metric value is true, and self.Bottom if it is false. 
+    -- Returns the metric names for all metrics where playerName exists.
+    GetPlayerMetrics = function(self, playerName)
+        local metrics = {}
+
+        for metricKey, metricVal in pairs(self.METRICS) do
+            if not metricVal then
+                if self.Top[metricKey].Player == playerName then
+                    table.insert(metrics, metricKey)
+                end
+            else
+                if self.Bottom[metricKey].Player == playerName then
+                    table.insert(metrics, metricKey)
+                end
+            end
+        end
+
+        -- Return metrics
+        return metrics
+    end,
 }
