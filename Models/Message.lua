@@ -211,7 +211,7 @@ function NemesisChat:InstantiateMsg()
             local nemesisMsg
             
             for _, aMsg in pairs(availableMessages) do
-                if string.find(aMsg, "%[(NEMESIS)[A-Za-z]*%]") ~= nil then
+                if string.find(aMsg.message, "%[(NEMESIS)[A-Za-z]*%]") ~= nil then -- ;;;;;;;;;;;;;;
                     nemesisMsg = aMsg
                     break
                 end

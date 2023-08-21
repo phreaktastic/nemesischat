@@ -193,7 +193,7 @@ function NemesisChat:InitializeHelpers()
             core.db.profile.leavers[guid] = {}
         end
 
-        tInsert(core.db.profile.leavers[guid], math.floor(GetTime() / 10) * 10)
+        tinsert(core.db.profile.leavers[guid], math.floor(GetTime() / 10) * 10)
     end
 
     function NemesisChat:AddLowPerformer(guid)
@@ -205,7 +205,7 @@ function NemesisChat:InitializeHelpers()
             core.db.profile.lowPerformers[guid] = {}
         end
 
-        table.insert(core.db.profile.lowPerformers[guid], math.floor(GetTime() / 10) * 10)
+        tinsert(core.db.profile.lowPerformers[guid], math.floor(GetTime() / 10) * 10)
     end
 
     function NemesisChat:InitializeTimers()
@@ -1028,7 +1028,7 @@ function NemesisChat:InitializeHelpers()
         local isAffixMobHandled, affixMobHandlerName, affixMobHandledGuid = NemesisChat:IsAffixMobHandled()
 
         if isBeginCast then
-            if core.db.profile.reportConfig["AFFIXES"]["CASTSTART"] then
+            if NCConfig:IsReportingAffixes_CastStart() then
                 SendChatMessage("Nemesis Chat: " .. beginCastName .. " is casting!", "YELL")
             end
 
@@ -1038,13 +1038,13 @@ function NemesisChat:InitializeHelpers()
         end
 
         if isSuccessfulCast then
-            if core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"] then
+            if NCConfig:IsReportingAffixes_CastSuccess() then
                 SendChatMessage("Nemesis Chat: " .. successfulCastName .. " successfully cast!", "YELL")
             end
         end
 
         if isCastInterrupted then
-            if core.db.profile.reportConfig["AFFIXES"]["CASTINTERRUPTED"] and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
+            if NCConfig:IsReportingAffixes_CastFailed() and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
                 SendChatMessage("Nemesis Chat: " .. castInterruptedName .. " cast interrupted, but not incapacitated/dead!", "YELL")
             end
 
