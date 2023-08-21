@@ -2,21 +2,35 @@
 
 ## 📢 Summary
 
+**1.8.x**: Things are spicing up with M+ leaver detection and low performer detection! 
+
 **1.7.x**: Hazardous Pull reporting? Neglected Heals reporting? Yes please! Oh, and more replacement tags, revamped reports config, new off-heals report, etc!
 
 **1.6.x**: Lots of new replacement tags and condition subjects. Added a `Flag Friends as Nemeses` option -- if anyone in your group is on your friends list, they'll be flagged as a Nemesis.
 
-**1.5.x**: Group and raid join/leave events have been split for a higher degree of granularity. More replacements added. Group and raid join/leave events will be exempt from the message interval limit, however it will be capped at 3 per trigger (imagine inviting large groups into a raid and firing off join messages for each player 🤢).
-
 ## 🩹 Patches
 
-- **1.7.3**: Fixed and improved health check in player state for healing callouts.
-- **1.7.2**: 
-   - Updated Affix logic to be more reliable. It's still in beta, but reports should be a bit more reliable now. WIP.
-   - Refactored reports logic. It's not as clean as I'd prefer, but we're getting there.
-- **1.7.1**: Fixed an issue with some configurations being incorrect.
+None yet, 1.8.0 is fresh!
 
 ## ⭐ Latest Versions
+
+### 1.8.0
+
+- Nemesis prioritization for scenarios where more than one message is retrieved for an event.
+- Beta features: hardening and optimization -- they're very close to full release state!
+- Enable / disable messages for APIs.
+- M+ early leaver storage and sync
+   - Leavers will now be logged in a persistent DB.
+   - Leavers will be synced between players in-game.
+- M+ low performers storage and sync
+   - Low performers will now be logged in a persistent DB.
+   - Low performers will be synced between players in-game.
+   - Low performers are currently defined as:
+      - At least 2 spots in the bottom (bottom affixes / DPS (non-DPS exempt) / offheals, most pulls (tank exempt) / deaths / avoidable damage).
+         - Deaths are taken fairly lightly, as that can be due to any number of reasons. Deaths are primarily examined base on how much avoidable damage was taken.
+      - Within those spots on the bottom, there must be a difference of >= 30% between them and the top for said metric.
+- Fix for dungeon keystone level.
+- Lots of new stuff behind the scenes, paving the way for some really awesome future features!
 
 ### 1.7.0
 
@@ -57,22 +71,6 @@
    - NOT friend (currently only available on Bystander, Nemesis, and Spell Target)
 - Migration from hardcoded core functionality to new API flow
 - UI clean up
-
-### 1.5.0
-
-- Refined `SELF` join events versus inviting a player and forming a group. No configuration updates are necessary.
-- Group `JOIN` and `LEAVE` events are now exclusive to non-raid groups.
-- Added raid `JOIN` and `LEAVE` events to allow for more granular configuration.
-- Group/raid `JOIN` and `LEAVE` events are now exempt from the minimum message interval.
-   - There is a hardcoded cap of 3 to guardrail against spam.
-- Added the following replacement tags:
-   - `[ROLE]`: Your role
-   - `[BYSTANDERROLE]`: The/a Bystander's role (on events triggered by a Bystander, that'll be the triggering Bystander, otherwise a random one is chosen)
-      - Keep in mind random Bystanders are chosen once so all Bystander replacement tags will refer to a singular Bystander.
-   - `[NEMESISROLE]`: The/a Nemesis's role (on events triggered by a Nemesis, that'll be the triggering Nemesis, otherwise a random one is chosen)
-      - Keep in mind random Nemeses are chosen once so all Nemesis replacement tags will refer to a singular Nemesis.
-      - As always, these are described in the `Reference` tab of the NC Configuration screen.
-- Minor updates to information presented in some configuration screens, such as `About`.
 
 # ⏱️ Coming Soon
 

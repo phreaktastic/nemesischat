@@ -10,6 +10,7 @@ local _, core = ...;
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned
 local UnitIsGroupLeader = UnitIsGroupLeader
 local IsInRaid = IsInRaid
+local UnitGUID = UnitGUID
 
 -----------------------------------------------------
 -- Event handling for Blizzard events
@@ -26,7 +27,7 @@ end
 
 function NemesisChat:CHALLENGE_MODE_START()
     NCEvent:Initialize()
-    NCDungeon:Start()
+    NCDungeon:Reset("", true)
     NemesisChat:HandleEvent()
 end
 
@@ -73,6 +74,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                 local isNemesis = (core.db.profile.nemeses[val] ~= nil or (NCRuntime:GetFriend(val) ~= nil and core.db.profile.flagFriendsAsNemeses) or (isInGuild and core.db.profile.flagGuildiesAsNemeses))
     
                 local newPlayer = {
+                    guid = UnitGUID(val),
                     isGuildmate = isInGuild,
                     isFriend = NCRuntime:IsFriend(val),
                     isNemesis = isNemesis,
@@ -103,6 +105,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                 local isNemesis = (core.db.profile.nemeses[val] ~= nil or (NCRuntime:GetFriend(val) ~= nil and core.db.profile.flagFriendsAsNemeses) or (isInGuild and core.db.profile.flagGuildiesAsNemeses))
     
                 local newPlayer = {
+                    guid = UnitGUID(val),
                     isGuildmate = isInGuild,
                     isFriend = NCRuntime:IsFriend(val),
                     isNemesis = isNemesis,
@@ -123,6 +126,11 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     
                 if #leaves <= 3 then
                     NemesisChat:PLAYER_LEAVES_GROUP(val, player.isNemesis)
+                end
+
+                if NCDungeon:IsActive() and player.guid ~= nil then
+                    self:Print("Added leaver to DB:", val)
+                    NemesisChat:AddLeaver(player.guid)
                 end
     
                 NCRuntime:RemoveGroupRosterPlayer(val)
@@ -155,4 +163,8 @@ end
 
 function NemesisChat:PLAYER_ROLES_ASSIGNED()
     NemesisChat:CheckGroup()
+end
+
+function NemesisChat:CHAT_MSG_ADDON(_, prefix, payload, distribution, sender)
+    NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
 end

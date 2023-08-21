@@ -207,7 +207,21 @@ function NemesisChat:InstantiateMsg()
             NCEvent:Initialize()
             return
         else
-            msg = availableMessages[random(#availableMessages)]
+            -- If we have more than one message that is available for an event, prioritize Nemesis based messages
+            local nemesisMsg
+            
+            for _, aMsg in pairs(availableMessages) do
+                if string.find(aMsg.message, "%[(NEMESIS)[A-Za-z]*%]") ~= nil then -- ;;;;;;;;;;;;;;
+                    nemesisMsg = aMsg
+                    break
+                end
+            end
+
+            if nemesisMsg then
+                msg = nemesisMsg
+            else
+                msg = availableMessages[random(#availableMessages)]
+            end
         end
 
         -- Roll the message chance

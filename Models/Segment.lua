@@ -66,8 +66,13 @@ NCSegment = {
     -- Pulls tracker for the segment
     Pulls = {},
 
+    -- Rankings object (NCRankings)
+    Rankings = {},
+
     -- Segment tracker -- array containing all objects which inherited from NCSegment
     Segments = {},
+
+    DetailsSegment = DETAILS_SEGMENTID_CURRENT,
 
     Start = function(self) 
         self.StartTime = GetTime()
@@ -84,6 +89,9 @@ NCSegment = {
         self.Wipe = NemesisChat:IsWipe()
         self:SetInactive()
         self:FinishCallback(success)
+        if self.Rankings and self.Rankings.Calculate then
+            self.Rankings:Calculate()
+        end
     end,
     FinishCallback = function(self, success)
         -- Override me
@@ -352,6 +360,55 @@ NCSegment = {
     AddPullCallback = function(self, player)
         -- Override me
     end,
+    GetStats = function(self, playerName, metric)
+        if metric == "DPS" then
+            return self:GetDps(playerName)
+        elseif metric == "Affixes" then
+            return self:GetAffixes(playerName)
+        elseif metric == "AvoidableDamage" then
+            return self:GetAvoidableDamage(playerName)
+        elseif metric == "Deaths" then
+            return self:GetDeaths(playerName)
+        elseif metric == "Interrupts" then
+            return self:GetInterrupts(playerName)
+        elseif metric == "OffHeals" then
+            return self:GetOffHeals(playerName)
+        elseif metric == "Pulls" then
+            return self:GetPulls(playerName)
+        end
+
+        return 0
+    end,
+    GetDps = function(self, playerName)
+        if Details == nil or NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or NCDetailsAPI == nil or NCDetailsAPI.GetDPS == nil then
+            return 0
+        end
+        
+        return NCDetailsAPI:GetDPS(playerName, self:GetDetailsSegment())
+    end,
+    GetDetailsSegment = function(self)
+        return self.DetailsSegment
+    end,
+    SetDetailsSegment = function(self, detailsSegment)
+        self.DetailsSegment = detailsSegment
+    end,
+    GetLowPerformers = function(self)
+        -- Get players from self.Rankings with the lowest DPS / affixes / interrupts, highest avoidable damage / deaths / pulls, and if the delta is >= 30% add them to the DB as low performers
+        local lowestDpsPlayer = self.Rankings.Bottom.DPS.Player
+        local lowestDpsDeltaPct = self.Rankings.Bottom.DPS.DeltaPercent
+        local lowestAffixesPlayer = self.Rankings.Bottom.Affixes.Player
+        local lowestAffixesDeltaPct = self.Rankings.Bottom.Affixes.DeltaPercent
+        local lowestInterruptsPlayer = self.Rankings.Bottom.Interrupts.Player
+        local lowestInterruptsDeltaPct = self.Rankings.Bottom.Interrupts.DeltaPercent
+        local highestAvoidableDamagePlayer = self.Rankings.Bottom.AvoidableDamage.Player
+        local highestAvoidableDamageDeltaPct = self.Rankings.Bottom.AvoidableDamage.DeltaPercent
+        local highestDeathsPlayer = self.Rankings.Bottom.Deaths.Player
+        local highestDeathsDeltaPct = self.Rankings.Bottom.Deaths.DeltaPercent
+        local highestPullsPlayer = self.Rankings.Bottom.Pulls.Player
+        local highestPullsDeltaPct = self.Rankings.Bottom.Pulls.DeltaPercent
+
+
+    end,
     GlobalAddAffix = function(self, player)
         if player == nil then
             return
@@ -434,6 +491,7 @@ NCSegment = {
         local o = {
             Identifier = identifier,
             Segments = nil,
+            Affixes = {},
             AvoidableDamage = {},
             Deaths = {},
             Heals = {},
@@ -444,7 +502,9 @@ NCSegment = {
         setmetatable(o, self)
         self.__index = self
 
-        NCSegment.Segments[#self.Segments + 1] = o
+        o.Rankings = NCRankings:New(o)
+
+        NCSegment.Segments[#NCSegment.Segments + 1] = o
 
         return o
     end,

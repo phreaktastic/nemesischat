@@ -7,6 +7,9 @@
 -----------------------------------------------------
 local addonName, core = ...;
 
+local LibSerialize = LibStub("LibSerialize")
+local LibDeflate = LibStub("LibDeflate")
+
 -----------------------------------------------------
 -- Blizzard functions
 -----------------------------------------------------
@@ -40,6 +43,8 @@ local SetRaidTarget = SetRaidTarget
 local IsInInstance = IsInInstance
 local UnitClassification = UnitClassification
 local UnitGUID = UnitGUID
+local C_ChatInfo = C_ChatInfo
+local GetNumGuildMembers = GetNumGuildMembers
 
 -- APIs
 local GTFO = GTFO
@@ -69,6 +74,143 @@ end
 -- Core global helper functions
 -----------------------------------------------------
 function NemesisChat:InitializeHelpers()
+
+    function NemesisChat:TransmitSyncData()
+        if NCRuntime:GetLastSyncType() == "" or NCRuntime:GetLastSyncType() == nil or NCRuntime:GetLastSyncType() == "LEAVERS" then
+            NCRuntime:SetLastSyncType("LOWPERFORMERS")
+            NemesisChat:TransmitLowPerformers()
+        else
+            NCRuntime:SetLastSyncType("LEAVERS")
+            NemesisChat:TransmitLeavers()
+        end
+    end
+
+    function NemesisChat:TransmitLeavers()
+        if core.db.profile.leavers == nil or NCDungeon:IsActive() then
+            return
+        end
+
+        local _, online = GetNumGuildMembers()
+
+        if online > 1 and NCRuntime:GetLastLeaverSyncType() ~= "GUILD" then
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "GUILD")
+            NCRuntime:SetLastLeaverSyncType("GUILD")
+        else
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "YELL")
+            NCRuntime:SetLastLeaverSyncType("YELL")
+        end
+    end
+
+    function NemesisChat:TransmitLowPerformers()
+        if core.db.profile.lowPerformers == nil or NCDungeon:IsActive() then
+            return
+        end
+
+        local _, online = GetNumGuildMembers()
+
+        if online > 1 and NCRuntime:GetLastLowPerformerSyncType() ~= "GUILD" then
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "GUILD")
+            NCRuntime:SetLastLowPerformerSyncType("GUILD")
+        else
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "YELL")
+            NCRuntime:SetLastLowPerformerSyncType("YELL")
+        end
+    end
+
+    function NemesisChat:Transmit(prefix, payload, distribution, target)
+        local serialized = LibSerialize:Serialize(payload)
+        local compressed = LibDeflate:CompressDeflate(serialized)
+        local encoded = LibDeflate:EncodeForWoWAddonChannel(compressed)
+
+        if target and distribution == "WHISPER" then
+            self:SendCommMessage(prefix, encoded, distribution, target)
+        else
+            self:SendCommMessage(prefix, encoded, distribution)
+        end
+    end
+
+    function NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
+        local decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
+        if not decoded then return end
+        local decompressed = LibDeflate:DecompressDeflate(decoded)
+        if not decompressed then return end
+        local success, data = LibSerialize:Deserialize(decompressed)
+        if not success then return end
+
+        local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
+
+        if sender == myFullName then
+            return
+        end
+
+        if prefix == "NC_LEAVERS" then
+            NemesisChat:ProcessLeavers(data)
+        elseif prefix == "NC_LOWPERFORMERS" then
+            NemesisChat:ProcessLowPerformers(data)
+        end
+    end
+
+    function NemesisChat:ProcessLeavers(leavers)
+        NemesisChat:ProcessReceivedData("leavers", leavers)
+    end
+
+    function NemesisChat:ProcessLowPerformers(lowPerformers)
+        NemesisChat:ProcessReceivedData("lowPerformers", lowPerformers)
+    end
+
+    function NemesisChat:ProcessReceivedData(configKey, data)
+        if data == nil or type(data) ~= "table" then
+            return
+        end
+
+        if core.db.profile[configKey] == nil then
+            core.db.profile[configKey] = {}
+        end
+
+        local count = 0
+
+        for key,val in pairs(data) do
+            count = count + 1
+            if core.db.profile[configKey][key] == nil then
+                core.db.profile[configKey][key] = val
+            else
+                core.db.profile[configKey][key] = ArrayMerge(core.db.profile[configKey][key], val)
+            end
+        end
+    end
+
+    function NemesisChat:RegisterPrefixes()
+        C_ChatInfo.RegisterAddonMessagePrefix("NC_LEAVERS")
+        C_ChatInfo.RegisterAddonMessagePrefix("NC_LOWPERFORMERS")
+    end
+
+    function NemesisChat:AddLeaver(guid)
+        if core.db.profile.leavers == nil then
+            core.db.profile.leavers = {}
+        end
+
+        if core.db.profile.leavers[guid] == nil then
+            core.db.profile.leavers[guid] = {}
+        end
+
+        tinsert(core.db.profile.leavers[guid], math.floor(GetTime() / 10) * 10)
+    end
+
+    function NemesisChat:AddLowPerformer(guid)
+        if core.db.profile.lowPerformers == nil then
+            core.db.profile.lowPerformers = {}
+        end
+
+        if core.db.profile.lowPerformers[guid] == nil then
+            core.db.profile.lowPerformers[guid] = {}
+        end
+
+        tinsert(core.db.profile.lowPerformers[guid], math.floor(GetTime() / 10) * 10)
+    end
+
+    function NemesisChat:InitializeTimers()
+        self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitSyncData", 60)
+    end
 
     function NemesisChat:GetMyName()
         NemesisChat:SetMyName()
@@ -430,6 +572,7 @@ function NemesisChat:InitializeHelpers()
                 end
     
                 local rosterPlayer = {
+                    guid = UnitGUID(val),
                     isGuildmate = isInGuild,
                     isFriend = NCRuntime:IsFriend(val),
                     isNemesis = isNemesis,
@@ -885,7 +1028,7 @@ function NemesisChat:InitializeHelpers()
         local isAffixMobHandled, affixMobHandlerName, affixMobHandledGuid = NemesisChat:IsAffixMobHandled()
 
         if isBeginCast then
-            if core.db.profile.reportConfig["AFFIXES"]["CASTSTART"] then
+            if NCConfig:IsReportingAffixes_CastStart() then
                 SendChatMessage("Nemesis Chat: " .. beginCastName .. " is casting!", "YELL")
             end
 
@@ -895,13 +1038,13 @@ function NemesisChat:InitializeHelpers()
         end
 
         if isSuccessfulCast then
-            if core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"] then
+            if NCConfig:IsReportingAffixes_CastSuccess() then
                 SendChatMessage("Nemesis Chat: " .. successfulCastName .. " successfully cast!", "YELL")
             end
         end
 
         if isCastInterrupted then
-            if core.db.profile.reportConfig["AFFIXES"]["CASTINTERRUPTED"] and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
+            if NCConfig:IsReportingAffixes_CastFailed() and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
                 SendChatMessage("Nemesis Chat: " .. castInterruptedName .. " cast interrupted, but not incapacitated/dead!", "YELL")
             end
 
