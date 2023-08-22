@@ -12,7 +12,7 @@
         - [Boss Fight End](#boss-fight-end)
         - [Combat Start](#combat-start)
         - [Combat End](#combat-end)
-        - [NCCombat](#nccombat)
+        - [NCSegment](#ncsegment)
     - [Step 3: Message is populated](#step-3-message-is-populated)
     - [Step 4: String replacement and message sending](#step-4-string-replacement-and-message-sending)
 - [General Concepts](#general-concepts)
@@ -73,15 +73,9 @@ ncSpell = {
 },
 ```
 
-Based on the event, the above objects will be hydrated with per-event data. If APIs are enabled (currently, only Details! and GTFO are supported), they will add custom replacements to `NCMessage.customReplacements` via the helper methods.
-
-> **Ephemeral Objects**
->
->It is important to note that all objects below are ephemeral in the scope of any `PLAYER_ENTERING_WORLD` events. That said, `NCDungeon` and `NCBoss` will be destroyed when a player leaves a dungeon or reloads their UI. 
->
->There is an attempt to recover these objects from runtime storage, however, a relog will absolutely result in lost data for dungeons and bosses.
-
 ---
+
+All of the models below inherit from `NCSegment`, which is a model designed for a particular time segment. More information on this particular model can be found below the overview of its children. It is recommended to review the model itself before modifying any children.
 
 ### M+ Dungeon Start: 
 
@@ -89,6 +83,7 @@ On start, `NCDungeon` will be hydrated with the following properties:
 
 ```
 {
+    identifier: <name of dungeon>,
     active: true,
     level: <level of M+ dungeon>,
     startTime: <timestamp>,
@@ -96,10 +91,6 @@ On start, `NCDungeon` will be hydrated with the following properties:
     totalTime: 0,
     complete: false,
     success: false,
-    deathCounter: {},
-    killCounter: {},
-    interrupts = {},
-    avoidableDamage = {},
 }
 ```
 
@@ -113,7 +104,6 @@ On end, `NCDungeon` will be updated / hydrated with the following properties:
 {
     active: false,
     level: <level of M+ dungeon>,
-    [...]
     completeTime: <timestamp of end>,
     totalTime: <end - start>,
     complete: true,
@@ -132,6 +122,7 @@ On start, `NCBoss` will be hydrated with the following properties:
 
 ```
 {
+    identifier: <name of boss>,
     active = true,
     startTime = <timestamp>,
     name = <boss name>,
@@ -165,27 +156,35 @@ On combat start, `NCCombat` will be hydrated with the following properties:
 
 ```
 {
-    inCombat = true,
-    interrupts = {}, -- key = string (player name), value = integer (number of interrupts)
-    avoidableDamage = {}, -- key = string (player name), value = integer (avoidable damage taken)
+    activate = true,
 },
 ```
 
 Each time an interrupt fires or avoidable damage is taken (assuming GTFO is installed and the option is enabled in NC), the above tables will be updated. NCDungeon will also be updated. This allows messages to fire based on leaving combat, and finishing a Mythic+ Dungeon.
 
+---
+
 ### Combat End: 
 
-On combat end, `inCombat` is updated to `false`. Data will not be wiped until a new combat start event fires.
+On combat end, `active` is updated to `false`. Data will not be wiped until a new combat start event fires.
 
-### NCCombat:
+---
 
-This object will be hydrated with data reflecting the current in-combat encounter. This can be trash mobs or bosses. So far, properties include `interrupts` and `avoidableDamage`, but this may change as new angles are considered.
+### NCSegment:
 
-The purpose of this object is to store data relating strictly to the current in-combat encounter. This object is re-initlialized every time a player enters combat from a non-combat state, and thus, should not be relied upon for any long-term data. The approach of wiping this data per-encounter is intentional; the goal is to minimize prospective memory usage and keep the addon efficient. There may be adjustments to this, as it is stil in development.
+This object is a base object, meant to be inherited by any objects which would be used for the purpose of tracking a particular segment. It provides the vast majority of tracking methods and variables used by the above models, and as such, it is often updated with new logic as opposed to updating children. It currently tracks per-player:
 
-It is currently under consideration to keep a running list of encounters. However, this is not in place currently, and this is unlikely to be published as it serves no general purpose to NC. In order to fully capitalize on the prospective benefits of keeping a running list, it seems the UI / Configuration Flow may be too complex for the average user. If you disagree with this, please message me with your idea(s) and we can make adjustments as necessary.
+- Affixes
+- Avoidable Damage
+- Deaths
+- Heals
+- Interrupts
+- Kills
+- Offheals
+- Pulls
+- Rankings (`NCRankings`)
 
-Currently, it is also considered to house a `deaths` and `kills` table on this object. More per-combat-segment data is likely to be added.
+It also tracks every segment which inherits from it, which allows updating all active segments with global methods. This makes it incredibly easy to instantiate a new segment and ensure it is properly hydrated + updated. The main logic that a child is responsible for, is ensuring that `active` is explicitly set when required (via `:Start()` or `:Reset()`), and what happens upon starting / finishing the segment (via `:StartCallback()` and `:FinishCallback()`).
 
 ## Step 3: Message is populated
 
