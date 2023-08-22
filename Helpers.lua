@@ -858,7 +858,7 @@ function NemesisChat:InitializeHelpers()
 
     -- Largely taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with some modifications
     function NemesisChat:IsPull()
-        if not IsInInstance() or not IsInGroup() then
+        if not IsInInstance() or not IsInGroup() or (NCBoss:IsActive() and NCDungeon:IsActive()) then
             return false, nil, nil, nil
         end
 
