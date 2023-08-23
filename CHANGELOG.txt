@@ -10,7 +10,8 @@
 
 ## 🩹 Patches
 
-- **1.8.1**: Pull announcements were getting a little loud during boss fights (first boss on NL for example). They will not longer occur during boss fights. This will likely be configurable once this feature is out of beta.
+- **1.8.2**: Bursting logic for affixes.
+- **1.8.1**: Pull announcements were getting a little loud during boss fights (first boss on NL for example). They will no longer occur during boss fights. This will likely be configurable once this feature is out of beta.
 
 ## ⭐ Latest Versions
 

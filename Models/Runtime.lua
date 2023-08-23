@@ -130,6 +130,13 @@ NCRuntime = {
 
         return core.runtime.playerStates[playerName][key]
     end,
+    SetPlayerStateValue = function(self, playerName, key, value)
+        if core.runtime.playerStates[playerName] == nil then
+            core.runtime.playerStates[playerName] = {}
+        end
+
+        core.runtime.playerStates[playerName][key] = value
+    end,
     CheckPlayerStates = function(self)
         if core.runtime.playerStates == nil then
             core.runtime.playerStates = {}
@@ -145,6 +152,19 @@ NCRuntime = {
     end,
     UpdatePlayerStatesLastCheck = function(self)
         core.runtime.playerStates.lastCheck = GetTime()
+    end,
+    GetPlayerStatesLastAuraCheck = function(self)
+        if core.runtime.playerStates.lastAuraCheck == nil then
+            core.runtime.playerStates.lastAuraCheck = 0
+        end
+
+        return core.runtime.playerStates.lastAuraCheck
+    end,
+    GetPlayerStatesLastAuraCheckDelta = function(self)
+        return GetTime() - core.runtime.playerStates.lastAuraCheck or 0
+    end,
+    UpdatePlayerStatesLastAuraCheck = function(self)
+        core.runtime.playerStates.lastAuraCheck = GetTime()
     end,
     GetFriends = function(self)
         return core.runtime.friends

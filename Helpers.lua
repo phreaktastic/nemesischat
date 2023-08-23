@@ -45,6 +45,7 @@ local UnitClassification = UnitClassification
 local UnitGUID = UnitGUID
 local C_ChatInfo = C_ChatInfo
 local GetNumGuildMembers = GetNumGuildMembers
+local AuraUtil = AuraUtil
 
 -- APIs
 local GTFO = GTFO
@@ -193,7 +194,7 @@ function NemesisChat:InitializeHelpers()
             core.db.profile.leavers[guid] = {}
         end
 
-        tinsert(core.db.profile.leavers[guid], math.floor(GetTime() / 10) * 10)
+        tinsert(core.db.profile.leavers[guid], math.ceil(GetTime() / 10) * 10)
     end
 
     function NemesisChat:AddLowPerformer(guid)
@@ -205,7 +206,7 @@ function NemesisChat:InitializeHelpers()
             core.db.profile.lowPerformers[guid] = {}
         end
 
-        tinsert(core.db.profile.lowPerformers[guid], math.floor(GetTime() / 10) * 10)
+        tinsert(core.db.profile.lowPerformers[guid], math.ceil(GetTime() / 10) * 10)
     end
 
     function NemesisChat:InitializeTimers()
@@ -1022,6 +1023,8 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:CheckAffixes()
+        NemesisChat:CheckAffixAuras()
+
         local isBeginCast, beginCastGuid, beginCastName = NemesisChat:IsAffixBeginCast()
         local isSuccessfulCast, successfulCastGuid, successfulCastName = NemesisChat:IsAffixSuccessfulCast()
         local isCastInterrupted, castInterruptedGuid, castInterruptedName = NemesisChat:IsAffixCastInterrupted()
@@ -1057,6 +1060,30 @@ function NemesisChat:InitializeHelpers()
             -- SetRaidTarget(affixMobHandledGuid, 0)
 
             NCSegment:GlobalAddAffix(affixMobHandlerName)
+        end
+    end
+end
+
+-- Check combat log for application or dose of auras listed in core.affixMobsAuras
+function NemesisChat:CheckAffixAuras()
+    if not IsInInstance() or not IsInGroup() then
+        return
+    end
+
+    local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,itype = CombatLogGetCurrentEventInfo()
+
+    if not UnitInParty(dname) or not string.find(event, "AURA_APPLIED") then
+        return
+    end
+
+    for _, auraData in pairs(core.affixMobsAuras) do
+        if auraData.spellId == arg1 and UnitInParty(dname) then
+            local name, rank, icon, count, dispelType, duration, expires, caster, isStealable, nameplateShowPersonal, spellID, canApplyAura, isBossDebuff, _, nameplateShowAll, timeMod, value1, value2, value3 = AuraUtil.FindAuraByName(auraData.spellName, dname, "HARMFUL")
+
+            if count >= auraData.highStacks and NCRuntime:GetPlayerStatesLastAuraCheckDelta() < 3 then
+                SendChatMessage("Nemesis Chat: " .. dname .. " has " .. auraData.name .. " at " .. count .. " stacks!", "YELL")
+                NCRuntime:UpdatePlayerStatesLastAuraCheck()
+            end
         end
     end
 end

@@ -427,6 +427,8 @@ core.feastIDs = {
 	[383063] = 1, -- Hoard of Draconic Delicacies (DF)
 }
 
+-- It's probably time to build a model for affix functionality
+
 -- All affix mobs
 core.affixMobs = {
     "Spiteful Shade",
@@ -446,6 +448,16 @@ core.affixMobsHandles = {
         "HEAL",
         "DISPEL",
     },
+}
+
+-- Auras applied by affix mobs
+core.affixMobsAuras = {
+    {
+        name = "Bursting",
+        spellName = "Burst",
+        spellId = 243237,
+        highStacks = 4,
+    }
 }
 
 -- Raid markers to use for affix mobs (currently unused)
