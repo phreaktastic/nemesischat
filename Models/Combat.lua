@@ -38,12 +38,16 @@ function NCCombat:FinishCallback()
 end
 
 function NCCombat:AnnounceAffixAuras()
+    if not NCConfig:IsReportingAffixes_AuraStacks() then
+        return
+    end
+
     for _, auraData in pairs(core.affixMobsAuras) do
         for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
             local name, rank, icon, count, dispelType, duration, expires, caster, isStealable, nameplateShowPersonal, spellID, canApplyAura, isBossDebuff, _, nameplateShowAll, timeMod, value1, value2, value3 = AuraUtil.FindAuraByName(auraData.spellName, playerName, "HARMFUL")
 
             if count >= auraData.highStacks then
-                SendChatMessage("Nemesis Chat: " .. auraData.name .. " is at " .. count .. " stacks -- please wait to pull more mobs!", "PARTY")
+                SendChatMessage("Nemesis Chat: " .. auraData.name .. " is at " .. count .. "+ stacks -- please wait to pull more mobs!", "PARTY")
 
                 return
             end

@@ -1093,7 +1093,7 @@ end
 
 -- Check combat log for application or dose of auras listed in core.affixMobsAuras
 function NemesisChat:CheckAffixAuras()
-    if not IsInInstance() or not IsInGroup() then
+    if not IsInInstance() or not IsInGroup() or not NCConfig:IsReportingAffixes_AuraStacks() then
         return
     end
 

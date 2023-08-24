@@ -417,6 +417,15 @@ NCConfig = {
     SetReportingAffixes_CastFailed = function(self, value)
         core.db.profile.reportConfig["AFFIXES"]["CASTINTERRUPTED"] = value
     end,
+    IsReportingAffixes_AuraStacks = function(self)
+        return core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"]
+    end,
+    ToggleReportingAffixes_AuraStacks = function(self)
+        core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"] = not core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"]
+    end,
+    SetReportingAffixes_AuraStacks = function(self, value)
+        core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"] = value
+    end,
     IsReportingAffixes_Markers = function(self)
         return core.db.profile.reportConfig["AFFIXES"]["MARKERS"]
     end,
