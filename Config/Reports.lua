@@ -525,6 +525,16 @@ core.options.args.reportsGroup = {
                     get = function() return core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"] end,
                     set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"] = value end,
                 },
+                affixAuraStacksWarningToggle = {
+                    order = 5,
+                    type = "toggle",
+                    name = "Announce Aura Stacks",
+                    desc = "Announce when an affix enemy has reached a high amount of stacks of a dangerous aura. This will be announced in real-time as a yell, and post-combat warnings to wait on pulls will be in party chat.",
+                    descStyle = "inline",
+                    width = "full",
+                    get = function() return core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"] end,
+                    set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"] = value end,
+                },
                 -- affixMarkersToggle = {
                 --     order = 5,
                 --     type = "toggle",

@@ -79,6 +79,7 @@ core.defaults = {
                 ["BOTTOM"] = false,
                 ["BOSS"] = false,
                 ["DUNGEON"] = false,
+                ["AURASTACKS"] = false,
             }
         },
         aiConfig = {

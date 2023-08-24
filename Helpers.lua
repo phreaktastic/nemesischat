@@ -1008,8 +1008,30 @@ function NemesisChat:InitializeHelpers()
             end
         end
 
-
         return isHandled, sname, dguid
+    end
+
+    function NemesisChat:IsAffixAuraHandled()
+        if not IsInInstance() or not IsInGroup() then
+            return false
+        end
+
+        local _, event, _, _, sname, _, _, _, dname, _, _, _, _, _, dispelledId = CombatLogGetCurrentEventInfo()
+
+        if (NCRuntime:GetGroupRosterPlayer(sname) == nil and sname ~= GetMyName()) or (NCRuntime:GetGroupRosterPlayer(dname) == nil and dname ~= GetMyName()) or event ~= "SPELL_DISPEL" then
+            return false
+        end
+
+        local isHandled = false
+
+        for _, auraData in pairs(core.affixMobsAuras) do
+            if auraData.spellId == dispelledId then
+                isHandled = true
+                break
+            end
+        end
+
+        return isHandled, sname
     end
 
     function NemesisChat:CheckIsAffix()
@@ -1029,6 +1051,7 @@ function NemesisChat:InitializeHelpers()
         local isSuccessfulCast, successfulCastGuid, successfulCastName = NemesisChat:IsAffixSuccessfulCast()
         local isCastInterrupted, castInterruptedGuid, castInterruptedName = NemesisChat:IsAffixCastInterrupted()
         local isAffixMobHandled, affixMobHandlerName, affixMobHandledGuid = NemesisChat:IsAffixMobHandled()
+        local isAuraHandled, auraHandlerName = NemesisChat:IsAffixAuraHandled()
 
         if isBeginCast then
             if NCConfig:IsReportingAffixes_CastStart() then
@@ -1060,6 +1083,10 @@ function NemesisChat:InitializeHelpers()
             -- SetRaidTarget(affixMobHandledGuid, 0)
 
             NCSegment:GlobalAddAffix(affixMobHandlerName)
+        end
+
+        if isAuraHandled then
+            NCSegment:GlobalAddAffix(auraHandlerName)
         end
     end
 end
