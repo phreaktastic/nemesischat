@@ -1080,7 +1080,7 @@ function NemesisChat:CheckAffixAuras()
         if auraData.spellId == arg1 and UnitInParty(dname) then
             local name, rank, icon, count, dispelType, duration, expires, caster, isStealable, nameplateShowPersonal, spellID, canApplyAura, isBossDebuff, _, nameplateShowAll, timeMod, value1, value2, value3 = AuraUtil.FindAuraByName(auraData.spellName, dname, "HARMFUL")
 
-            if count >= auraData.highStacks and NCRuntime:GetPlayerStatesLastAuraCheckDelta() < 3 then
+            if count >= auraData.highStacks and NCRuntime:GetPlayerStatesLastAuraCheckDelta() > 3 then
                 SendChatMessage("Nemesis Chat: " .. dname .. " has " .. auraData.name .. " at " .. count .. " stacks!", "YELL")
                 NCRuntime:UpdatePlayerStatesLastAuraCheck()
             end
