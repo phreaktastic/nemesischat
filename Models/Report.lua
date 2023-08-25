@@ -105,6 +105,20 @@ function NemesisChat:Report(event, success)
         end
 
         local data = typeData[type]
+
+        if bucket.Rankings.Top == nil then
+            if bucket.Rankings and bucket.Rankings.Calculate then
+                bucket.Rankings:Calculate()
+            end
+            NemesisChat:Print("Cannot retrieve rankings data for bucket " .. bucket:GetIdentifier() .. "!")
+            return
+        end
+
+        if bucket.Rankings.Top == nil then
+            NemesisChat:Print("Cannot retrieve rankings data for bucket " .. bucket:GetIdentifier() .. "!")
+            return
+        end
+
         local topVal = bucket.Rankings.Top[rankingType].Value
         local topPlayer = bucket.Rankings.Top[rankingType].Player
         local botVal = bucket.Rankings.Bottom[rankingType].Value

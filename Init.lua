@@ -455,7 +455,7 @@ core.affixMobsAuras = {
     {
         name = "Bursting",
         spellName = "Burst",
-        spellId = 243237,
+        spellId = 240443,
         highStacks = 4,
     }
 }

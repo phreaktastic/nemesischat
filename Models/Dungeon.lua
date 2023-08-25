@@ -30,8 +30,6 @@ function NCDungeon:StartCallback()
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
     NCDungeon:SetAffixes(affixIDs)
-
-    core.runtime.NCDungeon = NCDungeon
 end
 
 function NCDungeon:FinishCallback(success)
@@ -57,9 +55,6 @@ function NCDungeon:FinishCallback(success)
             self:Print("Number of bottom metrics:", #metrics)
         end
     end
-    
-
-    core.runtime.NCDungeon = nil
 end
 
 function NCDungeon:ResetCallback()
@@ -80,34 +75,6 @@ end
 
 function NCDungeon:GetAffixes()
     return NCDungeon.Affixes
-end
-
-function NCDungeon:AddAvoidableDamageCallback()
-    core.runtime.NCDungeon = NCDungeon
-end
-
-function NCDungeon:AddDeathCallback()
-    core.runtime.NCDungeon = NCDungeon
-end
-
-function NCDungeon:AddHealsCallback()
-    core.runtime.NCDungeon = NCDungeon
-end
-
-function NCDungeon:AddOffHealsCallback()
-    core.runtime.NCDungeon = NCDungeon
-end
-
-function NCDungeon:AddInterruptCallback()
-    core.runtime.NCDungeon = NCDungeon
-end
-
-function NCDungeon:AddKillCallback()
-    core.runtime.NCDungeon = NCDungeon
-end
-
-function NCDungeon:AddPullCallback()
-    core.runtime.NCDungeon = NCDungeon
 end
 
 function NCDungeon:GetLowestPerformer()

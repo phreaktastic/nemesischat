@@ -32,7 +32,7 @@ NCSegment = {
 
     -- Segment start time
     StartTime = 0,
-
+ 
     -- Was this segment a success?
     Success = false,
 
@@ -88,10 +88,12 @@ NCSegment = {
         self.Success = success or false
         self.Wipe = NemesisChat:IsWipe()
         self:SetInactive()
-        self:FinishCallback(success)
+
         if self.Rankings and self.Rankings.Calculate then
             self.Rankings:Calculate()
         end
+
+        self:FinishCallback(success)
     end,
     FinishCallback = function(self, success)
         -- Override me
@@ -496,13 +498,13 @@ NCSegment = {
             Deaths = {},
             Heals = {},
             Interrupts = {},
-            OffHeals = {}
+            OffHeals = {},
+            Pulls = {},
+            Rankings = NCRankings:New(o),
         }
         
         setmetatable(o, self)
         self.__index = self
-
-        o.Rankings = NCRankings:New(o)
 
         NCSegment.Segments[#NCSegment.Segments + 1] = o
 

@@ -172,11 +172,11 @@ NCRankings = {
         local o = {
             Top = {},
             Bottom = {},
-            _segment = {},
+            BottomTracker = {},
+            _segment = segment,
         }
         setmetatable(o, self)
         self.__index = self
-        self._segment = segment
         return o
     end,
 
