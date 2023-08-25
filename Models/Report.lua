@@ -22,12 +22,12 @@ function NemesisChat:Report(event, success)
     end
 
     local TYPES = {
-        ["DAMAGE"] = "DPS",
-        ["AVOIDABLE"] = "AvoidableDamage",
-        ["INTERRUPTS"] = "Interrupts",
-        ["OFFHEALS"] = "Offheals",
-        ["DEATHS"] = "Deaths",
-        ["AFFIXES"] = "Affixes",
+        "DAMAGE",
+        "AVOIDABLE",
+        "INTERRUPTS",
+        "OFFHEALS",
+        "DEATHS",
+        "AFFIXES",
     }
     local EVENTS = {
         "COMBAT",
@@ -36,23 +36,35 @@ function NemesisChat:Report(event, success)
     }
     local typeData = {
         ["DAMAGE"] = {
+            compatibilityCheck = function()
+                if Details == nil or NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or NCDetailsAPI == nil or NCDetailsAPI.GetDPS == nil then
+                    return false
+                end
+
+                return true
+            end,
+            exec = function(player, segment) return NCDetailsAPI:GetDPS(player, segment) end,
             topMsg = "Shout out to %s with the highest DPS for %s, at %s!",
             botMsg = "Lowest DPS for %s: %s at %s.",
         },
         ["AVOIDABLE"] = {
+            exec = function(player, segment, bucket) return bucket:GetAvoidableDamage(player) end,
             topMsg = "Highest avoidable damage taken for %s: %s at %s.",
             botMsg = "Shout out to %s with the lowest avoidable damage taken for %s, at %s!",
             inverted = true,
         },
         ["INTERRUPTS"] = {
+            exec = function(player, segment, bucket) return bucket:GetInterrupts(player) end,
             topMsg = "Shout out to %s with the most interrupts for %s, at %s!",
             botMsg = "Lowest interrupts for %s: %s at %s.",
         },
         ["OFFHEALS"] = {
+            exec = function(player, segment, bucket) return bucket:GetOffHeals(player) end,
             topMsg = "Shout out to %s with the most off-heals for %s, at %s!",
             botMsg = "Lowest off-heals for %s: %s at %s.",
         },
         ["DEATHS"] = {
+            exec = function(player, segment, bucket) return bucket:GetDeaths(player) end,
             preMessageHook = function(topMsg, botMsg, bucket)
                 local ad = bucket:GetAvoidableDamage(topPlayer)
                 local adFormatted = NemesisChat:FormatNumber(ad)
@@ -73,6 +85,7 @@ function NemesisChat:Report(event, success)
             inverted = true,
         },
         ["AFFIXES"] = {
+            exec = function(player, segment, bucket) return bucket:GetAffixes(player) end,
             topMsg = "Shout out to %s with the most affixes for %s, at %s!",
             botMsg = "Lowest affixes for %s: %s at %s.",
         },
@@ -84,9 +97,13 @@ function NemesisChat:Report(event, success)
         return
     end
 
-    for type, rankingType in pairs(TYPES) do
-        local bucket, topMsg, botMsg
+    for _, type in pairs(TYPES) do
+        local bucket, var, segment, topMsg, botMsg
         local config = core.db.profile.reportConfig[type][event]
+        local topPlayer = ""
+        local botPlayer = ""
+        local topVal = 0
+        local botVal = 99999999
         local segName = "this combat segment"
 
         if not config then
@@ -95,42 +112,46 @@ function NemesisChat:Report(event, success)
 
         if event == "COMBAT" or event == "BOSS" then
             bucket = NCCombat
+            segment = DETAILS_SEGMENTID_CURRENT
 
             if event == "BOSS" then
                 segName = NCBoss:GetIdentifier()
             end
         elseif event == "DUNGEON" then
             bucket = NCDungeon
+            segment = DETAILS_SEGMENTID_OVERALL
             segName = NCDungeon:GetIdentifier()
         end
 
         local data = typeData[type]
 
-        if bucket.Rankings.Top == nil then
-            if bucket.Rankings and bucket.Rankings.Calculate then
-                bucket.Rankings:Calculate()
+        if data.compatibilityCheck ~= nil and data.compatibilityCheck() == false then
+            return
+        end
+
+        for player, _ in pairs(NCRuntime:GetGroupRoster()) do
+            local val = data.exec(player, segment, bucket)
+
+            if val > topVal then
+                topVal = val
+                topPlayer = player
+            elseif val == topVal then
+                topPlayer = topPlayer .. " + " .. player
             end
-            NemesisChat:Print("Cannot retrieve rankings data for bucket " .. bucket:GetIdentifier() .. "!")
-            return
+
+            if val < botVal then
+                botVal = val
+                botPlayer = player
+            end
         end
 
-        if bucket.Rankings.Top == nil then
-            NemesisChat:Print("Cannot retrieve rankings data for bucket " .. bucket:GetIdentifier() .. "!")
-            return
-        end
-
-        local topVal = bucket.Rankings.Top[rankingType].Value
-        local topPlayer = bucket.Rankings.Top[rankingType].Player
-        local botVal = bucket.Rankings.Bottom[rankingType].Value
-        local botPlayer = bucket.Rankings.Bottom[rankingType].Player
-
-        if topPlayer == nil then
+        if topVal == 0 then
             topMsg = nil
         else
             topMsg = data.topMsg
         end
 
-        if botPlayer == nil then
+        if botVal == 99999999 then
             botMsg = nil
         else
             botMsg = data.botMsg
