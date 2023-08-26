@@ -144,8 +144,7 @@ end
 -- We leverage this event for entering combat
 function NemesisChat:PLAYER_REGEN_DISABLED()
     NCEvent:Initialize()
-    NCCombat:Reset()
-    NCCombat:Start()
+    NCCombat:Reset("Combat Segment " .. GetTime(), true)
     
     NCRuntime:ClearPlayerStates()
     NemesisChat:HandleEvent()

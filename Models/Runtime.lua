@@ -161,7 +161,7 @@ NCRuntime = {
         return core.runtime.playerStates.lastAuraCheck
     end,
     GetPlayerStatesLastAuraCheckDelta = function(self)
-        return GetTime() - core.runtime.playerStates.lastAuraCheck or 0
+        return GetTime() - self:GetPlayerStatesLastAuraCheck()
     end,
     UpdatePlayerStatesLastAuraCheck = function(self)
         core.runtime.playerStates.lastAuraCheck = GetTime()

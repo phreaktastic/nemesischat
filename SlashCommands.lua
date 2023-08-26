@@ -14,7 +14,9 @@ local _, core = ...;
 function NemesisChat:SlashCommand(msg)
 	if not msg or msg:trim() == "" then
 		InterfaceOptionsFrame_OpenToCategory(core.optionsFrame)
-	elseif msg:trim() == "test" then
+	elseif msg:trim() == "toast" then
+		
+	elseif msg:trim() == "stats" then
 		
 	else
         if core.db.profile.dbg then

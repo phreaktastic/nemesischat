@@ -170,8 +170,8 @@ NCRankings = {
     ---@return NCRankings
     New = function(self, segment)
         local o = {
-            Top = {},
-            Bottom = {},
+            Top = DeepCopy(self.Top),
+            Bottom = DeepCopy(self.Bottom),
             BottomTracker = {},
             _segment = segment,
         }
@@ -189,19 +189,21 @@ NCRankings = {
             local botPlayer = nil
 
             for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
-                if not ((playerData.role ~= "DAMAGER" and metricKey == "DPS") or (playerData.role == "TANK" and metricKey == "Pulls") or (playerData.role == "HEALER" and metricKey == "Offheals")) then
-                    local val = self._segment:GetStats(playerName, metricKey)
+                if not ((playerData.role ~= "DAMAGER" and metricKey == "DPS") or (playerData.role == "TANK" and metricKey == "Pulls") or (playerData.role == "HEALER" and metricKey == "Offheals")) and playerName ~= nil then
+                    local val = self._segment:GetStats(playerName, metricKey) or 0
 
-                    if val > topVal then
-                        topVal = val
-                        topPlayer = playerName
-                    elseif val == topVal then
-                        topPlayer = playerName
-                    elseif val < botVal then
-                        botVal = val
-                        botPlayer = playerName
-                    elseif val == botVal then
-                        botPlayer = playerName
+                    if type(val) == "string" then
+                        if val > topVal then
+                            topVal = val
+                            topPlayer = playerName
+                        elseif val == topVal then
+                            topPlayer = playerName
+                        elseif val < botVal then
+                            botVal = val
+                            botPlayer = playerName
+                        elseif val == botVal then
+                            botPlayer = playerName
+                        end
                     end
                 end
             end

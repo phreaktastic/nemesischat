@@ -12,7 +12,7 @@ core.version = GetAddOnMetadata(addonName, 'Version')
 -----------------------------------------------------
 -- Register global NemesisChat
 -----------------------------------------------------
-NemesisChat = LibStub("AceAddon-3.0"):NewAddon("NemesisChat", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceTimer-3.0")
+NemesisChat = LibStub("AceAddon-3.0"):NewAddon("NemesisChat", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceTimer-3.0", "LibToast-1.0")
 
 -----------------------------------------------------
 -- Global functions
@@ -456,7 +456,7 @@ core.affixMobsAuras = {
         name = "Bursting",
         spellName = "Burst",
         spellId = 240443,
-        highStacks = 4,
+        highStacks = 7,
     }
 }
 

@@ -500,11 +500,12 @@ NCSegment = {
             Interrupts = {},
             OffHeals = {},
             Pulls = {},
-            Rankings = NCRankings:New(o),
         }
         
         setmetatable(o, self)
         self.__index = self
+
+        o.Rankings = NCRankings:New(o)
 
         NCSegment.Segments[#NCSegment.Segments + 1] = o
 
@@ -535,16 +536,16 @@ NCSegment = {
         -- Don't touch anything that's not inherited
         for k, v in pairs(NCSegment) do
             -- We don't care about maintaining tables, just reset to {}
-            if type(v) == "table" then
+            if type(v) == "table" and k ~= "Rankings" and not string.find(k, "__") then
                 self[k] = {}
-            else
+            elseif type(v) ~= "function" and k ~= "Rankings" and not string.find(k, "__") then
                 self[k] = v
             end
         end
 
-        self:ResetCallback(optIdentifier, optStart)
-
         self.Identifier = identifier
+
+        self:ResetCallback(optIdentifier, optStart)
 
         if optStart == true then
             self:Start()

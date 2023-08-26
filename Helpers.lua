@@ -71,6 +71,9 @@ for i = 1, 48 do
     scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
 end
 
+local function CloseToast()
+end
+
 -----------------------------------------------------
 -- Core global helper functions
 -----------------------------------------------------
@@ -183,6 +186,16 @@ function NemesisChat:InitializeHelpers()
     function NemesisChat:RegisterPrefixes()
         C_ChatInfo.RegisterAddonMessagePrefix("NC_LEAVERS")
         C_ChatInfo.RegisterAddonMessagePrefix("NC_LOWPERFORMERS")
+    end
+
+    function NemesisChat:RegisterToasts()
+        NemesisChat:RegisterToast("Pull", function(toast, player, mob)
+            toast:SetTitle("|cffff4040Potentially Dangerous Pull|r")
+            toast:SetText("|cffffffff" .. player .. " pulled " .. mob .. "!|r")
+            toast:SetIconTexture([[Interface\ICONS\UI_Chat]])
+            toast:SetPrimaryCallback("Announce", CloseToast)
+            toast:SetUrgencyLevel("emergency")
+        end)
     end
 
     function NemesisChat:AddLeaver(guid)
@@ -1099,15 +1112,15 @@ function NemesisChat:CheckAffixAuras()
 
     local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,itype = CombatLogGetCurrentEventInfo()
 
-    if not UnitInParty(dname) or not string.find(event, "AURA_APPLIED") then
+    if not UnitInParty(dname) or (not string.find(event, "AURA_APPLIED") and not string.find(event, "AURA_DOSE")) then
         return
     end
 
     for _, auraData in pairs(core.affixMobsAuras) do
         if auraData.spellId == arg1 and UnitInParty(dname) then
-            local name, rank, icon, count, dispelType, duration, expires, caster, isStealable, nameplateShowPersonal, spellID, canApplyAura, isBossDebuff, _, nameplateShowAll, timeMod, value1, value2, value3 = AuraUtil.FindAuraByName(auraData.spellName, dname, "HARMFUL")
+            local _, _, count = AuraUtil.FindAuraByName(auraData.spellName, dname, "HARMFUL")
 
-            if tonumber(count) >= auraData.highStacks and NCRuntime:GetPlayerStatesLastAuraCheckDelta() >= 3 then
+            if count ~= nil and tonumber(count) >= auraData.highStacks and NCRuntime:GetPlayerStatesLastAuraCheckDelta() >= 3 then
                 SendChatMessage("Nemesis Chat: " .. dname .. " has " .. auraData.name .. " at " .. count .. " stacks!", "YELL")
                 NCRuntime:UpdatePlayerStatesLastAuraCheck()
             end
@@ -1125,4 +1138,13 @@ function NemesisChat:InstantiateCore()
 
     NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
     NemesisChat:InstantiateEvent()
+end
+
+function NemesisChat:Initialize()
+    NemesisChat:InitializeConfig()
+    NemesisChat:InitializeHelpers()
+    NemesisChat:InitializeTimers()
+    NemesisChat:PopulateFriends()
+    NemesisChat:RegisterPrefixes()
+    NemesisChat:RegisterToasts()
 end

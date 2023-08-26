@@ -25,9 +25,14 @@ function NCDungeon:StartCallback()
     NCDungeon:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
 
     local mapChallengeModeID, affixIDs, keystoneLevel = C_ChallengeMode.GetSlottedKeystoneInfo()
-    local name = C_ChallengeMode.GetMapUIInfo(mapChallengeModeID)
 
-    NCDungeon:SetIdentifier(name)
+    if mapChallengeModeID then
+        local name = C_ChallengeMode.GetMapUIInfo(mapChallengeModeID)
+        NCDungeon:SetIdentifier(name)
+    else
+        NCDungeon:SetIdentifier("dungeon")
+    end
+
     NCDungeon:SetLevel(keystoneLevel)
     NCDungeon:SetAffixes(affixIDs)
 end
