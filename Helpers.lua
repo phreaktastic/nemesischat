@@ -71,9 +71,6 @@ for i = 1, 48 do
     scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
 end
 
-local function CloseToast()
-end
-
 -----------------------------------------------------
 -- Core global helper functions
 -----------------------------------------------------
@@ -193,9 +190,72 @@ function NemesisChat:InitializeHelpers()
             toast:SetTitle("|cffff4040Potentially Dangerous Pull|r")
             toast:SetText("|cffffffff" .. player .. " pulled " .. mob .. "!|r")
             toast:SetIconTexture([[Interface\ICONS\UI_Chat]])
-            toast:SetPrimaryCallback("Announce", CloseToast)
             toast:SetUrgencyLevel("emergency")
         end)
+    end
+
+    function NemesisChat:ShowStatsFrame()
+        NemesisChat.testVar = 0
+        lwin = LibStub("LibWindow-1.1")
+        NemesisChat.StatsFrame = CreateFrame("Frame", "NemesisChatStatsFrame", UIParent, "BackdropTemplate") 
+
+        NemesisChat.StatsFrame:SetWidth(256)
+        NemesisChat.StatsFrame:SetHeight(400)
+        NemesisChat.StatsFrame:SetAlpha(0.8)
+        NemesisChat.StatsFrame:SetPoint("CENTER",UIParent)
+        NemesisChat.StatsFrame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
+            edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
+            tile = true, tileSize = 16, edgeSize = 16, 
+            insets = { left = 4, right = 4, top = 4, bottom = 4 }})
+        NemesisChat.StatsFrame:SetBackdropColor(0,0,0,1)
+        NemesisChat.StatsFrame:SetBackdropBorderColor(0,0,0,1)
+
+        NemesisChat.StatsFrame.header = NemesisChat.StatsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        NemesisChat.StatsFrame.header:SetPoint("TOP", NemesisChat.StatsFrame, "TOP", 0, -4)
+        NemesisChat.StatsFrame.header:SetText("Nemesis Chat")
+        NemesisChat.StatsFrame.header:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+
+        NemesisChat.StatsFrame.minimizeButton = CreateFrame("Button", nil, NemesisChat.StatsFrame, "UIPanelButtonTemplate")
+        NemesisChat.StatsFrame.minimizeButton:SetPoint("TOPRIGHT", NemesisChat.StatsFrame, "TOPRIGHT", -2, -2)
+        NemesisChat.StatsFrame.minimizeButton:SetSize(20, 20)
+        NemesisChat.StatsFrame.minimizeButton:SetText("-")
+        NemesisChat.StatsFrame.minimizeButton:SetNormalFontObject("GameFontNormal")
+        NemesisChat.StatsFrame.minimizeButton:SetHighlightFontObject("GameFontHighlight")
+        NemesisChat.StatsFrame.minimizeButton:SetScript("OnClick", function(self)
+            if NemesisChat.StatsFrame.content:IsShown() then
+                NemesisChat.StatsFrame.content:Hide()
+                NemesisChat.StatsFrame:SetHeight(24)
+                NemesisChat.StatsFrame:SetPoint("CENTER",UIParent,"CENTER",0,200)
+                lwin.RestorePosition(NemesisChat.StatsFrame) 
+            else
+                NemesisChat.StatsFrame.content:Show()
+                NemesisChat.StatsFrame:SetHeight(400)
+                NemesisChat.StatsFrame:SetPoint("CENTER",UIParent)
+                lwin.RestorePosition(NemesisChat.StatsFrame) 
+            end
+        end)
+
+        NemesisChat.StatsFrame.content = CreateFrame("Frame", nil, NemesisChat.StatsFrame, "BackdropTemplate")
+        NemesisChat.StatsFrame.content:SetWidth(256)
+        NemesisChat.StatsFrame.content:SetHeight(376)
+        NemesisChat.StatsFrame.content:SetPoint("TOP", NemesisChat.StatsFrame, "TOP", 0, -24)
+        NemesisChat.StatsFrame.content:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
+            edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
+            tile = true, tileSize = 16, edgeSize = 16, 
+            insets = { left = 4, right = 4, top = 0, bottom = 4 }})
+        NemesisChat.StatsFrame.content:SetBackdropColor(0,0,0,0.25)
+        NemesisChat.StatsFrame.content:SetBackdropBorderColor(0,0,0,0)
+
+        NemesisChat.StatsFrame.content.testText = NemesisChat.StatsFrame.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        NemesisChat.StatsFrame.content.testText:SetPoint("TOP", NemesisChat.StatsFrame.content, "TOP", 0, -4)
+        NemesisChat.StatsFrame.content.testText:SetText(tostring(NemesisChat.testVar))
+
+        lwin.RegisterConfig(NemesisChat.StatsFrame, core.db.profile.pullsFrame)
+        lwin.RestorePosition(NemesisChat.StatsFrame) 
+        lwin.MakeDraggable(NemesisChat.StatsFrame)
+        lwin.EnableMouseOnAlt(NemesisChat.StatsFrame)
+
+        NemesisChat.StatsFrame:Show()
     end
 
     function NemesisChat:AddLeaver(guid)
@@ -279,8 +339,14 @@ function NemesisChat:InitializeHelpers()
 
         -- Beta feature, to be cleaned up and polished
         if isPull then
-            if NCConfig:IsReportingPulls_Realtime() then
-                SendChatMessage("Nemesis Chat: " .. pullName .. " pulled " .. mobName, "YELL")
+            if NCRuntime:GetLastPullToastDelta() > 1.5 then
+                -- Nesting this in to prevent spam
+                if NCConfig:IsReportingPulls_Realtime() then
+                    SendChatMessage("Nemesis Chat: " .. pullName .. " pulled " .. mobName, "YELL")
+                end
+
+                NemesisChat:SpawnToast("Pull", pullName, mobName)
+                NCRuntime:UpdateLastPullToast()
             end
             
             NCSegment:GlobalAddPull(pullName)
@@ -1147,4 +1213,5 @@ function NemesisChat:Initialize()
     NemesisChat:PopulateFriends()
     NemesisChat:RegisterPrefixes()
     NemesisChat:RegisterToasts()
+    NemesisChat:SetMyName()
 end

@@ -5,7 +5,7 @@
 ## Notes: The event-driven, targeted message framework.
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB
-## OptionalDeps: Ace3,Details,GTFO
+## OptionalDeps: Details,GTFO
 
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
@@ -18,9 +18,9 @@ Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\LibToast-1.0\lib.xml
 
+Init.lua
 Models\Config.lua
 Models\Runtime.lua
-Init.lua
 Config\Config.lua
 Config\General.lua
 Config\Nemeses.lua

@@ -14,6 +14,143 @@ local _, core = ...;
 -- Blizzard functions
 local GetTime = GetTime
 
+core.runtimeDefaults = {
+    myName = "",
+    lastFeast = 0,
+    lastFriendCheck = 0,
+    lastLeaverSyncType = "GUILD",
+    lastLowPerformerSyncType = "GUILD",
+    lastMessage = 0,
+    lastPullToast = 0,
+    lastSyncType = "",
+    currentMarkerIndex = 0,
+    groupRoster = {},
+    pulledUnits = {},
+    playerStates = {},
+    friends = {
+        -- A simple cache for any online friends, with their character names as the key. Allows for
+        -- different interactions with friends, such as whispering them when they join a group.
+        -- ["CharacterName"] = 1,
+    },
+    petOwners = {},
+    ncEvent = {
+        category = "",
+        event = "",
+        target = "SELF",
+        nemesis = "",
+        bystander = "",
+    },
+    ncMessage = {
+        channel = "SAY",
+        message = "",
+        target = "",
+        customReplacements = {},
+        excludedNemeses = {},
+    },
+    ncDungeon = {
+        active = false,
+        level = 0,
+        startTime = 0,
+        completeTime = 0,
+        totalTime = 0,
+        success = false,
+        deathCounter = {},
+        killCounter = {},
+        avoidableDamage = {},
+        interrupts = {},
+    },
+    ncBoss = {
+        active = false,
+        startTime = 0,
+        name = "",
+        success = false,
+    },
+    ncSpell = {
+        active = false,
+        source = "",
+        target = "",
+        spellId = 0,
+        spellName = "",
+        extraSpellId = 0,
+    },
+    ncCombat = {
+        inCombat = false,
+        interrupts = {}, -- key = string (player name), value = integer (number of interrupts)
+        avoidableDamage = {}, -- key = string (player name), value = integer (avoidable damage taken)
+    },
+    ncApi = {
+        -- Sample values provided as reference for API
+        friendlyName = "",
+        configOptions = {
+            -- {
+            --     name = "Details! API",
+            --     value = "detailsApi",
+            --     description = "Enable the Details! API for use in messages."
+            --     primary = true, -- Flags the config option as the primary toggle for the API
+            -- }
+        },
+        compatibilityChecks = {
+            -- {
+            --     configCheck = true, -- This must be TRUE for config checks, otherwise we will not be able to enable it
+            --     exec = function()
+            --         if not NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() then
+            --             return false, "GTFO API is not enabled."
+            --         end
+            
+            --         return true, nil
+            --     end,
+            -- },
+            -- {
+            --     configCheck = false, -- This must be FALSE, otherwise it will not be checked when enabling
+            --     exec = function() 
+            --         if GTFO == nil then
+            --             return false, "GTFO is not installed."
+            --         end
+            
+            --         return true, nil
+            --     end,
+            -- }
+        },
+        preMessageHooks = {},
+        postMessageHooks = {},
+        subjects = {
+            -- {
+            --     label = "Nemesis DPS",
+            --     value = "NEMESIS_DPS",
+            --     exec = function() return 0 end,
+            --     operators = core.constants.EXTENDED_OPERATORS,
+            --     type = "NUMBER",
+            -- }
+        },
+        operators = {},
+        replacements = {
+            -- {
+            --     label = "Nemesis DPS",
+            --     value = "NEMESISDPS",
+            --     exec = function() return 0 end,
+            --     description = "The DPS of the Nemesis for the current fight."
+            --     isNumeric = true,
+            -- }
+        },
+        subjectMethods = {},
+        replacementMethods = {},
+    },
+    configuredMessage = {
+        label = "",
+        channel = "GROUP",
+        message = "",
+        chance = 1.0,
+        conditions = {}
+    },
+    messageCondition = {
+        left = "NEMESIS_ROLE",
+        operator = "IS",
+        right = "DAMAGER",
+    },
+}
+
+core.runtime = DeepCopy(core.runtimeDefaults)
+
 NCRuntime = {
     GetLastFeast = function(self)
         return core.runtime.lastFeast
@@ -50,6 +187,18 @@ NCRuntime = {
     end,
     SetLastMessage = function(self, value)
         core.runtime.lastMessage = value
+    end,
+    GetLastPullToast = function(self)
+        return core.runtime.lastPullToast
+    end,
+    SetLastPullToast = function(self, value)
+        core.runtime.lastPullToast = value
+    end,
+    UpdateLastPullToast = function(self)
+        core.runtime.lastPullToast = GetTime()
+    end,
+    GetLastPullToastDelta = function(self)
+        return GetTime() - core.runtime.lastPullToast
     end,
     UpdateLastMessage = function(self)
         core.runtime.lastMessage = GetTime()

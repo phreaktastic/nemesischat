@@ -7,8 +7,6 @@
 -----------------------------------------------------
 local _, core = ...;
 
-core.runtime = DeepCopy(core.runtimeDefaults)
-
 function NemesisChat:OnInitialize()
     core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
     NemesisChatAPI:SetAPIConfigOptions()
