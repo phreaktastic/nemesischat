@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.8.6**: One more fix for name logic which has been throwing errors.
 - **1.8.5**: Fix for name logic which was sometimes causing issues due to a race condition.
 - **1.8.4**: More bug fixes and groundwork for next version.
 - **1.8.3**: Bug fixes and groundwork for next version.
@@ -75,29 +76,3 @@
    - NOT friend (currently only available on Bystander, Nemesis, and Spell Target)
 - Migration from hardcoded core functionality to new API flow
 - UI clean up
-
-# ⏱️ Coming Soon
-
-## ✅ Confirmed
-
-- Nemesis configuration within reports (more work was done on this in 1.7.0, it's close):
-   - Exclude Nemeses from shout-outs 😈
-   - Replacements for Nemeses; Example, your Nemesis would get a shout-out for lowest damage dealt -- instead, you set a message that reads, `Shout out to [NEMESIS], who sat around doing nothing and consequently took 0 avoidable damage. Yaaaay.`
-
-## 💭 Under Consideration
-
-> **Note:** If you think any of the following features would be beneficial, *please* reach out in Discord and voice your opinion! I am a solo developer, and there is no possible way I can think of all scenarios. Your input would be greatly appreciated 😁
-
-- Player context menu -- `Add Nemesis` and `Remove Nemesis`:
-   - Major considerations are ensuring this does not break anything else, as hooking into the context menu has a high propensity for this.
-   - One prospective downside is NC is not designed for setting a PUG player as a Nemesis and this could potentially lead to abuse.
-   - On the flip side, the addon itself could always be abused anyway, and one can only realistically provide guard rails for prevention of abuse.
-- UI element for tracking Interrupts and Avoidable Damage.
-   - This will need to be non-intrusive, and configurable / disableable.
-   - Clicking on one would allow sending (customizable) reports.
-- Other potential "leaderboard-esque" UI elements
-   - Same as above -- non-intrusive, etc.
-- AI configuration screen
-   - Granular control over which (praise | taunt) messages to send based on whether it's a Bystander or Nemesis, and based on event.
-   - Custom overrides
-   - More AI choices (possibly a scale, 1-10, from taunt (1) to praise (10))

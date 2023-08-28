@@ -195,7 +195,6 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:ShowStatsFrame()
-        NemesisChat.testVar = 0
         lwin = LibStub("LibWindow-1.1")
         NemesisChat.StatsFrame = CreateFrame("Frame", "NemesisChatStatsFrame", UIParent, "BackdropTemplate") 
 
@@ -623,7 +622,7 @@ function NemesisChat:InitializeHelpers()
 
     -- If the player's name isn't set (or is set to a pre-load value), set it
     function NemesisChat:SetMyName()
-        if GetMyName() == nil or GetMyName() == "" or GetMyName() == UNKNOWNOBJECT then
+        if core.runtime.myName == nil or core.runtime.myName == "" or core.runtime.myName == UNKNOWNOBJECT then
             core.runtime.myName = UnitName("player")
         end
     end

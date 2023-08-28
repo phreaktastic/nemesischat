@@ -94,7 +94,7 @@ core.defaults = {
         API = {},
         leavers = {},
         lowPerformers = {},
-        pullsFrame = {},
+        statsFrame = {},
 	},
 }
 
