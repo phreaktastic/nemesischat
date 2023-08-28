@@ -67,7 +67,7 @@ function MapMerge(map1, map2)
 end
 
 function GetMyName()
-    return core.runtime.myName
+    return NemesisChat:GetMyName()
 end
 
 function IsNCEnabled()

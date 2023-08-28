@@ -288,7 +288,7 @@ function NemesisChat:InitializeHelpers()
 
     function NemesisChat:GetMyName()
         NemesisChat:SetMyName()
-        return GetMyName()
+        return core.runtime.myName
     end
 
     function NemesisChat:ShouldExitEventHandler()

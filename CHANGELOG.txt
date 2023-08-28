@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.8.5**: Fix for name logic which was sometimes causing issues due to a race condition.
 - **1.8.4**: More bug fixes and groundwork for next version.
 - **1.8.3**: Bug fixes and groundwork for next version.
 - **1.8.2**: Bursting logic for affixes.
