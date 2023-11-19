@@ -363,6 +363,10 @@ NCSegment = {
         -- Override me
     end,
     GetStats = function(self, playerName, metric)
+        if not playerName then
+            playerName = UnitName("player")
+        end
+        
         if metric == "DPS" then
             return self:GetDps(playerName)
         elseif metric == "Affixes" then
@@ -394,22 +398,11 @@ NCSegment = {
     SetDetailsSegment = function(self, detailsSegment)
         self.DetailsSegment = detailsSegment
     end,
-    GetLowPerformers = function(self)
-        -- Get players from self.Rankings with the lowest DPS / affixes / interrupts, highest avoidable damage / deaths / pulls, and if the delta is >= 30% add them to the DB as low performers
-        local lowestDpsPlayer = self.Rankings.Bottom.DPS.Player
-        local lowestDpsDeltaPct = self.Rankings.Bottom.DPS.DeltaPercent
-        local lowestAffixesPlayer = self.Rankings.Bottom.Affixes.Player
-        local lowestAffixesDeltaPct = self.Rankings.Bottom.Affixes.DeltaPercent
-        local lowestInterruptsPlayer = self.Rankings.Bottom.Interrupts.Player
-        local lowestInterruptsDeltaPct = self.Rankings.Bottom.Interrupts.DeltaPercent
-        local highestAvoidableDamagePlayer = self.Rankings.Bottom.AvoidableDamage.Player
-        local highestAvoidableDamageDeltaPct = self.Rankings.Bottom.AvoidableDamage.DeltaPercent
-        local highestDeathsPlayer = self.Rankings.Bottom.Deaths.Player
-        local highestDeathsDeltaPct = self.Rankings.Bottom.Deaths.DeltaPercent
-        local highestPullsPlayer = self.Rankings.Bottom.Pulls.Player
-        local highestPullsDeltaPct = self.Rankings.Bottom.Pulls.DeltaPercent
-
-
+    GetLowestPerformer = function(self)
+        return self.Rankings:GetLowestPerformer()
+    end,
+    GetHighestPerformer = function(self)
+        return self.Rankings:GetHighestPerformer()
     end,
     GlobalAddAffix = function(self, player)
         if player == nil then

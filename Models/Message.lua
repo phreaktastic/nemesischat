@@ -92,7 +92,11 @@ function NemesisChat:InstantiateMsg()
         -- Custom replacements, example: Details API [DPS] and [NEMESISDPS], this comes first as overrides are possible
         for k, v in pairs(NCMessage.customReplacements) do
             -- First check for condition specific replacements
-            msg = msg:gsub(k, v())
+            if type(v()) == "string" or type(v()) == "number" then
+                msg = msg:gsub(k, v())
+            else
+                NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(v()))
+            end
         end
 
         -- Remove condition-specific replacement text
@@ -100,7 +104,11 @@ function NemesisChat:InstantiateMsg()
 
         -- One more pass on custom replacements, without condition replacement text, as a fallback
         for k, v in pairs(NCMessage.customReplacements) do
-            msg = msg:gsub(k, v())
+            if type(v()) == "string" or type(v()) == "number" then
+                msg = msg:gsub(k, v())
+            else
+                NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(v()))
+            end
         end
 
         return msg
@@ -159,7 +167,7 @@ function NemesisChat:InstantiateMsg()
             end
         end
 
-        NCMessage:SetChannel(NemesisChat:GetChannel(NCMessage:GetChannel()))
+        NCMessage:SetChannel(NemesisChat:GetActualChannel(NCMessage:GetChannel()))
     end
 
     -- Set values for a random configured message
@@ -374,7 +382,7 @@ function NemesisChat:InstantiateMsg()
             return NCSpell:GetTarget()
         end,
         ["GROUP_COUNT"] = function()
-            return #NCRuntime:GetGroupRoster() or 0
+            return NCRuntime:GetGroupRosterCount() or 0
         end,
         ["NEMESES_COUNT"] = function()
             -- Return as string so input comparisons work properly

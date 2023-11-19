@@ -58,28 +58,28 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Bystander Deaths",
         value = "BYSTANDERDEATHS",
-        exec = function() return NCDungeon:GetDeaths(NCEvent:GetBystander()) or 0 end,
+        exec = function() return (NCDungeon:GetDeaths(NCEvent:GetBystander()) or 0) end,
         description = "The number of times the Bystander has died in the current dungeon.",
         isNumeric = true,
     })
     :AddReplacement({
         label = "Bystander Interrupts",
         value = "BYSTANDERINTERRUPTS",
-        exec = function() return NCCombat:GetInterrupts(NCEvent:GetBystander()) or 0 end,
+        exec = function() return (NCCombat:GetInterrupts(NCEvent:GetBystander()) or 0) end,
         description = "The number of times the Bystander has interrupted an enemy spell cast in the current combat segment.",
         isNumeric = true,
     })
     :AddReplacement({
         label = "Bystander Interrupts (Overall)",
         value = "BYSTANDERINTERRUPTSOVERALL",
-        exec = function() return NCDungeon:GetInterrupts(NCEvent:GetBystander()) or 0 end,
+        exec = function() return (NCDungeon:GetInterrupts(NCEvent:GetBystander()) or 0) end,
         description = "The number of times the Bystander has interrupted an enemy spell cast in the current dungeon.",
         isNumeric = true,
     })
     :AddReplacement({
         label = "Bystander Kills",
         value = "BYSTANDERKILLS",
-        exec = function() return NCDungeon:GetKills(NCEvent:GetBystander()) or 0 end,
+        exec = function() return (NCDungeon:GetKills(NCEvent:GetBystander()) or 0) end,
         description = "The number of times the Bystander has killed a unit in the current dungeon.",
         isNumeric = true,
     })
@@ -114,28 +114,28 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "My Deaths",
         value = "DEATHS",
-        exec = function() return NCDungeon:GetDeaths(GetMyName()) or 0 end,
+        exec = function() return (NCDungeon:GetDeaths(GetMyName()) or 0) end,
         description = "The number of times you have died in the current dungeon.",
         isNumeric = true,
     })
     :AddReplacement({
         label = "My Interrupts",
         value = "INTERRUPTS",
-        exec = function() return NCCombat:GetInterrupts(GetMyName()) or 0 end,
+        exec = function() return (NCCombat:GetInterrupts(GetMyName()) or 0) end,
         description = "The number of times you have interrupted an enemy spell cast in the current combat segment.",
         isNumeric = true,
     })
     :AddReplacement({
         label = "My Interrupts (Overall)",
         value = "INTERRUPTSOVERALL",
-        exec = function() return NCDungeon:GetInterrupts(GetMyName()) or 0 end,
+        exec = function() return (NCDungeon:GetInterrupts(GetMyName()) or 0) end,
         description = "The number of times you have interrupted an enemy spell cast in the current dungeon.",
         isNumeric = true,
     })
     :AddReplacement({
         label = "My Kills",
         value = "KILLS",
-        exec = function() return NCDungeon:GetKills(GetMyName()) or 0 end,
+        exec = function() return (NCDungeon:GetKills(GetMyName()) or 0) end,
         description = "The number of times you have killed a unit in the current dungeon.",
         isNumeric = true,
     })
@@ -156,28 +156,28 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Nemesis Deaths",
         value = "NEMESISDEATHS",
-        exec = function() return NCDungeon:GetDeaths(NCEvent:GetNemesis()) or 0 end,
+        exec = function() return (NCDungeon:GetDeaths(NCEvent:GetNemesis()) or 0) end,
         description = "The number of times the Nemesis has died in the current dungeon.",
         isNumeric = true,
     })
     :AddReplacement({
         label = "Nemesis Interrupts",
         value = "NEMESISINTERRUPTS",
-        exec = function() return NCCombat:GetInterrupts(NCEvent:GetNemesis()) or 0 end,
+        exec = function() return (NCCombat:GetInterrupts(NCEvent:GetNemesis()) or 0) end,
         description = "The number of times the Nemesis has interrupted an enemy spell cast in the current combat segment.",
         isNumeric = true,
     })
     :AddReplacement({
         label = "Nemesis Interrupts (Overall)",
         value = "NEMESISINTERRUPTSOVERALL",
-        exec = function() return NCDungeon:GetInterrupts(NCEvent:GetNemesis()) or 0 end,
+        exec = function() return (NCDungeon:GetInterrupts(NCEvent:GetNemesis()) or 0) end,
         description = "The number of times the Nemesis has interrupted an enemy spell cast in the current dungeon.",
         isNumeric = true,
     })
     :AddReplacement({
         label = "Nemesis Kills",
         value = "NEMESISKILLS",
-        exec = function() return NCDungeon:GetKills(NCEvent:GetNemesis()) or 0 end,
+        exec = function() return (NCDungeon:GetKills(NCEvent:GetNemesis()) or 0) end,
         description = "The number of times the Nemesis has killed a unit in the current dungeon.",
         isNumeric = true,
     })

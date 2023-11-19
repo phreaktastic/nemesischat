@@ -96,6 +96,19 @@ function GetRole(player)
     return "party animal"
 end
 
+function GetKeysSortedByValue(tbl, sortFunction)
+    local keys = {}
+    for key in pairs(tbl) do
+      table.insert(keys, key)
+    end
+  
+    table.sort(keys, function(a, b)
+      return sortFunction(tbl[a], tbl[b])
+    end)
+  
+    return keys
+  end
+
 -----------------------------------------------------
 -- Core options
 -----------------------------------------------------

@@ -21,6 +21,8 @@ function NCCombat:StartCallback()
     NCEvent:SetTarget("NA")
     NCEvent:RandomNemesis()
     NCEvent:RandomBystander()
+
+    NCInfo.StatsFrame:Hide()
 end
 
 function NCCombat:FinishCallback()
@@ -35,6 +37,9 @@ function NCCombat:FinishCallback()
     end
 
     core.runtime.pulledUnits = {}
+
+    NCInfo:Update()
+    NCInfo.StatsFrame:Show()
 end
 
 function NCCombat:AnnounceAffixAuras()

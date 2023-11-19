@@ -21,9 +21,15 @@ core.runtimeDefaults = {
     lastLeaverSyncType = "GUILD",
     lastLowPerformerSyncType = "GUILD",
     lastMessage = 0,
-    lastPullToast = 0,
+    lastUnsafePullToast = 0,
+    lastUnsafePullName = "",
+    lastUnsafePullMob = "",
+    lastUnsafePullCount = 0,
     lastSyncType = "",
     currentMarkerIndex = 0,
+    groupTank = nil,
+    groupHealer = nil,
+    groupRosterCount = 1,
     groupRoster = {},
     pulledUnits = {},
     playerStates = {},
@@ -188,17 +194,61 @@ NCRuntime = {
     SetLastMessage = function(self, value)
         core.runtime.lastMessage = value
     end,
-    GetLastPullToast = function(self)
-        return core.runtime.lastPullToast
+    GetLastUnsafePullToast = function(self)
+        return core.runtime.lastUnsafePullToast
     end,
-    SetLastPullToast = function(self, value)
-        core.runtime.lastPullToast = value
+    SetLastUnsafePullToast = function(self, value)
+        core.runtime.lastUnsafePullToast = value
     end,
-    UpdateLastPullToast = function(self)
-        core.runtime.lastPullToast = GetTime()
+    UpdateLastUnsafePullToast = function(self)
+        core.runtime.lastUnsafePullToast = GetTime()
     end,
-    GetLastPullToastDelta = function(self)
-        return GetTime() - core.runtime.lastPullToast
+    GetLastUnsafePullToastDelta = function(self)
+        return GetTime() - core.runtime.lastUnsafePullToast
+    end,
+    GetLastUnsafePullName = function(self)
+        return core.runtime.lastUnsafePullName
+    end,
+    SetLastUnsafePullName = function(self, value)
+        core.runtime.lastUnsafePullName = value
+    end,
+    GetLastUnsafePullMob = function(self)
+        return core.runtime.lastUnsafePullMob
+    end,
+    SetLastUnsafePullMob = function(self, value)
+        core.runtime.lastUnsafePullMob = value
+    end,
+    GetLastUnsafePullCount = function(self)
+        return core.runtime.lastUnsafePullCount
+    end,
+    SetLastUnsafePullCount = function(self, value)
+        core.runtime.lastUnsafePullCount = value
+    end,
+    UpdateLastUnsafePullCount = function(self)
+        if not core.runtime.lastUnsafePullCount then
+            core.runtime.lastUnsafePullCount = 0
+        end
+
+        core.runtime.lastUnsafePullCount = core.runtime.lastUnsafePullCount + 1
+    end,
+    SetLastUnsafePull = function(self, name, mob)
+        core.runtime.lastUnsafePullToast = GetTime()
+        core.runtime.lastUnsafePullMob = mob
+
+        if not core.runtime.lastUnsafePullCount then
+            core.runtime.lastUnsafePullCount = 0
+        end
+
+        if core.runtime.lastUnsafePullName == name then
+            core.runtime.lastUnsafePullCount = core.runtime.lastUnsafePullCount + 1
+            return
+        end
+
+        core.runtime.lastUnsafePullCount = 1
+        core.runtime.lastUnsafePullName = name
+    end,
+    GetLastUnsafePull = function(self)
+        return core.runtime.lastUnsafePullName, core.runtime.lastUnsafePullMob, core.runtime.lastUnsafePullCount
     end,
     UpdateLastMessage = function(self)
         core.runtime.lastMessage = GetTime()
@@ -221,27 +271,61 @@ NCRuntime = {
         end
         core.runtime.currentMarkerIndex = core.runtime.currentMarkerIndex + 1
     end,
-    GetRollingMarketIndex = function(self)
+    GetRollingMarkerIndex = function(self)
         local current = core.runtime.currentMarkerIndex
 
         NCRuntime:UpdateCurrentMarkerIndex()
 
         return current
     end,
+    GetGroupTank = function(self)
+        return core.runtime.groupTank
+    end,
+    GetGroupHealer = function(self)
+        return core.runtime.groupHealer
+    end,
     GetGroupRoster = function(self)
         return core.runtime.groupRoster
+    end,
+    GetGroupRosterCount = function(self)
+        return core.runtime.groupRosterCount
+    end,
+    GetGroupRosterCountOthers = function(self)
+        return core.runtime.groupRosterCount - 1
     end,
     GetGroupRosterPlayer = function(self, playerName)
         return core.runtime.groupRoster[playerName]
     end,
     ClearGroupRoster = function(self)
         core.runtime.groupRoster = {}
+        core.runtime.groupRosterCount = 0
+        core.runtime.groupTank = nil
+        core.runtime.groupHealer = nil
+        
+        -- We're at least one of the members
+        local me = {
+            guid = UnitGUID("player"),
+            isGuildmate = false,
+            isFriend = false,
+            isNemesis = false,
+            role = UnitGroupRolesAssigned("player"),
+        }
+
+        self:AddGroupRosterPlayer(GetMyName(), me)
     end,
     RemoveGroupRosterPlayer = function(self, playerName)
         core.runtime.groupRoster[playerName] = nil
+        core.runtime.groupRosterCount = core.runtime.groupRosterCount - 1
     end,
     AddGroupRosterPlayer = function(self, playerName, data)
         core.runtime.groupRoster[playerName] = data
+        core.runtime.groupRosterCount = core.runtime.groupRosterCount + 1
+
+        if data.role == "TANK" then
+            core.runtime.groupTank = playerName
+        elseif data.role == "HEALER" then
+            core.runtime.groupHealer = playerName
+        end
     end,
     GetPulledUnits = function(self)
         return core.runtime.pulledUnits

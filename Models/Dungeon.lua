@@ -81,10 +81,3 @@ end
 function NCDungeon:GetAffixes()
     return NCDungeon.Affixes
 end
-
-function NCDungeon:GetLowestPerformer()
-    local player = NCDungeon.Rankings:GetLowestPerformer()
-    local metrics = NCDungeon.Rankings:GetPlayerMetrics(player)
-
-    return player, metrics
-end

@@ -26,6 +26,7 @@ function NemesisChat:COMBAT_LOG_EVENT_UNFILTERED()
 end
 
 function NemesisChat:CHALLENGE_MODE_START()
+    NemesisChat:CheckGroup()
     NCEvent:Initialize()
     NCDungeon:Reset("", true)
     NemesisChat:HandleEvent()
@@ -60,10 +61,10 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     local joins,leaves = NemesisChat:GetRosterDelta()
 
     -- We left
-    if #leaves > 0 and #leaves == NemesisChat:GetLength(NCRuntime:GetGroupRoster()) then
+    if #leaves > 0 and #leaves == NCRuntime:GetGroupRosterCountOthers() then
         NCRuntime:ClearGroupRoster()
     -- We joined, or we invited someone to form a group
-    elseif NemesisChat:GetLength(NCRuntime:GetGroupRoster()) == 0 and #joins > 0 then
+    elseif NCRuntime:GetGroupRosterCountOthers() == 0 and #joins > 0 then
         NCRuntime:ClearGroupRoster()
         local members = NemesisChat:GetPlayersInGroup()
         local isLeader = UnitIsGroupLeader(GetMyName())
@@ -103,9 +104,10 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
             if val ~= nil then
                 local isInGuild = UnitIsInMyGuild(val) ~= nil
                 local isNemesis = (core.db.profile.nemeses[val] ~= nil or (NCRuntime:GetFriend(val) ~= nil and core.db.profile.flagFriendsAsNemeses) or (isInGuild and core.db.profile.flagGuildiesAsNemeses))
+                local unitGuid = UnitGUID(val)
     
                 local newPlayer = {
-                    guid = UnitGUID(val),
+                    guid = unitGuid,
                     isGuildmate = isInGuild,
                     isFriend = NCRuntime:IsFriend(val),
                     isNemesis = isNemesis,
@@ -113,9 +115,22 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                 }
 
                 NCRuntime:AddGroupRosterPlayer(val, newPlayer)
+
+                local leaves = NemesisChat:LeaveCount(unitGuid) or 0
+                local lowPerforms = NemesisChat:LowPerformerCount(unitGuid) or 0
     
                 if #joins <= 3 then
                     NemesisChat:PLAYER_JOINS_GROUP(val, isNemesis)
+                end
+
+                local channel = NemesisChat:GetActualChannel("GROUP")
+
+                if leaves > 0 then
+                    SendChatMessage("Nemesis Chat: " .. val .. " has bailed on at least " .. leaves .. " groups.", channel)
+                end
+
+                if lowPerforms > 0 then
+                    SendChatMessage("Nemesis Chat: " .. val .. " has dramatically underperformed at least " .. lowPerforms .. " times.", channel)
                 end
             end
         end

@@ -148,7 +148,22 @@ NCRankings = {
         },
     },
 
+    -- Rankings for all players by metric
+    All = {
+        Affixes = {},
+        AvoidableDamage = {},
+        Deaths = {},
+        DPS = {},
+        Interrupts = {},
+        Offheals = {},
+        Pulls = {},
+    },
+
+    -- Bottom players with scores based on their deltas
     BottomTracker = {},
+
+    -- Top players with scores based on their deltas
+    TopTracker = {},
 
     --- The segment to get rankings for
     ---@type NCSegment
@@ -187,40 +202,13 @@ NCRankings = {
             local botVal = 99999999
             local topPlayer = nil
             local botPlayer = nil
+            local myRole = GetRole()
+            local myName = GetMyName()
 
             for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
-                if not ((playerData.role ~= "DAMAGER" and metricKey == "DPS") or (playerData.role == "TANK" and metricKey == "Pulls") or (playerData.role == "HEALER" and metricKey == "Offheals")) and playerName ~= nil then
-                    local val = self._segment:GetStats(playerName, metricKey) or 0
+                topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.Role, playerName, topVal, botVal, topPlayer, botPlayer)
 
-                    if type(val) == "string" then
-                        if val > topVal then
-                            topVal = val
-                            topPlayer = playerName
-                        elseif val == topVal then
-                            topPlayer = playerName
-                        elseif val < botVal then
-                            botVal = val
-                            botPlayer = playerName
-                        elseif val == botVal then
-                            botPlayer = playerName
-                        end
-                    end
-                end
-            end
-            
-            local myName = GetMyName()
-            local myVal = self._segment:GetStats(myName, metricKey)
-
-            if myVal > topVal then
-                topVal = myVal
-                topPlayer = myName
-            elseif myVal == topVal then
-                topPlayer = myName
-            elseif myVal < botVal then
-                botVal = myVal
-                botPlayer = myName
-            elseif myVal == botVal then
-                botPlayer = myName
+                self.All[metricKey][playerName] = self._segment:GetStats(playerName, metricKey) or 0
             end
 
             if topVal == 0 then
@@ -237,39 +225,80 @@ NCRankings = {
             end
 
             if botPlayer ~= nil and topPlayer ~= nil then
-                local delta, deltaPercent
+                -- order[1] is the lowest value's key, order[#order] is the highest value's key
+                local order = GetKeysSortedByValue(self.All[metricKey], function(a, b) return a < b end)
+
+                local topDelta, topDeltaPercent, bottomDelta, bottomDeltaPercent
 
                 self.Bottom[metricKey].Player = botPlayer
                 self.Bottom[metricKey].Value = botVal
 
                 if botVal == 0 then
-                    delta = topVal
-                    deltaPercent = 100
+                    topDelta = topVal
+                    topDeltaPercent = 100
                 else
-                    delta = topVal - botVal
-                    deltaPercent = math.floor(((topVal - botVal) / topVal) * 10000) / 100
+                    topDelta = topVal - self.All[metricKey][order[#order-1]]
+                    topDeltaPercent = math.floor((topDelta / topVal) * 10000) / 100
+                    bottomDelta = self.All[metricKey][order[2]] - botVal
+                    bottomDeltaPercent = math.floor((bottomDelta / botVal) * 10000) / 100
                 end
 
-                self.Bottom[metricKey].Delta = delta
-                self.Bottom[metricKey].DeltaPercent = deltaPercent
-                self.Top[metricKey].Delta = delta
-                self.Top[metricKey].DeltaPercent = deltaPercent
+                self.Bottom[metricKey].Delta = bottomDelta
+                self.Bottom[metricKey].DeltaPercent = bottomDeltaPercent
+                self.Top[metricKey].Delta = topDelta
+                self.Top[metricKey].DeltaPercent = topDeltaPercent
+
+                local topIncrement, bottomIncrement = 1, 1
+
+                if topDeltaPercent >= 90 then
+                    topIncrement = 5
+                elseif topDeltaPercent >= 70 then
+                    topIncrement = 4
+                elseif topDeltaPercent >= 50 then
+                    topIncrement = 3
+                elseif topDeltaPercent >= 30 then
+                    topIncrement = 2
+                end
+
+                if bottomDeltaPercent >= 90 then
+                    bottomIncrement = 5
+                elseif bottomDeltaPercent >= 70 then
+                    bottomIncrement = 4
+                elseif bottomDeltaPercent >= 50 then
+                    bottomIncrement = 3
+                elseif bottomDeltaPercent >= 30 then
+                    bottomIncrement = 2
+                end
+
+                if metricKey == "DPS" and botVal < self._segment:GetStats(NemesisChat:GetHealer(), "DPS") then
+                    bottomIncrement = bottomIncrement + 10
+                elseif metricKey == "DPS" and botVal < self._segment:GetStats(NemesisChat:GetTank(), "DPS") then
+                    bottomIncrement = bottomIncrement + 5
+                end
 
                 if metricVal then
                     if self.BottomTracker[botPlayer] == nil then
-                        self.BottomTracker[botPlayer] = 0
+                        self.BottomTracker[botPlayer] = bottomIncrement
+                    else 
+                        self.BottomTracker[botPlayer] = self.BottomTracker[botPlayer] + bottomIncrement
                     end
 
-                    if deltaPercent >= 30 then
-                        self.BottomTracker[botPlayer] = self.BottomTracker[botPlayer] + 1
+                    if self.TopTracker[topPlayer] == nil then
+                        self.TopTracker[topPlayer] = topIncrement
+                    else
+                        self.TopTracker[topPlayer] = self.TopTracker[topPlayer] + topIncrement
                     end
                 else
                     if self.BottomTracker[topPlayer] == nil then
-                        self.BottomTracker[topPlayer] = 0
+                        self.BottomTracker[topPlayer] = topIncrement
+                    else
+                        self.BottomTracker[topPlayer] = self.BottomTracker[topPlayer] + topIncrement
                     end
 
-                    if deltaPercent >= 30 then
-                        self.BottomTracker[topPlayer] = self.BottomTracker[topPlayer] + 1
+                    if self.TopTracker[botPlayer] == nil then
+                        self.TopTracker[botPlayer] = bottomIncrement
+                    else
+                        self.TopTracker[botPlayer] = self.TopTracker[botPlayer] + bottomIncrement
                     end
                 end
             end
@@ -278,13 +307,16 @@ NCRankings = {
 
     -- Get the lowest performer from the bottom tracker
     GetLowestPerformer = function(self)
-        for i = 10, 2, -1 do
-            for playerName, playerCount in pairs(self.BottomTracker) do
-                if playerCount == i then
-                    return playerName
-                end
-            end
-        end
+        local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a < b end)
+
+        return players[1], self.BottomTracker[players[1]]
+    end,
+
+    -- Get the highest performer from the top tracker
+    GetHighestPerformer = function(self)
+        local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
+
+        return players[1], self.TopTracker[players[1]]
     end,
 
     -- Get all metrics for a player, looking in self.Top if the metric value is true, and self.Bottom if it is false. 
@@ -306,5 +338,33 @@ NCRankings = {
 
         -- Return metrics
         return metrics
+    end,
+
+    _SetTopBottom = function(self, metricKey, playerRole, playerName, topVal, botVal, topPlayer, botPlayer)
+        if not metricKey or not playerRole or not playerName then
+            return topVal, botVal, topPlayer, botPlayer
+        end
+
+        if (playerRole ~= "DAMAGER" and metricKey == "DPS") or (playerRole == "TANK" and metricKey == "Pulls") or (playerRole == "HEALER" and metricKey == "Offheals") or playerName == nil then
+            return topVal, botVal, topPlayer, botPlayer
+        end
+
+        local val = self._segment:GetStats(playerName, metricKey) or 0
+
+        if type(val) == "number" then
+            if val > topVal then
+                topVal = val
+                topPlayer = playerName
+            elseif val == topVal then
+                topPlayer = playerName
+            elseif val < botVal then
+                botVal = val
+                botPlayer = playerName
+            elseif val == botVal then
+                botPlayer = playerName
+            end
+        end
+
+        return topVal, botVal, topPlayer, botPlayer
     end,
 }
