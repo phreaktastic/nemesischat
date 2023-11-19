@@ -505,7 +505,7 @@ function NemesisChat:InitializeHelpers()
                 end
             end
         elseif IsInGroup() then
-            for i=1,4 do
+            for i=1,5 do
                 if (UnitName('party'..i)) then
                     local n,s = UnitName('party'..i)
                     local playerName = n
