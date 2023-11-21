@@ -165,6 +165,33 @@ NCRankings = {
     -- Top players with scores based on their deltas
     TopTracker = {},
 
+    -- Configuration values
+    Configuration = {
+        -- The amount to increment a score for good performance / high deltas 
+        Increments = {
+            BottomInitial = 1,
+            TopInitial = 1,
+            BottomBreakpoints = {
+                [90] = 5,
+                [70] = 4,
+                [50] = 3,
+                [30] = 2,
+            },
+            TopBreakpoints = {
+                [90] = 5,
+                [70] = 4,
+                [50] = 3,
+                [30] = 2,
+            },
+            Metrics = {
+                DPS = {
+                    Healer = 10,
+                    Tank = 5,
+                },
+            },
+        },
+    },
+
     --- The segment to get rankings for
     ---@type NCSegment
     _segment = nil,
@@ -206,7 +233,7 @@ NCRankings = {
             local myName = GetMyName()
 
             for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
-                topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.Role, playerName, topVal, botVal, topPlayer, botPlayer)
+                topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.role, playerName, topVal, botVal, topPlayer, botPlayer)
 
                 self.All[metricKey][playerName] = self._segment:GetStats(playerName, metricKey) or 0
             end
@@ -248,32 +275,24 @@ NCRankings = {
                 self.Top[metricKey].Delta = topDelta
                 self.Top[metricKey].DeltaPercent = topDeltaPercent
 
-                local topIncrement, bottomIncrement = 1, 1
+                local topIncrement, bottomIncrement = self.Configuration.Increments.TopInitial, self.Configuration.Increments.BottomInitial
 
-                if topDeltaPercent >= 90 then
-                    topIncrement = 5
-                elseif topDeltaPercent >= 70 then
-                    topIncrement = 4
-                elseif topDeltaPercent >= 50 then
-                    topIncrement = 3
-                elseif topDeltaPercent >= 30 then
-                    topIncrement = 2
+                for percent, increment in pairs(self.Configuration.Increments.TopBreakpoints) do
+                    if topDeltaPercent >= (tonumber(percent) or 101) then
+                        topIncrement = increment
+                    end
                 end
 
-                if bottomDeltaPercent >= 90 then
-                    bottomIncrement = 5
-                elseif bottomDeltaPercent >= 70 then
-                    bottomIncrement = 4
-                elseif bottomDeltaPercent >= 50 then
-                    bottomIncrement = 3
-                elseif bottomDeltaPercent >= 30 then
-                    bottomIncrement = 2
+                for percent, increment in pairs(self.Configuration.Increments.BottomBreakpoints) do
+                    if bottomDeltaPercent >= (tonumber(percent) or 101) then
+                        bottomIncrement = increment
+                    end
                 end
 
-                if metricKey == "DPS" and botVal < self._segment:GetStats(NemesisChat:GetHealer(), "DPS") then
-                    bottomIncrement = bottomIncrement + 10
-                elseif metricKey == "DPS" and botVal < self._segment:GetStats(NemesisChat:GetTank(), "DPS") then
-                    bottomIncrement = bottomIncrement + 5
+                if metricKey == "DPS" and botVal < self._segment:GetStats(NCRuntime:GetGroupHealer(), "DPS") then
+                    bottomIncrement = bottomIncrement + self.Configuration.Increments.Metrics.DPS.Healer
+                elseif metricKey == "DPS" and botVal < self._segment:GetStats(NCRuntime:GetGroupTank(), "DPS") then
+                    bottomIncrement = bottomIncrement + self.Configuration.Increments.Metrics.DPS.Tank
                 end
 
                 if metricVal then
