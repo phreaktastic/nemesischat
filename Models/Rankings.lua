@@ -177,12 +177,17 @@ NCRankings = {
                 [50] = 3,
                 [30] = 2,
             },
+            BottomBreakpointExclusions = {
+                ["Pulls"] = true,
+                ["Deaths"] = true,
+            },
             TopBreakpoints = {
                 [90] = 5,
                 [70] = 4,
                 [50] = 3,
                 [30] = 2,
             },
+            TopBreakpointExclusions = {},
             Metrics = {
                 DPS = {
                     Healer = 10,
@@ -263,6 +268,8 @@ NCRankings = {
                 if botVal == 0 then
                     topDelta = topVal
                     topDeltaPercent = 100
+                    bottomDelta = topVal
+                    bottomDeltaPercent = 100
                 else
                     topDelta = topVal - self.All[metricKey][order[#order-1]]
                     topDeltaPercent = math.floor((topDelta / topVal) * 10000) / 100
@@ -277,15 +284,25 @@ NCRankings = {
 
                 local topIncrement, bottomIncrement = self.Configuration.Increments.TopInitial, self.Configuration.Increments.BottomInitial
 
-                for percent, increment in pairs(self.Configuration.Increments.TopBreakpoints) do
-                    if topDeltaPercent >= (tonumber(percent) or 101) then
-                        topIncrement = increment
+                if not self.Configuration.Increments.BottomBreakpointExclusions[metricKey] then
+                    for _, key in ipairs(GetKeysSortedByValue(self.Configuration.Increments.TopBreakpoints, function(a, b) return a > b end)) do
+                        local percent = tonumber(key) or 101
+                        local increment = self.Configuration.Increments.TopBreakpoints[key]
+
+                        if bottomDeltaPercent >= percent then
+                            bottomIncrement = increment
+                        end
                     end
                 end
 
-                for percent, increment in pairs(self.Configuration.Increments.BottomBreakpoints) do
-                    if bottomDeltaPercent >= (tonumber(percent) or 101) then
-                        bottomIncrement = increment
+                if not self.Configuration.Increments.TopBreakpointExclusions[metricKey] then
+                    for _, key in ipairs(GetKeysSortedByValue(self.Configuration.Increments.TopBreakpoints, function(a, b) return a > b end)) do
+                        local percent = tonumber(key) or 101
+                        local increment = self.Configuration.Increments.TopBreakpoints[key]
+
+                        if topDeltaPercent >= percent then
+                            topIncrement = increment
+                        end
                     end
                 end
 

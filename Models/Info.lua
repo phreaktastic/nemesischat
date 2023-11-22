@@ -214,9 +214,13 @@ NCInfo = {
                 return
             end
 
-            local guid = NCRuntime:GetGroupRosterPlayer(lowPerformer).guid
+            local rosterPlayer = NCRuntime:GetGroupRosterPlayer(lowPerformer)
 
-            NemesisChat:AddLowPerformer(guid)
+            if not rosterPlayer then
+                return
+            end
+
+            NemesisChat:AddLowPerformer(rosterPlayer.guid)
 
             self:Disable()
             NemesisChat:Print("Added low performer to DB:", lowPerformer)
