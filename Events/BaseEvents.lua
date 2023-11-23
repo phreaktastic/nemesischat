@@ -57,6 +57,7 @@ end
 
 function NemesisChat:GROUP_ROSTER_UPDATE()
     NCEvent:Initialize()
+    NemesisChat:PopulateFriends()
 
     local joins,leaves = NemesisChat:GetRosterDelta()
 
@@ -176,6 +177,7 @@ function NemesisChat:PLAYER_REGEN_ENABLED()
 end
 
 function NemesisChat:PLAYER_ROLES_ASSIGNED()
+    NCEvent:Initialize()
     NemesisChat:CheckGroup()
 end
 

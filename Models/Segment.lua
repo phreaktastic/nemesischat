@@ -74,7 +74,12 @@ NCSegment = {
 
     DetailsSegment = DETAILS_SEGMENTID_CURRENT,
 
+    StartPreHook = function(self)
+        -- Override me
+    end,
     Start = function(self) 
+        self:Reset()
+        self:StartPreHook()
         self.StartTime = GetTime()
         self:SetActive()
         self:StartCallback()
@@ -537,6 +542,7 @@ NCSegment = {
         end
 
         self.Identifier = identifier
+        self.Rankings = NCRankings:New(self)
 
         self:ResetCallback(optIdentifier, optStart)
 

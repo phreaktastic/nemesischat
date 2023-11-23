@@ -30,6 +30,8 @@ function NCDungeon:StartCallback()
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
     NCDungeon:SetAffixes(affixIDs)
+
+    NCInfo:Update()
 end
 
 function NCDungeon:FinishCallback(success)

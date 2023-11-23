@@ -343,7 +343,11 @@ NCRankings = {
 
     -- Get the lowest performer from the bottom tracker
     GetLowestPerformer = function(self)
-        local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a < b end)
+        local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
+
+        if self.BottomTracker[players[1]] < 5 or (players[2] ~= nil and self.BottomTracker[players[2]] == self.BottomTracker[players[1]]) then
+            return nil, nil
+        end
 
         return players[1], self.BottomTracker[players[1]]
     end,
@@ -351,6 +355,10 @@ NCRankings = {
     -- Get the highest performer from the top tracker
     GetHighestPerformer = function(self)
         local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
+
+        if self.TopTracker[players[1]] < 5 or (players[2] ~= nil and self.BottomTracker[players[2]] == self.BottomTracker[players[1]]) then
+            return nil, nil
+        end
 
         return players[1], self.TopTracker[players[1]]
     end,
