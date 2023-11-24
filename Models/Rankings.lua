@@ -172,26 +172,26 @@ NCRankings = {
             BottomInitial = 1,
             TopInitial = 1,
             BottomBreakpoints = {
-                [90] = 5,
-                [70] = 4,
-                [50] = 3,
-                [30] = 2,
+                [90] = 25,
+                [70] = 20,
+                [50] = 15,
+                [30] = 10,
             },
             BottomBreakpointExclusions = {
                 ["Pulls"] = true,
                 ["Deaths"] = true,
             },
             TopBreakpoints = {
-                [90] = 5,
-                [70] = 4,
-                [50] = 3,
-                [30] = 2,
+                [90] = 25,
+                [70] = 20,
+                [50] = 15,
+                [30] = 10,
             },
             TopBreakpointExclusions = {},
             Metrics = {
                 DPS = {
-                    Healer = 10,
-                    Tank = 5,
+                    Healer = 30,
+                    Tank = 15,
                 },
             },
         },
@@ -345,7 +345,8 @@ NCRankings = {
     GetLowestPerformer = function(self)
         local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
 
-        if self.BottomTracker[players[1]] < 5 or (players[2] ~= nil and self.BottomTracker[players[2]] == self.BottomTracker[players[1]]) then
+        -- If the next lowest performer is within 10 points of the lowest performer, return nil
+        if players[2] ~= nil and self.BottomTracker[players[2]] >= self.BottomTracker[players[1]] - 10 then
             return nil, nil
         end
 
@@ -356,14 +357,15 @@ NCRankings = {
     GetHighestPerformer = function(self)
         local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
 
-        if self.TopTracker[players[1]] < 5 or (players[2] ~= nil and self.BottomTracker[players[2]] == self.BottomTracker[players[1]]) then
+        -- If the next highest performer is within 10 points of the highest performer, return nil
+        if players[2] ~= nil and self.TopTracker[players[2]] >= self.TopTracker[players[1]] - 10 then
             return nil, nil
         end
 
         return players[1], self.TopTracker[players[1]]
     end,
 
-    -- Get all metrics for a player, looking in self.Top if the metric value is true, and self.Bottom if it is false. 
+    -- Get all (bad) metrics for a player, looking in self.Top if the metric value is true, and self.Bottom if it is false. 
     -- Returns the metric names for all metrics where playerName exists.
     GetPlayerMetrics = function(self, playerName)
         local metrics = {}
@@ -389,7 +391,7 @@ NCRankings = {
             return topVal, botVal, topPlayer, botPlayer
         end
 
-        if (playerRole ~= "DAMAGER" and metricKey == "DPS") or (playerRole == "TANK" and metricKey == "Pulls") or (playerRole == "HEALER" and metricKey == "Offheals") or playerName == nil then
+        if (playerRole ~= "DAMAGER" and metricKey == "DPS") or (playerRole == "TANK" and metricKey == "Pulls") or (playerRole == "HEALER" and metricKey == "Offheals") then
             return topVal, botVal, topPlayer, botPlayer
         end
 

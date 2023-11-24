@@ -44,19 +44,6 @@ function NCDungeon:FinishCallback(success)
     if success then
         NCEvent:SetEvent("SUCCESS")
     end
-
-    local lowestPerformer, score = NCDungeon:GetLowestPerformer()
-
-    if lowestPerformer ~= nil and score ~= nil then
-        local player = NCRuntime:GetGroupRosterPlayer(lowestPerformer)
-
-        if score >= 5 and player ~= nil and player.guid ~= nil then
-            NemesisChat:AddLowPerformer(player.guid)
-
-            NemesisChat:Print("Added low performer to DB:", lowestPerformer)
-            NemesisChat:Print("Score:", score)
-        end
-    end
 end
 
 function NCDungeon:ResetCallback()

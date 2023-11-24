@@ -104,12 +104,6 @@ NCInfo = {
         end
 
         pullRow.announceToPartyButton:SetScript("OnClick", function(self)
-            local player, mob, count = NCRuntime:GetLastUnsafePull()
-
-            if not player then
-                return
-            end
-
             local message = "Nemesis Chat: Last unsafe pull by " .. player .. " with a total mob count of " .. count .. "."
 
             if player ~= nil then
@@ -144,8 +138,6 @@ NCInfo = {
         end
 
         highPerformerRow.announceToPartyButton:SetScript("OnClick", function(self)
-            local highPerformer = NCDungeon:GetHighestPerformer()
-
             if not highPerformer then
                 return
             end
@@ -172,6 +164,7 @@ NCInfo = {
 
     UpdateLowPerformerRow = function(self)
         local lowPerformer = NCDungeon:GetLowestPerformer()
+        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(lowPerformer)
         local lowPerformerRow
 
         if NCInfo.StatsFrame.content and NCInfo.StatsFrame.content.rows[NCInfo.LowPerformerOrder] then
@@ -186,8 +179,6 @@ NCInfo = {
         end
 
         lowPerformerRow.announceToPartyButton:SetScript("OnClick", function(self)
-            local lowPerformer = NCDungeon:GetLowestPerformer()
-
             if not lowPerformer then
                 return
             end
@@ -208,21 +199,13 @@ NCInfo = {
         end)
 
         lowPerformerRow.addToListButton:SetScript("OnClick", function(self)
-            local lowPerformer = NCDungeon:GetLowestPerformer()
-
-            if not lowPerformer then
-                return
-            end
-
-            local rosterPlayer = NCRuntime:GetGroupRosterPlayer(lowPerformer)
-
-            if not rosterPlayer then
+            if not lowPerformer or not rosterPlayer then
                 return
             end
 
             NemesisChat:AddLowPerformer(rosterPlayer.guid)
 
-            self:Disable()
+            lowPerformerRow.addToListButton:Hide()
             NemesisChat:Print("Added low performer to DB:", lowPerformer)
         end)
         lowPerformerRow.addToListButton:SetScript("OnEnter", function(self)
