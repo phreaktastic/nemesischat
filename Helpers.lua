@@ -424,6 +424,10 @@ function NemesisChat:InitializeHelpers()
         return bystanders
     end
 
+    function NemesisChat:GetPartyBystandersCount()
+        return NemesisChat:GetLength(NemesisChat:GetPartyBystanders())
+    end
+
     function NemesisChat:GetNemeses()
         return NCConfig:GetNemeses()
     end
