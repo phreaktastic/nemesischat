@@ -13,6 +13,7 @@ core.version = GetAddOnMetadata(addonName, 'Version')
 -- Register global NemesisChat
 -----------------------------------------------------
 NemesisChat = LibStub("AceAddon-3.0"):NewAddon("NemesisChat", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceTimer-3.0", "LibToast-1.0")
+LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
 
 -----------------------------------------------------
 -- Global functions
@@ -179,6 +180,14 @@ core.constants.NC_OPERATORS = {
     {
         label = "NOT a guildmate",
         value = "NOT_GUILDMATE",
+    },
+    {
+        label = "is underperformer",
+        value = "IS_UNDERPERFORMER",
+    },
+    {
+        label = "is overperformer",
+        value = "IS_OVERPERFORMER",
     }
 }
 core.events = {
@@ -460,6 +469,9 @@ core.affixMobsHandles = {
     ["Afflicted Soul"] = {
         "HEAL",
         "DISPEL",
+    },
+    ["Incorporeal"] = {
+        "CROWD_CONTROL",
     },
 }
 

@@ -487,6 +487,11 @@ NCSegment = {
             end
         end
     end,
+    GlobalReset = function(self)
+        for _, segment in pairs(NCSegment.Segments) do
+            segment:Reset()
+        end
+    end,
     New = function(self, identifier)
         local o = {
             Identifier = identifier,

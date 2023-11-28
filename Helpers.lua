@@ -364,6 +364,18 @@ function NemesisChat:InitializeHelpers()
         return nil
     end
 
+    function NemesisChat:GetNonExcludedBystander()
+        local bystanders = NemesisChat:GetPartyBystanders()
+
+        for player, _ in pairs(bystanders) do
+            if not tContains(NCMessage.excludedBystanders, player) then
+                return player
+            end
+        end
+
+        return nil
+    end
+
     function NemesisChat:GetRandomPartyNemesis()
         local partyNemeses = NemesisChat:GetPartyNemeses()
 
@@ -1015,9 +1027,9 @@ function NemesisChat:InitializeHelpers()
             return false
         end
 
-        local _,event,_,sguid,sname,_,_,dguid,dname = CombatLogGetCurrentEventInfo()
+        local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
 
-        if NCRuntime:GetGroupRosterPlayer(sname) == nil and sname ~= GetMyName() then
+        if NCRuntime:GetGroupRosterPlayer(sname) == nil then
             return false
         end
 
@@ -1029,9 +1041,17 @@ function NemesisChat:InitializeHelpers()
 
         if core.affixMobsHandles[dname] ~= nil then
             for _, eventSubstr in core.affixMobsHandles[dname] do
-                if string.find(event, eventSubstr) then
-                    isHandled = true
-                    break
+                if eventSubstr == "CROWD_CONTROL" then
+                    local flags = LibPlayerSpells:GetSpellInfo(spellId)
+
+                    if bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
+                        return true, sname, dguid
+                    end
+                else
+                    if string.find(event, eventSubstr) then
+                        isHandled = true
+                        break
+                    end
                 end
             end
         end

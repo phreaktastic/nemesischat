@@ -64,9 +64,11 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     -- We left
     if #leaves > 0 and #leaves == NCRuntime:GetGroupRosterCountOthers() then
         NCRuntime:ClearGroupRoster()
+        NCSegment:GlobalReset()
     -- We joined, or we invited someone to form a group
     elseif NCRuntime:GetGroupRosterCountOthers() == 0 and #joins > 0 then
         NCRuntime:ClearGroupRoster()
+        NCSegment:GlobalReset()
         local members = NemesisChat:GetPlayersInGroup()
         local isLeader = UnitIsGroupLeader(GetMyName())
 

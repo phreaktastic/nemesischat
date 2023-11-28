@@ -52,6 +52,7 @@ core.runtimeDefaults = {
         target = "",
         customReplacements = {},
         excludedNemeses = {},
+        excludedBystanders = {},
     },
     ncDungeon = {
         active = false,

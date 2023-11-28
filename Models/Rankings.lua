@@ -161,9 +161,13 @@ NCRankings = {
 
     -- Bottom players with scores based on their deltas
     BottomTracker = {},
+    -- Bottom players' score explanations
+    BottomScores = {},
 
     -- Top players with scores based on their deltas
     TopTracker = {},
+    -- Top players' score explanations
+    TopScores = {},
 
     -- Configuration values
     Configuration = {
@@ -229,6 +233,11 @@ NCRankings = {
 
     ---Get the top, bottom, and delta for all metrics
     Calculate = function(self)
+        self.BottomTracker = {}
+        self.BottomScores = {}
+        self.TopTracker = {}
+        self.TopScores = {}
+
         for metricKey, metricVal in pairs(self.METRICS) do
             local topVal = 0
             local botVal = 99999999
@@ -271,6 +280,7 @@ NCRankings = {
                     bottomDelta = topVal
                     bottomDeltaPercent = 100
                 else
+                    -- Deltas are from the top / bottom player to the NEXT player
                     topDelta = topVal - self.All[metricKey][order[#order-1]]
                     topDeltaPercent = math.floor((topDelta / topVal) * 10000) / 100
                     bottomDelta = self.All[metricKey][order[2]] - botVal
@@ -312,6 +322,24 @@ NCRankings = {
                     bottomIncrement = bottomIncrement + self.Configuration.Increments.Metrics.DPS.Tank
                 end
 
+                -- Add the scores for explanation on top / bottom placement(s)
+                if self.BottomScores[botPlayer] == nil then
+                    self.BottomScores[botPlayer] = {
+                        [metricKey] = bottomIncrement,
+                    }
+                else
+                    self.BottomScores[botPlayer][metricKey] = bottomIncrement
+                end
+
+                if self.TopScores[topPlayer] == nil then
+                    self.TopScores[topPlayer] = {
+                        [metricKey] = topIncrement,
+                    }
+                else
+                    self.TopScores[topPlayer][metricKey] = topIncrement
+                end
+
+                -- Add players to the top / bottom tracker
                 if metricVal then
                     if self.BottomTracker[botPlayer] == nil then
                         self.BottomTracker[botPlayer] = bottomIncrement
@@ -324,6 +352,23 @@ NCRankings = {
                     else
                         self.TopTracker[topPlayer] = self.TopTracker[topPlayer] + topIncrement
                     end
+
+                    -- Add the scores for explanation on top / bottom placement(s)
+                    if self.BottomScores[botPlayer] == nil then
+                        self.BottomScores[botPlayer] = {
+                            [metricKey] = bottomIncrement,
+                        }
+                    else
+                        self.BottomScores[botPlayer][metricKey] = bottomIncrement
+                    end
+
+                    if self.TopScores[topPlayer] == nil then
+                        self.TopScores[topPlayer] = {
+                            [metricKey] = topIncrement,
+                        }
+                    else
+                        self.TopScores[topPlayer][metricKey] = topIncrement
+                    end
                 else
                     if self.BottomTracker[topPlayer] == nil then
                         self.BottomTracker[topPlayer] = topIncrement
@@ -335,6 +380,23 @@ NCRankings = {
                         self.TopTracker[botPlayer] = bottomIncrement
                     else
                         self.TopTracker[botPlayer] = self.TopTracker[botPlayer] + bottomIncrement
+                    end
+
+                    -- Add the scores for explanation on top / bottom placement(s)
+                    if self.BottomScores[topPlayer] == nil then
+                        self.BottomScores[topPlayer] = {
+                            [metricKey] = bottomIncrement,
+                        }
+                    else
+                        self.BottomScores[topPlayer][metricKey] = topIncrement
+                    end
+
+                    if self.TopScores[botPlayer] == nil then
+                        self.TopScores[botPlayer] = {
+                            [metricKey] = topIncrement,
+                        }
+                    else
+                        self.TopScores[botPlayer][metricKey] = bottomIncrement
                     end
                 end
             end

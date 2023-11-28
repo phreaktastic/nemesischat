@@ -256,7 +256,7 @@ function NemesisChat:InstantiateMsg()
             end
         end
 
-        -- Keep rolling through Nemeses to see if one does match conditions
+        -- Keep rolling through Nemeses to see if one matches conditions
         if #returnMessages == 0 and NCEvent:GetTarget() ~= "NEMESIS" and NemesisChat:GetPartyNemesesCount() > 1 then
             table.insert(NCMessage.excludedNemeses, NCEvent:GetNemesis())
 
@@ -264,6 +264,19 @@ function NemesisChat:InstantiateMsg()
 
             if newNemesis ~= nil then
                 NCEvent:SetNemesis(newNemesis)
+
+                return NCMessage:GetConditionalMessages(pool)
+            end
+        end
+
+        -- Keep rolling through Bystanders to see if one matches conditions
+        if #returnMessages == 0 and NCEvent:GetTarget() ~= "BYSTANDER" and NemesisChat:GetPartyBystandersCount() > 1 then
+            table.insert(NCMessage.excludedBystanders, NCEvent:GetBystander())
+
+            local newBystander = NemesisChat:GetNonExcludedBystander()
+
+            if newBystander ~= nil then
+                NCEvent:SetBystander(newBystander)
 
                 return NCMessage:GetConditionalMessages(pool)
             end
@@ -459,6 +472,12 @@ function NemesisChat:InstantiateMsg()
             end
 
             return not NCRuntime:GetGroupRosterPlayer(val1).isGuildmate
+        end,
+        ["IS_UNDERPERFORMER"] = function(val1, val2)
+            return NCDungeon:GetLowestPerformer() == val1
+        end,
+        ["IS_OVERPERFORMER"] = function(val1, val2)
+            return NCDungeon:GetHighestPerformer() == val1
         end,
     }
 end
