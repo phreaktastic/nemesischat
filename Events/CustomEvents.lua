@@ -18,19 +18,19 @@ function NemesisChat:HandleEvent()
     end
 
     -- Try to pull a configured message first
-    NCMessage:ConfigMessage()
+    NCController:ConfigMessage()
 
     -- If AI messages are enabled, use them if a configured message couldn't be found
-    if core.db.profile.ai and not NCMessage:ValidMessage() then
-        NCMessage:AIMessage()
+    if core.db.profile.ai and not NCController:ValidMessage() then
+        NCController:AIMessage()
     end
 
     -- If we still don't have a message, bail
-    if not NCMessage:ValidMessage() then
+    if not NCController:ValidMessage() then
         return
     end
 
-    NCMessage:Handle()
+    NCController:Handle()
 end
 
 function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)

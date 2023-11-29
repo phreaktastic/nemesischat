@@ -36,7 +36,7 @@ function NemesisChat:InstantiateEvent()
 
         NemesisChat:InstantiateEvent()
 
-        NCMessage:Initialize()
+        NCController:Initialize()
         NCSpell:Initialize()
         NemesisChat:PopulateFriends()
     end
@@ -263,7 +263,7 @@ function NemesisChat:InstantiateEvent()
             return false
         end
 
-        local availableMessages = NCMessage:GetConditionalMessages(profileMessages)
+        local availableMessages = NCController:GetConditionalMessages(profileMessages)
 
         return availableMessages ~= nil and #availableMessages > 0
     end

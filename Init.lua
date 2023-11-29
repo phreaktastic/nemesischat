@@ -494,5 +494,5 @@ core.markers = {
 }
 
 NCEvent = {}
-NCMessage = {}
+NCController = {}
 NCSpell = {}

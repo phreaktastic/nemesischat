@@ -503,7 +503,7 @@ function NemesisChatAPI:InitPreMessage()
             end
     
             for _, replacement in pairs(api.replacements) do
-                NCMessage:AddCustomReplacement("%[" .. replacement.value .. "%]", replacement.exec)
+                NCController:AddCustomReplacement("%[" .. replacement.value .. "%]", replacement.exec)
             end
         end
     end

@@ -46,7 +46,7 @@ core.runtimeDefaults = {
         nemesis = "",
         bystander = "",
     },
-    ncMessage = {
+    NCController = {
         channel = "SAY",
         message = "",
         target = "",

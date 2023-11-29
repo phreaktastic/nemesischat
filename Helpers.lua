@@ -356,7 +356,7 @@ function NemesisChat:InitializeHelpers()
         local nemeses = NemesisChat:GetPartyNemeses()
 
         for player, _ in pairs(nemeses) do
-            if not tContains(NCMessage.excludedNemeses, player) then
+            if not tContains(NCController.excludedNemeses, player) then
                 return player
             end
         end
@@ -368,7 +368,7 @@ function NemesisChat:InitializeHelpers()
         local bystanders = NemesisChat:GetPartyBystanders()
 
         for player, _ in pairs(bystanders) do
-            if not tContains(NCMessage.excludedBystanders, player) then
+            if not tContains(NCController.excludedBystanders, player) then
                 return player
             end
         end
@@ -1169,7 +1169,7 @@ end
 
 -- Instantiate NC objects since they are ephemeral and will not persist through a UI load
 function NemesisChat:InstantiateCore()
-    NCMessage = DeepCopy(core.runtimeDefaults.ncMessage)
+    NCController = DeepCopy(core.runtimeDefaults.NCController)
     NemesisChat:InstantiateMsg()
 
     NCSpell = DeepCopy(core.runtimeDefaults.ncSpell)
