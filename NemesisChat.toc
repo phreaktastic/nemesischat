@@ -36,7 +36,7 @@ Models\Segment.lua
 Models\Boss.lua
 Models\Dungeon.lua
 Models\Event.lua
-Models\Message.lua
+Models\Controller.lua
 Models\Spell.lua
 Models\Combat.lua
 Models\Report.lua

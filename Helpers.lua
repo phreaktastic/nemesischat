@@ -10,6 +10,8 @@ local addonName, core = ...;
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 
+local E = unpack(ElvUI)
+
 -----------------------------------------------------
 -- Blizzard functions
 -----------------------------------------------------
@@ -416,7 +418,7 @@ function NemesisChat:InitializeHelpers()
         local bystanders = {}
 
         for key,val in pairs(NCRuntime:GetGroupRoster()) do
-            if val and not val.isNemesis then
+            if val and not val.isNemesis and key ~= GetMyName() then
                 bystanders[key] = key
             end
         end
@@ -604,6 +606,23 @@ function NemesisChat:InitializeHelpers()
         end
     end
 
+    -- Get a player's average item level. Currently only works if ElvUI is installed, will be expanded later.
+    function NemesisChat:GetItemLevel(unit)
+        if E and E.GetUnitItemLevel then
+            local itemLevel, retryUnit, retryTable, iLevelDB = E:GetUnitItemLevel(unit)
+
+            if itemLevel ~= "tooSoon" then
+                return itemLevel
+            end
+            
+            return nil
+        end
+
+        NemesisChat:Print("ElvUI is required to get item levels.")
+
+        return nil
+    end
+
     -- Check the roster and (un/re)subscribe events appropriately
     function NemesisChat:CheckGroup()
         if not IsNCEnabled() then
@@ -620,6 +639,7 @@ function NemesisChat:InitializeHelpers()
             if val ~= nil then
                 local isInGuild = UnitIsInMyGuild(val) ~= nil
                 local isNemesis = (NCConfig:GetNemesis(val) ~= nil or (NCRuntime:GetFriend(val) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
+                local itemLevel = NemesisChat:GetItemLevel(val)
                 count = count + 1
     
                 local rosterPlayer = {
@@ -629,6 +649,10 @@ function NemesisChat:InitializeHelpers()
                     isNemesis = isNemesis,
                     role = UnitGroupRolesAssigned(val),
                 }
+
+                if itemLevel ~= nil then
+                    rosterPlayer.itemLevel = itemLevel
+                end
 
                 NCRuntime:AddGroupRosterPlayer(val, rosterPlayer)
             end

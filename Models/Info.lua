@@ -137,6 +137,35 @@ NCInfo = {
             highPerformerRow = self:AddReportableContentRow(NCInfo.HighPerformerOrder, "Overperformer", highPerformer or "None", false)
         end
 
+        highPerformerRow:SetScript("OnEnter", function(self)
+            if not highPerformer then
+                -- Add a tooltip whose owner is the cursor
+                GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
+                GameTooltip:SetText("When there's a high performer, this will show their scoring.")
+                GameTooltip:Show()
+                return
+            end
+
+            local reasonArray = NCDungeon.Rankings.TopScores[highPerformer]
+            local reasons = ""
+
+            if not reasons then
+                return
+            end
+
+            for metric, reason in pairs(reasonArray) do
+                reasons = reasons .. metric .. ": " .. reason .. "\n"
+            end
+
+            GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Reasons for high performance:\n" .. reasons)
+            GameTooltip:Show()
+        end)
+
+        highPerformerRow:SetScript("OnLeave", function(self)
+            GameTooltip:Hide()
+        end)
+
         highPerformerRow.announceToPartyButton:SetScript("OnClick", function(self)
             if not highPerformer then
                 return
@@ -177,6 +206,34 @@ NCInfo = {
         else
             lowPerformerRow = self:AddReportableContentRow(NCInfo.LowPerformerOrder, "Underperformer", lowPerformer or "None", true)
         end
+
+        lowPerformerRow:SetScript("OnEnter", function(self)
+            if not lowPerformer then
+                GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
+                GameTooltip:SetText("When there's a low performer, this will show their scoring.")
+                GameTooltip:Show()
+                return
+            end
+
+            local reasonArray = NCDungeon.Rankings.TopScores[lowPerformer]
+            local reasons = ""
+
+            if not reasons then
+                return
+            end
+
+            for metric, reason in pairs(reasonArray) do
+                reasons = reasons .. metric .. ": " .. reason .. "\n"
+            end
+
+            GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Reasons for low performance:\n" .. reasons)
+            GameTooltip:Show()
+        end)
+
+        lowPerformerRow:SetScript("OnLeave", function(self)
+            GameTooltip:Hide()
+        end)
 
         lowPerformerRow.announceToPartyButton:SetScript("OnClick", function(self)
             if not lowPerformer then

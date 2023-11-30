@@ -172,6 +172,14 @@ function NemesisChat:InstantiateMsg()
 
     -- Set values for a random configured message
     function NCController:ConfigMessage()
+        -- If a global chance is configured, respect it
+        if core.db.profile.useGlobalChance == true then
+            if not NemesisChat:Roll(core.db.profile.globalChance or 1) then
+                NCEvent:Initialize()
+                return
+            end
+        end
+
         if core.db.profile.messages[NCEvent:GetCategory()] == nil or core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()] == nil or core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()] == nil then
             return
         end
@@ -184,14 +192,6 @@ function NemesisChat:InstantiateMsg()
         end
 
         local msg = ""
-
-        -- If a global chance is configured, respect it
-        if core.db.profile.useGlobalChance == true then
-            if not NemesisChat:Roll(core.db.profile.globalChance or 1) then
-                NCEvent:Initialize()
-                return
-            end
-        end
 
         -- Ensure conditions are met on all messages
         local availableMessages = NCController:GetConditionalMessages(profileMessages)

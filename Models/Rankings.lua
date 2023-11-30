@@ -176,26 +176,77 @@ NCRankings = {
             BottomInitial = 1,
             TopInitial = 1,
             BottomBreakpoints = {
-                [90] = 25,
-                [70] = 20,
-                [50] = 15,
-                [30] = 10,
+                [50] = 30,
+                [30] = 15,
             },
             BottomBreakpointExclusions = {
                 ["Pulls"] = true,
                 ["Deaths"] = true,
             },
             TopBreakpoints = {
-                [90] = 25,
-                [70] = 20,
-                [50] = 15,
-                [30] = 10,
+                [50] = 30,
+                [30] = 15,
             },
             TopBreakpointExclusions = {},
             Metrics = {
                 DPS = {
                     Healer = 30,
                     Tank = 15,
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
+                        local topItemLevel = NemesisChat:GetItemLevel(topPlayer)
+                        local bottomItemLevel = NemesisChat:GetItemLevel(botPlayer)
+
+                        local addTop = 0
+                        local addBot = 0
+
+                        local order = nil
+                        local secondItemLevel = nil
+
+                        -- Add the difference between the top player and the second player's item level
+                        if not topItemLevel or not bottomItemLevel then
+                            addBot = 0
+                            addTop = 0
+                        else
+                            addBot = math.abs(topItemLevel - bottomItemLevel)
+                            addTop = math.abs(topItemLevel - bottomItemLevel)
+                        end
+
+                        -- If the bot player's DPS is lower than the tank or healer, they're dramatically underperforming
+                        if botVal < self._segment:GetStats(NCRuntime:GetGroupHealer(), "DPS") then
+                            addBot = addBot + self.Configuration.Increments.Metrics.DPS.Healer
+                        elseif botVal < self._segment:GetStats(NCRuntime:GetGroupTank(), "DPS") then
+                            addBot = addBot + self.Configuration.Increments.Metrics.DPS.Tank
+                        end
+
+                        if self.All and self.All["DPS"] then
+                            order = GetKeysSortedByValue(self.All["DPS"], function(a, b) return a < b end)
+                            secondItemLevel = NemesisChat:GetItemLevel(order[#order-1]) or 0
+                        end
+
+                        -- If the second player's item level is higher than the top player's, add scores
+                        if secondItemLevel and topItemLevel and secondItemLevel > topItemLevel then
+                            -- The top player is seemingly overperforming
+                            addTop = addTop + 10
+
+                            -- The second player is seemingly underperforming
+                            if self.BottomTracker[order[#order-1]] == nil then
+                                self.BottomTracker[order[#order-1]] = 10
+                            else
+                                self.BottomTracker[order[#order-1]] = self.BottomTracker[order[#order-1]] + 10
+                            end
+
+                            -- Deduct from the top player's BottomTracker score
+                            if self.BottomTracker[topPlayer] ~= nil then
+                                if self.BottomTracker[topPlayer] < 10 then
+                                    self.BottomTracker[topPlayer] = nil
+                                else
+                                    self.BottomTracker[topPlayer] = self.BottomTracker[topPlayer] - 10
+                                end
+                            end
+                        end
+
+                        return addTop, addBot
+                    end,
                 },
             },
         },
@@ -295,9 +346,9 @@ NCRankings = {
                 local topIncrement, bottomIncrement = self.Configuration.Increments.TopInitial, self.Configuration.Increments.BottomInitial
 
                 if not self.Configuration.Increments.BottomBreakpointExclusions[metricKey] then
-                    for _, key in ipairs(GetKeysSortedByValue(self.Configuration.Increments.TopBreakpoints, function(a, b) return a > b end)) do
+                    for _, key in ipairs(GetKeysSortedByValue(self.Configuration.Increments.BottomBreakpoints, function(a, b) return a > b end)) do
                         local percent = tonumber(key) or 101
-                        local increment = self.Configuration.Increments.TopBreakpoints[key]
+                        local increment = self.Configuration.Increments.BottomBreakpoints[key]
 
                         if bottomDeltaPercent >= percent then
                             bottomIncrement = increment
@@ -316,10 +367,11 @@ NCRankings = {
                     end
                 end
 
-                if metricKey == "DPS" and botVal < self._segment:GetStats(NCRuntime:GetGroupHealer(), "DPS") then
-                    bottomIncrement = bottomIncrement + self.Configuration.Increments.Metrics.DPS.Healer
-                elseif metricKey == "DPS" and botVal < self._segment:GetStats(NCRuntime:GetGroupTank(), "DPS") then
-                    bottomIncrement = bottomIncrement + self.Configuration.Increments.Metrics.DPS.Tank
+                if self.Configuration.Increments.Metrics[metricKey] and self.Configuration.Increments.Metrics[metricKey].AdditiveCallback then
+                    local addTop, addBot = self.Configuration.Increments.Metrics[metricKey].AdditiveCallback(self, topPlayer, botPlayer, topVal, botVal)
+
+                    topIncrement = topIncrement + addTop
+                    bottomIncrement = bottomIncrement + addBot
                 end
 
                 -- Add the scores for explanation on top / bottom placement(s)

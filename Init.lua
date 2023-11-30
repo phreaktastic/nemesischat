@@ -473,6 +473,9 @@ core.affixMobsHandles = {
     ["Incorporeal"] = {
         "CROWD_CONTROL",
     },
+    ["Spiteful Shade"] = {
+        "CROWD_CONTROL",
+    },
 }
 
 -- Auras applied by affix mobs

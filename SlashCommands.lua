@@ -26,6 +26,8 @@ function NemesisChat:SlashCommand(msg)
 	elseif msg:trim() == "debugroster" then
 		NemesisChat:Print("ROSTER")
 		NemesisChat:Print_r(NCRuntime:GetGroupRoster())
+	elseif msg:trim() == "ilvl" then
+		NemesisChat:Print(NemesisChat:GetItemLevel("player"))
 	elseif msg:trim():match("stats") then
 		local _, _, cmd, arg = string.find(msg, "%s?(%w+)%s?(.*)")
 		if arg ~= nil then
