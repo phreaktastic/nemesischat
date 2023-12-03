@@ -466,10 +466,10 @@ function NemesisChat:InstantiateMsg()
             return not NCRuntime:GetGroupRosterPlayer(val1).isGuildmate
         end,
         ["IS_UNDERPERFORMER"] = function(val1, val2)
-            return NCDungeon:GetLowestPerformer() == val1
+            return NCDungeon:GetUnderperformer() == val1
         end,
         ["IS_OVERPERFORMER"] = function(val1, val2)
-            return NCDungeon:GetHighestPerformer() == val1
+            return NCDungeon:GetOverperformer() == val1
         end,
     }
 end

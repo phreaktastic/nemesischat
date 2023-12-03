@@ -125,7 +125,7 @@ NCInfo = {
     end,
 
     UpdateHighPerformerRow = function(self)
-        local highPerformer = NCDungeon:GetHighestPerformer()
+        local highPerformer = NCDungeon:GetOverperformer()
         local highPerformerRow
 
         if NCInfo.StatsFrame.content and NCInfo.StatsFrame.content.rows[NCInfo.HighPerformerOrder] then
@@ -149,12 +149,12 @@ NCInfo = {
             local reasonArray = NCDungeon.Rankings.TopScores[highPerformer]
             local reasons = ""
 
-            if not reasons then
+            if not reasonArray or type(reasonArray) ~= "table" then
                 return
             end
 
             for metric, reason in pairs(reasonArray) do
-                reasons = reasons .. metric .. ": " .. reason .. "\n"
+                reasons = reasons .. metric .. ": " .. reason .. " points\n"
             end
 
             GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
@@ -192,7 +192,7 @@ NCInfo = {
     end,
 
     UpdateLowPerformerRow = function(self)
-        local lowPerformer = NCDungeon:GetLowestPerformer()
+        local lowPerformer = NCDungeon:GetUnderperformer()
         local rosterPlayer = NCRuntime:GetGroupRosterPlayer(lowPerformer)
         local lowPerformerRow
 
@@ -218,12 +218,12 @@ NCInfo = {
             local reasonArray = NCDungeon.Rankings.TopScores[lowPerformer]
             local reasons = ""
 
-            if not reasons then
+            if not reasonArray or type(reasonArray) ~= "table" then
                 return
             end
 
             for metric, reason in pairs(reasonArray) do
-                reasons = reasons .. metric .. ": " .. reason .. "\n"
+                reasons = reasons .. metric .. ": " .. reason .. " points\n"
             end
 
             GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")

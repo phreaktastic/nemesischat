@@ -1067,12 +1067,12 @@ function NemesisChat:InitializeHelpers()
             return true, sname, dguid
         end
 
-        if core.affixMobsHandles[dname] ~= nil then
-            for _, eventSubstr in core.affixMobsHandles[dname] do
+        if core.affixMobsHandles[dname] ~= nil and type(core.affixMobsHandles[dname]) == "table" then
+            for _, eventSubstr in pairs(core.affixMobsHandles[dname]) do
                 if eventSubstr == "CROWD_CONTROL" then
                     local flags = LibPlayerSpells:GetSpellInfo(spellId)
 
-                    if bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
+                    if flags and bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
                         return true, sname, dguid
                     end
                 else

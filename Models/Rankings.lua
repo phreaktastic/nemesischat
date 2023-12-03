@@ -298,9 +298,23 @@ NCRankings = {
             local myName = GetMyName()
 
             for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
+                local s = self._segment:GetStats(playerName, metricKey) or nil
+
                 topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.role, playerName, topVal, botVal, topPlayer, botPlayer)
 
-                self.All[metricKey][playerName] = self._segment:GetStats(playerName, metricKey) or 0
+                if type(s) == "number" then
+                    self.All[metricKey][playerName] = s
+                elseif type(s) == "table" then
+                    NemesisChat:Print("TABLE VALUE - Rankings.Calculate():308! Metric:", metricKey, "Player Name:", playerName)
+                    NemesisChat:Print_r(s)
+                    if s[playerName] and type(s[playerName]) == "number" then
+                        self.All[metricKey][playerName] = s[playerName]
+                    else
+                        self.All[metricKey][playerName] = nil
+                    end
+                else
+                    self.All[metricKey][playerName] = nil
+                end
             end
 
             if topVal == 0 then
@@ -455,28 +469,50 @@ NCRankings = {
         end
     end,
 
-    -- Get the lowest performer from the bottom tracker
-    GetLowestPerformer = function(self)
+    -- Get the under performer, if there is one
+    GetUnderperformer = function(self)
         local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
 
         -- If the next lowest performer is within 10 points of the lowest performer, return nil
-        if players[2] ~= nil and self.BottomTracker[players[2]] >= self.BottomTracker[players[1]] - 10 then
+        if (players[2] ~= nil and self.BottomTracker[players[2]] >= self.BottomTracker[players[1]] - 10) or (self.BottomTracker[players[1]] < 10) then
             return nil, nil
         end
 
         return players[1], self.BottomTracker[players[1]]
     end,
 
-    -- Get the highest performer from the top tracker
-    GetHighestPerformer = function(self)
+    -- Get the over performer, if there is one
+    GetOverperformer = function(self)
         local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
 
         -- If the next highest performer is within 10 points of the highest performer, return nil
-        if players[2] ~= nil and self.TopTracker[players[2]] >= self.TopTracker[players[1]] - 10 then
+        if (players[2] ~= nil and self.TopTracker[players[2]] >= self.TopTracker[players[1]] - 10) or (self.TopTracker[players[1]] < 10) then
             return nil, nil
         end
 
         return players[1], self.TopTracker[players[1]]
+    end,
+
+    -- Get the highest performing player (may not be an overperformer) from the TopTracker
+    GetHighestPerformingPlayer = function(self)
+        if type(self.TopTracker) ~= "table" then
+            return nil, nil
+        end
+
+        local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
+
+        return players[1], self.TopTracker[players[1]]
+    end,
+
+    -- Get the lowest performing player (may not be an underperformer) from the BottomTracker
+    GetLowestPerformingPlayer = function(self)
+        if type(self.BottomTracker) ~= "table" then
+            return nil, nil
+        end
+
+        local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
+
+        return players[1], self.BottomTracker[players[1]]
     end,
 
     -- Get all (bad) metrics for a player, looking in self.Top if the metric value is true, and self.Bottom if it is false. 
