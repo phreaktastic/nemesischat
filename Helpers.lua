@@ -1052,13 +1052,13 @@ function NemesisChat:InitializeHelpers()
 
     function NemesisChat:IsAffixMobHandled()
         if not IsInInstance() or not IsInGroup() then
-            return false
+            return false, nil, nil
         end
 
         local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
 
         if NCRuntime:GetGroupRosterPlayer(sname) == nil then
-            return false
+            return false, nil, nil
         end
 
         local isHandled = false
@@ -1089,13 +1089,13 @@ function NemesisChat:InitializeHelpers()
 
     function NemesisChat:IsAffixAuraHandled()
         if not IsInInstance() or not IsInGroup() then
-            return false
+            return false, nil
         end
 
         local _, event, _, _, sname, _, _, _, dname, _, _, _, _, _, dispelledId = CombatLogGetCurrentEventInfo()
 
         if (NCRuntime:GetGroupRosterPlayer(sname) == nil and sname ~= GetMyName()) or (NCRuntime:GetGroupRosterPlayer(dname) == nil and dname ~= GetMyName()) or event ~= "SPELL_DISPEL" then
-            return false
+            return false, nil
         end
 
         local isHandled = false

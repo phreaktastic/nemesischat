@@ -28,6 +28,13 @@ function NemesisChat:SlashCommand(msg)
 		NemesisChat:Print_r(NCRuntime:GetGroupRoster())
 	elseif msg:trim() == "ilvl" then
 		NemesisChat:Print(NemesisChat:GetItemLevel("player"))
+	elseif msg:trim() == "debugaffix" then
+		NemesisChat:Print("AFFIXES")
+		if not NCCombat:IsActive() then
+			NCCombat:Start("Debug")
+		end
+		NCSegment:GlobalAddAffix(GetMyName())
+		NemesisChat:Print_r(NCCombat:GetAffixes())
 	elseif msg:trim():match("stats") then
 		local _, _, cmd, arg = string.find(msg, "%s?(%w+)%s?(.*)")
 		if arg ~= nil then

@@ -159,6 +159,9 @@ NCRankings = {
         Pulls = {},
     },
 
+    -- Points earned by players for irregular positive contributions such as offheals, crowd control, affixes, etc.
+    BonusPoints = {},
+
     -- Bottom players with scores based on their deltas
     BottomTracker = {},
     -- Bottom players' score explanations
@@ -176,12 +179,13 @@ NCRankings = {
             BottomInitial = 1,
             TopInitial = 1,
             BottomBreakpoints = {
-                [50] = 30,
-                [30] = 15,
+                [50] = 5,
+                [30] = 3,
             },
             BottomBreakpointExclusions = {
                 ["Pulls"] = true,
                 ["Deaths"] = true,
+                ["Interrupts"] = true,
             },
             TopBreakpoints = {
                 [50] = 30,
@@ -305,7 +309,7 @@ NCRankings = {
                 if type(s) == "number" then
                     self.All[metricKey][playerName] = s
                 elseif type(s) == "table" then
-                    NemesisChat:Print("TABLE VALUE - Rankings.Calculate():308! Metric:", metricKey, "Player Name:", playerName)
+                    NemesisChat:Print("TABLE VALUE - Rankings.Calculate():308! Metric:", metricKey, "Player Name:", playerName, "Segment:", self._segment:GetIdentifier())
                     NemesisChat:Print_r(s)
                     if s[playerName] and type(s[playerName]) == "number" then
                         self.All[metricKey][playerName] = s[playerName]
@@ -474,7 +478,7 @@ NCRankings = {
         local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
 
         -- If the next lowest performer is within 10 points of the lowest performer, return nil
-        if (players[2] ~= nil and self.BottomTracker[players[2]] >= self.BottomTracker[players[1]] - 10) or (self.BottomTracker[players[1]] < 10) then
+        if (players[2] ~= nil and self.BottomTracker[players[2]] >= self.BottomTracker[players[1]] - 10) or self.BottomTracker[players[1]] == nil or self.BottomTracker[players[1]] < 10 then
             return nil, nil
         end
 
@@ -486,7 +490,7 @@ NCRankings = {
         local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
 
         -- If the next highest performer is within 10 points of the highest performer, return nil
-        if (players[2] ~= nil and self.TopTracker[players[2]] >= self.TopTracker[players[1]] - 10) or (self.TopTracker[players[1]] < 10) then
+        if (players[2] ~= nil and self.TopTracker[players[2]] >= self.TopTracker[players[1]] - 10) or self.TopTracker[players[1]] == nil or self.TopTracker[players[1]] < 10 then
             return nil, nil
         end
 

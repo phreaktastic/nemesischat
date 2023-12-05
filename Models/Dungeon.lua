@@ -29,7 +29,7 @@ function NCDungeon:StartCallback()
 
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
-    NCDungeon:SetAffixes(affixIDs)
+    NCDungeon:SetKeystoneAffixes(affixIDs)
 
     NCInfo:Update()
 end
@@ -58,10 +58,10 @@ function NCDungeon:SetLevel(level)
     NCDungeon.Level = (level or 0)
 end
 
-function NCDungeon:SetAffixes(affixes)
+function NCDungeon:SetKeystoneAffixes(affixes)
     NCDungeon.Affixes = affixes
 end
 
-function NCDungeon:GetAffixes()
+function NCDungeon:GetKeystoneAffixes()
     return NCDungeon.Affixes
 end
