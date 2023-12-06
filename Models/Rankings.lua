@@ -194,8 +194,6 @@ NCRankings = {
             TopBreakpointExclusions = {},
             Metrics = {
                 DPS = {
-                    Healer = 30,
-                    Tank = 15,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
                         local topItemLevel = NemesisChat:GetItemLevel(topPlayer)
                         local bottomItemLevel = NemesisChat:GetItemLevel(botPlayer)
@@ -218,8 +216,26 @@ NCRankings = {
                         -- If the bot player's DPS is lower than the tank or healer, they're dramatically underperforming
                         if botVal < self._segment:GetStats(NCRuntime:GetGroupHealer(), "DPS") then
                             addBot = addBot + self.Configuration.Increments.Metrics.DPS.Healer
+
+                            -- Add the scores for explanation on top / bottom placement(s)
+                            if self.BottomScores[botPlayer] == nil then
+                                self.BottomScores[botPlayer] = {
+                                    ["DPS < Healer"] = addBot,
+                                }
+                            else
+                                self.BottomScores[botPlayer]["DPS < Healer"] = addBot
+                            end
                         elseif botVal < self._segment:GetStats(NCRuntime:GetGroupTank(), "DPS") then
                             addBot = addBot + self.Configuration.Increments.Metrics.DPS.Tank
+
+                            -- Add the scores for explanation on top / bottom placement(s)
+                            if self.BottomScores[botPlayer] == nil then
+                                self.BottomScores[botPlayer] = {
+                                    ["DPS < Tank"] = addBot,
+                                }
+                            else
+                                self.BottomScores[botPlayer]["DPS < Tank"] = addBot
+                            end
                         end
 
                         if self.All and self.All["DPS"] then
@@ -237,6 +253,15 @@ NCRankings = {
                                 self.BottomTracker[order[#order-1]] = 10
                             else
                                 self.BottomTracker[order[#order-1]] = self.BottomTracker[order[#order-1]] + 10
+                            end
+
+                            -- Add the scores for explanation on top / bottom placement(s)
+                            if self.BottomScores[order[#order-1]] == nil then
+                                self.BottomScores[order[#order-1]] = {
+                                    ["iLvl " .. secondItemLevel .. " DPS < iLvl " .. topItemLevel .. " DPS"] = 10,
+                                }
+                            else
+                                self.BottomScores[order[#order-1]]["iLvl " .. secondItemLevel .. " DPS < iLvl " .. topItemLevel .. " DPS"] = 10
                             end
 
                             -- Deduct from the top player's BottomTracker score
@@ -302,23 +327,9 @@ NCRankings = {
             local myName = GetMyName()
 
             for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
-                local s = self._segment:GetStats(playerName, metricKey) or nil
+                self.All[metricKey][playerName] = (self._segment:GetStats(playerName, metricKey) or nil)
 
                 topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.role, playerName, topVal, botVal, topPlayer, botPlayer)
-
-                if type(s) == "number" then
-                    self.All[metricKey][playerName] = s
-                elseif type(s) == "table" then
-                    NemesisChat:Print("TABLE VALUE - Rankings.Calculate():308! Metric:", metricKey, "Player Name:", playerName, "Segment:", self._segment:GetIdentifier())
-                    NemesisChat:Print_r(s)
-                    if s[playerName] and type(s[playerName]) == "number" then
-                        self.All[metricKey][playerName] = s[playerName]
-                    else
-                        self.All[metricKey][playerName] = nil
-                    end
-                else
-                    self.All[metricKey][playerName] = nil
-                end
             end
 
             if topVal == 0 then
