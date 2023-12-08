@@ -178,22 +178,69 @@ NCRankings = {
         Increments = {
             BottomInitial = 1,
             TopInitial = 1,
-            BottomBreakpoints = {
-                [50] = 5,
-                [30] = 3,
-            },
-            BottomBreakpointExclusions = {
-                ["Pulls"] = true,
-                ["Deaths"] = true,
-                ["Interrupts"] = true,
-            },
-            TopBreakpoints = {
-                [50] = 30,
-                [30] = 15,
-            },
-            TopBreakpointExclusions = {},
             Metrics = {
+                Affixes = {
+                    TopBreakpoints = {
+                        [50] = 10,
+                        [30] = 5,
+                    },
+                    BottomBreakpoints = {
+                        [50] = 5,
+                        [30] = 3,
+                    },
+                    ForgivenClasses = {},
+                    ForgivenSpecs = {},
+                    ForgivenRoles = {},
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
+                        return 0
+                    end,
+                },
+                AvoidableDamage = {
+                    TopBreakpoints = {
+                        [50] = 30,
+                        [30] = 15,
+                    },
+                    BottomBreakpoints = {
+                        [50] = 5,
+                        [30] = 3,
+                    },
+                    ForgivenClasses = {},
+                    ForgivenSpecs = {},
+                    ForgivenRoles = {},
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
+                        return 0
+                    end,
+                },
+                Deaths = {
+                    TopBreakpoints = {
+                        [50] = 30,
+                        [30] = 15,
+                    },
+                    BottomBreakpoints = {
+                        [50] = 5,
+                        [30] = 3,
+                    },
+                    ForgivenClasses = {},
+                    ForgivenSpecs = {},
+                    ForgivenRoles = {},
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
+                        return 0
+                    end,
+                },
                 DPS = {
+                    TopBreakpoints = {
+                        [50] = 30,
+                        [30] = 15,
+                    },
+                    BottomBreakpoints = {
+                        [50] = 5,
+                        [30] = 3,
+                    },
+                    ForgivenClasses = {},
+                    ForgivenSpecs = {},
+                    ForgivenRoles = {
+                        "HEALER",
+                    },
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
                         local topItemLevel = NemesisChat:GetItemLevel(topPlayer)
                         local bottomItemLevel = NemesisChat:GetItemLevel(botPlayer)
@@ -275,6 +322,56 @@ NCRankings = {
                         end
 
                         return addTop, addBot
+                    end,
+                },
+                Interrupts = {
+                    TopBreakpoints = {
+                        [50] = 30,
+                        [30] = 15,
+                    },
+                    BottomBreakpoints = {
+                        [50] = 5,
+                        [30] = 3,
+                    },
+                    ForgivenClasses = {
+                        "DRUID",
+                    },
+                    ForgivenSpecs = {},
+                    ForgivenRoles = {},
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
+                        return 0
+                    end,
+                },
+                Offheals = {
+                    TopBreakpoints = {
+                        [50] = 30,
+                        [30] = 15,
+                    },
+                    BottomBreakpoints = {
+                        [50] = 5,
+                        [30] = 3,
+                    },
+                    ForgivenClasses = {},
+                    ForgivenSpecs = {},
+                    ForgivenRoles = {},
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
+                        return 0
+                    end,
+                },
+                Pulls = {
+                    TopBreakpoints = {
+                        [50] = 30,
+                        [30] = 15,
+                    },
+                    BottomBreakpoints = {
+                        [50] = 5,
+                        [30] = 3,
+                    },
+                    ForgivenClasses = {},
+                    ForgivenSpecs = {},
+                    ForgivenRoles = {},
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
+                        return 0
                     end,
                 },
             },

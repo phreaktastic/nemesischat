@@ -35,28 +35,9 @@ function NemesisChat:SlashCommand(msg)
 		end
 		NCSegment:GlobalAddAffix(GetMyName())
 		NemesisChat:Print_r(NCCombat:GetAffixes())
-	elseif msg:trim():match("stats") then
-		local _, _, cmd, arg = string.find(msg, "%s?(%w+)%s?(.*)")
-		if arg ~= nil then
-			arg = tonumber(arg)
-			if arg ~= nil then
-				if NCDungeon.Rankings.All[arg] ~= nil then
-					local order = GetKeysSortedByValue(NCDungeon.Rankings.All[arg], function(a, b) return a > b end)
-
-					NemesisChat:Print("Ranking for " .. arg)
-
-					for i = 1, #order do
-						NemesisChat:Print(order[i] .. ": " .. NCDungeon.Rankings.All[arg][order[i]])
-					end
-				else
-					NemesisChat:Print("Invalid argument.")
-				end
-			else
-				NemesisChat:Print("Invalid argument.")
-			end
-		else
-			NemesisChat:Print("Invalid argument.")
-		end
+	elseif msg:trim() == "debugclass" then
+		local playerClass, englishClass = UnitClass("player")
+		ChatFrame1:AddMessage('Your player is a : ' .. playerClass .. '; ' .. englishClass .. '.')
 	else
         if core.db.profile.dbg then
             self:Print("Invalid command issued.")
