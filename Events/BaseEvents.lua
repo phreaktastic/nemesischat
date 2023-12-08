@@ -73,7 +73,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
         local isLeader = UnitIsGroupLeader(GetMyName())
 
         for key,val in pairs(members) do
-            if val ~= nil then
+            if val ~= nil and val ~= GetMyName() then
                 local isInGuild = UnitIsInMyGuild(val) ~= nil
                 local isNemesis = (core.db.profile.nemeses[val] ~= nil or (NCRuntime:GetFriend(val) ~= nil and core.db.profile.flagFriendsAsNemeses) or (isInGuild and core.db.profile.flagGuildiesAsNemeses))
     
@@ -104,7 +104,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
         
     else
         for key,val in pairs(joins) do
-            if val ~= nil then
+            if val ~= nil and val ~= GetMyName() then
                 local isInGuild = UnitIsInMyGuild(val) ~= nil
                 local isNemesis = (core.db.profile.nemeses[val] ~= nil or (NCRuntime:GetFriend(val) ~= nil and core.db.profile.flagFriendsAsNemeses) or (isInGuild and core.db.profile.flagGuildiesAsNemeses))
                 local unitGuid = UnitGUID(val)
@@ -139,7 +139,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
         end
     
         for key,val in pairs(leaves) do
-            if val ~= nil then
+            if val ~= nil and val ~= GetMyName() then
                 local player = NCRuntime:GetGroupRosterPlayer(val)
     
                 if #leaves <= 3 then

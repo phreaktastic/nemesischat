@@ -551,14 +551,14 @@ function NemesisChat:InitializeHelpers()
 
         -- Get joins
         for key,val in pairs(newRoster) do 
-            if oldRoster[val] == nil then
+            if oldRoster[val] == nil and val ~= GetMyName() then
                 tinsert(joined, val)
             end
         end
 
         -- Get leaves
         for key,val in pairs(oldRoster) do
-            if newRoster[val] == nil then
+            if newRoster[val] == nil and val ~= GetMyName() then
                 tinsert(left, val)
             end
         end
@@ -617,8 +617,6 @@ function NemesisChat:InitializeHelpers()
             
             return nil
         end
-
-        NemesisChat:Print("ElvUI is required to get item levels.")
 
         return nil
     end

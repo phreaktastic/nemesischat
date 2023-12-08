@@ -145,9 +145,9 @@ function NemesisChat:InstantiateMsg()
         NCRuntime:UpdateLastMessage()
     end
 
-    -- No exceptions currently, but this is where we'd add them
+    -- Group join events are an exception to the minimum time rule
     function NCController:IsMinTimeException()
-        return false
+        return NCEvent:GetCategory() == "GROUP" and (NCEvent:GetEvent() == "JOIN" or NCEvent:GetEvent() == "LEAVE")
     end
 
     -- If `channel` is `GROUP`, we need to set it to `PARTY`, `INSTANCE_CHAT`, or `RAID`

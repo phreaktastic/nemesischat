@@ -100,15 +100,26 @@ end
 function GetKeysSortedByValue(tbl, sortFunction)
     local keys = {}
     for key in pairs(tbl) do
-      table.insert(keys, key)
+        table.insert(keys, key)
     end
-  
+
     table.sort(keys, function(a, b)
-      return sortFunction(tbl[a], tbl[b])
+        return sortFunction(tbl[a], tbl[b])
     end)
-  
+
     return keys
-  end
+end
+
+function Split(str, sep)
+    local result = {}
+    local regex = ("([^%s]+)"):format(sep)
+    
+    for each in str:gmatch(regex) do
+        table.insert(result, each)
+    end
+
+    return result
+ end
 
 -----------------------------------------------------
 -- Core options
