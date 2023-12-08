@@ -9,6 +9,8 @@
 -----------------------------------------------------
 local _, core = ...;
 
+local LGIST = LibStub:GetLibrary("LibGroupInSpecT-1.1")
+
 -----------------------------------------------------
 -- Core rankings logic
 -----------------------------------------------------
@@ -159,8 +161,8 @@ NCRankings = {
         Pulls = {},
     },
 
-    -- Points earned by players for irregular positive contributions such as offheals, crowd control, affixes, etc.
-    BonusPoints = {},
+    -- Rolling points earned by players based on certain actions
+    ActionPoints = {},
 
     -- Bottom players with scores based on their deltas
     BottomTracker = {},
@@ -180,67 +182,50 @@ NCRankings = {
             TopInitial = 1,
             Metrics = {
                 Affixes = {
-                    TopBreakpoints = {
-                        [50] = 10,
-                        [30] = 5,
-                    },
-                    BottomBreakpoints = {
-                        [50] = 5,
-                        [30] = 3,
-                    },
-                    ForgivenClasses = {},
-                    ForgivenSpecs = {},
-                    ForgivenRoles = {},
+                    IsIncludedCallback = function(self, player)
+                        return true
+                    end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return 0
+                        return (topVal - botVal), (topVal - botVal)
                     end,
                 },
                 AvoidableDamage = {
-                    TopBreakpoints = {
-                        [50] = 30,
-                        [30] = 15,
+                    TopDeltaBreakpoints = {
+                        [200] = 20,
+                        [100] = 10,
                     },
-                    BottomBreakpoints = {
-                        [50] = 5,
-                        [30] = 3,
+                    BottomDeltaBreakpoints = {
+                        [200] = 3,
+                        [100] = 2,
+                        [50] = 1,
                     },
-                    ForgivenClasses = {},
-                    ForgivenSpecs = {},
-                    ForgivenRoles = {},
+                    IsIncludedCallback = function(self, player)
+                        return true
+                    end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
                         return 0
                     end,
                 },
                 Deaths = {
-                    TopBreakpoints = {
-                        [50] = 30,
-                        [30] = 15,
-                    },
-                    BottomBreakpoints = {
-                        [50] = 5,
-                        [30] = 3,
-                    },
-                    ForgivenClasses = {},
-                    ForgivenSpecs = {},
-                    ForgivenRoles = {},
+                    IsIncludedCallback = function(self, player)
+                        return true
+                    end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return 0
+                        return (topVal - botVal), (topVal - botVal) * 2
                     end,
                 },
                 DPS = {
-                    TopBreakpoints = {
-                        [50] = 30,
-                        [30] = 15,
+                    TopDeltaBreakpoints = {
+                        [50] = 20,
+                        [30] = 10,
                     },
-                    BottomBreakpoints = {
-                        [50] = 5,
-                        [30] = 3,
+                    BottomDeltaBreakpoints = {
+                        [50] = 20,
+                        [30] = 10,
                     },
-                    ForgivenClasses = {},
-                    ForgivenSpecs = {},
-                    ForgivenRoles = {
-                        "HEALER",
-                    },
+                    IsIncludedCallback = function(self, player)
+                        return GetRole(player) == "DAMAGER"
+                    end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
                         local topItemLevel = NemesisChat:GetItemLevel(topPlayer)
                         local bottomItemLevel = NemesisChat:GetItemLevel(botPlayer)
@@ -325,53 +310,47 @@ NCRankings = {
                     end,
                 },
                 Interrupts = {
-                    TopBreakpoints = {
-                        [50] = 30,
-                        [30] = 15,
+                    TopDeltaBreakpoints = {
+                        [50] = 3,
+                        [30] = 2,
                     },
-                    BottomBreakpoints = {
+                    BottomDeltaBreakpoints = {
                         [50] = 5,
                         [30] = 3,
                     },
-                    ForgivenClasses = {
-                        "DRUID",
-                    },
-                    ForgivenSpecs = {},
-                    ForgivenRoles = {},
+                    IsIncludedCallback = function(self, player)
+                        local _, classId = UnitClassBase(player)
+
+                        -- Warlock and Druid are forgiven for not interrupting
+                        return classId ~= 9 and classId ~= 11
+                    end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return 0
+                        return (topVal - botVal), (topVal - botVal)
                     end,
                 },
                 Offheals = {
-                    TopBreakpoints = {
-                        [50] = 30,
-                        [30] = 15,
-                    },
-                    BottomBreakpoints = {
-                        [50] = 5,
-                        [30] = 3,
-                    },
-                    ForgivenClasses = {},
-                    ForgivenSpecs = {},
-                    ForgivenRoles = {},
+                    IsIncludedCallback = function(self, player)
+                        -- If the player is a healer, they're forgiven for not offhealing
+                        if GetRole(player) == "HEALER" then
+                            return false
+                        end
+
+                        local _, classId = UnitClassBase(player)
+
+                        -- Only certain classes can offheal
+                        -- Paladin, Priest, Shaman, Monk, Druid, Evoker
+                        return classId == 2 or classId == 5 or classId == 7 or classId == 10 or classId == 11 or classId == 13
+                    end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return 0
+                        return (topVal - botVal), (topVal - botVal)
                     end,
                 },
                 Pulls = {
-                    TopBreakpoints = {
-                        [50] = 30,
-                        [30] = 15,
-                    },
-                    BottomBreakpoints = {
-                        [50] = 5,
-                        [30] = 3,
-                    },
-                    ForgivenClasses = {},
-                    ForgivenSpecs = {},
-                    ForgivenRoles = {},
+                    IsIncludedCallback = function(self, player)
+                        return true
+                    end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return 0
+                        return math.floor((topVal - botVal) / 2), math.floor((topVal - botVal) / 2)
                     end,
                 },
             },
@@ -471,28 +450,32 @@ NCRankings = {
 
                 local topIncrement, bottomIncrement = self.Configuration.Increments.TopInitial, self.Configuration.Increments.BottomInitial
 
-                if not self.Configuration.Increments.BottomBreakpointExclusions[metricKey] then
-                    for _, key in ipairs(GetKeysSortedByValue(self.Configuration.Increments.BottomBreakpoints, function(a, b) return a > b end)) do
-                        local percent = tonumber(key) or 101
-                        local increment = self.Configuration.Increments.BottomBreakpoints[key]
+                -- Breakpoint-based increments
+                if self.Configuration.Increments.Metrics[metricKey] and self.Configuration.Increments.Metrics[metricKey].IsIncludedCallback(self, topPlayer) then
+                    if self.Configuration.Increments.Metrics[metricKey].TopDeltaBreakpoints ~= nil then
+                        for _, key in ipairs(GetKeysSortedByValue(self.Configuration.Increments.Metrics[metricKey].TopDeltaBreakpoints, function(a, b) return a > b end)) do
+                            local percent = tonumber(key) or 101
+                            local increment = self.Configuration.Increments.Metrics[metricKey].TopDeltaBreakpoints[key]
+    
+                            if topDeltaPercent >= percent then
+                                topIncrement = increment
+                            end
+                        end
+                    end
 
-                        if bottomDeltaPercent >= percent then
-                            bottomIncrement = increment
+                    if self.Configuration.Increments.Metrics[metricKey].BottomDeltaBreakpoints ~= nil then
+                        for _, key in ipairs(GetKeysSortedByValue(self.Configuration.Increments.Metrics[metricKey].BottomDeltaBreakpoints, function(a, b) return a > b end)) do
+                            local percent = tonumber(key) or 101
+                            local increment = self.Configuration.Increments.Metrics[metricKey].BottomDeltaBreakpoints[key]
+    
+                            if bottomDeltaPercent >= percent then
+                                bottomIncrement = increment
+                            end
                         end
                     end
                 end
 
-                if not self.Configuration.Increments.TopBreakpointExclusions[metricKey] then
-                    for _, key in ipairs(GetKeysSortedByValue(self.Configuration.Increments.TopBreakpoints, function(a, b) return a > b end)) do
-                        local percent = tonumber(key) or 101
-                        local increment = self.Configuration.Increments.TopBreakpoints[key]
-
-                        if topDeltaPercent >= percent then
-                            topIncrement = increment
-                        end
-                    end
-                end
-
+                -- Additive increments
                 if self.Configuration.Increments.Metrics[metricKey] and self.Configuration.Increments.Metrics[metricKey].AdditiveCallback then
                     local addTop, addBot = self.Configuration.Increments.Metrics[metricKey].AdditiveCallback(self, topPlayer, botPlayer, topVal, botVal)
 
@@ -517,7 +500,7 @@ NCRankings = {
                     self.TopScores[topPlayer][metricKey] = topIncrement
                 end
 
-                -- Add players to the top / bottom tracker
+                -- Add players to the top / bottom tracker. If metricVal is true, top is good. If false, bottom is good.
                 if metricVal then
                     if self.BottomTracker[botPlayer] == nil then
                         self.BottomTracker[botPlayer] = bottomIncrement
