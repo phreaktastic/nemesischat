@@ -318,7 +318,7 @@ NCRankings = {
                     IsIncludedCallback = function(self, player)
                         local _, classId = UnitClassBase(player)
 
-                        -- Warlock and Druid are forgiven for not interrupting
+                        -- Warlock and Druid are excluded
                         return classId ~= 9 and classId ~= 11
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
@@ -327,7 +327,7 @@ NCRankings = {
                 },
                 Offheals = {
                     IsIncludedCallback = function(self, player)
-                        -- If the player is a healer, they're forgiven for not offhealing
+                        -- If the player is a healer, they're excluded
                         if GetRole(player) == "HEALER" then
                             return false
                         end

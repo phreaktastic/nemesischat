@@ -460,6 +460,17 @@ NCSegment = {
     GetHighestPerformer = function(self)
         return self.Rankings:GetHighestPerformer()
     end,
+    GlobalAddActionPoints = function(self, amount, player, optDescription)
+        if player == nil or amount == nil then
+            return
+        end
+
+        for _, segment in pairs(NCSegment.Segments) do
+            if segment:IsActive() then
+                segment:AddActionPoints(amount, player, optDescription)
+            end
+        end
+    end,
     GlobalAddAffix = function(self, player)
         if player == nil then
             return
