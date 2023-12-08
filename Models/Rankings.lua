@@ -564,25 +564,29 @@ NCRankings = {
     -- Get the under performer, if there is one
     GetUnderperformer = function(self)
         local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
+        local firstScore = (self.BottomTracker[players[1]] or 0) + (self._segment:GetActionPointsAmount(players[1]) or 0)
+        local secondScore = (self.BottomTracker[players[2]] or 0) + (self._segment:GetActionPointsAmount(players[2]) or 0)
 
         -- If the next lowest performer is within 10 points of the lowest performer, return nil
-        if (players[2] ~= nil and self.BottomTracker[players[2]] >= self.BottomTracker[players[1]] - 10) or self.BottomTracker[players[1]] == nil or self.BottomTracker[players[1]] < 10 then
+        if secondScore >= firstScore - 10 or firstScore < 10 then
             return nil, nil
         end
 
-        return players[1], self.BottomTracker[players[1]]
+        return players[1], firstScore
     end,
 
     -- Get the over performer, if there is one
     GetOverperformer = function(self)
         local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
+        local firstScore = (self.TopTracker[players[1]] or 0) + (self._segment:GetActionPointsAmount(players[1]) or 0)
+        local secondScore = (self.TopTracker[players[2]] or 0) + (self._segment:GetActionPointsAmount(players[2]) or 0)
 
         -- If the next highest performer is within 10 points of the highest performer, return nil
-        if (players[2] ~= nil and self.TopTracker[players[2]] >= self.TopTracker[players[1]] - 10) or self.TopTracker[players[1]] == nil or self.TopTracker[players[1]] < 10 then
+        if secondScore >= firstScore - 10 or firstScore < 10 then
             return nil, nil
         end
 
-        return players[1], self.TopTracker[players[1]]
+        return players[1], firstScore
     end,
 
     -- Get the highest performing player (may not be an overperformer) from the TopTracker
@@ -592,8 +596,9 @@ NCRankings = {
         end
 
         local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
+        local score = (self.TopTracker[players[1]] or 0) + (self._segment:GetActionPointsAmount(players[1]) or 0)
 
-        return players[1], self.TopTracker[players[1]]
+        return players[1], score
     end,
 
     -- Get the lowest performing player (may not be an underperformer) from the BottomTracker
