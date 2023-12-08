@@ -161,9 +161,6 @@ NCRankings = {
         Pulls = {},
     },
 
-    -- Rolling points earned by players based on certain actions
-    ActionPoints = {},
-
     -- Bottom players with scores based on their deltas
     BottomTracker = {},
     -- Bottom players' score explanations

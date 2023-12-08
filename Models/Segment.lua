@@ -42,6 +42,9 @@ NCSegment = {
     -- Was this segment a wipe?
     Wipe = false,
 
+    -- Rolling points earned by players based on certain actions
+    ActionPoints = {},
+
     -- Affix handler tracker for the segment
     Affixes = {},
 
@@ -145,6 +148,54 @@ NCSegment = {
         end
 
         return self.Affixes[player]
+    end,
+    AddActionPoints = function(self, amount, player, optDescription)
+        if player == nil or amount == nil then
+            return
+        end
+
+        if self.ActionPoints[player] == nil then
+            self.ActionPoints[player] = {}
+        end
+
+        table.insert(self.ActionPoints[player], {
+            Amount = amount,
+            Description = optDescription,
+            Timestamp = GetTime()
+        })
+
+        self:AddActionPointsCallback(amount, player, optDescription)
+    end,
+    AddActionPointsCallback = function(self, amount, player, optDescription)
+        -- Override me
+    end,
+    GetActionPoints = function(self, player)
+        if player == nil then
+            return self.ActionPoints
+        end
+        
+        if self.ActionPoints[player] == nil then
+            self.ActionPoints[player] = {}
+        end
+
+        return self.ActionPoints[player]
+    end,
+    GetActionPointsAmount = function(self, player)
+        if player == nil then
+            return 0
+        end
+        
+        if self.ActionPoints[player] == nil then
+            self.ActionPoints[player] = {}
+        end
+
+        local amount = 0
+
+        for _, actionPoint in pairs(self.ActionPoints[player]) do
+            amount = amount + actionPoint.Amount
+        end
+
+        return amount
     end,
     AddAffix = function(self, player)
         if player == nil then
