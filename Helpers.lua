@@ -298,6 +298,7 @@ function NemesisChat:InitializeHelpers()
 
         NemesisChat:SetMyName()
         NemesisChat:UpdateGroupState()
+        NemesisChat:ActionScoring()
         NemesisChat:CheckAffixes()
 
         NCEvent:Initialize()
@@ -1083,6 +1084,32 @@ function NemesisChat:InitializeHelpers()
         end
 
         return isHandled, sname, dguid
+    end
+
+    function NemesisChat:ActionScoring()
+        local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
+
+        if not IsInInstance() or not IsInGroup() or not UnitInParty(sname) then
+            return
+        end
+
+        local flags = LibPlayerSpells:GetSpellInfo(spellId)
+
+        if not flags then
+            return
+        end
+
+        local description = ""
+
+        if bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
+            description = "Crowd control"
+        elseif bit.band(flags, LibPlayerSpells.constants.DISPEL) ~= 0 then
+            description = "Dispel"
+        elseif bit.band(flags, LibPlayerSpells.constants.SURVIVAL) ~= 0 then
+            description = "Defensive"
+        end
+
+        NCSegment:GlobalAddActionPoints(1, sname, description)
     end
 
     function NemesisChat:IsAffixAuraHandled()

@@ -54,6 +54,9 @@ NCSegment = {
     -- Death tracker for the segment
     Deaths = {},
 
+    -- Defensive tracker for the segment
+    Defensives = {},
+
     -- Heal tracker for the segment
     Heals = {},
 
@@ -265,6 +268,33 @@ NCSegment = {
         self:AddDeathCallback(player)
     end,
     AddDeathCallback = function(self, player)
+        -- Override me
+    end,
+    GetDefensives = function(self, player)
+        if player == nil then
+            return self.Defensives
+        end
+        
+        if self.Defensives[player] == nil then
+            self.Defensives[player] = 0
+        end
+
+        return self.Defensives[player]
+    end,
+    AddDefensive = function(self, player)
+        if player == nil then
+            return
+        end
+
+        if self.Defensives[player] == nil then
+            self.Defensives[player] = 1
+        else
+            self.Defensives[player] = self.Defensives[player] + 1
+        end
+
+        self:AddDefensiveCallback(player)
+    end,
+    AddDefensiveCallback = function(self, player)
         -- Override me
     end,
     GetHeals = function(self, player)
@@ -503,6 +533,15 @@ NCSegment = {
             if segment:IsActive() then
                 segment:AddDeath(player)
             end
+        end
+    end,
+    GlobalAddDefensive = function(self, player)
+        if player == nil then
+            return
+        end
+
+        for _, segment in pairs(NCSegment.Segments) do
+            segment:AddDefensive(player)
         end
     end,
     GlobalAddHeals = function(self, amount, source, target)
