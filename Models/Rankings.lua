@@ -220,6 +220,8 @@ NCRankings = {
                         [50] = 20,
                         [30] = 10,
                     },
+                    BelowHealerIncrement = 30,
+                    BelowTankIncrement = 20,
                     IsIncludedCallback = function(self, player)
                         return GetRole(player) == "DAMAGER"
                     end,
@@ -234,42 +236,45 @@ NCRankings = {
                         local secondItemLevel = nil
 
                         -- Add the difference between the top player and the second player's item level
-                        if not topItemLevel or not bottomItemLevel then
+                        if not tonumber(topItemLevel) or not tonumber(bottomItemLevel) then
                             addBot = 0
                             addTop = 0
                         else
-                            addBot = math.abs(topItemLevel - bottomItemLevel)
-                            addTop = math.abs(topItemLevel - bottomItemLevel)
+                            addBot = math.abs(tonumber(topItemLevel) - tonumber(bottomItemLevel))
+                            addTop = math.abs(tonumber(topItemLevel) - tonumber(bottomItemLevel))
                         end
 
                         -- If the bot player's DPS is lower than the tank or healer, they're dramatically underperforming
-                        if botVal < self._segment:GetStats(NCRuntime:GetGroupHealer(), "DPS") then
-                            addBot = addBot + self.Configuration.Increments.Metrics.DPS.Healer
+                        if botVal < NCRankings._segment:GetStats(NCRuntime:GetGroupHealer(), "DPS") then
+                            addBot = addBot + NCRankings.Configuration.Increments.Metrics.DPS.BelowHealerIncrement
 
                             -- Add the scores for explanation on top / bottom placement(s)
-                            if self.BottomScores[botPlayer] == nil then
-                                self.BottomScores[botPlayer] = {
+                            if NCRankings.BottomScores[botPlayer] == nil then
+                                NCRankings.BottomScores[botPlayer] = {
                                     ["DPS < Healer"] = addBot,
                                 }
                             else
-                                self.BottomScores[botPlayer]["DPS < Healer"] = addBot
+                                NCRankings.BottomScores[botPlayer]["DPS < Healer"] = addBot
                             end
-                        elseif botVal < self._segment:GetStats(NCRuntime:GetGroupTank(), "DPS") then
-                            addBot = addBot + self.Configuration.Increments.Metrics.DPS.Tank
+                        elseif botVal < NCRankings._segment:GetStats(NCRuntime:GetGroupTank(), "DPS") then
+                            addBot = addBot + NCRankings.Configuration.Increments.Metrics.DPS.BelowTankIncrement
 
                             -- Add the scores for explanation on top / bottom placement(s)
-                            if self.BottomScores[botPlayer] == nil then
-                                self.BottomScores[botPlayer] = {
+                            if NCRankings.BottomScores[botPlayer] == nil then
+                                NCRankings.BottomScores[botPlayer] = {
                                     ["DPS < Tank"] = addBot,
                                 }
                             else
-                                self.BottomScores[botPlayer]["DPS < Tank"] = addBot
+                                NCRankings.BottomScores[botPlayer]["DPS < Tank"] = addBot
                             end
                         end
 
-                        if self.All and self.All["DPS"] then
-                            order = GetKeysSortedByValue(self.All["DPS"], function(a, b) return a < b end)
-                            secondItemLevel = NemesisChat:GetItemLevel(order[#order-1]) or 0
+                        if NCRankings.All and NCRankings.All["DPS"] then
+                            order = GetKeysSortedByValue(NCRankings.All["DPS"], function(a, b) return a < b end)
+
+                            if order and order[#order-1] then
+                                secondItemLevel = NemesisChat:GetItemLevel(order[#order-1]) or 0
+                            end
                         end
 
                         -- If the second player's item level is higher than the top player's, add scores
@@ -278,27 +283,27 @@ NCRankings = {
                             addTop = addTop + 10
 
                             -- The second player is seemingly underperforming
-                            if self.BottomTracker[order[#order-1]] == nil then
-                                self.BottomTracker[order[#order-1]] = 10
+                            if NCRankings.BottomTracker[order[#order-1]] == nil then
+                                NCRankings.BottomTracker[order[#order-1]] = 10
                             else
-                                self.BottomTracker[order[#order-1]] = self.BottomTracker[order[#order-1]] + 10
+                                NCRankings.BottomTracker[order[#order-1]] = NCRankings.BottomTracker[order[#order-1]] + 10
                             end
 
                             -- Add the scores for explanation on top / bottom placement(s)
-                            if self.BottomScores[order[#order-1]] == nil then
-                                self.BottomScores[order[#order-1]] = {
+                            if NCRankings.BottomScores[order[#order-1]] == nil then
+                                NCRankings.BottomScores[order[#order-1]] = {
                                     ["iLvl " .. secondItemLevel .. " DPS < iLvl " .. topItemLevel .. " DPS"] = 10,
                                 }
                             else
-                                self.BottomScores[order[#order-1]]["iLvl " .. secondItemLevel .. " DPS < iLvl " .. topItemLevel .. " DPS"] = 10
+                                NCRankings.BottomScores[order[#order-1]]["iLvl " .. secondItemLevel .. " DPS < iLvl " .. topItemLevel .. " DPS"] = 10
                             end
 
                             -- Deduct from the top player's BottomTracker score
-                            if self.BottomTracker[topPlayer] ~= nil then
-                                if self.BottomTracker[topPlayer] < 10 then
-                                    self.BottomTracker[topPlayer] = nil
+                            if NCRankings.BottomTracker[topPlayer] ~= nil then
+                                if NCRankings.BottomTracker[topPlayer] < 10 then
+                                    NCRankings.BottomTracker[topPlayer] = nil
                                 else
-                                    self.BottomTracker[topPlayer] = self.BottomTracker[topPlayer] - 10
+                                    NCRankings.BottomTracker[topPlayer] = NCRankings.BottomTracker[topPlayer] - 10
                                 end
                             end
                         end
@@ -474,7 +479,7 @@ NCRankings = {
 
                 -- Additive increments
                 if self.Configuration.Increments.Metrics[metricKey] and self.Configuration.Increments.Metrics[metricKey].AdditiveCallback then
-                    local addTop, addBot = self.Configuration.Increments.Metrics[metricKey].AdditiveCallback(self, topPlayer, botPlayer, topVal, botVal)
+                    local addTop, addBot = self.Configuration.Increments.Metrics[metricKey]:AdditiveCallback(topPlayer, botPlayer, topVal, botVal)
 
                     topIncrement = topIncrement + addTop
                     bottomIncrement = bottomIncrement + addBot
@@ -644,18 +649,16 @@ NCRankings = {
 
         local val = self._segment:GetStats(playerName, metricKey) or 0
 
-        if type(val) == "number" then
-            if val > topVal then
-                topVal = val
-                topPlayer = playerName
-            elseif val == topVal then
-                topPlayer = playerName
-            elseif val < botVal then
-                botVal = val
-                botPlayer = playerName
-            elseif val == botVal then
-                botPlayer = playerName
-            end
+        if val > topVal then
+            topVal = val
+            topPlayer = playerName
+        elseif val == topVal then
+            topPlayer = playerName
+        elseif val < botVal then
+            botVal = val
+            botPlayer = playerName
+        elseif val == botVal then
+            botPlayer = playerName
         end
 
         return topVal, botVal, topPlayer, botPlayer

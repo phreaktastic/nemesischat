@@ -38,6 +38,10 @@ function NemesisChat:SlashCommand(msg)
 	elseif msg:trim() == "debugclass" then
 		local playerClass, englishClass = UnitClass("player")
 		ChatFrame1:AddMessage('Your player is a : ' .. playerClass .. '; ' .. englishClass .. '.')
+	elseif msg:trim() == "debugcalc" then
+		local test1, test2 = NCCombat.Rankings.Configuration.Increments.Metrics["DPS"].AdditiveCallback(NCCombat.Rankings, "Glaivetastic", "None", 837462, 12843)
+
+		NemesisChat:Print("TEST1: " .. test1, "TEST2: " .. test2)
 	else
         if core.db.profile.dbg then
             self:Print("Invalid command issued.")

@@ -215,6 +215,12 @@ function NemesisChat:InstantiateEvent()
         end
     end
 
+    -- Same as above, but the death was due to avoidable damage
+    function NCEvent:AvoidableDeath(dest)
+        NCEvent:Death(dest)
+        NCEvent:SetEvent("AVOIDABLE_DEATH")
+    end
+
     -- Set the event's Target based on the input source (SELF|NEMESIS|BYSTANDER), and set a random Bystander/Nemesis if appropriate
     function NCEvent:SetTargetFromSource(source)
         local member = core.runtime.groupRoster[source]

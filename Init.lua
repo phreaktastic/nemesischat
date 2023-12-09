@@ -199,6 +199,14 @@ core.constants.NC_OPERATORS = {
     {
         label = "is overperformer",
         value = "IS_OVERPERFORMER",
+    },
+    {
+        label = "is alive",
+        value = "IS_ALIVE",
+    },
+    {
+        label = "is dead",
+        value = "IS_DEAD",
     }
 }
 core.events = {
@@ -211,6 +219,11 @@ core.events = {
         {
             label = "Death",
             value = "DEATH",
+            options = core.constants.STANDARD
+        },
+        {
+            label = "Death (Avoidable)",
+            value = "AVOIDABLE_DEATH",
             options = core.constants.STANDARD
         },
         {

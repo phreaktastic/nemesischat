@@ -25,7 +25,7 @@ function NCDungeon:StartCallback()
     NCDungeon:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
 
     local keystoneLevel, affixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
-    local name, mapChallengeModeID, timeLimit = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
+    local name, _, _ = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
 
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)

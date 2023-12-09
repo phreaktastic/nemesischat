@@ -209,4 +209,102 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         description = "The name of the target of the spell that was cast.",
         isNumeric = false,
     })
-    
+    :AddReplacement({
+        label = "My Health",
+        value = "HP",
+        exec = function() return NemesisChat:FormatNumber(UnitHealth(GetMyName())) or 0 end,
+        description = "The current health of your character.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        label = "My Max Health",
+        value = "MAXHP",
+        exec = function() return NemesisChat:FormatNumber(UnitHealthMax(GetMyName())) or 0 end,
+        description = "The maximum health of your character.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        label = "My Health %",
+        value = "HPPERCENT",
+        exec = function() return math.floor((UnitHealth(GetMyName()) / UnitHealthMax(GetMyName())) * 100) .. "%" end,
+        description = "The current health percentage of your character.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        label = "Bystander Health",
+        value = "BYSTANDERHP",
+        exec = function() return NemesisChat:FormatNumber(UnitHealth(NCEvent:GetBystander())) or 0 end,
+        description = "The current health of the bystander.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        label = "Bystander Max Health",
+        value = "BYSTANDERMAXHP",
+        exec = function() return NemesisChat:FormatNumber(UnitHealthMax(NCEvent:GetBystander())) or 0 end,
+        description = "The maximum health of the bystander.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        label = "Bystander Health %",
+        value = "BYSTANDERHPPERCENT",
+        exec = function() return math.floor((UnitHealth(NCEvent:GetBystander()) / UnitHealthMax(NCEvent:GetBystander())) * 100) .. "%" end,
+        description = "The current health percentage of the bystander.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        label = "Nemesis Health",
+        value = "NEMESISHP",
+        exec = function() return NemesisChat:FormatNumber(UnitHealth(NCEvent:GetNemesis())) or 0 end,
+        description = "The current health of the Nemesis.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        label = "Nemesis Max Health",
+        value = "NEMESISMAXHP",
+        exec = function() return NemesisChat:FormatNumber(UnitHealthMax(NCEvent:GetNemesis())) or 0 end,
+        description = "The maximum health of the Nemesis.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        label = "Nemesis Health %",
+        value = "NEMESISHPPERCENT",
+        exec = function() return math.floor((UnitHealth(NCEvent:GetNemesis()) / UnitHealthMax(NCEvent:GetNemesis())) * 100) .. "%" end,
+        description = "The current health percentage of the Nemesis.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        value = "HP_CONDITION",
+        exec = function() return UnitHealth(GetMyName()) or 0 end,
+    })
+    :AddReplacement({
+        value = "MAXHP_CONDITION",
+        exec = function() return UnitHealthMax(GetMyName()) or 0 end,
+    })
+    :AddReplacement({
+        value = "HPPERCENT_CONDITION",
+        exec = function() return math.floor((UnitHealth(GetMyName()) / UnitHealthMax(GetMyName())) * 100) end,
+    })
+    :AddReplacement({
+        value = "BYSTANDERHP_CONDITION",
+        exec = function() return UnitHealth(NCEvent:GetBystander()) or 0 end,
+    })
+    :AddReplacement({
+        value = "BYSTANDERMAXHP_CONDITION",
+        exec = function() return UnitHealthMax(NCEvent:GetBystander()) or 0 end,
+    })
+    :AddReplacement({
+        value = "BYSTANDERHPPERCENT_CONDITION",
+        exec = function() return math.floor((UnitHealth(NCEvent:GetBystander()) / UnitHealthMax(NCEvent:GetBystander())) * 100) end,
+    })
+    :AddReplacement({
+        value = "NEMESISHP_CONDITION",
+        exec = function() return UnitHealth(NCEvent:GetNemesis()) or 0 end,
+    })
+    :AddReplacement({
+        value = "NEMESISMAXHP_CONDITION",
+        exec = function() return UnitHealthMax(NCEvent:GetNemesis()) or 0 end,
+    })
+    :AddReplacement({
+        value = "NEMESISHPPERCENT_CONDITION",
+        exec = function() return math.floor((UnitHealth(NCEvent:GetNemesis()) / UnitHealthMax(NCEvent:GetNemesis())) * 100) end,
+    })

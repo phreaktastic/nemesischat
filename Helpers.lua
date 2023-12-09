@@ -293,8 +293,8 @@ function NemesisChat:InitializeHelpers()
 
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
-        local timeStamp, subEvent, _, _, sourceName, _, _, destGuid, destName, _, _, misc1, misc2, misc3, misc4, _, _, _, _, _, _, healAmount = CombatLogGetCurrentEventInfo()
-        local isPull, pullType, pullName, mobName = NemesisChat:IsPull()
+        local _, subEvent, _, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _, healAmount = CombatLogGetCurrentEventInfo()
+        local isPull, _, pullName, mobName = NemesisChat:IsPull()
 
         NemesisChat:SetMyName()
         NemesisChat:UpdateGroupState()
@@ -334,11 +334,27 @@ function NemesisChat:InitializeHelpers()
             end
 
             NCEvent:Death(destName)
+
+            local state = NCRuntime:GetPlayerState(destName)
+
+            if state and state.lastDamageAvoidable then
+                NCEvent:AvoidableDeath(destName)
+
+                if not NCEvent:EventHasMessages() then
+                    NCEvent:Death(destName)
+                end
+            end
         elseif NCEvent:IsDamageEvent(subEvent, destName, misc4) then
             local damage = tonumber(misc4) or 0
+            local state = NCRuntime:GetPlayerState(destName)
+            local isAvoidable = (GTFO and GTFO.SpellID[tostring(misc1)] ~= nil)
 
-            if GTFO and GTFO.SpellID[tostring(misc1)] ~= nil then
+            if isAvoidable then
                 NCSegment:GlobalAddAvoidableDamage(damage, destName)
+            end
+
+            if state then
+                state.lastDamageAvoidable = isAvoidable
             end
         else
             -- Something unsupported.
@@ -818,6 +834,8 @@ function NemesisChat:InitializeHelpers()
             powerType = "",
             lastHeal = GetTime(),
             lastDeltaReport = GetTime(),
+            lastDefensive = GetTime(),
+            lastDamageAvoidable = false,
         }
     end
 
@@ -1107,6 +1125,12 @@ function NemesisChat:InitializeHelpers()
             description = "Dispel"
         elseif bit.band(flags, LibPlayerSpells.constants.SURVIVAL) ~= 0 then
             description = "Defensive"
+
+            local state = NCRuntime:GetPlayerState(sname)
+
+            if state then
+                state.lastDefensive = GetTime()
+            end
         end
 
         NCSegment:GlobalAddActionPoints(1, sname, description)

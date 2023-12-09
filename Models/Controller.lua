@@ -471,5 +471,11 @@ function NemesisChat:InstantiateMsg()
         ["IS_OVERPERFORMER"] = function(val1, val2)
             return NCDungeon:GetOverperformer() == val1
         end,
+        ["IS_ALIVE"] = function(val1, val2)
+            return UnitIsDeadOrGhost(val1) == false
+        end,
+        ["IS_DEAD"] = function(val1, val2)
+            return UnitIsDeadOrGhost(val1) == true
+        end,
     }
 end
