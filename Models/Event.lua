@@ -225,7 +225,7 @@ function NemesisChat:InstantiateEvent()
     function NCEvent:SetTargetFromSource(source)
         local member = core.runtime.groupRoster[source]
 
-        if source == NemesisChat:GetMyName() then 
+        if source == NemesisChat:GetMyName() then
             NCEvent:SetTarget("SELF")
             NCEvent:RandomNemesis()
             NCEvent:RandomBystander()

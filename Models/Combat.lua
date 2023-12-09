@@ -38,7 +38,7 @@ function NCCombat:FinishCallback()
 
     core.runtime.pulledUnits = {}
 
-    NCDungeon.Rankings:Calculate()
+    NCDungeon.Rankings.Calculate(NCDungeon.Rankings)
 
     NCInfo:Update()
     NCInfo.StatsFrame:Show()

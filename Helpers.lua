@@ -293,7 +293,7 @@ function NemesisChat:InitializeHelpers()
 
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
-        local _, subEvent, _, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _, healAmount = CombatLogGetCurrentEventInfo()
+        local _, subEvent, eventType, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _, healAmount = CombatLogGetCurrentEventInfo()
         local isPull, _, pullName, mobName = NemesisChat:IsPull()
 
         NemesisChat:SetMyName()
@@ -320,7 +320,7 @@ function NemesisChat:InitializeHelpers()
         end
 
         -- This could be more modular, the only problem is feasts...
-        if subEvent == "SPELL_INTERRUPT" then
+        if eventType == "SPELL_INTERRUPT" then
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)

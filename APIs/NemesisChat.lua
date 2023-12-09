@@ -86,7 +86,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Bystander Name",
         value = "BYSTANDER",
-        exec = function() return Split(NCEvent:GetBystander(), "-")[1] end,
+        exec = function() return (Split(NCEvent:GetBystander(), "-")[1] or "") end,
         description = "The Bystander's name.",
         isNumeric = false,
     })
@@ -205,7 +205,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Target Name",
         value = "TARGET",
-        exec = function() return Split(NCSpell:GetTarget(), "-")[1] end,
+        exec = function() return (Split(NCSpell:GetTarget(), "-")[1] or "") end,
         description = "The name of the target of the spell that was cast.",
         isNumeric = false,
     })
