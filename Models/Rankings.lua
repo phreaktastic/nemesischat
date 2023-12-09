@@ -200,7 +200,7 @@ NCRankings = {
                         return true
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return 0
+                        return 0, 0
                     end,
                 },
                 Deaths = {
