@@ -32,11 +32,32 @@ NCRankings = {
             -- Top avoidable damage value
             Value = 0,
         },
+        -- Top Crowd Control
+        CrowdControl = {
+            -- Top Crowd Control player
+            Player = nil,
+            -- Top Crowd Control value
+            Value = 0,
+        },
         -- Top deaths
         Deaths = {
             -- Top deaths player
             Player = nil,
             -- Top deaths value
+            Value = 0,
+        },
+        -- Top Defensives 
+        Defensives = {
+            -- Top Defensives player
+            Player = nil,
+            -- Top Defensives value
+            Value = 0,
+        },
+        -- Top Dispells
+        Dispells = {
+            -- Top Dispells player
+            Player = nil,
+            -- Top Dispells value
             Value = 0,
         },
         -- Top DPS
@@ -93,11 +114,44 @@ NCRankings = {
             -- Delta percentage
             DeltaPercent = 0,
         },
+        -- Bottom crowd control
+        CrowdControl = {
+            -- Bottom Crowd Control player
+            Player = nil,
+            -- Bottom Crowd Control value
+            Value = 0,
+            -- Delta number
+            Delta = 0,
+            -- Delta percentage
+            DeltaPercent = 0,
+        },
         -- Bottom deaths
         Deaths = {
             -- Bottom deaths player
             Player = nil,
             -- Bottom deaths value
+            Value = 0,
+            -- Delta number
+            Delta = 0,
+            -- Delta percentage
+            DeltaPercent = 0,
+        },
+        -- Bottom Defensives
+        Defensives = {
+            -- Bottom Defensives player
+            Player = nil,
+            -- Bottom Defensives value
+            Value = 0,
+            -- Delta number
+            Delta = 0,
+            -- Delta percentage
+            DeltaPercent = 0,
+        },
+        -- Bottom Dispells
+        Dispells = {
+            -- Bottom Dispells player
+            Player = nil,
+            -- Bottom Dispells value
             Value = 0,
             -- Delta number
             Delta = 0,
@@ -154,7 +208,10 @@ NCRankings = {
     All = {
         Affixes = {},
         AvoidableDamage = {},
+        CrowdControl = {},
         Deaths = {},
+        Defensives = {},
+        Dispells = {},
         DPS = {},
         Interrupts = {},
         Offheals = {},
@@ -182,8 +239,12 @@ NCRankings = {
                     IsIncludedCallback = function(self, player)
                         return true
                     end,
-                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return (topVal - botVal), (topVal - botVal)
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
+                        local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
+                        local secondFromTop = self.All[metric][order[#order-1]] or botVal
+                        local secondFromBot = self.All[metric][order[2]] or topVal
+                        
+                        return (topVal - secondFromTop), (secondFromBot - botVal)
                     end,
                 },
                 AvoidableDamage = {
@@ -203,12 +264,52 @@ NCRankings = {
                         return 0, 0
                     end,
                 },
+                CrowdControl = {
+                    IsIncludedCallback = function(self, player)
+                        return true
+                    end,
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
+                        local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
+                        local secondFromTop = self.All[metric][order[#order-1]] or botVal
+                        local secondFromBot = self.All[metric][order[2]] or topVal
+                        
+                        return (topVal - secondFromTop), (secondFromBot - botVal)
+                    end,
+                },
                 Deaths = {
                     IsIncludedCallback = function(self, player)
                         return true
                     end,
-                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return (topVal - botVal), (topVal - botVal) * 2
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
+                        local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
+                        local secondFromTop = self.All[metric][order[#order-1]] or botVal
+                        local secondFromBot = self.All[metric][order[2]] or topVal
+                        
+                        return (topVal - secondFromTop), (secondFromBot - botVal) * 2
+                    end,
+                },
+                Defensives = {
+                    IsIncludedCallback = function(self, player)
+                        return true
+                    end,
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
+                        local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
+                        local secondFromTop = self.All[metric][order[#order-1]] or botVal
+                        local secondFromBot = self.All[metric][order[2]] or topVal
+                        
+                        return (topVal - secondFromTop), (secondFromBot - botVal)
+                    end,
+                },
+                Dispells = {
+                    IsIncludedCallback = function(self, player)
+                        return true
+                    end,
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
+                        local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
+                        local secondFromTop = self.All[metric][order[#order-1]] or botVal
+                        local secondFromBot = self.All[metric][order[2]] or topVal
+                        
+                        return (topVal - secondFromTop), (secondFromBot - botVal)
                     end,
                 },
                 DPS = {
@@ -225,7 +326,7 @@ NCRankings = {
                     IsIncludedCallback = function(self, player)
                         return GetRole(player) == "DAMAGER"
                     end,
-                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local topItemLevel = NemesisChat:GetItemLevel(topPlayer)
                         local bottomItemLevel = NemesisChat:GetItemLevel(botPlayer)
 
@@ -326,8 +427,12 @@ NCRankings = {
                         -- Warlock and Druid are excluded
                         return classId ~= 9 and classId ~= 11
                     end,
-                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return (topVal - botVal), (topVal - botVal)
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
+                        local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
+                        local secondFromTop = self.All[metric][order[#order-1]] or botVal
+                        local secondFromBot = self.All[metric][order[2]] or topVal
+                        
+                        return (topVal - secondFromTop), (secondFromBot - botVal)
                     end,
                 },
                 Offheals = {
@@ -343,16 +448,20 @@ NCRankings = {
                         -- Paladin, Priest, Shaman, Monk, Druid, Evoker
                         return classId == 2 or classId == 5 or classId == 7 or classId == 10 or classId == 11 or classId == 13
                     end,
-                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return (topVal - botVal), (topVal - botVal)
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
+                        local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
+                        local secondFromTop = self.All[metric][order[#order-1]] or botVal
+                        local secondFromBot = self.All[metric][order[2]] or topVal
+                        
+                        return (topVal - secondFromTop), (secondFromBot - botVal)
                     end,
                 },
                 Pulls = {
                     IsIncludedCallback = function(self, player)
                         return true
                     end,
-                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal)
-                        return math.floor((topVal - botVal) / 2), math.floor((topVal - botVal) / 2)
+                    AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
+                        return 0, 0
                     end,
                 },
             },
@@ -367,7 +476,10 @@ NCRankings = {
     METRICS = {
         Affixes = true,
         AvoidableDamage = false,
+        CrowdControl = true,
         Deaths = false,
+        Defensives = true,
+        Dispells = true,
         DPS = true,
         Interrupts = true,
         Offheals = true,
@@ -401,13 +513,19 @@ NCRankings = {
             local botVal = 99999999
             local topPlayer = nil
             local botPlayer = nil
-            local myRole = GetRole()
-            local myName = GetMyName()
 
             for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
                 self.All[metricKey][playerName] = (self._segment:GetStats(playerName, metricKey) or nil)
 
                 topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.role, playerName, topVal, botVal, topPlayer, botPlayer)
+            end
+
+            -- It is possible to have someone in the top and bottom for the same metric as they'd be the only one in the pool at all
+            if topPlayer == botPlayer then
+                topPlayer = nil
+                botPlayer = nil
+                topVal = 0
+                botVal = 99999999
             end
 
             if topVal == 0 then
@@ -479,7 +597,7 @@ NCRankings = {
 
                 -- Additive increments
                 if self.Configuration.Increments.Metrics[metricKey] and self.Configuration.Increments.Metrics[metricKey].AdditiveCallback then
-                    local addTop, addBot = self.Configuration.Increments.Metrics[metricKey].AdditiveCallback(self, topPlayer, botPlayer, topVal, botVal)
+                    local addTop, addBot = self.Configuration.Increments.Metrics[metricKey].AdditiveCallback(self, topPlayer, botPlayer, topVal, botVal, metricKey)
 
                     topIncrement = topIncrement + addTop
                     bottomIncrement = bottomIncrement + addBot

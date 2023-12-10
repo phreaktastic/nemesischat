@@ -42,6 +42,15 @@ NCConfig = {
     SetNonCombatMode = function(self, value)
         core.db.profile.nonCombatMode = value
     end,
+    IsInterruptException = function(self)
+        return core.db.profile.interruptException
+    end,
+    ToggleInterruptException = function(self)
+        core.db.profile.interruptException = not core.db.profile.interruptException
+    end,
+    SetInterruptException = function(self, value)
+        core.db.profile.interruptException = value
+    end,
     IsAIEnabled = function(self)
         return core.db.profile.ai
     end,

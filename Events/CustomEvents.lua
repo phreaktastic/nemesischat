@@ -13,8 +13,8 @@ local _, core = ...;
 
 function NemesisChat:HandleEvent()
     -- Exit if we're not in a group, the event is not supported, config isn't setup, etc.
-	if NemesisChat:ShouldExitEventHandler() then 
-        return 
+	if NemesisChat:ShouldExitEventHandler() then
+        return
     end
 
     -- Try to pull a configured message first

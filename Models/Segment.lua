@@ -51,11 +51,17 @@ NCSegment = {
     -- Avoidable damage tracker for the segment
     AvoidableDamage = {},
 
+    -- Crowd control tracker for the segment
+    CrowdControl = {},
+
     -- Death tracker for the segment
     Deaths = {},
 
     -- Defensive tracker for the segment
     Defensives = {},
+
+    -- Dispell tracker for the segment
+    Dispells = {},
 
     -- Heal tracker for the segment
     Heals = {},
@@ -243,6 +249,33 @@ NCSegment = {
     AddAvoidableDamageCallback = function(self, amount, player)
         -- Override me
     end,
+    GetCrowdControls = function(self, player)
+        if player == nil then
+            return self.CrowdControl
+        end
+        
+        if self.CrowdControl[player] == nil then
+            self.CrowdControl[player] = 0
+        end
+
+        return self.CrowdControl[player]
+    end,
+    AddCrowdControl = function(self, player)
+        if player == nil then
+            return
+        end
+
+        if self.CrowdControl[player] == nil then
+            self.CrowdControl[player] = 1
+        else
+            self.CrowdControl[player] = self.CrowdControl[player] + 1
+        end
+
+        self:AddCrowdControlCallback(player)
+    end,
+    AddCrowdControlCallback = function(self, player)
+        -- Override me
+    end,
     GetDeaths = function(self, player)
         if player == nil then
             return self.Deaths
@@ -295,6 +328,33 @@ NCSegment = {
         self:AddDefensiveCallback(player)
     end,
     AddDefensiveCallback = function(self, player)
+        -- Override me
+    end,
+    GetDispells = function(self, player)
+        if player == nil then
+            return self.Dispells
+        end
+        
+        if self.Dispells[player] == nil then
+            self.Dispells[player] = 0
+        end
+
+        return self.Dispells[player]
+    end,
+    AddDispell = function(self, player)
+        if player == nil then
+            return
+        end
+
+        if self.Dispells[player] == nil then
+            self.Dispells[player] = 1
+        else
+            self.Dispells[player] = self.Dispells[player] + 1
+        end
+
+        self:AddDispellCallback(player)
+    end,
+    AddDispellCallback = function(self, player)
         -- Override me
     end,
     GetHeals = function(self, player)
@@ -459,8 +519,14 @@ NCSegment = {
             return self:GetAffixes(playerName)
         elseif metric == "AvoidableDamage" then
             return self:GetAvoidableDamage(playerName)
+        elseif metric == "CrowdControl" then
+            return self:GetCrowdControls(playerName)
         elseif metric == "Deaths" then
             return self:GetDeaths(playerName)
+        elseif metric == "Defensives" then
+            return self:GetDefensives(playerName)
+        elseif metric == "Dispells" then
+            return self:GetDispells(playerName)
         elseif metric == "Interrupts" then
             return self:GetInterrupts(playerName)
         elseif metric == "OffHeals" then
@@ -524,6 +590,17 @@ NCSegment = {
             
         end
     end,
+    GlobalAddCrowdControl = function(self, player)
+        if player == nil then
+            return
+        end
+
+        for _, segment in pairs(NCSegment.Segments) do
+            if segment:IsActive() then
+                segment:AddCrowdControl(player)
+            end
+        end
+    end,
     GlobalAddDeath = function(self, player)
         if player == nil then
             return
@@ -542,6 +619,15 @@ NCSegment = {
 
         for _, segment in pairs(NCSegment.Segments) do
             segment:AddDefensive(player)
+        end
+    end,
+    GlobalAddDispell = function(self, player)
+        if player == nil then
+            return
+        end
+
+        for _, segment in pairs(NCSegment.Segments) do
+            segment:AddDispell(player)
         end
     end,
     GlobalAddHeals = function(self, amount, source, target)

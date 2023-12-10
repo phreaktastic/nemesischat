@@ -198,15 +198,15 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Spell Name",
         value = "SPELL",
-        exec = function() return NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or "Spell" end,
-        description = "The name of the spell that was cast.",
+        exec = function() if NCEvent:GetEvent() == "INTERRUPT" then return (NCSpell:GetExtraSpellLink() or "Spell") else return (NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or "Spell") end end,
+        description = "The name of the spell that was cast or interrupted.",
         isNumeric = false,
     })
     :AddReplacement({
         label = "Target Name",
         value = "TARGET",
         exec = function() return (Split(NCSpell:GetTarget(), "-")[1] or "") end,
-        description = "The name of the target of the spell that was cast.",
+        description = "The name of the target of the spell that was cast or interrupted.",
         isNumeric = false,
     })
     :AddReplacement({

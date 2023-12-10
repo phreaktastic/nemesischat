@@ -129,7 +129,7 @@ function NemesisChat:InstantiateMsg()
 
         -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
         -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
-        if core.db.profile.nonCombatMode and NCCombat:IsActive() and (NCEvent:GetCategory() ~= "BOSS" or NCEvent:GetEvent() ~= "START") then
+        if core.db.profile.nonCombatMode and NCCombat:IsActive() and not NCController:IsNonCombatModeException() then
             NCEvent:Initialize()
             return
         end
@@ -143,6 +143,18 @@ function NemesisChat:InstantiateMsg()
         end
 
         NCRuntime:UpdateLastMessage()
+    end
+
+    function NCController:IsNonCombatModeException()
+        if NCEvent:GetCategory() == "BOSS" and NCEvent:GetEvent() == "START" then
+            return true
+        end
+
+        if NCEvent:GetEvent() == "INTERRUPT" and NCConfig:IsInterruptException() then
+            return true
+        end
+
+        return false
     end
 
     -- Group join events are an exception to the minimum time rule

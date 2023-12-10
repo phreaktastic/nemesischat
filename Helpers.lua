@@ -320,7 +320,7 @@ function NemesisChat:InitializeHelpers()
         end
 
         -- This could be more modular, the only problem is feasts...
-        if eventType == "SPELL_INTERRUPT" then
+        if subEvent == "SPELL_INTERRUPT" then
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)
@@ -1121,8 +1121,12 @@ function NemesisChat:InitializeHelpers()
 
         if bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
             description = "Crowd control"
+
+            NCSegment:GlobalAddCrowdControl(sname)
         elseif bit.band(flags, LibPlayerSpells.constants.DISPEL) ~= 0 then
             description = "Dispel"
+
+            NCSegment:GlobalAddDispell(sname)
         elseif bit.band(flags, LibPlayerSpells.constants.SURVIVAL) ~= 0 then
             description = "Defensive"
 
@@ -1131,6 +1135,8 @@ function NemesisChat:InitializeHelpers()
             if state then
                 state.lastDefensive = GetTime()
             end
+
+            NCSegment:GlobalAddDefensive(sname)
         end
 
         NCSegment:GlobalAddActionPoints(1, sname, description)

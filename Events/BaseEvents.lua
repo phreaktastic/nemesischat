@@ -50,7 +50,7 @@ end
 
 function NemesisChat:ENCOUNTER_END(_, encounterID, encounterName, difficultyID, groupSize, success, fightTime)
     NCEvent:Initialize()
-    NCBoss:Finish(success)
+    NCBoss:Finish(success == 1)
     NemesisChat:HandleEvent()
     NemesisChat:Report("BOSS")
 end
