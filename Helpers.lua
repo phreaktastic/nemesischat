@@ -967,9 +967,9 @@ function NemesisChat:InitializeHelpers()
 
                     local validDamage = type(itype) == "number" and itype > 0
                     local classification = UnitClassification(dguid)
-                    local isNotTrivial = classification ~= "trivial" and classification ~= "minus"
+                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and UnitCanAttack("player", dguid)
 
-					if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isNotTrivial then
+					if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
                         -- Fire off a pull event -- player attacked a mob!
 
                         return true, "PLAYER_ATTACK", sname, dname
@@ -984,9 +984,9 @@ function NemesisChat:InitializeHelpers()
                     end
 
                     local classification = UnitClassification(sguid)
-                    local isNotTrivial = classification ~= "trivial" and classification ~= "minus"
+                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and UnitCanAttack("player", sguid)
 
-                    if NemesisChat:UnitIsNotPulled(sguid) and isNotTrivial then
+                    if NemesisChat:UnitIsNotPulled(sguid) and isEliteEnemy then
                         -- Fire off a butt-pull event -- mob attacked a player!
 
                         return true, "PLAYER_PULL", dname, sname
@@ -1002,9 +1002,9 @@ function NemesisChat:InitializeHelpers()
 
                     local validDamage = type(itype) == "number" and itype > 0
                     local classification = UnitClassification(dguid)
-                    local isNotTrivial = classification ~= "trivial" and classification ~= "minus"
+                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and UnitCanAttack("player", dguid)
 					    
-                    if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isNotTrivial then
+                    if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
                         -- Fire off a pet pull event -- player's pet attacked a mob!
 
                         return true, "PET_ATTACK", pullname, dname

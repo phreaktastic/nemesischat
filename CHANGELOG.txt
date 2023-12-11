@@ -1,79 +1,43 @@
 # 🎯 Key Changes
 
+- New UI with stats and the ability to report as desired.
+- New trackers:
+   - Crowd control
+   - Defensives
+   - Dispells
+- New replacements, events, conditions, etc.
+- Performance tracking which will attempt to rank players within the group based on:
+   - DPS (for DPS only)
+      - Tracks when a DPS is lower than tank and/or healer DPS
+      - Tracks when a DPS is significantly lower / higher than others in the group
+   - Affixes
+      - Attempts to understand which classes / specs should be exempt 
+      - Scoring based on handling affixes (CCing souls counts, for example)
+   - Avoidable Damage
+   - Crowd Control
+   - Deaths
+   - Usage of defensive abilities
+   - Dispells
+   - Interrupts
+   - Offheals
+   - Butt pulls
+   - And more!
+- Overperformer and underperformer tracking
+   - Ability to store in permanent DB
+   - DB synchronization with other players
+   - Reporting for when someone joins who was marked as either over/under performing recently
+   - Based on scoring of all of the above metrics
+   - Smart scoring -- for example, a Resto Druid will not be negatively scored for a lack of **interrupts** (yes, they can disrupt / CC)
+
+
 ## 📢 Summary
 
-**1.8.x**: Things are spicing up with M+ leaver detection and low performer detection! 
-
-**1.7.x**: Hazardous Pull reporting? Neglected Heals reporting? Yes please! Oh, and more replacement tags, revamped reports config, new off-heals report, etc!
-
-**1.6.x**: Lots of new replacement tags and condition subjects. Added a `Flag Friends as Nemeses` option -- if anyone in your group is on your friends list, they'll be flagged as a Nemesis.
+**2.0.0**: Fresh release.
 
 ## 🩹 Patches
 
-- **1.8.7**: 10.1.7 support.
-- **1.8.6**: One more fix for name logic which has been throwing errors.
-- **1.8.5**: Fix for name logic which was sometimes causing issues due to a race condition.
-- **1.8.4**: More bug fixes and groundwork for next version.
-- **1.8.3**: Bug fixes and groundwork for next version.
-- **1.8.2**: Bursting logic for affixes.
-- **1.8.1**: Pull announcements were getting a little loud during boss fights (first boss on NL for example). They will no longer occur during boss fights. This will likely be configurable once this feature is out of beta.
+None, 2.0.0 is fresh!
 
 ## ⭐ Latest Versions
 
-### 1.8.0
-
-- Nemesis prioritization for scenarios where more than one message is retrieved for an event.
-- Beta features: hardening and optimization -- they're very close to full release state!
-- Enable / disable messages for APIs.
-- M+ early leaver storage and sync
-   - Leavers will now be logged in a persistent DB.
-   - Leavers will be synced between players in-game.
-- M+ low performers storage and sync
-   - Low performers will now be logged in a persistent DB.
-   - Low performers will be synced between players in-game.
-   - Low performers are currently defined as:
-      - At least 2 spots in the bottom (bottom affixes / DPS (non-DPS exempt) / offheals, most pulls (tank exempt) / deaths / avoidable damage).
-         - Deaths are taken fairly lightly, as that can be due to any number of reasons. Deaths are primarily examined base on how much avoidable damage was taken.
-      - Within those spots on the bottom, there must be a difference of >= 30% between them and the top for said metric.
-- Fix for dungeon keystone level.
-- Lots of new stuff behind the scenes, paving the way for some really awesome future features!
-
-### 1.7.0
-
-- New `Flag Guildmates as Nemeses` option
-- Two new conditions, `is guildmate` and `NOT guildmate`
-- More enhancements across the configuration screen
-- New Off-Heals reports
-- New dungeon completion Deaths report
-   - Includes the amount of avoidable damage they took throughout the dungeon
-   - If the amount of avoidable damage taken is excessive, the report will also include an amount relative to their life ("*6.25M avoidable damage (10.88x their max health)*") 😈
-- Report channel selection in configuration
-- Revamped all segments, normalized all data, and exposed a few more replacements in the process
-- **(Beta) pull reporting**: This feature will announce seemingly unintentional / hazardous pulls
-   - Tanks are not included
-   - This is not precise as Blizzard does not expose great ways of doing this
-   - It currently only reports in real-time, and as a yell
-   - More options to come as this feature matures
-- **(Beta) neglected heals reporting**: This feature will announce when (non-healer) players have been at or below 60% health without receiving a (non-self) heal
-   - This feature also only reports in real-time, and as a yell
-   - Once again, more options to come as this feature matures
-- **(Beta) affix tracking and reporting**: This feature contains both announcements and reports:
-   - Announce when affix mobs begin casting (if enabled)
-   - Announce when affix mobs successfully cast (if enabled)
-   - Announce when affix mobs are interrupted **but not incapacitated/dead** (if enabled)
-   - Top and bottom affixes handled reporting for boss fights and end of dungeon (if enabled)
-
-### 1.6.0
-
-- Added new option, `Flag Friends as Nemeses`: When enabled, anyone in your group who is on your friends list will be flagged as a Nemesis.
-- Normalized all replacement tags by adding missing Bystander replacement tags
-- New condition subjects
-   - Nemesis
-   - Bystander
-   - Boss Name
-   - Keystone Level
-- New condition operators:
-   - Is friend (currently only available on Bystander, Nemesis, and Spell Target)
-   - NOT friend (currently only available on Bystander, Nemesis, and Spell Target)
-- Migration from hardcoded core functionality to new API flow
-- UI clean up
+### 2.0.0

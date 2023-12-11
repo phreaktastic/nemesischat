@@ -429,8 +429,8 @@ NCRankings = {
                     IsIncludedCallback = function(self, player)
                         local _, classId = UnitClassBase(player)
 
-                        -- Warlock and Druid are excluded
-                        return classId ~= 9 and classId ~= 11
+                        -- Priest and Druid are excluded
+                        return classId ~= 5 and classId ~= 11
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
