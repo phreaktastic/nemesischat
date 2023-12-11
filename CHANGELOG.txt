@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.8.7**: 10.1.7 support.
 - **1.8.6**: One more fix for name logic which has been throwing errors.
 - **1.8.5**: Fix for name logic which was sometimes causing issues due to a race condition.
 - **1.8.4**: More bug fixes and groundwork for next version.
