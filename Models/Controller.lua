@@ -154,6 +154,10 @@ function NemesisChat:InstantiateMsg()
             return true
         end
 
+        if NCEvent:GetEvent() == "DEATH" and NCConfig:IsDeathException() then
+            return true
+        end
+
         return false
     end
 

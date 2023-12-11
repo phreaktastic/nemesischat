@@ -51,6 +51,15 @@ NCConfig = {
     SetInterruptException = function(self, value)
         core.db.profile.interruptException = value
     end,
+    IsDeathException = function(self)
+        return core.db.profile.deathException
+    end,
+    ToggleDeathException = function(self)
+        core.db.profile.deathException = not core.db.profile.deathException
+    end,
+    SetDeathException = function(self, value)
+        core.db.profile.deathException = value
+    end,
     IsAIEnabled = function(self)
         return core.db.profile.ai
     end,

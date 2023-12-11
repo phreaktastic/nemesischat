@@ -296,6 +296,11 @@ NCRankings = {
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
                         local secondFromTop = self.All[metric][order[#order-1]] or botVal
                         local secondFromBot = self.All[metric][order[2]] or topVal
+                        local topPlayerInfo = NCRuntime:GetGroupRosterPlayer(topPlayer)
+
+                        if topPlayerInfo and topPlayerInfo.role == "TANK" then
+                            return 0, (secondFromBot - botVal)
+                        end
                         
                         return (topVal - secondFromTop), (secondFromBot - botVal)
                     end,
@@ -520,7 +525,7 @@ NCRankings = {
                 topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.role, playerName, topVal, botVal, topPlayer, botPlayer)
             end
 
-            -- It is possible to have someone in the top and bottom for the same metric as they'd be the only one in the pool at all
+            -- It is possible to have someone in the top and bottom if they're the only one in the pool
             if topPlayer == botPlayer then
                 topPlayer = nil
                 botPlayer = nil

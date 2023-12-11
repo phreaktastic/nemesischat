@@ -154,7 +154,7 @@ NCInfo = {
             end
 
             for metric, reason in pairs(reasonArray) do
-                reasons = reasons .. metric .. ": +" .. reason .. " points (abnormally high performance)\n"
+                reasons = reasons .. metric .. ": " .. reason .. " points.\n"
             end
 
             GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
@@ -171,7 +171,13 @@ NCInfo = {
                 return
             end
 
-            local message = "Nemesis Chat: " .. highPerformer .. " is dramatically outperforming the group."
+            local message
+
+            if NCDungeon:IsActive() then
+                message = "Nemesis Chat: " .. highPerformer .. " is dramatically outperforming the group."
+            else
+                message = "Nemesis Chat: " .. highPerformer .. " dramatically outperformed the group."
+            end
 
             if highPerformer ~= nil then
                 SendChatMessage(message, "PARTY")
@@ -223,7 +229,7 @@ NCInfo = {
             end
 
             for metric, reason in pairs(reasonArray) do
-                reasons = reasons .. metric .. ": -" .. reason .. " points (abnormally poor performance)\n"
+                reasons = reasons .. metric .. ": " .. reason .. " points.\n"
             end
 
             GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
@@ -240,7 +246,13 @@ NCInfo = {
                 return
             end
 
-            local message = "Nemesis Chat: " .. lowPerformer .. " is dramatically underperforming."
+            local message
+
+            if NCDungeon:IsActive() then
+                message = "Nemesis Chat: " .. lowPerformer .. " is dramatically underperforming."
+            else
+                message = "Nemesis Chat: " .. lowPerformer .. " dramatically underperformed."
+            end
 
             if lowPerformer ~= nil then
                 SendChatMessage(message, "PARTY")

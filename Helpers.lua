@@ -906,7 +906,7 @@ function NemesisChat:InitializeHelpers()
         if NemesisChat:IsHealerAlive() and NemesisChat:GetHealer() ~= playerName then
             local lastHealDelta = math.floor((GetTime() - player.lastHeal) * 100) / 100
 
-            if not UnitIsDead(playerName) and player.healthPercent <= 60 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
+            if not UnitIsDead(playerName) and player.healthPercent <= 45 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
                 SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds!", "YELL")
                 player.lastDeltaReport = GetTime()
             end
