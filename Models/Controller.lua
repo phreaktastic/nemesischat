@@ -225,8 +225,8 @@ function NemesisChat:InstantiateMsg()
         else
             -- If we have more than one message that is available for an event, prioritize Nemesis based messages
             local nemesisMsg
-            
-            for _, aMsg in pairs(availableMessages) do
+
+            for _, aMsg in pairs(ShuffleTable(availableMessages)) do
                 if string.find(aMsg.message, "%[(NEMESIS)[A-Za-z]*%]") ~= nil then
                     nemesisMsg = aMsg
                     break
@@ -241,7 +241,7 @@ function NemesisChat:InstantiateMsg()
         end
 
         -- Roll the message chance
-        if not NemesisChat:Roll(msg.chance) then
+        if (msg.chance < 1.0 and not NemesisChat:Roll(msg.chance)) or msg.chance == 0.0 then
             NCEvent:Initialize()
             return
         end
@@ -294,8 +294,8 @@ function NemesisChat:InstantiateMsg()
     end
 
     function NCController:CheckAllConditions(message)
-        local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_NEMESIS" and NCEvent:GetTarget() == "SELF")
-        local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_BYSTANDER" and NCEvent:GetTarget() == "SELF")
+        local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_NEMESIS" and (NCEvent:GetTarget() == "SELF" or NCEvent:GetTarget() == "NA"))
+        local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_BYSTANDER" and (NCEvent:GetTarget() == "SELF" or NCEvent:GetTarget() == "NA"))
 
         if includesNemesis and not NemesisChat:HasPartyNemeses() then
             return false
