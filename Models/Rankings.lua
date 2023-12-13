@@ -246,11 +246,14 @@ NCRankings = {
                         
                         return (topVal - secondFromTop), (secondFromBot - botVal)
                     end,
+                    AdditiveTopMaximum = 6,
+                    AdditiveBotMaximum = 10,
                 },
                 AvoidableDamage = {
                     TopDeltaBreakpoints = {
                         [200] = 20,
                         [100] = 10,
+                        [50] = 5,
                     },
                     BottomDeltaBreakpoints = {
                         [200] = 3,
@@ -273,8 +276,10 @@ NCRankings = {
                         local secondFromTop = self.All[metric][order[#order-1]] or botVal
                         local secondFromBot = self.All[metric][order[2]] or topVal
                         
-                        return (topVal - secondFromTop), (secondFromBot - botVal)
+                        return (topVal - secondFromTop), (secondFromBot - botVal) * 2
                     end,
+                    AdditiveTopMaximum = 6,
+                    AdditiveBotMaximum = 12,
                 },
                 Deaths = {
                     IsIncludedCallback = function(self, player)
@@ -290,7 +295,7 @@ NCRankings = {
                 },
                 Defensives = {
                     IsIncludedCallback = function(self, player)
-                        return true
+                        return GetRole(player) ~= "TANK"
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
@@ -316,6 +321,8 @@ NCRankings = {
                         
                         return (topVal - secondFromTop), (secondFromBot - botVal)
                     end,
+                    AdditiveTopMaximum = 6,
+                    AdditiveBotMaximum = 10,
                 },
                 DPS = {
                     TopDeltaBreakpoints = {
@@ -430,7 +437,7 @@ NCRankings = {
                         local _, classId = UnitClassBase(player)
 
                         -- Priest and Druid are excluded
-                        return classId ~= 5 and classId ~= 11
+                        return classId ~= 5 and classId ~= 11 and GetRole(player) == "DAMAGER"
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
@@ -439,6 +446,8 @@ NCRankings = {
                         
                         return (topVal - secondFromTop), (secondFromBot - botVal)
                     end,
+                    AdditiveTopMaximum = 6,
+                    AdditiveBotMaximum = 10,
                 },
                 Offheals = {
                     IsIncludedCallback = function(self, player)
@@ -604,6 +613,18 @@ NCRankings = {
                 if self.Configuration.Increments.Metrics[metricKey] and self.Configuration.Increments.Metrics[metricKey].AdditiveCallback then
                     local addTop, addBot = self.Configuration.Increments.Metrics[metricKey].AdditiveCallback(self, topPlayer, botPlayer, topVal, botVal, metricKey)
 
+                    if self.Configuration.Increments.Metrics[metricKey].AdditiveTopMaximum ~= nil then
+                        if addTop > self.Configuration.Increments.Metrics[metricKey].AdditiveTopMaximum then
+                            addTop = self.Configuration.Increments.Metrics[metricKey].AdditiveTopMaximum
+                        end
+                    end
+
+                    if self.Configuration.Increments.Metrics[metricKey].AdditiveBotMaximum ~= nil then
+                        if addBot > self.Configuration.Increments.Metrics[metricKey].AdditiveBotMaximum then
+                            addBot = self.Configuration.Increments.Metrics[metricKey].AdditiveBotMaximum
+                        end
+                    end
+
                     topIncrement = topIncrement + addTop
                     bottomIncrement = bottomIncrement + addBot
                 end
@@ -692,8 +713,8 @@ NCRankings = {
     -- Get the under performer, if there is one
     GetUnderperformer = function(self)
         local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
-        local firstScore = (self.BottomTracker[players[1]] or 0) + (self._segment:GetActionPointsAmount(players[1]) or 0)
-        local secondScore = (self.BottomTracker[players[2]] or 0) + (self._segment:GetActionPointsAmount(players[2]) or 0)
+        local firstScore = (self.BottomTracker[players[1]] or 0) - (self._segment:GetActionPointsAmount(players[1]) or 0)
+        local secondScore = (self.BottomTracker[players[2]] or 0) - (self._segment:GetActionPointsAmount(players[2]) or 0)
 
         -- If the next lowest performer is within 10 points of the lowest performer, return nil
         if secondScore >= firstScore - 10 or firstScore < 10 then
@@ -736,8 +757,9 @@ NCRankings = {
         end
 
         local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
+        local score = (self.TopTracker[players[1]] or 0) - (self._segment:GetActionPointsAmount(players[1]) or 0)
 
-        return players[1], self.BottomTracker[players[1]]
+        return players[1], score
     end,
 
     -- Get all (bad) metrics for a player, looking in self.Top if the metric value is true, and self.Bottom if it is false. 

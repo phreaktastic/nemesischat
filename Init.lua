@@ -76,7 +76,7 @@ function IsNCEnabled()
 end
 
 function GetRole(player)
-    local role 
+    local role
 
     if player == nil or player == GetMyName() then
         role = UnitGroupRolesAssigned("player")
@@ -120,6 +120,18 @@ function Split(str, sep)
 
     return result
  end
+
+ function ShuffleTable(t)
+    local tbl = {}
+    for i = 1, #t do
+      tbl[i] = t[i]
+    end
+    for i = #tbl, 2, -1 do
+      local j = math.random(i)
+      tbl[i], tbl[j] = tbl[j], tbl[i]
+    end
+    return tbl
+  end
 
 -----------------------------------------------------
 -- Core options
@@ -315,6 +327,13 @@ core.messageConditions = {
         options = DeepCopy(core.roles),
     },
     {
+        label = "Bystander Role",
+        value = "BYSTANDER_ROLE",
+        operators = core.constants.OPERATORS,
+        type = "SELECT",
+        options = DeepCopy(core.roles),
+    },
+    {
         label = "Spell ID",
         value = "SPELL_ID",
         operators = core.constants.OPERATORS,
@@ -357,6 +376,12 @@ core.messageConditions = {
         type = "NUMBER", 
     },
     {
+        label = "Bys. Interrupts (Combat)",
+        value = "BYSTANDER_INTERRUPTS",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "NUMBER", 
+    },
+    {
         label = "My Interrupts (Overall)",
         value = "INTERRUPTS_OVERALL",
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
@@ -367,6 +392,30 @@ core.messageConditions = {
         value = "NEMESIS_INTERRUPTS_OVERALL",
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
         type = "NUMBER", 
+    },
+    {
+        label = "Bys. Interrupts (Overall)",
+        value = "BYSTANDER_INTERRUPTS_OVERALL",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "NUMBER", 
+    },
+    {
+        label = "My Health %",
+        value = "HEALTH_PERCENT",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "NUMBER",
+    },
+    {
+        label = "Nem. Health %",
+        value = "NEMESIS_HEALTH_PERCENT",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "NUMBER",
+    },
+    {
+        label = "Bys. Health %",
+        value = "BYSTANDER_HEALTH_PERCENT",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        type = "NUMBER",
     },
 }
 

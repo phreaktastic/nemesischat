@@ -210,7 +210,7 @@ function NemesisChat:InstantiateMsg()
         local msg = ""
 
         -- Ensure conditions are met on all messages
-        local availableMessages = NCController:GetConditionalMessages(profileMessages)
+        local availableMessages = NCController:GetConditionalMessages(ShuffleTable(profileMessages))
 
         if availableMessages == nil then
             NCEvent:Initialize()
@@ -390,7 +390,10 @@ function NemesisChat:InstantiateMsg()
     NCController.Condition = {
         -- Subjects
         ["NEMESIS_ROLE"] = function()
-            return NCRuntime:GetGroupRosterPlayer(NCEvent:GetNemesis()).role
+            return GetRole(NCEvent:GetNemesis())
+        end,
+        ["BYSTANDER_ROLE"] = function()
+            return GetRole(NCEvent:GetBystander())
         end,
         ["SPELL_ID"] = function()
             -- Return as string so input comparisons work properly
@@ -424,6 +427,26 @@ function NemesisChat:InstantiateMsg()
         ["NEMESIS_INTERRUPTS_OVERALL"] = function()
             -- Return as string so input comparisons work properly
             return NCDungeon:GetInterrupts(NCEvent:GetNemesis()) .. ""
+        end,
+        ["BYSTANDER_INTERRUPTS"] = function()
+            -- Return as string so input comparisons work properly
+            return NCCombat:GetInterrupts(NCEvent:GetBystander()) .. ""
+        end,
+        ["BYSTANDER_INTERRUPTS_OVERALL"] = function()
+            -- Return as string so input comparisons work properly
+            return NCDungeon:GetInterrupts(NCEvent:GetBystander()) .. ""
+        end,
+        ["HEALTH_PERCENT"] = function()
+            -- Return as string so input comparisons work properly
+            return math.floor((UnitHealth(GetMyName()) / UnitHealthMax(GetMyName())) * 100) .. ""
+        end,
+        ["NEMESIS_HEALTH_PERCENT"] = function()
+            -- Return as string so input comparisons work properly
+            return math.floor((UnitHealth(NCEvent:GetNemesis()) / UnitHealthMax(NCEvent:GetNemesis())) * 100) .. ""
+        end,
+        ["BYSTANDER_HEALTH_PERCENT"] = function()
+            -- Return as string so input comparisons work properly
+            return math.floor((UnitHealth(NCEvent:GetBystander()) / UnitHealthMax(NCEvent:GetBystander())) * 100) .. ""
         end,
 
         -- Operators
