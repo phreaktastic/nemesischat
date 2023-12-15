@@ -293,7 +293,7 @@ function NemesisChat:InitializeHelpers()
 
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
-        local _, subEvent, eventType, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _, healAmount = CombatLogGetCurrentEventInfo()
+        local _, subEvent, eventType, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _ = CombatLogGetCurrentEventInfo()
         local isPull, _, pullName, mobName = NemesisChat:IsPull()
 
         NemesisChat:SetMyName()
@@ -325,7 +325,7 @@ function NemesisChat:InitializeHelpers()
         elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)
         elseif subEvent == "SPELL_HEAL" then
-            NCEvent:Heal(sourceName, destName, misc1, misc2, healAmount)
+            NCEvent:Heal(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "PARTY_KILL" then
             NCEvent:Kill(sourceName, destName)
         elseif subEvent == "UNIT_DIED" then
