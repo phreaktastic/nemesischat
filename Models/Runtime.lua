@@ -317,6 +317,11 @@ NCRuntime = {
     RemoveGroupRosterPlayer = function(self, playerName)
         core.runtime.groupRoster[playerName] = nil
         core.runtime.groupRosterCount = core.runtime.groupRosterCount - 1
+
+        if NCInfo.CurrentPlayer == playerName then
+            NCInfo.CurrentPlayer = GetMyName()
+            NCInfo:UpdatePlayerDropdown()
+        end
     end,
     AddGroupRosterPlayer = function(self, playerName, data)
         core.runtime.groupRoster[playerName] = data
@@ -327,6 +332,8 @@ NCRuntime = {
         elseif data.role == "HEALER" then
             core.runtime.groupHealer = playerName
         end
+
+        NCInfo:UpdatePlayerDropdown()
     end,
     GetPulledUnits = function(self)
         return core.runtime.pulledUnits

@@ -1137,6 +1137,8 @@ function NemesisChat:InitializeHelpers()
             end
 
             NCSegment:GlobalAddDefensive(sname)
+        else
+            return
         end
 
         NCSegment:GlobalAddActionPoints(1, sname, description)

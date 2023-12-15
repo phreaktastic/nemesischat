@@ -14,363 +14,256 @@ local _, core = ...;
 -- Core info frame logic
 -----------------------------------------------------
 
-lwin = LibStub("LibWindow-1.1")
-
 NCInfo = {
-    LowPerformerOrder = 2,
-    HighPerformerOrder = 1,
-    PullReportOrder = 3,
+    SCROLLVIEW_HEIGHT = 0,
+    SCROLLVIEW_TOP = 0,
+    SCROLLVIEW_BOTTOM = 0,
+    DISPLAY_WIDTH = 200,
+    CELL_HEIGHT = 14,
+    HEADER_HEIGHT = 0,
+    HEADER_BUFFER = 48,
+    FOOTER_HEIGHT = 16,
+    FOOTER_BUFFER = 0,
+    TOTAL_WIDTH = 200,
+    TOTAL_HEIGHT = 210,
 
-    StatsFrame = CreateFrame("Frame", "NemesisChatInfoFrame", UIParent, "BackdropTemplate"),
+    REPLACEMENTS = {
+        ["AvoidableDamage"] = "Avoidable Damage",
+        ["CrowdControl"] = "CC Score",
+    },
 
-    Initialize = function()
-        NCInfo.StatsFrame:SetWidth(256)
-        NCInfo.StatsFrame:SetHeight(280)
-        NCInfo.StatsFrame:SetAlpha(0.8)
-        NCInfo.StatsFrame:SetPoint("CENTER",UIParent,"CENTER",0,0)
-        NCInfo.StatsFrame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
-            tile = true, tileSize = 16, edgeSize = 16, 
-            insets = { left = 4, right = 4, top = 4, bottom = 4 }})
-        NCInfo.StatsFrame:SetBackdropColor(0,0,0,1)
-        NCInfo.StatsFrame:SetBackdropBorderColor(0,0,0,1)
+    CurrentPlayer = nil,
 
-        NCInfo.StatsFrame.header = NCInfo.StatsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        NCInfo.StatsFrame.header:SetPoint("TOP", NCInfo.StatsFrame, "TOP", 0, -4)
-        NCInfo.StatsFrame.header:SetText("Nemesis Chat")
-        NCInfo.StatsFrame.header:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    StatsFrame = CreateFrame("MessageFrame", "NemesisChatStatsFrame", UIParent, "BackdropTemplate"),
 
-        NCInfo.StatsFrame.minimizeButton = CreateFrame("Button", nil, NCInfo.StatsFrame, "UIPanelButtonTemplate")
-        NCInfo.StatsFrame.minimizeButton:SetPoint("TOPRIGHT", NCInfo.StatsFrame, "TOPRIGHT", -2, -2)
-        NCInfo.StatsFrame.minimizeButton:SetSize(20, 20)
-        NCInfo.StatsFrame.minimizeButton:SetText("-")
-        NCInfo.StatsFrame.minimizeButton:SetNormalFontObject("GameFontNormal")
-        NCInfo.StatsFrame.minimizeButton:SetHighlightFontObject("GameFontHighlight")
-        NCInfo.StatsFrame.minimizeButton:SetScript("OnClick", function(self)
-            if NCInfo.StatsFrame.content:IsShown() then
-                NCInfo.StatsFrame.content:Hide()
-                NCInfo.StatsFrame:SetHeight(24)
-                NCInfo.StatsFrame:SetPoint("CENTER",UIParent,"CENTER",0,188)
-                NCInfo.StatsFrame.minimizeButton:SetText("+")
-            else
-                NCInfo.StatsFrame.content:Show()
-                NCInfo.StatsFrame:SetHeight(280)
-                NCInfo.StatsFrame:SetPoint("CENTER",UIParent)
-                NCInfo.StatsFrame.minimizeButton:SetText("-")
+    Initialize = function(self)
+        self:InitializeVars()
+
+        local f = self.StatsFrame
+
+        f:SetSize(self.TOTAL_WIDTH, self.TOTAL_HEIGHT)
+        f:SetPoint("CENTER", UIParent, "CENTER")
+        f:SetMovable(true)
+        f:SetResizable(true)
+        f:SetScript("OnHide", function(self)
+            self:StopMovingOrSizing()
+        end)
+        f:SetClampedToScreen(true)
+        f:SetUserPlaced(true)
+        f:SetFrameStrata("BACKGROUND")
+        f:SetBackdrop({
+            bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true,
+            tileSize = 2,
+            edgeSize = 2,
+            insets = {
+                left = 0,
+                right = 0,
+                top = 0,
+                bottom = 0
+            }
+        })
+        f:SetBackdropColor(0,0,0,0.4)
+        f:SetBackdropBorderColor(0,0,0,1)
+
+        f.header = f:CreateFontString(nil,"ARTWORK","GameFontNormalLarge")
+        f.header:SetPoint("TOPLEFT",8,16)
+        f.header:SetPoint("TOPRIGHT",-8,16)
+        f.header:SetText("NemesisChat")
+        f.header:SetTextColor(0.50,0.60,1)
+        f.header:SetJustifyH("CENTER")
+        f.header:SetScript("OnMouseDown", function(self, button)
+            if button == "LeftButton" then
+                NCInfo.StatsFrame:StartMoving()
             end
         end)
+        f.header:SetScript("OnMouseUp", function(self, button)
+            NCInfo.StatsFrame:StopMovingOrSizing()
+        end)
 
-        NCInfo.StatsFrame.content = CreateFrame("Frame", nil, NCInfo.StatsFrame, "BackdropTemplate")
-        NCInfo.StatsFrame.content:SetWidth(256)
-        NCInfo.StatsFrame.content:SetHeight(256)
-        NCInfo.StatsFrame.content:SetPoint("TOP", NCInfo.StatsFrame, "TOP", 0, -24)
-        NCInfo.StatsFrame.content:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
-            tile = true, tileSize = 16, edgeSize = 16, 
-            insets = { left = 4, right = 4, top = 0, bottom = 4 }})
-        NCInfo.StatsFrame.content:SetBackdropColor(0,0,0,0.25)
-        NCInfo.StatsFrame.content:SetBackdropBorderColor(0,0,0,0)
+        f.closeButton = CreateFrame("Button",nil,f,"UIPanelCloseButton")
+        f.closeButton:SetPoint("TOPRIGHT",0,18)
+        f.closeButton:SetSize(16,16)
+        f.closeButton:SetScript("OnClick", function(self)
+            NCInfo.StatsFrame:Hide()
+        end)
 
-        NCInfo.StatsFrame.content.rows = CreateFrame("Frame", nil, NCInfo.StatsFrame.content, "BackdropTemplate")
-        NCInfo.StatsFrame.content.rows:SetWidth(250)
-        NCInfo.StatsFrame.content.rows:SetHeight(376)
-        NCInfo.StatsFrame.content.rows:SetPoint("TOP", NCInfo.StatsFrame.content, "TOP", -3, 48)
+        -- Add a dropdown menu to select the player
+        f.playerDropdown = CreateFrame("Frame", "NemesisChatStatsFramePlayerDropdown", f, "UIDropDownMenuTemplate")
+        f.playerDropdown:SetPoint("TOPLEFT",0,-4)
+        f.playerDropdown:SetPoint("BOTTOMRIGHT",0,0)
+        f.playerDropdown:SetScript("OnShow", function(self)
+            UIDropDownMenu_Initialize(self, function(self, level, menuList)
+                for name, _ in pairs(NCRuntime:GetGroupRoster()) do
+                    local info = UIDropDownMenu_CreateInfo()
+                    info.text = name
+                    info.value = name
+                    info.checked = (name == NCInfo.CurrentPlayer)
+                    info.func = function(self)
+                        NCInfo.CurrentPlayer = self.value
+                        NCInfo:Update()
+                    end
+                    UIDropDownMenu_AddButton(info)
+                end
+            end, "OTHER")
+        end)
+        UIDropDownMenu_SetWidth(f.playerDropdown, self.TOTAL_WIDTH - 48)
+        UIDropDownMenu_SetText(f.playerDropdown, self.CurrentPlayer)
+        f.playerDropdown:Show()
 
-        lwin.RegisterConfig(NCInfo.StatsFrame, core.db.profile.statsFrame)
-        lwin.RestorePosition(NCInfo.StatsFrame) 
-        lwin.MakeDraggable(NCInfo.StatsFrame)
-        lwin.EnableMouseOnAlt(NCInfo.StatsFrame)
+        f.scrollFrame = CreateFrame("ScrollFrame",nil,f,"UIPanelScrollFrameTemplate")
+        f.scrollFrame:SetPoint("TOPLEFT",8,-(self.SCROLLVIEW_TOP))
+        f.scrollFrame:SetPoint("BOTTOMRIGHT",-26, self.SCROLLVIEW_BOTTOM)
+        f.scrollFrame:SetSize(self.TOTAL_WIDTH - 34, self.TOTAL_HEIGHT - self.SCROLLVIEW_TOP - self.SCROLLVIEW_BOTTOM)
 
-        NCInfo:Update()
-    end,
+        f.scrollFrame.scrollChild = CreateFrame("Frame",nil,f.scrollFrame)
+        f.scrollFrame.scrollChild:SetPoint("TOPLEFT",5,-5)
+        f.scrollFrame.scrollChild:SetPoint("BOTTOMRIGHT",-5, -5)
+        f.scrollFrame.scrollChild:SetSize(f.scrollFrame:GetWidth(), f.scrollFrame:GetHeight() - 4)
+        f.scrollFrame:SetScrollChild(f.scrollFrame.scrollChild)
 
-    UpdateLastUnsafePullRow = function(self)
-        local player, mob, count = NCRuntime:GetLastUnsafePull()
-        local pullRow
+        f.scrollFrame:Show()
+        f.scrollFrame.scrollChild:Show()
 
-        if player == "" then
-            player = nil
-        end
-
-        local val = (player or "None") .. " (" .. (count or 0) .. ")"
-
-        if NCInfo.StatsFrame.content and NCInfo.StatsFrame.content.rows[NCInfo.PullReportOrder] then
-            pullRow = NCInfo.StatsFrame.content.rows[NCInfo.PullReportOrder]
-            pullRow.value:SetText(val)
-            pullRow.announceToPartyButton:Enable()
-            pullRow.announceToPartyButton:Show()
-        else
-            pullRow = self:AddReportableContentRow(NCInfo.PullReportOrder, "Last Unsafe Pull", val)
-        end
-
-        pullRow.announceToPartyButton:SetScript("OnClick", function(self)
-            local message = "Nemesis Chat: Last unsafe pull by " .. player .. " with a total mob count of " .. count .. "."
-
-            if player ~= nil then
-                SendChatMessage(message, "PARTY")
+        f.resizeButton = CreateFrame("Button",nil,f)
+        f.resizeButton:SetPoint("BOTTOMRIGHT",0,0)
+        f.resizeButton:SetSize(16,16)
+        f.resizeButton:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+        f.resizeButton:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+        f.resizeButton:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+        f.resizeButton:SetScript("OnMouseDown", function(self, button)
+            if button == "LeftButton" then
+                NCInfo.StatsFrame:StartSizing("BOTTOMRIGHT")
+                NCInfo.StatsFrame:SetUserPlaced(false)
+                NCInfo.StatsFrame.scrollFrame:Hide()
             end
         end)
-        pullRow.announceToPartyButton:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Announce the last unsafe pull to the party.")
-            GameTooltip:Show()
+        f.resizeButton:SetScript("OnMouseUp", function(self, button)
+            NCInfo.StatsFrame:StopMovingOrSizing()
+            NCInfo.StatsFrame:SetUserPlaced(true)
         end)
-        pullRow.announceToPartyButton:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
-        end)
-
-        if not player or player == "" then
-            pullRow.announceToPartyButton:Hide()
-        end
-    end,
-
-    UpdateHighPerformerRow = function(self)
-        local highPerformer = NCDungeon.Rankings:GetOverperformer()
-        local highPerformerRow
-
-        if NCInfo.StatsFrame.content and NCInfo.StatsFrame.content.rows[NCInfo.HighPerformerOrder] then
-            highPerformerRow = NCInfo.StatsFrame.content.rows[NCInfo.HighPerformerOrder]
-            highPerformerRow.value:SetText(highPerformer or "None")
-            highPerformerRow.announceToPartyButton:Enable()
-            highPerformerRow.announceToPartyButton:Show()
-        else
-            highPerformerRow = self:AddReportableContentRow(NCInfo.HighPerformerOrder, "Overperformer", highPerformer or "None", false)
-        end
-
-        highPerformerRow:SetScript("OnEnter", function(self)
-            if not highPerformer then
-                -- Add a tooltip whose owner is the cursor
-                GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
-                GameTooltip:SetText("When there's a high performer, this will show their scoring.")
-                GameTooltip:Show()
-                return
+        f:SetScript("OnSizeChanged", function(self, button)
+            if NCInfo.StatsFrame:GetWidth() < 200 then
+                NCInfo.StatsFrame:SetWidth(200)
             end
 
-            local reasonArray = NCDungeon.Rankings.TopScores[highPerformer]
-            local reasons = ""
-
-            if not reasonArray or type(reasonArray) ~= "table" then
-                return
+            if NCInfo.StatsFrame:GetHeight() < 210 then
+                NCInfo.StatsFrame:SetHeight(210)
             end
 
-            for metric, reason in pairs(reasonArray) do
-                reasons = reasons .. metric .. ": " .. reason .. " points.\n"
-            end
+            NCInfo.TOTAL_HEIGHT = NCInfo.StatsFrame:GetHeight()
+            NCInfo.TOTAL_WIDTH = NCInfo.StatsFrame:GetWidth()
 
-            GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Reasons for high performance:\n" .. reasons)
-            GameTooltip:Show()
+            NCInfo.StatsFrame:SetSize(NCInfo.TOTAL_WIDTH, NCInfo.TOTAL_HEIGHT)
+
+            NCInfo:InitializeVars()
+
+            NCInfo.StatsFrame.scrollFrame:SetSize(NCInfo.TOTAL_WIDTH - 34, NCInfo.TOTAL_HEIGHT - NCInfo.SCROLLVIEW_TOP - NCInfo.SCROLLVIEW_BOTTOM)
+            NCInfo.StatsFrame.scrollFrame.scrollChild:SetSize(NCInfo.TOTAL_WIDTH - 44, NCInfo.TOTAL_HEIGHT - NCInfo.SCROLLVIEW_TOP - NCInfo.SCROLLVIEW_BOTTOM)
+            NCInfo:Update()
+
+            NCInfo.StatsFrame.scrollFrame:Show()
+            UIDropDownMenu_SetWidth(NCInfo.StatsFrame.playerDropdown, NCInfo.TOTAL_WIDTH - 48)
         end)
 
-        highPerformerRow:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
-        end)
+        f.scrollFrame.scrollChild.rows = {}
 
-        highPerformerRow.announceToPartyButton:SetScript("OnClick", function(self)
-            if not highPerformer then
-                return
-            end
-
-            local message
-
-            if NCDungeon:IsActive() then
-                message = "Nemesis Chat: " .. highPerformer .. " is dramatically outperforming the group."
-            else
-                message = "Nemesis Chat: " .. highPerformer .. " dramatically outperformed the group."
-            end
-
-            if highPerformer ~= nil then
-                SendChatMessage(message, "PARTY")
-            end
-        end)
-        highPerformerRow.announceToPartyButton:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Announce the highest performer to the party.")
-            GameTooltip:Show()
-        end)
-        highPerformerRow.announceToPartyButton:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
-        end)
-
-        if not highPerformer then
-            highPerformerRow.announceToPartyButton:Hide()
-        end
-    end,
-
-    UpdateLowPerformerRow = function(self)
-        local lowPerformer = NCDungeon.Rankings:GetUnderperformer()
-        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(lowPerformer)
-        local lowPerformerRow
-
-        if NCInfo.StatsFrame.content and NCInfo.StatsFrame.content.rows[NCInfo.LowPerformerOrder] then
-            lowPerformerRow = NCInfo.StatsFrame.content.rows[NCInfo.LowPerformerOrder]
-            lowPerformerRow.value:SetText(lowPerformer or "None")
-            lowPerformerRow.addToListButton:Enable()
-            lowPerformerRow.addToListButton:Show()
-            lowPerformerRow.announceToPartyButton:Enable()
-            lowPerformerRow.announceToPartyButton:Show()
-        else
-            lowPerformerRow = self:AddReportableContentRow(NCInfo.LowPerformerOrder, "Underperformer", lowPerformer or "None", true)
-        end
-
-        lowPerformerRow:SetScript("OnEnter", function(self)
-            if not lowPerformer then
-                GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
-                GameTooltip:SetText("When there's a low performer, this will show their scoring.")
-                GameTooltip:Show()
-                return
-            end
-
-            local reasonArray = NCDungeon.Rankings.TopScores[lowPerformer]
-            local reasons = ""
-
-            if not reasonArray or type(reasonArray) ~= "table" then
-                return
-            end
-
-            for metric, reason in pairs(reasonArray) do
-                reasons = reasons .. metric .. ": " .. reason .. " points.\n"
-            end
-
-            GameTooltip:SetOwner(self.value, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Reasons for low performance:\n" .. reasons)
-            GameTooltip:Show()
-        end)
-
-        lowPerformerRow:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
-        end)
-
-        lowPerformerRow.announceToPartyButton:SetScript("OnClick", function(self)
-            if not lowPerformer then
-                return
-            end
-
-            local message
-
-            if NCDungeon:IsActive() then
-                message = "Nemesis Chat: " .. lowPerformer .. " is dramatically underperforming."
-            else
-                message = "Nemesis Chat: " .. lowPerformer .. " dramatically underperformed."
-            end
-
-            if lowPerformer ~= nil then
-                SendChatMessage(message, "PARTY")
-            end
-        end)
-        lowPerformerRow.announceToPartyButton:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Announce the lowest performer to the party.")
-            GameTooltip:Show()
-        end)
-        lowPerformerRow.announceToPartyButton:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
-        end)
-
-        lowPerformerRow.addToListButton:SetScript("OnClick", function(self)
-            if not lowPerformer or not rosterPlayer then
-                return
-            end
-
-            NemesisChat:AddLowPerformer(rosterPlayer.guid)
-
-            lowPerformerRow.addToListButton:Hide()
-            NemesisChat:Print("Added low performer to DB:", lowPerformer)
-        end)
-        lowPerformerRow.addToListButton:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Add the lowest performer to the database.")
-            GameTooltip:Show()
-        end)
-        lowPerformerRow.addToListButton:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
-        end)
-        
-        if not lowPerformer then
-            lowPerformerRow.addToListButton:Hide()
-            lowPerformerRow.announceToPartyButton:Hide()
-        end
+        self:Update()
     end,
 
     Update = function(self)
-        NCInfo:UpdateLowPerformerRow()
-        NCInfo:UpdateHighPerformerRow()
-        NCInfo:UpdateLastUnsafePullRow()
-    end,
+        local f = self.StatsFrame
+        local content = f.scrollFrame.scrollChild
 
-    AddReportableRow = function(self, label, value, rowParent, listButton, x, y)
-        local reportableRow = CreateFrame("Frame", nil, rowParent, "BackdropTemplate")
-        local valueX = -40
-        local btnWidth = 40
+        local i = 1
+        local ROW_WIDTH = content:GetWidth()
+        for metric, positive in pairs(NCRankings.METRICS) do
+            if not content.rows[metric] then
+                local button = CreateFrame("Button",nil,content)
+                
+                button:SetSize(ROW_WIDTH, self.CELL_HEIGHT)
+                button:SetPoint("TOPLEFT",0,-(i-1)*self.CELL_HEIGHT)
+                button.columns = {} -- creating columns for the row
+                button.columns[1] = button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+                button.columns[1]:SetPoint("LEFT",0,0)
+                button.columns[1]:SetTextColor(0.5,0.6,0.85)
+                button.columns[2] = button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+                button.columns[2]:SetPoint("LEFT",ROW_WIDTH * 0.6,0)
+                button.columns[2]:SetPoint("RIGHT",0,0)
+                button.columns[2]:SetTextColor(0.5,0.6,0.85)
+                content.rows[metric] = button
+            end
 
-        if not listButton then
-            valueX = -20
-            btnWidth = 20
+            content.rows[metric].columns[1]:SetText(self.REPLACEMENTS[metric] or metric)
+            content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)))
+            content.rows[metric]:SetPoint("TOPLEFT",0,-(i-1)*self.CELL_HEIGHT)
+            content.rows[metric]:SetScript("OnEnter", function(self)
+                self.columns[1]:SetTextColor(1,1,1)
+                self.columns[2]:SetTextColor(1,1,1)
+
+                GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+                GameTooltip:AddLine("Left click: Report to group chat")
+                GameTooltip:Show()
+            end)
+            content.rows[metric]:SetScript("OnLeave", function(self)
+                self.columns[1]:SetTextColor(0.5,0.6,0.85)
+                self.columns[2]:SetTextColor(0.5,0.6,0.85)
+
+                GameTooltip:Hide()
+            end)
+            content.rows[metric].columns[1]:SetWidth(ROW_WIDTH * 0.6)
+            content.rows[metric].columns[1]:SetJustifyH("LEFT")
+            content.rows[metric].columns[2]:SetWidth(ROW_WIDTH * 0.4)
+            content.rows[metric].columns[2]:SetJustifyH("RIGHT")
+
+            if not (
+                (GetRole(self.CurrentPlayer) == "TANK" and metric == "Pulls") or
+                (GetRole(self.CurrentPlayer) == "HEALER" and metric == "Offheals")
+            ) then
+                content.rows[metric]:SetSize(ROW_WIDTH, self.CELL_HEIGHT)
+                content.rows[metric]:Show()
+            else
+                content.rows[metric]:SetSize(ROW_WIDTH, 0)
+                content.rows[metric]:Hide()
+            end
+
+            content.rows[metric]:SetScript("OnClick", function(self)
+                NCInfo:ReportMetric(metric, NCInfo.CurrentPlayer)
+            end)
+            
+            i = i + 1
         end
 
-        reportableRow:SetPoint("TOPLEFT", rowParent, "TOPLEFT", x, y)
-        reportableRow:SetWidth(242)
-        reportableRow:SetHeight(72)
-        reportableRow:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
-            tile = true, tileSize = 16, edgeSize = 16, 
-            insets = { left = 4, right = 4, top = 4, bottom = 4 }})
-        reportableRow:SetBackdropColor(1,1,1,0.1)
-        reportableRow:SetBackdropBorderColor(1,1,1,0.5)
-
-        reportableRow.header = reportableRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        reportableRow.header:SetPoint("TOP", reportableRow, "TOP", 0, 6)
-        reportableRow.header:SetText(label)
-        reportableRow.header:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-        
-        reportableRow.value = reportableRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        reportableRow.value:SetPoint("TOP", reportableRow, "TOP", 0, -22)
-        reportableRow.value:SetText(value or "None")
-        reportableRow.value:SetFont("Fonts\\FRIZQT__.TTF", 12)
-        reportableRow.value:SetTextColor(1, 1, 1, 1)
-        reportableRow.value:SetHeight(12)
-        reportableRow.value:SetWidth(200)
-        reportableRow.value:SetJustifyH("CENTER")
-        reportableRow.value:SetJustifyV("CENTER")
-        reportableRow.value:SetWordWrap(true)
-        reportableRow.value:SetNonSpaceWrap(true)
-
-        reportableRow.announceToPartyButton = CreateFrame("Button", nil, reportableRow, "UIPanelButtonTemplate")
-        reportableRow.announceToPartyButton:SetPoint("BOTTOM", reportableRow.value, "RIGHT", 0, -34)
-        reportableRow.announceToPartyButton:SetSize(20, 20)
-        reportableRow.announceToPartyButton:SetNormalFontObject("GameFontNormal")
-        reportableRow.announceToPartyButton:SetHighlightFontObject("GameFontHighlight")
-
-        reportableRow.announceToPartyButton.icon = reportableRow.announceToPartyButton:CreateTexture(nil, "OVERLAY")
-        reportableRow.announceToPartyButton.icon:SetSize(16, 16)
-        reportableRow.announceToPartyButton.icon:SetPoint("CENTER", reportableRow.announceToPartyButton, "CENTER", 0, 0)
-        reportableRow.announceToPartyButton.icon:SetTexture("Interface\\Icons\\UI_Chat")
-
-        if listButton then
-            reportableRow.addToListButton = CreateFrame("Button", nil, reportableRow, "UIPanelButtonTemplate")
-            reportableRow.addToListButton:SetPoint("RIGHT", reportableRow.announceToPartyButton, "LEFT", 0, 0)
-            reportableRow.addToListButton:SetSize(20, 20)
-            reportableRow.addToListButton:SetNormalFontObject("GameFontNormal")
-            reportableRow.addToListButton:SetHighlightFontObject("GameFontHighlight")
-
-            reportableRow.addToListButton.icon = reportableRow.addToListButton:CreateTexture(nil, "OVERLAY")
-            reportableRow.addToListButton.icon:SetSize(16, 16)
-            reportableRow.addToListButton.icon:SetPoint("CENTER", reportableRow.addToListButton, "CENTER", 0, 0)
-            reportableRow.addToListButton.icon:SetTexture("Interface\\Icons\\INV_Misc_Book_09")
-        end
-
-        -- reportableRow.label = reportableRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        -- reportableRow.label:SetPoint("LEFT", reportableRow, "LEFT", 4, 0)
-        -- reportableRow.label:SetText(label)
-        -- reportableRow.label:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-        
-        return reportableRow
+        UIDropDownMenu_SetText(f.playerDropdown, self.CurrentPlayer)
     end,
 
-    AddReportableContentRow = function(self, order, label, value, listButton)
-        local y = ((-82 * order) + 24)
-        NCInfo.StatsFrame.content.rows[order] = self:AddReportableRow(label, value, NCInfo.StatsFrame.content.rows, listButton, 7, y)
+    UpdatePlayerDropdown = function(self)
+        UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, self.CurrentPlayer)
+        UIDropDownMenu_Initialize(self.StatsFrame.playerDropdown, function(self, level, menuList)
+            for name, _ in pairs(NCRuntime:GetGroupRoster()) do
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = name
+                info.value = name
+                info.checked = (name == NCInfo.CurrentPlayer)
+                info.func = function(self)
+                    NCInfo.CurrentPlayer = self.value
+                    NCInfo:Update()
+                end
+                UIDropDownMenu_AddButton(info)
+            end
+        end, "OTHER")
+    end,
 
-        return NCInfo.StatsFrame.content.rows[order]
+    InitializeVars = function(self)
+        self.CurrentPlayer = UnitName("player")
+        self.SCROLLVIEW_HEIGHT = self.TOTAL_HEIGHT - self.HEADER_HEIGHT - self.HEADER_BUFFER - self.FOOTER_HEIGHT - self.FOOTER_BUFFER
+        self.SCROLLVIEW_TOP = self.HEADER_HEIGHT + self.HEADER_BUFFER
+        self.SCROLLVIEW_BOTTOM = self.FOOTER_HEIGHT + self.FOOTER_BUFFER
+    end,
+
+    ReportMetric = function(self, metric, player)
+        local message = string.format("%s for %s (Dungeon): %s", self.REPLACEMENTS[metric] or metric, player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
+        SendChatMessage(message, NemesisChat:GetActualChannel("GROUP"))
     end,
 }

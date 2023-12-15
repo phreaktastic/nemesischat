@@ -437,12 +437,16 @@ NCRankings = {
                         local _, classId = UnitClassBase(player)
 
                         -- Priest and Druid are excluded
-                        return classId ~= 5 and classId ~= 11 and GetRole(player) == "DAMAGER"
+                        return classId ~= 5 and classId ~= 11
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
                         local secondFromTop = self.All[metric][order[#order-1]] or botVal
                         local secondFromBot = self.All[metric][order[2]] or topVal
+
+                        if GetRole(topPlayer) == "TANK" then
+                            topVal = 0
+                        end
                         
                         return (topVal - secondFromTop), (secondFromBot - botVal)
                     end,
@@ -713,8 +717,8 @@ NCRankings = {
     -- Get the under performer, if there is one
     GetUnderperformer = function(self)
         local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
-        local firstScore = (self.BottomTracker[players[1]] or 0) - (self._segment:GetActionPointsAmount(players[1]) or 0)
-        local secondScore = (self.BottomTracker[players[2]] or 0) - (self._segment:GetActionPointsAmount(players[2]) or 0)
+        local firstScore = (self.BottomTracker[players[1]] or 0)
+        local secondScore = (self.BottomTracker[players[2]] or 0)
 
         -- If the next lowest performer is within 10 points of the lowest performer, return nil
         if secondScore >= firstScore - 10 or firstScore < 10 then
@@ -727,8 +731,8 @@ NCRankings = {
     -- Get the over performer, if there is one
     GetOverperformer = function(self)
         local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
-        local firstScore = (self.TopTracker[players[1]] or 0) + (self._segment:GetActionPointsAmount(players[1]) or 0)
-        local secondScore = (self.TopTracker[players[2]] or 0) + (self._segment:GetActionPointsAmount(players[2]) or 0)
+        local firstScore = (self.TopTracker[players[1]] or 0)
+        local secondScore = (self.TopTracker[players[2]] or 0)
 
         -- If the next highest performer is within 10 points of the highest performer, return nil
         if secondScore >= firstScore - 10 or firstScore < 10 then
@@ -745,7 +749,7 @@ NCRankings = {
         end
 
         local players = GetKeysSortedByValue(self.TopTracker, function(a, b) return a > b end)
-        local score = (self.TopTracker[players[1]] or 0) + (self._segment:GetActionPointsAmount(players[1]) or 0)
+        local score = (self.TopTracker[players[1]] or 0)
 
         return players[1], score
     end,
@@ -757,7 +761,7 @@ NCRankings = {
         end
 
         local players = GetKeysSortedByValue(self.BottomTracker, function(a, b) return a > b end)
-        local score = (self.TopTracker[players[1]] or 0) - (self._segment:GetActionPointsAmount(players[1]) or 0)
+        local score = (self.TopTracker[players[1]] or 0)
 
         return players[1], score
     end,
