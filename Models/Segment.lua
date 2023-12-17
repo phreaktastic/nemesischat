@@ -380,8 +380,10 @@ NCSegment = {
         end
 
         local rosterPlayer = NCRuntime:GetGroupRosterPlayer(source)
+        local rosterTarget = NCRuntime:GetGroupRosterPlayer(target)
 
-        if rosterPlayer ~= nil and rosterPlayer.role ~= "HEALER" and source ~= target then
+        -- If the source is not a healer, and the source is not the target, and the target is in the group (ignoring pets and self heals)
+        if rosterPlayer ~= nil and rosterPlayer.role ~= "HEALER" and source ~= target and rosterTarget ~= nil then
             self:AddOffHeals(amount, source)
         end
 
@@ -529,7 +531,7 @@ NCSegment = {
             return self:GetDispells(playerName)
         elseif metric == "Interrupts" then
             return self:GetInterrupts(playerName)
-        elseif metric == "OffHeals" then
+        elseif metric == "Offheals" then
             return self:GetOffHeals(playerName)
         elseif metric == "Pulls" then
             return self:GetPulls(playerName)
