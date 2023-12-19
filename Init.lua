@@ -554,12 +554,28 @@ core.affixMobsHandles = {
 -- Auras applied by affix mobs
 core.affixMobsAuras = {
     {
+        type = "HARMFUL",
         name = "Bursting",
         spellName = "Burst",
         spellId = 240443,
-        highStacks = 7,
+        highStacks = 3,
+    },
+    {
+        type = "HELPFUL",
+        name = "Bolstering",
+        spellName = "Bolster",
+        spellId = 209859,
+        highStacks = 5,
     }
 }
+
+-- Cache the affix mob aura spells to avoid repeated lookups
+core.affixMobsAuraSpells = {}
+
+for _, val in pairs(core.affixMobsAuras) do
+    core.affixMobsAuraSpells[val.spellId] = val
+    core.affixMobsAuraSpells[val.spellName] = val
+end
 
 -- Raid markers to use for affix mobs (currently unused)
 core.markers = {

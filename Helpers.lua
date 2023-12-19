@@ -1232,13 +1232,17 @@ function NemesisChat:CheckAffixAuras()
 
     local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,itype = CombatLogGetCurrentEventInfo()
 
-    if not UnitInParty(dname) or (not string.find(event, "AURA_APPLIED") and not string.find(event, "AURA_DOSE")) then
+    if not core.affixMobsAuraSpells[arg1] then
+        return
+    end
+
+    if not string.find(event, "AURA_APPLIED") and not string.find(event, "AURA_DOSE") then
         return
     end
 
     for _, auraData in pairs(core.affixMobsAuras) do
-        if auraData.spellId == arg1 and UnitInParty(dname) then
-            local _, _, count = AuraUtil.FindAuraByName(auraData.spellName, dname, "HARMFUL")
+        if auraData.spellId == arg1 then
+            local _, _, count = AuraUtil.FindAuraByName(auraData.spellName, dname, auraData.type)
 
             if count ~= nil and tonumber(count) >= auraData.highStacks and NCRuntime:GetPlayerStatesLastAuraCheckDelta() >= 3 then
                 SendChatMessage("Nemesis Chat: " .. dname .. " has " .. auraData.name .. " at " .. count .. " stacks!", "YELL")
