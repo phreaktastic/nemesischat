@@ -336,7 +336,7 @@ NCRankings = {
                     BelowHealerIncrement = 30,
                     BelowTankIncrement = 20,
                     IsIncludedCallback = function(self, player)
-                        return GetRole(player) == "DAMAGER"
+                        return GetRole(player) == "DPS"
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local topItemLevel = NemesisChat:GetItemLevel(topPlayer)

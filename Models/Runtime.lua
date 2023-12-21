@@ -125,7 +125,7 @@ core.runtimeDefaults = {
             --     label = "Nemesis DPS",
             --     value = "NEMESIS_DPS",
             --     exec = function() return 0 end,
-            --     operators = core.constants.EXTENDED_OPERATORS,
+            --     operators = core.constants.NUMERIC_OPERATORS,
             --     type = "NUMBER",
             -- }
         },

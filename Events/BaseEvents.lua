@@ -187,3 +187,40 @@ end
 function NemesisChat:CHAT_MSG_ADDON(_, prefix, payload, distribution, sender)
     NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
 end
+
+function NemesisChat:UNIT_SPELLCAST_START(_, unitTarget, castGUID, spellID)
+    local casterName = UnitName(unitTarget)
+
+    if not core.affixMobsCastersLookup[casterName] then
+        return
+    end
+
+    if NCConfig:IsReportingAffixes_CastStart() then
+        SendChatMessage("Nemesis Chat: " .. casterName .. " is casting!", "YELL")
+    end
+end
+
+function NemesisChat:UNIT_SPELLCAST_SUCCEEDED(_, unitTarget, castGUID, spellID)
+    local casterName = UnitName(unitTarget)
+
+    if not core.affixMobsCastersLookup[casterName] then
+        return
+    end
+
+    if NCConfig:IsReportingAffixes_CastStart() then
+        SendChatMessage("Nemesis Chat: " .. casterName .. " successfully cast!", "YELL")
+    end
+end
+
+function NemesisChat:UNIT_SPELLCAST_INTERRUPTED(_, unitTarget, castGUID, spellID)
+    local casterName = UnitName(unitTarget)
+    local castInterruptedGuid = UnitGUID(unitTarget)
+
+    if not core.affixMobsCastersLookup[casterName] then
+        return
+    end
+    
+    if NCConfig:IsReportingAffixes_CastFailed() and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
+        SendChatMessage("Nemesis Chat: " .. casterName .. " cast interrupted, but not incapacitated/dead!", "YELL")
+    end
+end

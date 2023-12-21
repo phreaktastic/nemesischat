@@ -26,6 +26,7 @@ NCInfo = {
     FOOTER_BUFFER = 0,
     TOTAL_WIDTH = 200,
     TOTAL_HEIGHT = 210,
+    DROPDOWN_WIDTH = 128,
 
     REPLACEMENTS = {
         ["AvoidableDamage"] = "Avoidable Damage",
@@ -164,7 +165,8 @@ NCInfo = {
             NCInfo:Update()
 
             NCInfo.StatsFrame.scrollFrame:Show()
-            UIDropDownMenu_SetWidth(NCInfo.StatsFrame.playerDropdown, NCInfo.TOTAL_WIDTH - 48)
+
+            UIDropDownMenu_SetWidth(NCInfo.StatsFrame.playerDropdown, NCInfo.DROPDOWN_WIDTH)
         end)
 
         f.scrollFrame.scrollChild.rows = {}
@@ -175,16 +177,51 @@ NCInfo = {
     Update = function(self)
         local f = self.StatsFrame
         local content = f.scrollFrame.scrollChild
-
         local i = 1
         local ROW_WIDTH = content:GetWidth()
+
+        local red = {0.85,0.6,0.5}
+        local green = {0.5,0.85,0.6}
+        local neutral = {0.5,0.6,0.85}
+
+        if self.CurrentPlayer ~= GetMyName() then
+            if not content.rows["compareWithMeCheckbox"] then
+                local checkbox = CreateFrame("CheckButton",nil,content,"ChatConfigCheckButtonTemplate")
+                checkbox:SetPoint("TOPLEFT",0,0)
+                checkbox:SetSize(14, 14)
+                checkbox:SetChecked(core.db.profile.infoClickCompare)
+                checkbox:SetScript("OnClick", function(self)
+                    core.db.profile.infoClickCompare = self:GetChecked()
+                end)
+                checkbox.text = checkbox:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+                checkbox.text:SetPoint("LEFT",20,0)
+                checkbox.text:SetText("Compare with me")
+                checkbox.text:SetTextColor(0.5,0.6,0.85)
+                checkbox.text:SetJustifyH("LEFT")
+                checkbox.text:SetWidth(ROW_WIDTH - 20)
+                checkbox.text:SetHeight(self.CELL_HEIGHT)
+                content.rows["compareWithMeCheckbox"] = checkbox
+            end
+
+            content.rows["compareWithMeCheckbox"]:Show()
+
+            i = i + 1
+        else
+            if content.rows["compareWithMeCheckbox"] then
+                content.rows["compareWithMeCheckbox"]:Hide()
+            end
+        end
+
         for metric, positive in pairs(NCRankings.METRICS) do
+            local greaterColor = positive and green or red
+            local lesserColor = positive and red or green
+
             if not content.rows[metric] then
                 local button = CreateFrame("Button",nil,content)
                 
                 button:SetSize(ROW_WIDTH, self.CELL_HEIGHT)
                 button:SetPoint("TOPLEFT",0,-(i-1)*self.CELL_HEIGHT)
-                button.columns = {} -- creating columns for the row
+                button.columns = {}
                 button.columns[1] = button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
                 button.columns[1]:SetPoint("LEFT",0,0)
                 button.columns[1]:SetTextColor(0.5,0.6,0.85)
@@ -196,7 +233,29 @@ NCInfo = {
             end
 
             content.rows[metric].columns[1]:SetText(self.REPLACEMENTS[metric] or metric)
-            content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)))
+
+            if core.db.profile.infoClickCompare then
+                local delta = NCDungeon:GetStats(self.CurrentPlayer, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
+
+                if delta > 0 then
+                    content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)) .. " (+" .. NemesisChat:FormatNumber(delta) .. ")")
+                    content.rows[metric].columns[2]:SetTextColor(greaterColor[1], greaterColor[2], greaterColor[3])
+                    content.rows[metric].columns[2].desiredColor = {greaterColor[1], greaterColor[2], greaterColor[3]}
+                elseif delta < 0 then
+                    content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)) .. " (-" .. NemesisChat:FormatNumber(math.abs(delta)) .. ")")
+                    content.rows[metric].columns[2]:SetTextColor(lesserColor[1], lesserColor[2], lesserColor[3])
+                    content.rows[metric].columns[2].desiredColor = {lesserColor[1], lesserColor[2], lesserColor[3]}
+                else
+                    content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)))
+                    content.rows[metric].columns[2]:SetTextColor(neutral[1], neutral[2], neutral[3])
+                    content.rows[metric].columns[2].desiredColor = {neutral[1], neutral[2], neutral[3]}
+                end
+            else
+                content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)))
+                content.rows[metric].columns[2]:SetTextColor(neutral[1], neutral[2], neutral[3])
+                content.rows[metric].columns[2].desiredColor = {neutral[1], neutral[2], neutral[3]}
+            end
+
             content.rows[metric]:SetPoint("TOPLEFT",0,-(i-1)*self.CELL_HEIGHT)
             content.rows[metric]:SetScript("OnEnter", function(self)
                 self.columns[1]:SetTextColor(1,1,1)
@@ -208,31 +267,28 @@ NCInfo = {
             end)
             content.rows[metric]:SetScript("OnLeave", function(self)
                 self.columns[1]:SetTextColor(0.5,0.6,0.85)
-                self.columns[2]:SetTextColor(0.5,0.6,0.85)
+                self.columns[2]:SetTextColor(self.columns[2].desiredColor[1],self.columns[2].desiredColor[2],self.columns[2].desiredColor[3])
 
                 GameTooltip:Hide()
             end)
-            content.rows[metric].columns[1]:SetWidth(ROW_WIDTH * 0.6)
-            content.rows[metric].columns[1]:SetJustifyH("LEFT")
-            content.rows[metric].columns[2]:SetWidth(ROW_WIDTH * 0.4)
-            content.rows[metric].columns[2]:SetJustifyH("RIGHT")
 
-            if not (
-                (GetRole(self.CurrentPlayer) == "TANK" and metric == "Pulls") or
-                (GetRole(self.CurrentPlayer) == "HEALER" and metric == "Offheals")
-            ) then
-                content.rows[metric]:SetSize(ROW_WIDTH, self.CELL_HEIGHT)
-                content.rows[metric]:Show()
-            else
-                content.rows[metric]:SetSize(ROW_WIDTH, 0)
-                content.rows[metric]:Hide()
-            end
+            content.rows[metric].columns[1]:SetWidth(96)
+            content.rows[metric].columns[1]:SetJustifyH("LEFT")
+            content.rows[metric].columns[2]:SetWidth(ROW_WIDTH - 96)
+            content.rows[metric].columns[2]:SetJustifyH("RIGHT")
 
             content.rows[metric]:SetScript("OnClick", function(self)
                 NCInfo:ReportMetric(metric, NCInfo.CurrentPlayer)
             end)
-            
-            i = i + 1
+
+            if NCRankings.Configuration.Increments.Metrics[metric]:IsIncludedCallback(NCInfo.CurrentPlayer) then
+                content.rows[metric]:SetSize(ROW_WIDTH, self.CELL_HEIGHT)
+                content.rows[metric]:Show()
+                i = i + 1
+            else
+                content.rows[metric]:SetSize(ROW_WIDTH, 0)
+                content.rows[metric]:Hide()
+            end
         end
 
         UIDropDownMenu_SetText(f.playerDropdown, self.CurrentPlayer)
@@ -264,6 +320,15 @@ NCInfo = {
 
     ReportMetric = function(self, metric, player)
         local message = string.format("%s for %s (Dungeon): %s", self.REPLACEMENTS[metric] or metric, player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
+        if core.db.profile.infoClickCompare then
+            local delta = NCDungeon:GetStats(player, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
+            
+            if delta > 0 then
+                message = message .. string.format(" (%s higher than mine)", NemesisChat:FormatNumber(delta))
+            elseif delta < 0 then
+                message = message .. string.format(" (%s lower than mine)", NemesisChat:FormatNumber(math.abs(delta)))
+            end
+        end
         SendChatMessage(message, NemesisChat:GetActualChannel("GROUP"))
     end,
 }

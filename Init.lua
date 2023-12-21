@@ -78,13 +78,9 @@ end
 function GetRole(player)
     local role
 
-    if player == nil or player == GetMyName() then
-        role = UnitGroupRolesAssigned("player")
+    if NCRuntime:GetGroupRosterPlayer(player) == nil then
+        role = UnitGroupRolesAssigned(player)
     else
-        if NCRuntime:GetGroupRosterPlayer(player) == nil then
-            return "party animal"
-        end
-
         role = NCRuntime:GetGroupRosterPlayer(player).role
     end
 
@@ -153,7 +149,7 @@ core.units = {
     {
         label = "Bystander",
         value = "BYSTANDER"
-    }
+    },
 }
 core.constants = {}
 core.constants.NA = { 1 }
@@ -169,7 +165,7 @@ core.constants.OPERATORS = {
         value = "IS_NOT"
     }
 }
-core.constants.EXTENDED_OPERATORS = {
+core.constants.NUMERIC_OPERATORS = {
     {
         label = ">",
         value = "GT"
@@ -179,7 +175,7 @@ core.constants.EXTENDED_OPERATORS = {
         value = "LT"
     }
 }
-core.constants.NC_OPERATORS = {
+core.constants.UNIT_OPERATORS = {
     {
         label = "is a Nemesis",
         value = "IS_NEMESIS"
@@ -222,7 +218,7 @@ core.constants.NC_OPERATORS = {
     }
 }
 core.events = {
-    env = {
+    segment = {
         {
             label = "Start",
             value = "START",
@@ -348,73 +344,73 @@ core.messageConditions = {
     {
         label = "Spell Target",
         value = "SPELL_TARGET",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NC_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
         type = "INPUT",
     },
     {
         label = "Players In Group",
         value = "GROUP_COUNT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "Nemeses In Group",
         value = "NEMESES_COUNT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "My Interrupts (Combat)",
         value = "INTERRUPTS",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "Nem. Interrupts (Combat)",
         value = "NEMESIS_INTERRUPTS",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "Bys. Interrupts (Combat)",
         value = "BYSTANDER_INTERRUPTS",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "My Interrupts (Overall)",
         value = "INTERRUPTS_OVERALL",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "Nem. Interrupts (Overall)",
         value = "NEMESIS_INTERRUPTS_OVERALL",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "Bys. Interrupts (Overall)",
         value = "BYSTANDER_INTERRUPTS_OVERALL",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "My Health %",
         value = "HEALTH_PERCENT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER",
     },
     {
         label = "Nem. Health %",
         value = "NEMESIS_HEALTH_PERCENT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER",
     },
     {
         label = "Bys. Health %",
         value = "BYSTANDER_HEALTH_PERCENT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER",
     },
 }
@@ -423,7 +419,7 @@ core.messageConditions = {
 core.configTree = {
     ["BOSS"] = {
         label = "Boss Fight",
-        events = DeepCopy(core.events.env)
+        events = DeepCopy(core.events.segment)
     },
     ["COMBATLOG"] = {
         label = "General",
@@ -433,13 +429,13 @@ core.configTree = {
         label = "Group",
         events = DeepCopy(core.events.group)
     },
+    ["CHALLENGE"] = {
+        label = "Mythic+ Dungeon",
+        events = DeepCopy(core.events.segment)
+    },
     ["RAID"] = {
         label = "Raid",
         events = DeepCopy(core.events.group)
-    },
-    ["CHALLENGE"] = {
-        label = "Mythic+ Dungeon",
-        events = DeepCopy(core.events.env)
     },
 }
 core.channels = {
@@ -448,6 +444,7 @@ core.channels = {
     ["SAY"] = "Say",
     ["EMOTE"] = "Emote",
     ["YELL"] = "Yell",
+    ["GUILD"] = "Guild",
 }
 core.channelsExtended = {
     ["WHISPER"] = "Whisper Nemesis (|c00ff0000May be unavailable|r)",
@@ -531,8 +528,8 @@ core.affixMobs = {
     "Afflicted Soul",
 }
 
--- Affix mobs of interest
-core.affixMobsMarker = {
+-- Affix mobs that cast
+core.affixMobsCasters = {
     "Incorporeal",
     "Afflicted Soul",
 }
@@ -545,6 +542,7 @@ core.affixMobsHandles = {
     },
     ["Incorporeal"] = {
         "CROWD_CONTROL",
+        "INTERRUPT"
     },
     ["Spiteful Shade"] = {
         "CROWD_CONTROL",
@@ -575,6 +573,13 @@ core.affixMobsAuraSpells = {}
 for _, val in pairs(core.affixMobsAuras) do
     core.affixMobsAuraSpells[val.spellId] = val
     core.affixMobsAuraSpells[val.spellName] = val
+end
+
+-- Cache the affix mobs that cast to avoid repeated lookups
+core.affixMobsCastersLookup = {}
+
+for _, val in pairs(core.affixMobsCasters) do
+    core.affixMobsCastersLookup[val] = true
 end
 
 -- Raid markers to use for affix mobs (currently unused)

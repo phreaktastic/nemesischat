@@ -17,14 +17,14 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Nemesis",
         value = "NEMESIS_PLAYER",
         exec = function() return NCEvent:GetNemesis() end,
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NC_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
         type = "INPUT",
     })
     :AddSubject({
         label = "Bystander",
         value = "BYSTANDER_PLAYER",
         exec = function() return NCEvent:GetBystander() end,
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NC_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
         type = "INPUT",
     })
     :AddSubject({
@@ -38,7 +38,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Keystone Level",
         value = "KEYSTONE_LEVEL",
         exec = function() return NCDungeon:GetLevel() end,
-        operators = core.constants.EXTENDED_OPERATORS,
+        operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
     })
     :AddReplacement({

@@ -682,6 +682,9 @@ function NemesisChat:InitializeHelpers()
             NemesisChat:RegisterEvent("ENCOUNTER_START")
             NemesisChat:RegisterEvent("PLAYER_REGEN_DISABLED")
             NemesisChat:RegisterEvent("PLAYER_ROLES_ASSIGNED")
+            NemesisChat:RegisterEvent("UNIT_SPELLCAST_START")
+            NemesisChat:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+            NemesisChat:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
         else
             NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
             NemesisChat:UnregisterEvent("ENCOUNTER_END")
@@ -691,6 +694,9 @@ function NemesisChat:InitializeHelpers()
             NemesisChat:UnregisterEvent("ENCOUNTER_START")
             NemesisChat:UnregisterEvent("PLAYER_REGEN_DISABLED")
             NemesisChat:UnregisterEvent("PLAYER_ROLES_ASSIGNED")
+            NemesisChat:UnregisterEvent("UNIT_SPELLCAST_START")
+            NemesisChat:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+            NemesisChat:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
         end
     end
 
@@ -960,14 +966,14 @@ function NemesisChat:InitializeHelpers()
                     -- A player is attacking a mob
                     local player = NCRuntime:GetGroupRosterPlayer(sname)
 
-                    if (sname ~= GetMyName() and (player == nil or player.role == "TANK")) or (sname == GetMyName() and UnitGroupRolesAssigned("player") == "TANK") then
+                    if player.role == "TANK" then
                         NCRuntime:AddPulledUnit(dguid)
                         return false, nil, nil, nil
                     end
 
                     local validDamage = type(itype) == "number" and itype > 0
                     local classification = UnitClassification(dguid)
-                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and UnitCanAttack("player", dguid)
+                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and UnitCanAttack("player", dguid)
 
 					if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
                         -- Fire off a pull event -- player attacked a mob!
@@ -976,15 +982,15 @@ function NemesisChat:InitializeHelpers()
 					end
 				elseif(bit.band(dflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) and not tContains(core.affixMobs, sname) then
                     -- A mob is attacking a player
-                    local player = core.runtime.groupRoster[dname]
+                    local player = NCRuntime:GetGroupRosterPlayer(dname)
 
-                    if (dname ~= GetMyName() and (player == nil or player.role == "TANK")) or (dname == GetMyName() and UnitGroupRolesAssigned("player") == "TANK") then
+                    if player.role == "TANK" then
                         NCRuntime:AddPulledUnit(dguid)
                         return false, nil, nil, nil
                     end
 
                     local classification = UnitClassification(sguid)
-                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and UnitCanAttack("player", sguid)
+                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and UnitCanAttack("player", sguid)
 
                     if NemesisChat:UnitIsNotPulled(sguid) and isEliteEnemy then
                         -- Fire off a butt-pull event -- mob attacked a player!
@@ -996,13 +1002,15 @@ function NemesisChat:InitializeHelpers()
 					local pullname;
 					local pname = NemesisChat:GetPetOwner(sguid);
 
-					if(pname == "Unknown") then pullname = sname.." (pet)";
-					else pullname = pname;
+					if (pname == "Unknown") then 
+                        pullname = sname.." (pet)"
+					else 
+                        pullname = pname
 					end
 
                     local validDamage = type(itype) == "number" and itype > 0
                     local classification = UnitClassification(dguid)
-                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and UnitCanAttack("player", dguid)
+                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and UnitCanAttack("player", dguid)
 					    
                     if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
                         -- Fire off a pet pull event -- player's pet attacked a mob!
@@ -1037,36 +1045,6 @@ function NemesisChat:InitializeHelpers()
 		end
     end
 
-    function NemesisChat:IsAffixBeginCast()
-        if not NemesisChat:CheckIsAffix() then
-            return false
-        end
-
-        local _,event,_,sguid,sname = CombatLogGetCurrentEventInfo()
-
-        return event == "SPELL_CAST_START", sguid, sname
-    end
-
-    function NemesisChat:IsAffixSuccessfulCast()
-        if not NemesisChat:CheckIsAffix() then
-            return false
-        end
-
-        local _,event,_,sguid,sname = CombatLogGetCurrentEventInfo()
-
-        return event == "SPELL_CAST_SUCCESS", sguid, sname
-    end
-
-    function NemesisChat:IsAffixCastInterrupted()
-        if not NemesisChat:CheckIsAffix() then
-            return false
-        end
-
-        local _,event,_,sguid,sname = CombatLogGetCurrentEventInfo()
-
-        return event == "SPELL_CAST_FAILED", sguid, sname
-    end
-
     function NemesisChat:IsAffixMobHandled()
         if not IsInInstance() or not IsInGroup() then
             return false, nil, nil
@@ -1077,8 +1055,6 @@ function NemesisChat:InitializeHelpers()
         if NCRuntime:GetGroupRosterPlayer(sname) == nil then
             return false, nil, nil
         end
-
-        local isHandled = false
 
         if UnitIsUnconscious(dguid) or UnitIsDead(dguid) or string.find(event, "INSTAKILL") then
             return true, sname, dguid
@@ -1094,14 +1070,13 @@ function NemesisChat:InitializeHelpers()
                     end
                 else
                     if string.find(event, eventSubstr) then
-                        isHandled = true
-                        break
+                        return true, sname, dguid
                     end
                 end
             end
         end
 
-        return isHandled, sname, dguid
+        return false, nil, nil
     end
 
     function NemesisChat:ActionScoring()
@@ -1180,37 +1155,8 @@ function NemesisChat:InitializeHelpers()
     function NemesisChat:CheckAffixes()
         NemesisChat:CheckAffixAuras()
 
-        local isBeginCast, beginCastGuid, beginCastName = NemesisChat:IsAffixBeginCast()
-        local isSuccessfulCast, successfulCastGuid, successfulCastName = NemesisChat:IsAffixSuccessfulCast()
-        local isCastInterrupted, castInterruptedGuid, castInterruptedName = NemesisChat:IsAffixCastInterrupted()
         local isAffixMobHandled, affixMobHandlerName, affixMobHandledGuid = NemesisChat:IsAffixMobHandled()
         local isAuraHandled, auraHandlerName = NemesisChat:IsAffixAuraHandled()
-
-        if isBeginCast then
-            if NCConfig:IsReportingAffixes_CastStart() then
-                SendChatMessage("Nemesis Chat: " .. beginCastName .. " is casting!", "YELL")
-            end
-
-            -- if core.db.profile.reportConfig["AFFIXES"]["MARKERS"] and tContains(core.affixMobsMarker, beginCastName) then
-            --     SetRaidTarget(beginCastGuid, core.markers[NCRuntime:GetRollingMarketIndex()])
-            -- end
-        end
-
-        if isSuccessfulCast then
-            if NCConfig:IsReportingAffixes_CastSuccess() then
-                SendChatMessage("Nemesis Chat: " .. successfulCastName .. " successfully cast!", "YELL")
-            end
-        end
-
-        if isCastInterrupted then
-            if NCConfig:IsReportingAffixes_CastFailed() and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
-                SendChatMessage("Nemesis Chat: " .. castInterruptedName .. " cast interrupted, but not incapacitated/dead!", "YELL")
-            end
-
-            -- if core.db.profile.reportConfig["AFFIXES"]["MARKERS"] and UnitIsUnconscious(beginCastGuid) then
-            --     SetRaidTarget(beginCastGuid, 0)
-            -- end
-        end
 
         if isAffixMobHandled then
             -- SetRaidTarget(affixMobHandledGuid, 0)

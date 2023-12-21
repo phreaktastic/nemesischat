@@ -323,12 +323,12 @@ This compability check will not run when toggling config options, as it checks i
     label = "Nem. DPS (Current)",
     value = "NEMESIS_DPS",
     exec = function() return NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT) end,
-    operators = core.constants.EXTENDED_OPERATORS,
+    operators = core.constants.NUMERIC_OPERATORS,
     type = "NUMBER",
 })
 ```
 
-This method call is adding a new subject to conditions labeled `Nem. DPS (Current)`. The `exec` property is a function which will retrieve the value immediately prior to comparison. You may add any operators you want, but they must follow the standardized operators structure. Here, we just want our `EXTENDED_OPERATORS`, which are for comparing numeric values.
+This method call is adding a new subject to conditions labeled `Nem. DPS (Current)`. The `exec` property is a function which will retrieve the value immediately prior to comparison. You may add any operators you want, but they must follow the standardized operators structure. Here, we just want our `NUMERIC_OPERATORS`, which are for comparing numeric values.
 
 ```
 :AddReplacement({
