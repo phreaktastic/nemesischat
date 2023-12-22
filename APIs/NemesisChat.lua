@@ -41,6 +41,76 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
     })
+    :AddSubject({
+        label = "Dungeon Time",
+        value = "DUNGEON_TIME",
+        exec = function() return NCDungeon:GetStartTime() end,
+        operators = core.constants.NUMERIC_OPERATORS,
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Boss Time",
+        value = "BOSS_TIME",
+        exec = function() return NCBoss:GetStartTime() end,
+        operators = core.constants.NUMERIC_OPERATORS,
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "My Race",
+        value = "RACE",
+        exec = function() return UnitRace("player") end,
+        operators = core.constants.OPERATORS,
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "My Class",
+        value = "CLASS",
+        exec = function() return UnitClass("player") end,
+        operators = core.constants.OPERATORS,
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "My Spec",
+        value = "SPEC",
+        exec = function() return GetSpecializationNameForSpecID(GetSpecialization()) end,
+        operators = core.constants.OPERATORS,
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "My Item Level",
+        value = "ILVL",
+        exec = function() return GetAverageItemLevel() end,
+        operators = core.constants.NUMERIC_OPERATORS,
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Nemesis Race",
+        value = "NEMESIS_RACE",
+        exec = function() return UnitRace(NCEvent:GetNemesis()) end,
+        operators = core.constants.OPERATORS,
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "Nemesis Class",
+        value = "NEMESIS_CLASS",
+        exec = function() return UnitClass(NCEvent:GetNemesis()) end,
+        operators = core.constants.OPERATORS,
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "Bystander Race",
+        value = "BYSTANDER_RACE",
+        exec = function() return UnitRace(NCEvent:GetBystander()) end,
+        operators = core.constants.OPERATORS,
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "Bystander Class",
+        value = "BYSTANDER_CLASS",
+        exec = function() return UnitClass(NCEvent:GetBystander()) end,
+        operators = core.constants.OPERATORS,
+        type = "INPUT",
+    })
     :AddReplacement({
         label = "Boss Name",
         value = "BOSSNAME",
@@ -184,7 +254,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Nemesis Name",
         value = "NEMESIS",
-        exec = function() return Split(NCEvent:GetNemesis(), "-")[1] end,
+        exec = function() return (Split(NCEvent:GetNemesis(), "-")[1] or "") end,
         description = "The Nemesis's name.",
         isNumeric = false,
     })
@@ -271,6 +341,62 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return math.floor((UnitHealth(NCEvent:GetNemesis()) / UnitHealthMax(NCEvent:GetNemesis())) * 100) .. "%" end,
         description = "The current health percentage of the Nemesis.",
         isNumeric = true,
+    })
+    :AddReplacement({
+        label = "My Race",
+        value = "RACE",
+        exec = function() return UnitRace("player") end,
+        description = "Your character's race.",
+        isNumeric = false,
+    })
+    :AddReplacement({
+        label = "My Class",
+        value = "CLASS",
+        exec = function() return UnitClass("player") end,
+        description = "Your character's class.",
+        isNumeric = false,
+    })
+    :AddReplacement({
+        label = "My Spec",
+        value = "SPEC",
+        exec = function() return GetSpecializationNameForSpecID(GetSpecialization()) end,
+        description = "Your character's specialization.",
+        isNumeric = false,
+    })
+    :AddReplacement({
+        label = "My Item Level",
+        value = "ILVL",
+        exec = function() return GetAverageItemLevel() end,
+        description = "Your character's average item level.",
+        isNumeric = true,
+    })
+    :AddReplacement({
+        label = "Nemesis Race",
+        value = "NEMESISRACE",
+        exec = function() return UnitRace(NCEvent:GetNemesis()) end,
+        description = "The race of the Nemesis's character.",
+        isNumeric = false,
+    })
+    :AddReplacement({
+        label = "Nemesis Class",
+        value = "NEMESISCLASS",
+        exec = function() return UnitClass(NCEvent:GetNemesis()) end,
+        description = "The class of the Nemesis's character.",
+        isNumeric = false,
+    })
+    :AddReplacement({
+        label = "Bystander Race",
+        value = "BYSTANDERRACE",
+        exec = function() return UnitRace(NCEvent:GetBystander()) end,
+        description = "The race of the Bystander's character.",
+        isNumeric = false,
+    })
+    :AddReplacement({
+        label = "Bystander Class",
+        value = "BYSTANDERCLASS",
+        exec = function() return UnitClass(NCEvent:GetBystander()) end,
+        description = "The class of the Bystander's character.",
+        isNumeric = false,
     })
     :AddReplacement({
         value = "HP_CONDITION",

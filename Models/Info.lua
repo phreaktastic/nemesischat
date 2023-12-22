@@ -31,6 +31,7 @@ NCInfo = {
     REPLACEMENTS = {
         ["AvoidableDamage"] = "Avoidable Damage",
         ["CrowdControl"] = "CC Score",
+        ["Affixes"] = "Affix Score",
     },
 
     CurrentPlayer = nil,
@@ -38,6 +39,7 @@ NCInfo = {
     StatsFrame = CreateFrame("MessageFrame", "NemesisChatStatsFrame", UIParent, "BackdropTemplate"),
 
     Initialize = function(self)
+        self.CurrentPlayer = UnitName("player")
         self:InitializeVars()
 
         local f = self.StatsFrame
@@ -137,7 +139,6 @@ NCInfo = {
             if button == "LeftButton" then
                 NCInfo.StatsFrame:StartSizing("BOTTOMRIGHT")
                 NCInfo.StatsFrame:SetUserPlaced(false)
-                NCInfo.StatsFrame.scrollFrame:Hide()
             end
         end)
         f.resizeButton:SetScript("OnMouseUp", function(self, button)
@@ -164,8 +165,6 @@ NCInfo = {
             NCInfo.StatsFrame.scrollFrame.scrollChild:SetSize(NCInfo.TOTAL_WIDTH - 44, NCInfo.TOTAL_HEIGHT - NCInfo.SCROLLVIEW_TOP - NCInfo.SCROLLVIEW_BOTTOM)
             NCInfo:Update()
 
-            NCInfo.StatsFrame.scrollFrame:Show()
-
             UIDropDownMenu_SetWidth(NCInfo.StatsFrame.playerDropdown, NCInfo.DROPDOWN_WIDTH)
         end)
 
@@ -175,7 +174,7 @@ NCInfo = {
     end,
 
     Update = function(self)
-        local f = self.StatsFrame
+        local f = NCInfo.StatsFrame
         local content = f.scrollFrame.scrollChild
         local i = 1
         local ROW_WIDTH = content:GetWidth()
@@ -184,7 +183,7 @@ NCInfo = {
         local green = {0.5,0.85,0.6}
         local neutral = {0.5,0.6,0.85}
 
-        if self.CurrentPlayer ~= GetMyName() then
+        if NCInfo.CurrentPlayer ~= GetMyName() then
             if not content.rows["compareWithMeCheckbox"] then
                 local checkbox = CreateFrame("CheckButton",nil,content,"ChatConfigCheckButtonTemplate")
                 checkbox:SetPoint("TOPLEFT",0,0)
@@ -192,6 +191,7 @@ NCInfo = {
                 checkbox:SetChecked(core.db.profile.infoClickCompare)
                 checkbox:SetScript("OnClick", function(self)
                     core.db.profile.infoClickCompare = self:GetChecked()
+                    NCInfo:Update()
                 end)
                 checkbox.text = checkbox:CreateFontString(nil,"ARTWORK","GameFontHighlight")
                 checkbox.text:SetPoint("LEFT",20,0)
@@ -235,23 +235,23 @@ NCInfo = {
             content.rows[metric].columns[1]:SetText(self.REPLACEMENTS[metric] or metric)
 
             if core.db.profile.infoClickCompare then
-                local delta = NCDungeon:GetStats(self.CurrentPlayer, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
+                local delta = NCDungeon:GetStats(NCInfo.CurrentPlayer, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
 
                 if delta > 0 then
-                    content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)) .. " (+" .. NemesisChat:FormatNumber(delta) .. ")")
+                    content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(NCInfo.CurrentPlayer, metric)) .. " (+" .. NemesisChat:FormatNumber(delta) .. ")")
                     content.rows[metric].columns[2]:SetTextColor(greaterColor[1], greaterColor[2], greaterColor[3])
                     content.rows[metric].columns[2].desiredColor = {greaterColor[1], greaterColor[2], greaterColor[3]}
                 elseif delta < 0 then
-                    content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)) .. " (-" .. NemesisChat:FormatNumber(math.abs(delta)) .. ")")
+                    content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(NCInfo.CurrentPlayer, metric)) .. " (-" .. NemesisChat:FormatNumber(math.abs(delta)) .. ")")
                     content.rows[metric].columns[2]:SetTextColor(lesserColor[1], lesserColor[2], lesserColor[3])
                     content.rows[metric].columns[2].desiredColor = {lesserColor[1], lesserColor[2], lesserColor[3]}
                 else
-                    content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)))
+                    content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(NCInfo.CurrentPlayer, metric)))
                     content.rows[metric].columns[2]:SetTextColor(neutral[1], neutral[2], neutral[3])
                     content.rows[metric].columns[2].desiredColor = {neutral[1], neutral[2], neutral[3]}
                 end
             else
-                content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(self.CurrentPlayer, metric)))
+                content.rows[metric].columns[2]:SetText(NemesisChat:FormatNumber(NCDungeon:GetStats(NCInfo.CurrentPlayer, metric)))
                 content.rows[metric].columns[2]:SetTextColor(neutral[1], neutral[2], neutral[3])
                 content.rows[metric].columns[2].desiredColor = {neutral[1], neutral[2], neutral[3]}
             end
@@ -276,6 +276,7 @@ NCInfo = {
             content.rows[metric].columns[1]:SetJustifyH("LEFT")
             content.rows[metric].columns[2]:SetWidth(ROW_WIDTH - 96)
             content.rows[metric].columns[2]:SetJustifyH("RIGHT")
+            content.rows[metric].columns[2]:SetMaxLines(1)
 
             content.rows[metric]:SetScript("OnClick", function(self)
                 NCInfo:ReportMetric(metric, NCInfo.CurrentPlayer)
@@ -291,13 +292,17 @@ NCInfo = {
             end
         end
 
-        UIDropDownMenu_SetText(f.playerDropdown, self.CurrentPlayer)
+        UIDropDownMenu_SetText(f.playerDropdown, NCInfo.CurrentPlayer)
     end,
 
     UpdatePlayerDropdown = function(self)
-        UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, self.CurrentPlayer)
-        UIDropDownMenu_Initialize(self.StatsFrame.playerDropdown, function(self, level, menuList)
-            for name, _ in pairs(NCRuntime:GetGroupRoster()) do
+        UIDropDownMenu_SetText(NCInfo.StatsFrame.playerDropdown, NCInfo.CurrentPlayer)
+        UIDropDownMenu_Initialize(NCInfo.StatsFrame.playerDropdown, function(self, level, menuList)
+            local roster = NCRuntime:GetGroupRoster()
+            local snapshot = NCDungeon.RosterSnapshot
+            local players = GetHashmapKeys(MapMerge(roster, snapshot))
+
+            for _, name in pairs(players) do
                 local info = UIDropDownMenu_CreateInfo()
                 info.text = name
                 info.value = name
@@ -312,14 +317,13 @@ NCInfo = {
     end,
 
     InitializeVars = function(self)
-        self.CurrentPlayer = UnitName("player")
         self.SCROLLVIEW_HEIGHT = self.TOTAL_HEIGHT - self.HEADER_HEIGHT - self.HEADER_BUFFER - self.FOOTER_HEIGHT - self.FOOTER_BUFFER
         self.SCROLLVIEW_TOP = self.HEADER_HEIGHT + self.HEADER_BUFFER
         self.SCROLLVIEW_BOTTOM = self.FOOTER_HEIGHT + self.FOOTER_BUFFER
     end,
 
     ReportMetric = function(self, metric, player)
-        local message = string.format("%s for %s (Dungeon): %s", self.REPLACEMENTS[metric] or metric, player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
+        local message = string.format("%s for %s (Dungeon): %s", (self.REPLACEMENTS[metric] or metric), player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
         if core.db.profile.infoClickCompare then
             local delta = NCDungeon:GetStats(player, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
             

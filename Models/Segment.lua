@@ -84,6 +84,9 @@ NCSegment = {
     -- Segment tracker -- array containing all objects which inherited from NCSegment
     Segments = {},
 
+    -- Roster snapshot at the beginning of the segment
+    RosterSnapshot = {},
+
     DetailsSegment = DETAILS_SEGMENTID_CURRENT,
 
     StartPreHook = function(self)
@@ -95,6 +98,7 @@ NCSegment = {
         self.StartTime = GetTime()
         self:SetActive()
         self:StartCallback()
+        self.RosterSnapshot = DeepCopy(NCRuntime:GetGroupRoster())
     end,
     StartCallback = function(self)
         -- Override me
@@ -206,15 +210,15 @@ NCSegment = {
 
         return amount
     end,
-    AddAffix = function(self, player)
+    AddAffix = function(self, player, optCount)
         if player == nil then
             return
         end
 
         if self.Affixes[player] == nil then
-            self.Affixes[player] = 1
+            self.Affixes[player] = optCount or 1
         else
-            self.Affixes[player] = self.Affixes[player] + 1
+            self.Affixes[player] = self.Affixes[player] + (optCount or 1)
         end
 
         self:AddAffixCallback(player)
@@ -569,14 +573,14 @@ NCSegment = {
             end
         end
     end,
-    GlobalAddAffix = function(self, player)
+    GlobalAddAffix = function(self, player, optCount)
         if player == nil then
             return
         end
 
         for _, segment in pairs(NCSegment.Segments) do
             if segment:IsActive() then
-                segment:AddAffix(player)
+                segment:AddAffix(player, optCount)
             end
         end
     end,

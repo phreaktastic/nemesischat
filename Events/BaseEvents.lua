@@ -214,13 +214,25 @@ end
 
 function NemesisChat:UNIT_SPELLCAST_INTERRUPTED(_, unitTarget, castGUID, spellID)
     local casterName = UnitName(unitTarget)
-    local castInterruptedGuid = UnitGUID(unitTarget)
 
     if not core.affixMobsCastersLookup[casterName] then
         return
     end
+
+    local castInterruptedGuid = UnitGUID(unitTarget)
     
     if NCConfig:IsReportingAffixes_CastFailed() and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
         SendChatMessage("Nemesis Chat: " .. casterName .. " cast interrupted, but not incapacitated/dead!", "YELL")
     end
+end
+
+function NemesisChat:PLAYER_TARGET_CHANGED(_, unitTarget)
+    local targetName = UnitName("target")
+
+    if not targetName or not core.affixMobsCastersLookup[targetName] then
+        return
+    end
+
+    SetRaidTarget("target", 5)
+    SendChatMessage("Nemesis Chat: I am currently handling {moon}MOON{moon}!", NemesisChat:GetActualChannel("GROUP"))
 end

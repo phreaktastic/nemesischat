@@ -91,11 +91,27 @@ function NemesisChat:InstantiateMsg()
 
         -- Custom replacements, example: Details API [DPS] and [NEMESISDPS], this comes first as overrides are possible
         for k, v in pairs(NCController.customReplacements) do
-            -- First check for condition specific replacements
-            if type(v()) == "string" or type(v()) == "number" then
-                msg = msg:gsub(k, v())
+            local val = v()
+
+            NemesisChat:Print("REPLACEMENT MATCH:", k, val)
+
+            if type(val) == "string" or type(val) == "number" then
+                msg = msg:gsub(k, val)
             else
-                NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(v()))
+                NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+            end
+
+            -- First check for condition specific replacements
+            if msg:match(k) then
+                local val = v()
+
+                NemesisChat:Print("REPLACEMENT MATCH:", k, val)
+
+                if type(val) == "string" or type(val) == "number" then
+                    msg = msg:gsub(k, val)
+                else
+                    NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+                end
             end
         end
 
@@ -104,10 +120,14 @@ function NemesisChat:InstantiateMsg()
 
         -- One more pass on custom replacements, without condition replacement text, as a fallback
         for k, v in pairs(NCController.customReplacements) do
-            if type(v()) == "string" or type(v()) == "number" then
-                msg = msg:gsub(k, v())
-            else
-                NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(v()))
+            if msg:match(k) then
+                local val = v()
+
+                if type(val) == "string" or type(val) == "number" then
+                    msg = msg:gsub(k, val)
+                else
+                    NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+                end
             end
         end
 

@@ -456,7 +456,7 @@ NCRankings = {
                 Offheals = {
                     IsIncludedCallback = function(self, player)
                         -- If the player is a healer, they're excluded
-                        if GetRole(player) == "HEALER" then
+                        if GetRole(player) == "Healer" then
                             return false
                         end
 

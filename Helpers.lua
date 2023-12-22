@@ -685,6 +685,7 @@ function NemesisChat:InitializeHelpers()
             NemesisChat:RegisterEvent("UNIT_SPELLCAST_START")
             NemesisChat:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
             NemesisChat:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+            NemesisChat:RegisterEvent("PLAYER_TARGET_CHANGED")
         else
             NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
             NemesisChat:UnregisterEvent("ENCOUNTER_END")
@@ -697,6 +698,7 @@ function NemesisChat:InitializeHelpers()
             NemesisChat:UnregisterEvent("UNIT_SPELLCAST_START")
             NemesisChat:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
             NemesisChat:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+            NemesisChat:UnregisterEvent("PLAYER_TARGET_CHANGED")
         end
     end
 
@@ -1149,7 +1151,7 @@ function NemesisChat:InitializeHelpers()
 
         local _,event,_,_,sname = CombatLogGetCurrentEventInfo()
 
-        return tContains(core.affixMobs, sname)
+        return core.affixMobsLookup[sname] == true
     end
 
     function NemesisChat:CheckAffixes()
@@ -1159,9 +1161,15 @@ function NemesisChat:InitializeHelpers()
         local isAuraHandled, auraHandlerName = NemesisChat:IsAffixAuraHandled()
 
         if isAffixMobHandled then
+            local mobName = UnitName(affixMobHandledGuid)
             -- SetRaidTarget(affixMobHandledGuid, 0)
 
-            NCSegment:GlobalAddAffix(affixMobHandlerName)
+            -- More score for caster mobs as opposed to simply CCing shades, for example
+            if core.affixMobsCastersLookup[mobName] then
+                NCSegment:GlobalAddAffix(affixMobHandlerName, 10)
+            else
+                NCSegment:GlobalAddAffix(affixMobHandlerName)
+            end
         end
 
         if isAuraHandled then

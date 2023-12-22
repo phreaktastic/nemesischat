@@ -129,6 +129,20 @@ function Split(str, sep)
     return tbl
   end
 
+function GetHashmapKeys(hashmap)
+    local keys = {}
+
+    if hashmap == nil then
+        return keys
+    end
+
+    for key, _ in pairs(hashmap) do
+        table.insert(keys, key)
+    end
+
+    return keys
+end
+
 -----------------------------------------------------
 -- Core options
 -----------------------------------------------------
@@ -151,10 +165,17 @@ core.units = {
         value = "BYSTANDER"
     },
 }
+core.unitsAffix = {
+    {
+        label = "Affix Mob",
+        value = "AFFIX_MOB"
+    }
+}
 core.constants = {}
 core.constants.NA = { 1 }
 core.constants.STANDARD = { 2, 3, 4, }
 core.constants.OTHERS = { 3, 4, }
+core.constants.AFFIXES = { 5 }
 core.constants.OPERATORS = {
     {
         label = "is",
@@ -215,7 +236,23 @@ core.constants.UNIT_OPERATORS = {
     {
         label = "is dead",
         value = "IS_DEAD",
-    }
+    },
+    {
+        label = "is an affix mob",
+        value = "IS_AFFIX_MOB",
+    },
+    {
+        label = "is NOT an affix mob",
+        value = "IS_NOT_AFFIX_MOB",
+    },
+    {
+        label = "is an affix caster",
+        value = "IS_AFFIX_CASTER",
+    },
+    {
+        label = "is NOT an affix caster",
+        value = "IS_NOT_AFFIX_CASTER",
+    },
 }
 core.events = {
     segment = {
@@ -395,24 +432,6 @@ core.messageConditions = {
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
-    {
-        label = "My Health %",
-        value = "HEALTH_PERCENT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER",
-    },
-    {
-        label = "Nem. Health %",
-        value = "NEMESIS_HEALTH_PERCENT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER",
-    },
-    {
-        label = "Bys. Health %",
-        value = "BYSTANDER_HEALTH_PERCENT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER",
-    },
 }
 
 -- This is what the configuration screen is built from.
@@ -524,13 +543,13 @@ core.feastIDs = {
 -- All affix mobs
 core.affixMobs = {
     "Spiteful Shade",
-    "Incorporeal",
+    "Incorporeal Being",
     "Afflicted Soul",
 }
 
 -- Affix mobs that cast
 core.affixMobsCasters = {
-    "Incorporeal",
+    "Incorporeal Being",
     "Afflicted Soul",
 }
 
@@ -540,7 +559,7 @@ core.affixMobsHandles = {
         "HEAL",
         "DISPEL",
     },
-    ["Incorporeal"] = {
+    ["Incorporeal Being"] = {
         "CROWD_CONTROL",
         "INTERRUPT"
     },
@@ -582,12 +601,53 @@ for _, val in pairs(core.affixMobsCasters) do
     core.affixMobsCastersLookup[val] = true
 end
 
--- Raid markers to use for affix mobs (currently unused)
+-- Cache the affix mobs to avoid repeated lookups
+core.affixMobsLookup = {}
+
+for _, val in pairs(core.affixMobs) do
+    core.affixMobsLookup[val] = true
+end
+
+-- Raid markers to use for affix mobs
 core.markers = {
-    1,
-    5,
-    7,
-    8,
+    1, -- Star
+    -- 2, -- Circle
+    3, -- Diamond
+    -- 4, -- Triangle
+    5, -- Moon
+    6, -- Square
+    7, -- Cross
+    8, -- Skull
+}
+
+-- Incorporeal Beings count as every creature type. List of all players' crowd control spells that work on them, which will fear, incapacitate, or stun for 8 seconds or more:
+core.incorporealBeingCCSpells = {
+    5782, -- Fear
+    8122, -- Psychic Scream
+    6358, -- Seduction
+    115268, -- Mesmerize
+    115078, -- Paralysis
+    20066, -- Repentance
+    9484, -- Shackle Undead
+    605, -- Mind Control
+    2094, -- Blind
+    1776, -- Gouge
+    6770, -- Sap
+    51514, -- Hex
+    217832, -- Imprison
+    118, -- Polymorph
+    28272, -- Polymorph (pig)
+    28271, -- Polymorph (turtle)
+    61305, -- Polymorph (black cat)
+    61721, -- Polymorph (rabbit)
+    61780, -- Polymorph (turkey)
+    161353, -- Polymorph (bear cub)
+    161354, -- Polymorph (monkey)
+    161355, -- Polymorph (penguin)
+    161372, -- Polymorph (peacock)
+    277787, -- Polymorph (baby direhorn)
+    277792, -- Polymorph (bumblebee)
+    10326, -- Turn Evil
 }
 
 NCEvent = {}
