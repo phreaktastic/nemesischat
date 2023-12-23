@@ -531,4 +531,13 @@ NCConfig = {
     RemoveMessage = function(self, message)
         table.remove(core.db.profile.messages, message)
     end,
+    ShouldShowInfoFrame = function(self)
+        return core.db.profile.showInfoFrame
+    end,
+    ToggleShowInfoFrame = function(self)
+        core.db.profile.showInfoFrame = not core.db.profile.showInfoFrame
+    end,
+    SetShowInfoFrame = function(self, value)
+        core.db.profile.showInfoFrame = value
+    end,
 }

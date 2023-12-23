@@ -294,7 +294,7 @@ function NemesisChat:InitializeHelpers()
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
         local _, subEvent, eventType, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _ = CombatLogGetCurrentEventInfo()
-        local isPull, _, pullName, mobName = NemesisChat:IsPull()
+        local isPull, _, pullPlayerName, mobName = NemesisChat:IsPull()
 
         NemesisChat:SetMyName()
         NemesisChat:UpdateGroupState()
@@ -309,14 +309,15 @@ function NemesisChat:InitializeHelpers()
             if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
                 -- Nesting this in to prevent spam
                 if NCConfig:IsReportingPulls_Realtime() then
-                    SendChatMessage("Nemesis Chat: " .. pullName .. " pulled " .. mobName, "YELL")
+                    SendChatMessage("Nemesis Chat: " .. pullPlayerName .. " pulled " .. mobName, "YELL")
                 end
 
-                NemesisChat:SpawnToast("Pull", pullName, mobName)
+                NemesisChat:SpawnToast("Pull", pullPlayerName, mobName)
+                NCRuntime:UpdateLastUnsafePullToast()
             end
             
-            NCRuntime:SetLastUnsafePull(pullName, mobName)
-            NCSegment:GlobalAddPull(pullName)
+            NCRuntime:SetLastUnsafePull(pullPlayerName, mobName)
+            NCSegment:GlobalAddPull(pullPlayerName)
         end
 
         -- This could be more modular, the only problem is feasts...
@@ -652,53 +653,20 @@ function NemesisChat:InitializeHelpers()
     
         for key,val in pairs(members) do
             if val ~= nil then
-                local isInGuild = UnitIsInMyGuild(val) ~= nil
-                local isNemesis = (NCConfig:GetNemesis(val) ~= nil or (NCRuntime:GetFriend(val) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
-                local itemLevel = NemesisChat:GetItemLevel(val)
                 count = count + 1
-    
-                local rosterPlayer = {
-                    guid = UnitGUID(val),
-                    isGuildmate = isInGuild,
-                    isFriend = NCRuntime:IsFriend(val),
-                    isNemesis = isNemesis,
-                    role = UnitGroupRolesAssigned(val),
-                }
 
-                if itemLevel ~= nil then
-                    rosterPlayer.itemLevel = itemLevel
-                end
-
-                NCRuntime:AddGroupRosterPlayer(val, rosterPlayer)
+                NCRuntime:AddGroupRosterPlayer(val)
             end
         end
 
-        if count > 0 then
-            NemesisChat:RegisterEvent("PLAYER_REGEN_ENABLED")
-            NemesisChat:RegisterEvent("ENCOUNTER_END")
-            NemesisChat:RegisterEvent("CHALLENGE_MODE_COMPLETED")
-            NemesisChat:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-            NemesisChat:RegisterEvent("CHALLENGE_MODE_START")
-            NemesisChat:RegisterEvent("ENCOUNTER_START")
-            NemesisChat:RegisterEvent("PLAYER_REGEN_DISABLED")
-            NemesisChat:RegisterEvent("PLAYER_ROLES_ASSIGNED")
-            NemesisChat:RegisterEvent("UNIT_SPELLCAST_START")
-            NemesisChat:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-            NemesisChat:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-            NemesisChat:RegisterEvent("PLAYER_TARGET_CHANGED")
+        if count > 0 and IsNCEnabled() then
+            for _, event in pairs(core.eventSubscriptions) do
+                NemesisChat:RegisterEvent(event)
+            end
         else
-            NemesisChat:UnregisterEvent("PLAYER_REGEN_ENABLED")
-            NemesisChat:UnregisterEvent("ENCOUNTER_END")
-            NemesisChat:UnregisterEvent("CHALLENGE_MODE_COMPLETED")
-            NemesisChat:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-            NemesisChat:UnregisterEvent("CHALLENGE_MODE_START")
-            NemesisChat:UnregisterEvent("ENCOUNTER_START")
-            NemesisChat:UnregisterEvent("PLAYER_REGEN_DISABLED")
-            NemesisChat:UnregisterEvent("PLAYER_ROLES_ASSIGNED")
-            NemesisChat:UnregisterEvent("UNIT_SPELLCAST_START")
-            NemesisChat:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-            NemesisChat:UnregisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-            NemesisChat:UnregisterEvent("PLAYER_TARGET_CHANGED")
+            for _, event in pairs(core.eventSubscriptions) do
+                NemesisChat:UnregisterEvent(event)
+            end
         end
     end
 
@@ -952,21 +920,29 @@ function NemesisChat:InitializeHelpers()
 
     -- Largely taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with some modifications
     function NemesisChat:IsPull()
-        if not IsInInstance() or not IsInGroup() or (NCBoss:IsActive() and NCDungeon:IsActive()) then
-            return false, nil, nil, nil
-        end
+        -- if not IsInInstance() or not IsInGroup() or (NCBoss:IsActive() and NCDungeon:IsActive()) or IsInRaid() then
+        --     return false, nil, nil, nil
+        -- end
 
         local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,itype = CombatLogGetCurrentEventInfo()
 
-        if not UnitInParty(sname) and not UnitInParty(dname) then
-            return false, nil, nil, nil
-        end
+        -- if not UnitInParty(sname) and not UnitInParty(dname) then
+        --     return false, nil, nil, nil
+        -- end
 
 		if (dname and sname and dname ~= sname and not string.find(event,"_RESURRECT") and not string.find(event,"_CREATE") and (string.find(event,"SWING") or string.find(event,"RANGE") or string.find(event,"SPELL"))) and not tContains(core.affixMobs, sname) and not tContains(core.affixMobs, dname) then
 			if(not string.find(event,"_SUMMON")) then
-				if(bit.band(sflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) and not tContains(core.affixMobs, dname) then
+				if(bit.band(sflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                     -- A player is attacking a mob
                     local player = NCRuntime:GetGroupRosterPlayer(sname)
+
+                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
+                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
+                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
+                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
+                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
+                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
+                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
 
                     if player.role == "TANK" then
                         NCRuntime:AddPulledUnit(dguid)
@@ -982,7 +958,7 @@ function NemesisChat:InitializeHelpers()
 
                         return true, "PLAYER_ATTACK", sname, dname
 					end
-				elseif(bit.band(dflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) and not tContains(core.affixMobs, sname) then
+				elseif(bit.band(dflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                     -- A mob is attacking a player
                     local player = NCRuntime:GetGroupRosterPlayer(dname)
 
@@ -999,7 +975,7 @@ function NemesisChat:InitializeHelpers()
 
                         return true, "PLAYER_PULL", dname, sname
                     end
-				elseif(bit.band(sflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) and not tContains(core.affixMobs, dname) then
+				elseif(bit.band(sflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                     -- Player's pet attacks a mob
 					local pullname;
 					local pname = NemesisChat:GetPetOwner(sguid);
@@ -1019,7 +995,7 @@ function NemesisChat:InitializeHelpers()
 
                         return true, "PET_ATTACK", pullname, dname
                     end
-				elseif(bit.band(dflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) and not tContains(core.affixMobs, sname) then
+				elseif(bit.band(dflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                     --Mob attacks a player's pet
 					local pullname;
 					local pname = NemesisChat:GetPetOwner(dguid);

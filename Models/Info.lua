@@ -89,6 +89,7 @@ NCInfo = {
         f.closeButton:SetPoint("TOPRIGHT",0,18)
         f.closeButton:SetSize(16,16)
         f.closeButton:SetScript("OnClick", function(self)
+            NCConfig:SetShowInfoFrame(false)
             NCInfo.StatsFrame:Hide()
         end)
 
@@ -175,6 +176,7 @@ NCInfo = {
 
     Update = function(self)
         local f = NCInfo.StatsFrame
+        local infoFrame = f.infoFrame
         local content = f.scrollFrame.scrollChild
         local i = 1
         local ROW_WIDTH = content:GetWidth()
@@ -183,10 +185,38 @@ NCInfo = {
         local green = {0.5,0.85,0.6}
         local neutral = {0.5,0.6,0.85}
 
+        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(NCInfo.CurrentPlayer)
+        local snapshotPlayer = NCDungeon.RosterSnapshot[NCInfo.CurrentPlayer]
+        local playerInfo = MapMerge(rosterPlayer, snapshotPlayer)
+        local race = playerInfo.race or UnitRace(NCInfo.CurrentPlayer) or "Unknown"
+        local class = playerInfo.class or UnitClass(NCInfo.CurrentPlayer) or "Unknown"
+
+        -- Player information -- group roster race, class, and role
+        if not infoFrame then
+            local button = CreateFrame("Button",nil,f)
+            
+            button:SetSize(NCInfo.TOTAL_WIDTH, self.CELL_HEIGHT)
+            button:SetPoint("TOPLEFT",0,-34)
+            button:SetPoint("TOPRIGHT",0,-34)
+
+            button.text = button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
+            button.text:SetPoint("LEFT",0,0)
+            button.text:SetPoint("RIGHT",0,0)
+            button.text:SetWidth(NCInfo.TOTAL_WIDTH)
+            button.text:SetHeight(self.CELL_HEIGHT)
+            button.text:SetJustifyH("CENTER")
+            
+            infoFrame = button
+            f.infoFrame = infoFrame
+            f.infoFrame:Show()
+        end
+
+        infoFrame.text:SetText(race .. " " .. class)
+
         if NCInfo.CurrentPlayer ~= GetMyName() then
             if not content.rows["compareWithMeCheckbox"] then
                 local checkbox = CreateFrame("CheckButton",nil,content,"ChatConfigCheckButtonTemplate")
-                checkbox:SetPoint("TOPLEFT",0,0)
+                checkbox:SetPoint("TOPLEFT",0,-(i-1)*self.CELL_HEIGHT)
                 checkbox:SetSize(14, 14)
                 checkbox:SetChecked(core.db.profile.infoClickCompare)
                 checkbox:SetScript("OnClick", function(self)

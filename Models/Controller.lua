@@ -91,16 +91,6 @@ function NemesisChat:InstantiateMsg()
 
         -- Custom replacements, example: Details API [DPS] and [NEMESISDPS], this comes first as overrides are possible
         for k, v in pairs(NCController.customReplacements) do
-            local val = v()
-
-            NemesisChat:Print("REPLACEMENT MATCH:", k, val)
-
-            if type(val) == "string" or type(val) == "number" then
-                msg = msg:gsub(k, val)
-            else
-                NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
-            end
-
             -- First check for condition specific replacements
             if msg:match(k) then
                 local val = v()

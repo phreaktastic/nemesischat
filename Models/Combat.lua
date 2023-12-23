@@ -41,7 +41,10 @@ function NCCombat:FinishCallback()
     NCDungeon.Rankings.Calculate(NCDungeon.Rankings)
 
     NCInfo:Update()
-    NCInfo.StatsFrame:Show()
+
+    if NCConfig:ShouldShowInfoFrame() then
+        NCInfo.StatsFrame:Show()
+    end
 end
 
 function NCCombat:AnnounceAffixAuras()

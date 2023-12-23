@@ -233,7 +233,6 @@ NCRuntime = {
         core.runtime.lastUnsafePullCount = core.runtime.lastUnsafePullCount + 1
     end,
     SetLastUnsafePull = function(self, name, mob)
-        core.runtime.lastUnsafePullToast = GetTime()
         core.runtime.lastUnsafePullMob = mob
 
         if not core.runtime.lastUnsafePullCount then
@@ -323,7 +322,21 @@ NCRuntime = {
             NCInfo:UpdatePlayerDropdown()
         end
     end,
-    AddGroupRosterPlayer = function(self, playerName, data)
+    AddGroupRosterPlayer = function(self, playerName)
+        local isInGuild = UnitIsInMyGuild(val) ~= nil
+        local isNemesis = (NCConfig:GetNemesis(val) ~= nil or (NCRuntime:GetFriend(val) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
+        local itemLevel = NemesisChat:GetItemLevel(val)
+        local data =  {
+            guid = UnitGUID(playerName),
+            isGuildmate = isInGuild,
+            isFriend = NCRuntime:IsFriend(playerName),
+            isNemesis = isNemesis,
+            role = UnitGroupRolesAssigned(playerName),
+            itemLevel = itemLevel,
+            race = UnitRace(playerName),
+            class = UnitClass(playerName),
+        }
+
         core.runtime.groupRoster[playerName] = data
         core.runtime.groupRosterCount = core.runtime.groupRosterCount + 1
 
@@ -334,6 +347,8 @@ NCRuntime = {
         end
 
         NCInfo:UpdatePlayerDropdown()
+
+        return data
     end,
     GetPulledUnits = function(self)
         return core.runtime.pulledUnits

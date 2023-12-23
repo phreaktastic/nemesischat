@@ -53,17 +53,21 @@ end
 
 function MapMerge(map1, map2)
     local mergedMap = {}
-    
+
     -- Merge values from map1
-    for key, value in pairs(map1) do
-        mergedMap[key] = value
+    if map1 and type(map1) == "table" then
+        for key, value in pairs(map1) do
+            mergedMap[key] = value
+        end
     end
-    
+
     -- Merge values from map2, overriding existing values
-    for key, value in pairs(map2) do
-        mergedMap[key] = value
+    if map2 and type(map2) == "table" then
+        for key, value in pairs(map2) do
+            mergedMap[key] = value
+        end
     end
-    
+
     return mergedMap
 end
 
@@ -648,6 +652,29 @@ core.incorporealBeingCCSpells = {
     277787, -- Polymorph (baby direhorn)
     277792, -- Polymorph (bumblebee)
     10326, -- Turn Evil
+}
+
+core.eventSubscriptions = {
+    -- Enter / exit combat
+    "PLAYER_REGEN_ENABLED", -- Exit Combat
+    "PLAYER_REGEN_DISABLED", -- Enter Combat
+
+    -- Group
+    "PLAYER_ROLES_ASSIGNED", -- Role change
+    "ENCOUNTER_START", -- Boss start
+    "ENCOUNTER_END", -- Boss end
+    "CHALLENGE_MODE_START", -- M+ start
+    "CHALLENGE_MODE_COMPLETED", -- M+ complete
+    "CHALLENGE_MODE_RESET", -- M+ reset
+
+    -- Unit Actions
+    "UNIT_SPELLCAST_START",
+    "UNIT_SPELLCAST_SUCCEEDED",
+    "UNIT_SPELLCAST_INTERRUPTED",
+
+    -- Self
+    "PLAYER_TARGET_CHANGED",
+    "COMBAT_LOG_EVENT_UNFILTERED",
 }
 
 NCEvent = {}

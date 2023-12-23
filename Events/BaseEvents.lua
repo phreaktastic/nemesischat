@@ -74,24 +74,13 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
         for key,val in pairs(members) do
             if val ~= nil and val ~= GetMyName() then
-                local isInGuild = UnitIsInMyGuild(val) ~= nil
-                local isNemesis = (core.db.profile.nemeses[val] ~= nil or (NCRuntime:GetFriend(val) ~= nil and core.db.profile.flagFriendsAsNemeses) or (isInGuild and core.db.profile.flagGuildiesAsNemeses))
-    
-                local newPlayer = {
-                    guid = UnitGUID(val),
-                    isGuildmate = isInGuild,
-                    isFriend = NCRuntime:IsFriend(val),
-                    isNemesis = isNemesis,
-                    role = UnitGroupRolesAssigned(val),
-                }
-
-                NCRuntime:AddGroupRosterPlayer(val, newPlayer)
+                local player = NCRuntime:AddGroupRosterPlayer(val)
 
                 -- We're the leader, fire off some join events
                 if isLeader then
                     -- Imagine inviting a large group to a raid, we don't want to spam the chat
                     if #joins <= 3 then
-                        NemesisChat:PLAYER_JOINS_GROUP(val, isNemesis)
+                        NemesisChat:PLAYER_JOINS_GROUP(val, player.isNemesis)
                     end
                 end
             end
@@ -105,25 +94,13 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     else
         for key,val in pairs(joins) do
             if val ~= nil and val ~= GetMyName() then
-                local isInGuild = UnitIsInMyGuild(val) ~= nil
-                local isNemesis = (core.db.profile.nemeses[val] ~= nil or (NCRuntime:GetFriend(val) ~= nil and core.db.profile.flagFriendsAsNemeses) or (isInGuild and core.db.profile.flagGuildiesAsNemeses))
-                local unitGuid = UnitGUID(val)
-    
-                local newPlayer = {
-                    guid = unitGuid,
-                    isGuildmate = isInGuild,
-                    isFriend = NCRuntime:IsFriend(val),
-                    isNemesis = isNemesis,
-                    role = UnitGroupRolesAssigned(val),
-                }
+                local player = NCRuntime:AddGroupRosterPlayer(val)
 
-                NCRuntime:AddGroupRosterPlayer(val, newPlayer)
-
-                local leaves = NemesisChat:LeaveCount(unitGuid) or 0
-                local lowPerforms = NemesisChat:LowPerformerCount(unitGuid) or 0
+                local leaves = NemesisChat:LeaveCount(player.guid) or 0
+                local lowPerforms = NemesisChat:LowPerformerCount(player.guid) or 0
     
                 if #joins <= 3 then
-                    NemesisChat:PLAYER_JOINS_GROUP(val, isNemesis)
+                    NemesisChat:PLAYER_JOINS_GROUP(val, player.isNemesis)
                 end
 
                 local channel = NemesisChat:GetActualChannel("GROUP")
@@ -195,7 +172,7 @@ function NemesisChat:UNIT_SPELLCAST_START(_, unitTarget, castGUID, spellID)
         return
     end
 
-    if NCConfig:IsReportingAffixes_CastStart() then
+    if NCConfig:IsReportingAffixes_CastStart() and UnitIsEnemy("player", unitTarget) then
         SendChatMessage("Nemesis Chat: " .. casterName .. " is casting!", "YELL")
     end
 end
@@ -207,7 +184,7 @@ function NemesisChat:UNIT_SPELLCAST_SUCCEEDED(_, unitTarget, castGUID, spellID)
         return
     end
 
-    if NCConfig:IsReportingAffixes_CastStart() then
+    if NCConfig:IsReportingAffixes_CastSuccess() and UnitIsEnemy("player", unitTarget) then
         SendChatMessage("Nemesis Chat: " .. casterName .. " successfully cast!", "YELL")
     end
 end

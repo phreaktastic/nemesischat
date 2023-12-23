@@ -17,21 +17,11 @@ function NemesisChat:SlashCommand(msg)
 	if not msg or msg:trim() == "" then
 		InterfaceOptionsFrame_OpenToCategory(core.optionsFrame)
 	elseif cmd == "showinfo" then
+		NCConfig:SetShowInfoFrame(true)
 		NCInfo.StatsFrame:Show()
 	elseif cmd == "hideinfo" then
+		NCConfig:SetShowInfoFrame(false)
 		NCInfo.StatsFrame:Hide()
-	elseif cmd == "stats" then
-		local playerName = args
-		if playerName and NCRuntime:GetGroupRosterPlayer(playerName) then
-			self:Print("NemesisChat: " .. playerName .. "'s stats:")
-			for metric, _ in pairs(NCRankings.METRICS) do
-				local stats = NCDungeon:GetStats(playerName, metric)
-				
-				self:Print(metric .. ": " .. stats)
-			end
-		else
-			self:Print("Please specify a valid player name.")
-		end
 	else
         if core.db.profile.dbg then
             self:Print("Invalid command issued.")
