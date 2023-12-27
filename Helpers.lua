@@ -309,15 +309,15 @@ function NemesisChat:InitializeHelpers()
             if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
                 -- Nesting this in to prevent spam
                 if NCConfig:IsReportingPulls_Realtime() then
-                    SendChatMessage("Nemesis Chat: " .. pullPlayerName .. " pulled " .. mobName, "YELL")
+                    SendChatMessage("Nemesis Chat: " .. UnitName(pullPlayerName) .. " pulled " .. mobName, "YELL")
                 end
 
-                NemesisChat:SpawnToast("Pull", pullPlayerName, mobName)
+                NemesisChat:SpawnToast("Pull", UnitName(pullPlayerName), mobName)
                 NCRuntime:UpdateLastUnsafePullToast()
             end
             
-            NCRuntime:SetLastUnsafePull(pullPlayerName, mobName)
-            NCSegment:GlobalAddPull(pullPlayerName)
+            NCRuntime:SetLastUnsafePull(UnitName(pullPlayerName), mobName)
+            NCSegment:GlobalAddPull(UnitName(pullPlayerName))
         end
 
         -- This could be more modular, the only problem is feasts...
@@ -345,6 +345,8 @@ function NemesisChat:InitializeHelpers()
                     NCEvent:Death(destName)
                 end
             end
+
+            NCSegment:GlobalAddDeath(destName)
         elseif NCEvent:IsDamageEvent(subEvent, destName, misc4) then
             local damage = tonumber(misc4) or 0
             local state = NCRuntime:GetPlayerState(destName)
@@ -359,6 +361,7 @@ function NemesisChat:InitializeHelpers()
             end
         else
             -- Something unsupported.
+            return
         end
 
         NemesisChat:HandleEvent()
@@ -890,11 +893,11 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:UpdateGroupState()
-        if IsInRaid() or not IsInGroup() then
+        if IsInRaid() or not IsInGroup() or NCCombat:IsInactive() then
             return
         end
 
-        if NCRuntime:GetPlayerStatesLastCheck() == nil or GetTime() - NCRuntime:GetPlayerStatesLastCheck() > 0.25 then
+        if NCRuntime:GetPlayerStatesLastCheck() == nil or NCRuntime:GetPlayerStatesLastCheckDelta() > 0.25 then
             NCRuntime:UpdatePlayerStatesLastCheck()
 
             for i=1,4 do
@@ -920,15 +923,15 @@ function NemesisChat:InitializeHelpers()
 
     -- Largely taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with some modifications
     function NemesisChat:IsPull()
-        -- if not IsInInstance() or not IsInGroup() or (NCBoss:IsActive() and NCDungeon:IsActive()) or IsInRaid() then
-        --     return false, nil, nil, nil
-        -- end
+        if not IsInInstance() or not IsInGroup() or (NCBoss:IsActive() and NCDungeon:IsActive()) or IsInRaid() then
+            return false, nil, nil, nil
+        end
 
         local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,itype = CombatLogGetCurrentEventInfo()
 
-        -- if not UnitInParty(sname) and not UnitInParty(dname) then
-        --     return false, nil, nil, nil
-        -- end
+        if not UnitInParty(sname) and not UnitInParty(dname) then
+            return false, nil, nil, nil
+        end
 
 		if (dname and sname and dname ~= sname and not string.find(event,"_RESURRECT") and not string.find(event,"_CREATE") and (string.find(event,"SWING") or string.find(event,"RANGE") or string.find(event,"SPELL"))) and not tContains(core.affixMobs, sname) and not tContains(core.affixMobs, dname) then
 			if(not string.find(event,"_SUMMON")) then
@@ -936,13 +939,9 @@ function NemesisChat:InitializeHelpers()
                     -- A player is attacking a mob
                     local player = NCRuntime:GetGroupRosterPlayer(sname)
 
-                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
-                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
-                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
-                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
-                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
-                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
-                    NemesisChat:Print("PLAYER ATTACKING MOB!!!!!!!!!!!!!")
+                    if player == nil then
+                        return false, nil, nil, nil
+                    end
 
                     if player.role == "TANK" then
                         NCRuntime:AddPulledUnit(dguid)
@@ -951,9 +950,9 @@ function NemesisChat:InitializeHelpers()
 
                     local validDamage = type(itype) == "number" and itype > 0
                     local classification = UnitClassification(dguid)
-                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and UnitCanAttack("player", dguid)
-
-					if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
+                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and not UnitIsPlayer(dguid)
+                
+                    if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
                         -- Fire off a pull event -- player attacked a mob!
 
                         return true, "PLAYER_ATTACK", sname, dname
@@ -962,13 +961,17 @@ function NemesisChat:InitializeHelpers()
                     -- A mob is attacking a player
                     local player = NCRuntime:GetGroupRosterPlayer(dname)
 
+                    if player == nil then
+                        return false, nil, nil, nil
+                    end
+
                     if player.role == "TANK" then
                         NCRuntime:AddPulledUnit(dguid)
                         return false, nil, nil, nil
                     end
 
                     local classification = UnitClassification(sguid)
-                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and UnitCanAttack("player", sguid)
+                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and not UnitIsPlayer(dguid)
 
                     if NemesisChat:UnitIsNotPulled(sguid) and isEliteEnemy then
                         -- Fire off a butt-pull event -- mob attacked a player!
@@ -988,7 +991,7 @@ function NemesisChat:InitializeHelpers()
 
                     local validDamage = type(itype) == "number" and itype > 0
                     local classification = UnitClassification(dguid)
-                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and UnitCanAttack("player", dguid)
+                    local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and not UnitIsPlayer(dguid)
 					    
                     if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
                         -- Fire off a pet pull event -- player's pet attacked a mob!

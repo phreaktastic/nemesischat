@@ -323,9 +323,9 @@ NCRuntime = {
         end
     end,
     AddGroupRosterPlayer = function(self, playerName)
-        local isInGuild = UnitIsInMyGuild(val) ~= nil
-        local isNemesis = (NCConfig:GetNemesis(val) ~= nil or (NCRuntime:GetFriend(val) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
-        local itemLevel = NemesisChat:GetItemLevel(val)
+        local isInGuild = UnitIsInMyGuild(playerName) ~= nil
+        local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
+        local itemLevel = NemesisChat:GetItemLevel(playerName)
         local data =  {
             guid = UnitGUID(playerName),
             isGuildmate = isInGuild,
@@ -405,6 +405,9 @@ NCRuntime = {
     end,
     GetPlayerStatesLastCheck = function(self)
         return core.runtime.playerStates.lastCheck
+    end,
+    GetPlayerStatesLastCheckDelta = function(self)
+        return GetTime() - (self:GetPlayerStatesLastCheck() or 0)
     end,
     UpdatePlayerStatesLastCheck = function(self)
         core.runtime.playerStates.lastCheck = GetTime()

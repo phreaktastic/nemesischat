@@ -95,8 +95,6 @@ function NemesisChat:InstantiateMsg()
             if msg:match(k) then
                 local val = v()
 
-                NemesisChat:Print("REPLACEMENT MATCH:", k, val)
-
                 if type(val) == "string" or type(val) == "number" then
                     msg = msg:gsub(k, val)
                 else

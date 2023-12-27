@@ -28,10 +28,18 @@ NCInfo = {
     TOTAL_HEIGHT = 210,
     DROPDOWN_WIDTH = 128,
 
-    REPLACEMENTS = {
+    METRIC_REPLACEMENTS = {
         ["AvoidableDamage"] = "Avoidable Damage",
         ["CrowdControl"] = "CC Score",
         ["Affixes"] = "Affix Score",
+        ["Pulls"] = "Unsafe Pulls",
+    },
+
+    ROLE_REPLACEMENTS = {
+        ["DAMAGER"] = "DPS",
+        ["HEALER"] = "Healer",
+        ["TANK"] = "Tank",
+        ["OTHER"] = "Other",
     },
 
     CurrentPlayer = nil,
@@ -262,7 +270,7 @@ NCInfo = {
                 content.rows[metric] = button
             end
 
-            content.rows[metric].columns[1]:SetText(self.REPLACEMENTS[metric] or metric)
+            content.rows[metric].columns[1]:SetText(self.METRIC_REPLACEMENTS[metric] or metric)
 
             if core.db.profile.infoClickCompare then
                 local delta = NCDungeon:GetStats(NCInfo.CurrentPlayer, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
@@ -330,11 +338,13 @@ NCInfo = {
         UIDropDownMenu_Initialize(NCInfo.StatsFrame.playerDropdown, function(self, level, menuList)
             local roster = NCRuntime:GetGroupRoster()
             local snapshot = NCDungeon.RosterSnapshot
-            local players = GetHashmapKeys(MapMerge(roster, snapshot))
+            local mergedData = MapMerge(roster, snapshot)
+            local players = GetHashmapKeys(mergedData)
 
             for _, name in pairs(players) do
                 local info = UIDropDownMenu_CreateInfo()
-                info.text = name
+                local role = NCInfo.ROLE_REPLACEMENTS[mergedData[name].role or "OTHER"]
+                info.text = name .. " (" .. (role or "unknown") .. ")"
                 info.value = name
                 info.checked = (name == NCInfo.CurrentPlayer)
                 info.func = function(self)
@@ -353,7 +363,7 @@ NCInfo = {
     end,
 
     ReportMetric = function(self, metric, player)
-        local message = string.format("%s for %s (Dungeon): %s", (self.REPLACEMENTS[metric] or metric), player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
+        local message = string.format("%s for %s (Dungeon): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
         if core.db.profile.infoClickCompare then
             local delta = NCDungeon:GetStats(player, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
             

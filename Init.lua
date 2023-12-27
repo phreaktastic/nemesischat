@@ -652,6 +652,15 @@ core.incorporealBeingCCSpells = {
     277787, -- Polymorph (baby direhorn)
     277792, -- Polymorph (bumblebee)
     10326, -- Turn Evil
+    1513, -- Scare Beast
+    14326, -- Scare Beast
+    14327, -- Scare Beast
+    14328, -- Scare Beast
+    14329, -- Scare Beast
+    27044, -- Scare Beast
+    49050, -- Scare Beast
+    50519, -- Scare Beast
+    50520, -- Scare Beast
 }
 
 core.eventSubscriptions = {
@@ -665,7 +674,6 @@ core.eventSubscriptions = {
     "ENCOUNTER_END", -- Boss end
     "CHALLENGE_MODE_START", -- M+ start
     "CHALLENGE_MODE_COMPLETED", -- M+ complete
-    "CHALLENGE_MODE_RESET", -- M+ reset
 
     -- Unit Actions
     "UNIT_SPELLCAST_START",

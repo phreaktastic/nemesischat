@@ -34,7 +34,7 @@ core.options.args.generalGroup = {
                     name = "Enable",
                     desc = "Toggle Nemesis Chat",
                     get = function() return IsNCEnabled() end,
-                    set = function() NCConfig:SetEnabled(value) end,
+                    set = function(_, value) NCConfig:SetEnabled(value) end,
                 },
                 flagFriendsAsNemeses = {
                     order = 2,

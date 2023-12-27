@@ -64,7 +64,9 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     -- We left
     if #leaves > 0 and #leaves == NCRuntime:GetGroupRosterCountOthers() then
         NCRuntime:ClearGroupRoster()
-        NCSegment:GlobalReset()
+
+        -- To be monitored. We want data on the last group we ran with, and if we get kicked with this in place it is lost.
+        --NCSegment:GlobalReset()
     -- We joined, or we invited someone to form a group
     elseif NCRuntime:GetGroupRosterCountOthers() == 0 and #joins > 0 then
         NCRuntime:ClearGroupRoster()
@@ -123,7 +125,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                     NemesisChat:PLAYER_LEAVES_GROUP(val, player.isNemesis)
                 end
 
-                if NCDungeon:IsActive() and player.guid ~= nil then
+                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 then
                     self:Print("Added leaver to DB:", val)
                     SendChatMessage("Nemesis Chat: " .. val .. " has left the group with a dungeon in progress, and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
                     NemesisChat:AddLeaver(player.guid)
@@ -206,7 +208,7 @@ end
 function NemesisChat:PLAYER_TARGET_CHANGED(_, unitTarget)
     local targetName = UnitName("target")
 
-    if not targetName or not core.affixMobsCastersLookup[targetName] then
+    if not targetName or not core.affixMobsCastersLookup[targetName] or UnitIsDead("player") then
         return
     end
 

@@ -208,8 +208,6 @@ function NemesisChat:InstantiateEvent()
         NCEvent:SetEvent("DEATH")
         NCEvent:SetTargetFromSource(dest)
 
-        NCSegment:GlobalAddDeath(dest)
-
         if NCBoss:IsActive() then
             NCEvent:SetCategory("BOSS")
         end

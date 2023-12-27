@@ -136,6 +136,9 @@ NCSegment = {
     IsActive = function(self)
         return self.Active
     end,
+    IsInactive = function(self)
+        return not self.Active
+    end,
     IsSuccess = function(self)
         return self.Success
     end,
