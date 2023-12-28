@@ -247,7 +247,7 @@ core.constants.UNIT_OPERATORS = {
     },
     {
         label = "is NOT an affix mob",
-        value = "IS_NOT_AFFIX_MOB",
+        value = "NOT_AFFIX_MOB",
     },
     {
         label = "is an affix caster",
@@ -255,7 +255,7 @@ core.constants.UNIT_OPERATORS = {
     },
     {
         label = "is NOT an affix caster",
-        value = "IS_NOT_AFFIX_CASTER",
+        value = "NOT_AFFIX_CASTER",
     },
 }
 core.events = {

@@ -524,5 +524,17 @@ function NemesisChat:InstantiateMsg()
         ["IS_DEAD"] = function(val1, val2)
             return UnitIsDeadOrGhost(val1) == true
         end,
+        ["IS_AFFIX_MOB"] = function(val1, val2)
+            return core.affixMobs[val1] ~= nil
+        end,
+        ["NOT_AFFIX_MOB"] = function(val1, val2)
+            return core.affixMobs[val1] == nil
+        end,
+        ["IS_AFFIX_CASTER"] = function(val1, val2)
+            return core.affixMobsCastersLookup[val1] == true
+        end,
+        ["NOT_AFFIX_CASTER"] = function(val1, val2)
+            return core.affixMobsCastersLookup[val1] ~= true
+        end,
     }
 end
