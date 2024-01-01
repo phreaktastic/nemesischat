@@ -627,7 +627,7 @@ function NemesisChat:InitializeHelpers()
         end
     end
 
-    -- Get a player's average item level. Currently only works if ElvUI is installed, will be expanded later.
+    -- Get a player's average item level. Currently only works if ElvUI is installed, may be expanded later.
     function NemesisChat:GetItemLevel(unit)
         if E and E.GetUnitItemLevel then
             local itemLevel, retryUnit, retryTable, iLevelDB = E:GetUnitItemLevel(unit)
@@ -831,22 +831,26 @@ function NemesisChat:InitializeHelpers()
         return NCRuntime:GetGroupHealer()
     end
 
-    function NemesisChat:Print_r(item)
-        if type(item) == "table" then
-            for key,val in pairs(item) do
-                if type(key) == "table" then
-                    self:Print_r(key)
-                else
-                    if type(val) ~= "table" then
-                        self:Print(key .. ":", val)
+    function NemesisChat:Print_r(...)
+        local arg = {...}
+
+        for _,item in pairs(arg) do
+            if type(item) == "table" then
+                for key,val in pairs(item) do
+                    if type(key) == "table" then
+                        self:Print_r(key)
                     else
-                        self:Print(key .. ":")
-                        self:Print_r(val)
+                        if type(val) ~= "table" then
+                            self:Print(key .. ":", val)
+                        else
+                            self:Print(key .. ":")
+                            self:Print_r(val)
+                        end
                     end
                 end
+            else
+                self:Print(item)
             end
-        else
-            self:Print(item)
         end
     end
 

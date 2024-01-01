@@ -35,15 +35,16 @@ function DeepCopy(orig)
     return copy
 end
 
-function ArrayMerge(tableA, tableB)
+function ArrayMerge(...)
     local returnTable = {}
+    local tables = {...}
 
-    for key, val in pairs(tableA) do
-        table.insert(returnTable, val)
+    if not tables then
+        return returnTable
     end
 
-    for key, val in pairs(tableB) do
-        if not tContains(returnTable, val) then
+    for _, table in pairs(tables) do
+        for _, val in pairs(table) do
             table.insert(returnTable, val)
         end
     end
@@ -51,20 +52,17 @@ function ArrayMerge(tableA, tableB)
     return returnTable
 end
 
-function MapMerge(map1, map2)
+function MapMerge(...)
     local mergedMap = {}
+    local maps = {...}
 
-    -- Merge values from map1
-    if map1 and type(map1) == "table" then
-        for key, value in pairs(map1) do
-            mergedMap[key] = value
-        end
+    if not maps then
+        return mergedMap
     end
 
-    -- Merge values from map2, overriding existing values
-    if map2 and type(map2) == "table" then
-        for key, value in pairs(map2) do
-            mergedMap[key] = value
+    for _, map in pairs(maps) do
+        for key, val in pairs(map) do
+            mergedMap[key] = val
         end
     end
 
