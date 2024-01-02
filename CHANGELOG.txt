@@ -1,6 +1,23 @@
 # 🎯 Key Changes
 
+## 📢 Summary
+
+**1.9.x**: Massive stability and performance pass. Pre-release for 2.x with a new, highly refined approach.
+
+**1.8.x**: Things are spicing up with M+ leaver detection and low performer detection! 
+
+**1.7.x**: Hazardous Pull reporting? Neglected Heals reporting? Yes please! Oh, and more replacement tags, revamped reports config, new off-heals report, etc!
+
+## 🩹 Patches
+
+- None yet, 1.9.0 is fresh!
+
+## ⭐ Latest Versions
+
+### 1.9.0
+
 - New UI with stats and the ability to report as desired.
+   - This is a preview of 2.x functionality.
 - New trackers:
    - Crowd control
    - Defensives
@@ -23,21 +40,56 @@
    - Butt pulls
    - And more!
 - Overperformer and underperformer tracking
-   - Ability to store in permanent DB
+   - Stored in permanent DB
    - DB synchronization with other players
    - Reporting for when someone joins who was marked as either over/under performing recently
    - Based on scoring of all of the above metrics
    - Smart scoring -- for example, a Resto Druid will not be negatively scored for a lack of **interrupts** (yes, they can disrupt / CC)
+- The same process which happens for nemeses and configured messages will now happen for bystanders:
+   - All bystanders will be checked for matching conditions
+   - The most optimal message will be chosen based on all criteria
+   - This allows one to set hyper-specific criteria, and know that if someone ever meets that criteria, the message will be used
+- Mountains of fixes and optimizations
 
+### 1.8.0
 
-## 📢 Summary
+- Nemesis prioritization for scenarios where more than one message is retrieved for an event.
+- Beta features: hardening and optimization -- they're very close to full release state!
+- Enable / disable messages for APIs.
+- M+ early leaver storage and sync
+   - Leavers will now be logged in a persistent DB.
+   - Leavers will be synced between players in-game.
+- M+ low performers storage and sync
+   - Low performers will now be logged in a persistent DB.
+   - Low performers will be synced between players in-game.
+   - Low performers are currently defined as:
+      - At least 2 spots in the bottom (bottom affixes / DPS (non-DPS exempt) / offheals, most pulls (tank exempt) / deaths / avoidable damage).
+         - Deaths are taken fairly lightly, as that can be due to any number of reasons. Deaths are primarily examined base on how much avoidable damage was taken.
+      - Within those spots on the bottom, there must be a difference of >= 30% between them and the top for said metric.
+- Fix for dungeon keystone level.
+- Lots of new stuff behind the scenes, paving the way for some really awesome future features!
 
-**2.0.0**: Fresh release.
+### 1.7.0
 
-## 🩹 Patches
-
-None, 2.0.0 is fresh!
-
-## ⭐ Latest Versions
-
-### 2.0.0
+- New `Flag Guildmates as Nemeses` option
+- Two new conditions, `is guildmate` and `NOT guildmate`
+- More enhancements across the configuration screen
+- New Off-Heals reports
+- New dungeon completion Deaths report
+   - Includes the amount of avoidable damage they took throughout the dungeon
+   - If the amount of avoidable damage taken is excessive, the report will also include an amount relative to their life ("*6.25M avoidable damage (10.88x their max health)*") 😈
+- Report channel selection in configuration
+- Revamped all segments, normalized all data, and exposed a few more replacements in the process
+- **(Beta) pull reporting**: This feature will announce seemingly unintentional / hazardous pulls
+   - Tanks are not included
+   - This is not precise as Blizzard does not expose great ways of doing this
+   - It currently only reports in real-time, and as a yell
+   - More options to come as this feature matures
+- **(Beta) neglected heals reporting**: This feature will announce when (non-healer) players have been at or below 60% health without receiving a (non-self) heal
+   - This feature also only reports in real-time, and as a yell
+   - Once again, more options to come as this feature matures
+- **(Beta) affix tracking and reporting**: This feature contains both announcements and reports:
+   - Announce when affix mobs begin casting (if enabled)
+   - Announce when affix mobs successfully cast (if enabled)
+   - Announce when affix mobs are interrupted **but not incapacitated/dead** (if enabled)
+   - Top and bottom affixes handled reporting for boss fights and end of dungeon (if enabled)
