@@ -61,9 +61,10 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
     local joins,leaves = NemesisChat:GetRosterDelta()
 
-    -- We left
+    -- We left, or the last player left the group leaving us solo
     if #leaves > 0 and #leaves == NCRuntime:GetGroupRosterCountOthers() then
         NCRuntime:ClearGroupRoster()
+        NemesisChat:CheckGroup()
 
         -- To be monitored. We want data on the last group we ran with, and if we get kicked with this in place it is lost.
         --NCSegment:GlobalReset()
@@ -92,6 +93,8 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
         if not isLeader then
             NemesisChat:PLAYER_JOINS_GROUP(GetMyName(), false)
         end
+
+        NemesisChat:CheckGroup()
         
     else
         for key,val in pairs(joins) do
@@ -135,8 +138,6 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
             end
         end
     end
-
-    NemesisChat:CheckGroup()
 end
 
 -- We leverage this event for entering combat
@@ -208,7 +209,7 @@ end
 function NemesisChat:PLAYER_TARGET_CHANGED(_, unitTarget)
     local targetName = UnitName("target")
 
-    if not targetName or not core.affixMobsCastersLookup[targetName] or UnitIsDead("player") then
+    if not targetName or not core.affixMobsCastersLookup[targetName] or UnitIsDead("player") or not core.db.profile.reportConfig["AFFIXES"]["MARKERS"] then
         return
     end
 

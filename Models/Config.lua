@@ -23,6 +23,14 @@ NCConfig = {
     end,
     SetEnabled = function(self, value)
         core.db.profile.enabled = value
+
+        if value then
+            NemesisChat:Enable()
+            NemesisChat:Print("Enabled.")
+        else
+            NemesisChat:Disable()
+            NemesisChat:Print("Disabled.")
+        end
     end,
     IsDebugging = function(self)
         return core.db.profile.dbg

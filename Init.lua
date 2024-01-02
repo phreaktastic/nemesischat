@@ -43,8 +43,8 @@ function ArrayMerge(...)
         return returnTable
     end
 
-    for _, table in pairs(tables) do
-        for _, val in pairs(table) do
+    for _, t in pairs(tables) do
+        for _, val in pairs(t) do
             table.insert(returnTable, val)
         end
     end

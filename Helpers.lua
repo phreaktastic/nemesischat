@@ -644,30 +644,12 @@ function NemesisChat:InitializeHelpers()
 
     -- Check the roster and (un/re)subscribe events appropriately
     function NemesisChat:CheckGroup()
-        if not IsNCEnabled() then
-            NemesisChat:OnDisable()
-        else
-            NemesisChat:OnEnable()
-        end
+        local count = NCRuntime:GetGroupRosterCountOthers()
 
-        NCRuntime:ClearGroupRoster()
-        local members = NemesisChat:GetPlayersInGroup()
-        local count = 0
-    
-        for key,val in pairs(members) do
-            if val ~= nil then
-                count = count + 1
-
-                NCRuntime:AddGroupRosterPlayer(val)
-            end
-        end
-
-        if count > 0 and IsNCEnabled() then
-            for _, event in pairs(core.eventSubscriptions) do
+        for _, event in pairs(core.eventSubscriptions) do
+            if count > 0 and IsNCEnabled() then
                 NemesisChat:RegisterEvent(event)
-            end
-        else
-            for _, event in pairs(core.eventSubscriptions) do
+            else
                 NemesisChat:UnregisterEvent(event)
             end
         end
