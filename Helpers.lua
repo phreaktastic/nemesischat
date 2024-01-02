@@ -897,32 +897,30 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:UpdateGroupState()
-        if IsInRaid() or not IsInGroup() or NCCombat:IsInactive() then
+        if IsInRaid() or not IsInGroup() or NCCombat:IsInactive() or NCRuntime:GetPlayerStatesLastCheckDelta() < 0.25 then
             return
         end
 
-        if NCRuntime:GetPlayerStatesLastCheck() == nil or NCRuntime:GetPlayerStatesLastCheckDelta() > 0.25 then
-            NCRuntime:UpdatePlayerStatesLastCheck()
+        NCRuntime:UpdatePlayerStatesLastCheck()
 
-            for i=1,4 do
-                if (UnitName('party'..i)) then
-                    local n,s = UnitName('party'..i)
-                    local playerName = n
+        for i=1,4 do
+            if (UnitName('party'..i)) then
+                local n,s = UnitName('party'..i)
+                local playerName = n
 
-                    if s then 
-                        playerName = playerName .. "-" .. s
-                    end
+                if s then 
+                    playerName = playerName .. "-" .. s
+                end
 
-                    if playerName ~= "Unknown" then
-                        NemesisChat:UpdatePlayerState(playerName)
-                        NemesisChat:CheckLastHealDelta(playerName)
-                    end
+                if playerName ~= "Unknown" then
+                    NemesisChat:UpdatePlayerState(playerName)
+                    NemesisChat:CheckLastHealDelta(playerName)
                 end
             end
-
-            NemesisChat:UpdatePlayerState(GetMyName())
-            NemesisChat:CheckLastHealDelta(GetMyName())
         end
+
+        NemesisChat:UpdatePlayerState(GetMyName())
+        NemesisChat:CheckLastHealDelta(GetMyName())
     end
 
     -- Originally taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with heavy modifications
