@@ -13,24 +13,24 @@ local _, core = ...;
 
 function NemesisChat:HandleEvent()
     -- Exit if we're not in a group, the event is not supported, config isn't setup, etc.
-	if NemesisChat:ShouldExitEventHandler() then 
-        return 
-    end
-
-    -- Try to pull a configured message first
-    NCMessage:ConfigMessage()
-
-    -- If AI messages are enabled, use them if a configured message couldn't be found
-    if core.db.profile.ai and not NCMessage:ValidMessage() then
-        NCMessage:AIMessage()
-    end
-
-    -- If we still don't have a message, bail
-    if not NCMessage:ValidMessage() then
+	if NemesisChat:ShouldExitEventHandler() then
         return
     end
 
-    NCMessage:Handle()
+    -- Try to pull a configured message first
+    NCController:ConfigMessage()
+
+    -- If AI messages are enabled, use them if a configured message couldn't be found
+    if core.db.profile.ai and not NCController:ValidMessage() then
+        NCController:AIMessage()
+    end
+
+    -- If we still don't have a message, bail
+    if not NCController:ValidMessage() then
+        return
+    end
+
+    NCController:Handle()
 end
 
 function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)

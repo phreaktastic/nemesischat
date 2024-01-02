@@ -24,17 +24,14 @@ function NCDungeon:StartCallback()
     NCEvent:RandomBystander()
     NCDungeon:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
 
-    local mapChallengeModeID, affixIDs, keystoneLevel = C_ChallengeMode.GetSlottedKeystoneInfo()
+    local keystoneLevel, affixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
+    local name, _, _ = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
 
-    if mapChallengeModeID then
-        local name = C_ChallengeMode.GetMapUIInfo(mapChallengeModeID)
-        NCDungeon:SetIdentifier(name)
-    else
-        NCDungeon:SetIdentifier("dungeon")
-    end
-
+    NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
-    NCDungeon:SetAffixes(affixIDs)
+    NCDungeon:SetKeystoneAffixes(affixIDs)
+
+    NCInfo:Update()
 end
 
 function NCDungeon:FinishCallback(success)
@@ -47,19 +44,6 @@ function NCDungeon:FinishCallback(success)
     if success then
         NCEvent:SetEvent("SUCCESS")
     end
-
-    local lowestPerformer, metrics = NCDungeon:GetLowestPerformer()
-
-    if lowestPerformer ~= nil and metrics ~= nil then
-        local player = NCRuntime:GetGroupRosterPlayer(lowestPerformer)
-
-        if #metrics >= 3 and player ~= nil and player.guid ~= nil then
-            NemesisChat:AddLowPerformer(player.guid)
-
-            self:Print("Added low performer to DB:", lowestPerformer)
-            self:Print("Number of bottom metrics:", #metrics)
-        end
-    end
 end
 
 function NCDungeon:ResetCallback()
@@ -67,24 +51,17 @@ function NCDungeon:ResetCallback()
 end
 
 function NCDungeon:GetLevel()
-    return NCDungeon.Level
+    return (NCDungeon.Level or 0)
 end
 
 function NCDungeon:SetLevel(level)
-    NCDungeon.Level = level
+    NCDungeon.Level = (level or 0)
 end
 
-function NCDungeon:SetAffixes(affixes)
+function NCDungeon:SetKeystoneAffixes(affixes)
     NCDungeon.Affixes = affixes
 end
 
-function NCDungeon:GetAffixes()
+function NCDungeon:GetKeystoneAffixes()
     return NCDungeon.Affixes
-end
-
-function NCDungeon:GetLowestPerformer()
-    local player = NCDungeon.Rankings:GetLowestPerformer()
-    local metrics = NCDungeon.Rankings:GetPlayerMetrics(player)
-
-    return player, metrics
 end

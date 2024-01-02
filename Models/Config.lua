@@ -23,6 +23,14 @@ NCConfig = {
     end,
     SetEnabled = function(self, value)
         core.db.profile.enabled = value
+
+        if value then
+            NemesisChat:Enable()
+            NemesisChat:Print("Enabled.")
+        else
+            NemesisChat:Disable()
+            NemesisChat:Print("Disabled.")
+        end
     end,
     IsDebugging = function(self)
         return core.db.profile.dbg
@@ -41,6 +49,24 @@ NCConfig = {
     end,
     SetNonCombatMode = function(self, value)
         core.db.profile.nonCombatMode = value
+    end,
+    IsInterruptException = function(self)
+        return core.db.profile.interruptException
+    end,
+    ToggleInterruptException = function(self)
+        core.db.profile.interruptException = not core.db.profile.interruptException
+    end,
+    SetInterruptException = function(self, value)
+        core.db.profile.interruptException = value
+    end,
+    IsDeathException = function(self)
+        return core.db.profile.deathException
+    end,
+    ToggleDeathException = function(self)
+        core.db.profile.deathException = not core.db.profile.deathException
+    end,
+    SetDeathException = function(self, value)
+        core.db.profile.deathException = value
     end,
     IsAIEnabled = function(self)
         return core.db.profile.ai
@@ -512,5 +538,14 @@ NCConfig = {
     end,
     RemoveMessage = function(self, message)
         table.remove(core.db.profile.messages, message)
+    end,
+    ShouldShowInfoFrame = function(self)
+        return core.db.profile.showInfoFrame
+    end,
+    ToggleShowInfoFrame = function(self)
+        core.db.profile.showInfoFrame = not core.db.profile.showInfoFrame
+    end,
+    SetShowInfoFrame = function(self, value)
+        core.db.profile.showInfoFrame = value
     end,
 }

@@ -42,42 +42,42 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
         label = "Nem. Avoidable (Combat)",
         value = "NEMESIS_AD",
         exec = function() return NCCombat:GetAvoidableDamage(NCEvent:GetNemesis() or "Unknown") end,
-        operators = core.constants.EXTENDED_OPERATORS,
+        operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
     })
     :AddSubject({
         label = "Nem. Avoidable (Overall)",
         value = "NEMESIS_AD_OVERALL",
         exec = function() return NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis() or "Unknown") end,
-        operators = core.constants.EXTENDED_OPERATORS,
+        operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
     })
     :AddSubject({
         label = "Bys. Avoidable (Combat)",
         value = "BYSTANDER_AD",
         exec = function() return NCCombat:GetAvoidableDamage(NCEvent:GetBystander() or "Unknown") end,
-        operators = core.constants.EXTENDED_OPERATORS,
+        operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
     })
     :AddSubject({
         label = "Bys. Avoidable (Overall)",
         value = "BYSTANDER_AD_OVERALL",
         exec = function() return NCDungeon:GetAvoidableDamage(NCEvent:GetBystander() or "Unknown") end,
-        operators = core.constants.EXTENDED_OPERATORS,
+        operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
     })
     :AddSubject({
         label = "My Avoidable (Combat)",
         value = "MY_AD",
         exec = function() return NCCombat:GetAvoidableDamage(GetMyName() or "Unknown") end,
-        operators = core.constants.EXTENDED_OPERATORS,
+        operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
     })
     :AddSubject({
         label = "My Avoidable (Overall)",
         value = "MY_AD_OVERALL",
         exec = function() return NCDungeon:GetAvoidableDamage(GetMyName() or "Unknown") end,
-        operators = core.constants.EXTENDED_OPERATORS,
+        operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
     })
     :AddReplacement({

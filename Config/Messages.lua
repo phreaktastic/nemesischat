@@ -944,7 +944,7 @@ function IsNcOperator()
 end
 
 function GetIsNcOperator(condition)
-    for key, val in pairs(ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS)) do
+    for key, val in pairs(ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS)) do
         if condition.operator == val.value then
             return false
         end
@@ -994,7 +994,7 @@ function GetOperatorFormatted(operatorValue)
         return ""
     end
 
-    for key, val in pairs(ArrayMerge(ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS), core.constants.NC_OPERATORS)) do
+    for key, val in pairs(ArrayMerge(ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS), core.constants.UNIT_OPERATORS)) do
         if val.value == operatorValue then
             return val.label
         end

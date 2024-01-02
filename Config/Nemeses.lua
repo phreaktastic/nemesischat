@@ -23,7 +23,7 @@ core.options.args.nemesesGroup = {
             order = 1,
             type = "description",
             fontSize = "medium",
-            name = "This is a list of all character names which will be flagged as Nemeses.",
+            name = "This is a list of all character names which will be flagged as Nemeses. You must include the realm name if the character is not on your realm, e.g. 'Nemesis-Stormrage'.",
         },
         nemesesPaddingUpper = {
             order = 2,

@@ -54,7 +54,7 @@ function NemesisChat:Report(event, success)
             botMsg = "Lowest off-heals for %s: %s at %s.",
         },
         ["DEATHS"] = {
-            preMessageHook = function(topMsg, botMsg, bucket)
+            preMessageHook = function(topPlayer, topMsg, botMsg, bucket)
                 local ad = bucket:GetAvoidableDamage(topPlayer)
                 local adFormatted = NemesisChat:FormatNumber(ad)
                 local lifePercent = math.floor(ad / UnitHealthMax(topPlayer) * 10000) / 100
@@ -123,8 +123,8 @@ function NemesisChat:Report(event, success)
             botMsg = data.botMsg
         end
 
-        if data.preMessageHook ~= nil then
-            topMsg, botMsg = data.preMessageHook(topMsg, botMsg, bucket)
+        if data.preMessageHook ~= nil and topPlayer ~= nil then
+            topMsg, botMsg = data.preMessageHook(topPlayer, topMsg, botMsg, bucket)
         end
 
         if topMsg ~= nil then
@@ -147,7 +147,7 @@ function NemesisChat:Report(event, success)
             end
         end
 
-        local channel = NemesisChat:GetChannel(NCConfig:GetReportChannel())
+        local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
 
         if core.db.profile.reportConfig[type]["TOP"] == true and topMsg ~= nil then
             SendChatMessage("Nemesis Chat: " .. topMsg, channel)

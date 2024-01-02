@@ -42,14 +42,26 @@ NCSegment = {
     -- Was this segment a wipe?
     Wipe = false,
 
+    -- Rolling points earned by players based on certain actions
+    ActionPoints = {},
+
     -- Affix handler tracker for the segment
     Affixes = {},
 
     -- Avoidable damage tracker for the segment
     AvoidableDamage = {},
 
+    -- Crowd control tracker for the segment
+    CrowdControl = {},
+
     -- Death tracker for the segment
     Deaths = {},
+
+    -- Defensive tracker for the segment
+    Defensives = {},
+
+    -- Dispell tracker for the segment
+    Dispells = {},
 
     -- Heal tracker for the segment
     Heals = {},
@@ -72,12 +84,21 @@ NCSegment = {
     -- Segment tracker -- array containing all objects which inherited from NCSegment
     Segments = {},
 
+    -- Roster snapshot at the beginning of the segment
+    RosterSnapshot = {},
+
     DetailsSegment = DETAILS_SEGMENTID_CURRENT,
 
+    StartPreHook = function(self)
+        -- Override me
+    end,
     Start = function(self) 
+        self:Reset()
+        self:StartPreHook()
         self.StartTime = GetTime()
         self:SetActive()
         self:StartCallback()
+        self.RosterSnapshot = DeepCopy(NCRuntime:GetGroupRoster())
     end,
     StartCallback = function(self)
         -- Override me
@@ -115,6 +136,9 @@ NCSegment = {
     IsActive = function(self)
         return self.Active
     end,
+    IsInactive = function(self)
+        return not self.Active
+    end,
     IsSuccess = function(self)
         return self.Success
     end,
@@ -141,15 +165,63 @@ NCSegment = {
 
         return self.Affixes[player]
     end,
-    AddAffix = function(self, player)
+    AddActionPoints = function(self, amount, player, optDescription)
+        if player == nil or amount == nil then
+            return
+        end
+
+        if self.ActionPoints[player] == nil then
+            self.ActionPoints[player] = {}
+        end
+
+        table.insert(self.ActionPoints[player], {
+            Amount = amount,
+            Description = optDescription,
+            Timestamp = GetTime()
+        })
+
+        self:AddActionPointsCallback(amount, player, optDescription)
+    end,
+    AddActionPointsCallback = function(self, amount, player, optDescription)
+        -- Override me
+    end,
+    GetActionPoints = function(self, player)
+        if player == nil then
+            return self.ActionPoints
+        end
+        
+        if self.ActionPoints[player] == nil then
+            self.ActionPoints[player] = {}
+        end
+
+        return self.ActionPoints[player]
+    end,
+    GetActionPointsAmount = function(self, player)
+        if player == nil then
+            return 0
+        end
+        
+        if self.ActionPoints[player] == nil then
+            self.ActionPoints[player] = {}
+        end
+
+        local amount = 0
+
+        for _, actionPoint in pairs(self.ActionPoints[player]) do
+            amount = amount + actionPoint.Amount
+        end
+
+        return amount
+    end,
+    AddAffix = function(self, player, optCount)
         if player == nil then
             return
         end
 
         if self.Affixes[player] == nil then
-            self.Affixes[player] = 1
+            self.Affixes[player] = optCount or 1
         else
-            self.Affixes[player] = self.Affixes[player] + 1
+            self.Affixes[player] = self.Affixes[player] + (optCount or 1)
         end
 
         self:AddAffixCallback(player)
@@ -184,6 +256,33 @@ NCSegment = {
     AddAvoidableDamageCallback = function(self, amount, player)
         -- Override me
     end,
+    GetCrowdControls = function(self, player)
+        if player == nil then
+            return self.CrowdControl
+        end
+        
+        if self.CrowdControl[player] == nil then
+            self.CrowdControl[player] = 0
+        end
+
+        return self.CrowdControl[player]
+    end,
+    AddCrowdControl = function(self, player)
+        if player == nil then
+            return
+        end
+
+        if self.CrowdControl[player] == nil then
+            self.CrowdControl[player] = 1
+        else
+            self.CrowdControl[player] = self.CrowdControl[player] + 1
+        end
+
+        self:AddCrowdControlCallback(player)
+    end,
+    AddCrowdControlCallback = function(self, player)
+        -- Override me
+    end,
     GetDeaths = function(self, player)
         if player == nil then
             return self.Deaths
@@ -211,6 +310,60 @@ NCSegment = {
     AddDeathCallback = function(self, player)
         -- Override me
     end,
+    GetDefensives = function(self, player)
+        if player == nil then
+            return self.Defensives
+        end
+        
+        if self.Defensives[player] == nil then
+            self.Defensives[player] = 0
+        end
+
+        return self.Defensives[player]
+    end,
+    AddDefensive = function(self, player)
+        if player == nil then
+            return
+        end
+
+        if self.Defensives[player] == nil then
+            self.Defensives[player] = 1
+        else
+            self.Defensives[player] = self.Defensives[player] + 1
+        end
+
+        self:AddDefensiveCallback(player)
+    end,
+    AddDefensiveCallback = function(self, player)
+        -- Override me
+    end,
+    GetDispells = function(self, player)
+        if player == nil then
+            return self.Dispells
+        end
+        
+        if self.Dispells[player] == nil then
+            self.Dispells[player] = 0
+        end
+
+        return self.Dispells[player]
+    end,
+    AddDispell = function(self, player)
+        if player == nil then
+            return
+        end
+
+        if self.Dispells[player] == nil then
+            self.Dispells[player] = 1
+        else
+            self.Dispells[player] = self.Dispells[player] + 1
+        end
+
+        self:AddDispellCallback(player)
+    end,
+    AddDispellCallback = function(self, player)
+        -- Override me
+    end,
     GetHeals = function(self, player)
         if player == nil then
             return self.Heals
@@ -234,8 +387,10 @@ NCSegment = {
         end
 
         local rosterPlayer = NCRuntime:GetGroupRosterPlayer(source)
+        local rosterTarget = NCRuntime:GetGroupRosterPlayer(target)
 
-        if rosterPlayer ~= nil and rosterPlayer.role ~= "HEALER" and source ~= target then
+        -- If the source is not a healer, and the source is not the target, and the target is in the group (ignoring pets and self heals)
+        if rosterPlayer ~= nil and rosterPlayer.role ~= "HEALER" and source ~= target and rosterTarget ~= nil then
             self:AddOffHeals(amount, source)
         end
 
@@ -363,17 +518,27 @@ NCSegment = {
         -- Override me
     end,
     GetStats = function(self, playerName, metric)
+        if not playerName then
+            playerName = UnitName("player")
+        end
+        
         if metric == "DPS" then
             return self:GetDps(playerName)
         elseif metric == "Affixes" then
             return self:GetAffixes(playerName)
         elseif metric == "AvoidableDamage" then
             return self:GetAvoidableDamage(playerName)
+        elseif metric == "CrowdControl" then
+            return self:GetCrowdControls(playerName)
         elseif metric == "Deaths" then
             return self:GetDeaths(playerName)
+        elseif metric == "Defensives" then
+            return self:GetDefensives(playerName)
+        elseif metric == "Dispells" then
+            return self:GetDispells(playerName)
         elseif metric == "Interrupts" then
             return self:GetInterrupts(playerName)
-        elseif metric == "OffHeals" then
+        elseif metric == "Offheals" then
             return self:GetOffHeals(playerName)
         elseif metric == "Pulls" then
             return self:GetPulls(playerName)
@@ -394,31 +559,31 @@ NCSegment = {
     SetDetailsSegment = function(self, detailsSegment)
         self.DetailsSegment = detailsSegment
     end,
-    GetLowPerformers = function(self)
-        -- Get players from self.Rankings with the lowest DPS / affixes / interrupts, highest avoidable damage / deaths / pulls, and if the delta is >= 30% add them to the DB as low performers
-        local lowestDpsPlayer = self.Rankings.Bottom.DPS.Player
-        local lowestDpsDeltaPct = self.Rankings.Bottom.DPS.DeltaPercent
-        local lowestAffixesPlayer = self.Rankings.Bottom.Affixes.Player
-        local lowestAffixesDeltaPct = self.Rankings.Bottom.Affixes.DeltaPercent
-        local lowestInterruptsPlayer = self.Rankings.Bottom.Interrupts.Player
-        local lowestInterruptsDeltaPct = self.Rankings.Bottom.Interrupts.DeltaPercent
-        local highestAvoidableDamagePlayer = self.Rankings.Bottom.AvoidableDamage.Player
-        local highestAvoidableDamageDeltaPct = self.Rankings.Bottom.AvoidableDamage.DeltaPercent
-        local highestDeathsPlayer = self.Rankings.Bottom.Deaths.Player
-        local highestDeathsDeltaPct = self.Rankings.Bottom.Deaths.DeltaPercent
-        local highestPullsPlayer = self.Rankings.Bottom.Pulls.Player
-        local highestPullsDeltaPct = self.Rankings.Bottom.Pulls.DeltaPercent
-
-
+    GetLowestPerformer = function(self)
+        return self.Rankings:GetLowestPerformer()
     end,
-    GlobalAddAffix = function(self, player)
+    GetHighestPerformer = function(self)
+        return self.Rankings:GetHighestPerformer()
+    end,
+    GlobalAddActionPoints = function(self, amount, player, optDescription)
+        if player == nil or amount == nil then
+            return
+        end
+
+        for _, segment in pairs(NCSegment.Segments) do
+            if segment:IsActive() then
+                segment:AddActionPoints(amount, player, optDescription)
+            end
+        end
+    end,
+    GlobalAddAffix = function(self, player, optCount)
         if player == nil then
             return
         end
 
         for _, segment in pairs(NCSegment.Segments) do
             if segment:IsActive() then
-                segment:AddAffix(player)
+                segment:AddAffix(player, optCount)
             end
         end
     end,
@@ -434,6 +599,17 @@ NCSegment = {
             
         end
     end,
+    GlobalAddCrowdControl = function(self, player)
+        if player == nil then
+            return
+        end
+
+        for _, segment in pairs(NCSegment.Segments) do
+            if segment:IsActive() then
+                segment:AddCrowdControl(player)
+            end
+        end
+    end,
     GlobalAddDeath = function(self, player)
         if player == nil then
             return
@@ -443,6 +619,24 @@ NCSegment = {
             if segment:IsActive() then
                 segment:AddDeath(player)
             end
+        end
+    end,
+    GlobalAddDefensive = function(self, player)
+        if player == nil then
+            return
+        end
+
+        for _, segment in pairs(NCSegment.Segments) do
+            segment:AddDefensive(player)
+        end
+    end,
+    GlobalAddDispell = function(self, player)
+        if player == nil then
+            return
+        end
+
+        for _, segment in pairs(NCSegment.Segments) do
+            segment:AddDispell(player)
         end
     end,
     GlobalAddHeals = function(self, amount, source, target)
@@ -487,6 +681,11 @@ NCSegment = {
             if segment:IsActive() then
                 segment:AddPull(player)
             end
+        end
+    end,
+    GlobalReset = function(self)
+        for _, segment in pairs(NCSegment.Segments) do
+            segment:Reset()
         end
     end,
     New = function(self, identifier)
@@ -544,6 +743,7 @@ NCSegment = {
         end
 
         self.Identifier = identifier
+        self.Rankings = NCRankings:New(self)
 
         self:ResetCallback(optIdentifier, optStart)
 

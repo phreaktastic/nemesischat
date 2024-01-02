@@ -2,23 +2,54 @@
 
 ## 📢 Summary
 
+**1.9.x**: Massive stability and performance pass. Pre-release for 2.x with a new, highly refined approach.
+
 **1.8.x**: Things are spicing up with M+ leaver detection and low performer detection! 
 
 **1.7.x**: Hazardous Pull reporting? Neglected Heals reporting? Yes please! Oh, and more replacement tags, revamped reports config, new off-heals report, etc!
 
-**1.6.x**: Lots of new replacement tags and condition subjects. Added a `Flag Friends as Nemeses` option -- if anyone in your group is on your friends list, they'll be flagged as a Nemesis.
-
 ## 🩹 Patches
 
-- **1.8.7**: 10.1.7 support.
-- **1.8.6**: One more fix for name logic which has been throwing errors.
-- **1.8.5**: Fix for name logic which was sometimes causing issues due to a race condition.
-- **1.8.4**: More bug fixes and groundwork for next version.
-- **1.8.3**: Bug fixes and groundwork for next version.
-- **1.8.2**: Bursting logic for affixes.
-- **1.8.1**: Pull announcements were getting a little loud during boss fights (first boss on NL for example). They will no longer occur during boss fights. This will likely be configurable once this feature is out of beta.
+- None yet, 1.9.0 is fresh!
 
 ## ⭐ Latest Versions
+
+### 1.9.0
+
+- New UI with stats and the ability to report as desired.
+   - This is a preview of 2.x functionality.
+- New trackers:
+   - Crowd control
+   - Defensives
+   - Dispells
+- New replacements, events, conditions, etc.
+- Performance tracking which will attempt to rank players within the group based on:
+   - DPS (for DPS only)
+      - Tracks when a DPS is lower than tank and/or healer DPS
+      - Tracks when a DPS is significantly lower / higher than others in the group
+   - Affixes
+      - Attempts to understand which classes / specs should be exempt 
+      - Scoring based on handling affixes (CCing souls counts, for example)
+   - Avoidable Damage
+   - Crowd Control
+   - Deaths
+   - Usage of defensive abilities
+   - Dispells
+   - Interrupts
+   - Offheals
+   - Butt pulls
+   - And more!
+- Overperformer and underperformer tracking
+   - Stored in permanent DB
+   - DB synchronization with other players
+   - Reporting for when someone joins who was marked as either over/under performing recently
+   - Based on scoring of all of the above metrics
+   - Smart scoring -- for example, a Resto Druid will not be negatively scored for a lack of **interrupts** (yes, they can disrupt / CC)
+- The same process which happens for nemeses and configured messages will now happen for bystanders:
+   - All bystanders will be checked for matching conditions
+   - The most optimal message will be chosen based on all criteria
+   - This allows one to set hyper-specific criteria, and know that if someone ever meets that criteria, the message will be used
+- Mountains of fixes and optimizations
 
 ### 1.8.0
 
@@ -62,18 +93,3 @@
    - Announce when affix mobs successfully cast (if enabled)
    - Announce when affix mobs are interrupted **but not incapacitated/dead** (if enabled)
    - Top and bottom affixes handled reporting for boss fights and end of dungeon (if enabled)
-
-### 1.6.0
-
-- Added new option, `Flag Friends as Nemeses`: When enabled, anyone in your group who is on your friends list will be flagged as a Nemesis.
-- Normalized all replacement tags by adding missing Bystander replacement tags
-- New condition subjects
-   - Nemesis
-   - Bystander
-   - Boss Name
-   - Keystone Level
-- New condition operators:
-   - Is friend (currently only available on Bystander, Nemesis, and Spell Target)
-   - NOT friend (currently only available on Bystander, Nemesis, and Spell Target)
-- Migration from hardcoded core functionality to new API flow
-- UI clean up

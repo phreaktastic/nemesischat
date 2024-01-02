@@ -13,6 +13,7 @@ core.version = GetAddOnMetadata(addonName, 'Version')
 -- Register global NemesisChat
 -----------------------------------------------------
 NemesisChat = LibStub("AceAddon-3.0"):NewAddon("NemesisChat", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceTimer-3.0", "LibToast-1.0")
+LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
 
 -----------------------------------------------------
 -- Global functions
@@ -34,15 +35,16 @@ function DeepCopy(orig)
     return copy
 end
 
-function ArrayMerge(tableA, tableB)
+function ArrayMerge(...)
     local returnTable = {}
+    local tables = {...}
 
-    for key, val in pairs(tableA) do
-        table.insert(returnTable, val)
+    if not tables then
+        return returnTable
     end
 
-    for key, val in pairs(tableB) do
-        if not tContains(returnTable, val) then
+    for _, t in pairs(tables) do
+        for _, val in pairs(t) do
             table.insert(returnTable, val)
         end
     end
@@ -50,19 +52,20 @@ function ArrayMerge(tableA, tableB)
     return returnTable
 end
 
-function MapMerge(map1, map2)
+function MapMerge(...)
     local mergedMap = {}
-    
-    -- Merge values from map1
-    for key, value in pairs(map1) do
-        mergedMap[key] = value
+    local maps = {...}
+
+    if not maps then
+        return mergedMap
     end
-    
-    -- Merge values from map2, overriding existing values
-    for key, value in pairs(map2) do
-        mergedMap[key] = value
+
+    for _, map in pairs(maps) do
+        for key, val in pairs(map) do
+            mergedMap[key] = val
+        end
     end
-    
+
     return mergedMap
 end
 
@@ -75,15 +78,11 @@ function IsNCEnabled()
 end
 
 function GetRole(player)
-    local role 
+    local role
 
-    if player == nil or player == GetMyName() then
-        role = UnitGroupRolesAssigned("player")
+    if NCRuntime:GetGroupRosterPlayer(player) == nil then
+        role = UnitGroupRolesAssigned(player)
     else
-        if NCRuntime:GetGroupRosterPlayer(player) == nil then
-            return "party animal"
-        end
-
         role = NCRuntime:GetGroupRosterPlayer(player).role
     end
 
@@ -94,6 +93,56 @@ function GetRole(player)
     end
 
     return "party animal"
+end
+
+function GetKeysSortedByValue(tbl, sortFunction)
+    local keys = {}
+    for key in pairs(tbl) do
+        table.insert(keys, key)
+    end
+
+    table.sort(keys, function(a, b)
+        return sortFunction(tbl[a], tbl[b])
+    end)
+
+    return keys
+end
+
+function Split(str, sep)
+    local result = {}
+    local regex = ("([^%s]+)"):format(sep)
+    
+    for each in str:gmatch(regex) do
+        table.insert(result, each)
+    end
+
+    return result
+ end
+
+ function ShuffleTable(t)
+    local tbl = {}
+    for i = 1, #t do
+      tbl[i] = t[i]
+    end
+    for i = #tbl, 2, -1 do
+      local j = math.random(i)
+      tbl[i], tbl[j] = tbl[j], tbl[i]
+    end
+    return tbl
+  end
+
+function GetHashmapKeys(hashmap)
+    local keys = {}
+
+    if hashmap == nil then
+        return keys
+    end
+
+    for key, _ in pairs(hashmap) do
+        table.insert(keys, key)
+    end
+
+    return keys
 end
 
 -----------------------------------------------------
@@ -116,12 +165,19 @@ core.units = {
     {
         label = "Bystander",
         value = "BYSTANDER"
+    },
+}
+core.unitsAffix = {
+    {
+        label = "Affix Mob",
+        value = "AFFIX_MOB"
     }
 }
 core.constants = {}
 core.constants.NA = { 1 }
 core.constants.STANDARD = { 2, 3, 4, }
 core.constants.OTHERS = { 3, 4, }
+core.constants.AFFIXES = { 5 }
 core.constants.OPERATORS = {
     {
         label = "is",
@@ -132,7 +188,7 @@ core.constants.OPERATORS = {
         value = "IS_NOT"
     }
 }
-core.constants.EXTENDED_OPERATORS = {
+core.constants.NUMERIC_OPERATORS = {
     {
         label = ">",
         value = "GT"
@@ -142,7 +198,7 @@ core.constants.EXTENDED_OPERATORS = {
         value = "LT"
     }
 }
-core.constants.NC_OPERATORS = {
+core.constants.UNIT_OPERATORS = {
     {
         label = "is a Nemesis",
         value = "IS_NEMESIS"
@@ -166,10 +222,42 @@ core.constants.NC_OPERATORS = {
     {
         label = "NOT a guildmate",
         value = "NOT_GUILDMATE",
-    }
+    },
+    {
+        label = "is underperformer",
+        value = "IS_UNDERPERFORMER",
+    },
+    {
+        label = "is overperformer",
+        value = "IS_OVERPERFORMER",
+    },
+    {
+        label = "is alive",
+        value = "IS_ALIVE",
+    },
+    {
+        label = "is dead",
+        value = "IS_DEAD",
+    },
+    {
+        label = "is an affix mob",
+        value = "IS_AFFIX_MOB",
+    },
+    {
+        label = "is NOT an affix mob",
+        value = "NOT_AFFIX_MOB",
+    },
+    {
+        label = "is an affix caster",
+        value = "IS_AFFIX_CASTER",
+    },
+    {
+        label = "is NOT an affix caster",
+        value = "NOT_AFFIX_CASTER",
+    },
 }
 core.events = {
-    env = {
+    segment = {
         {
             label = "Start",
             value = "START",
@@ -178,6 +266,11 @@ core.events = {
         {
             label = "Death",
             value = "DEATH",
+            options = core.constants.STANDARD
+        },
+        {
+            label = "Death (Avoidable)",
+            value = "AVOIDABLE_DEATH",
             options = core.constants.STANDARD
         },
         {
@@ -269,6 +362,13 @@ core.messageConditions = {
         options = DeepCopy(core.roles),
     },
     {
+        label = "Bystander Role",
+        value = "BYSTANDER_ROLE",
+        operators = core.constants.OPERATORS,
+        type = "SELECT",
+        options = DeepCopy(core.roles),
+    },
+    {
         label = "Spell ID",
         value = "SPELL_ID",
         operators = core.constants.OPERATORS,
@@ -283,43 +383,55 @@ core.messageConditions = {
     {
         label = "Spell Target",
         value = "SPELL_TARGET",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NC_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
         type = "INPUT",
     },
     {
         label = "Players In Group",
         value = "GROUP_COUNT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "Nemeses In Group",
         value = "NEMESES_COUNT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "My Interrupts (Combat)",
         value = "INTERRUPTS",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "Nem. Interrupts (Combat)",
         value = "NEMESIS_INTERRUPTS",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
+        type = "NUMBER", 
+    },
+    {
+        label = "Bys. Interrupts (Combat)",
+        value = "BYSTANDER_INTERRUPTS",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "My Interrupts (Overall)",
         value = "INTERRUPTS_OVERALL",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
     {
         label = "Nem. Interrupts (Overall)",
         value = "NEMESIS_INTERRUPTS_OVERALL",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.EXTENDED_OPERATORS),
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
+        type = "NUMBER", 
+    },
+    {
+        label = "Bys. Interrupts (Overall)",
+        value = "BYSTANDER_INTERRUPTS_OVERALL",
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
         type = "NUMBER", 
     },
 }
@@ -328,7 +440,7 @@ core.messageConditions = {
 core.configTree = {
     ["BOSS"] = {
         label = "Boss Fight",
-        events = DeepCopy(core.events.env)
+        events = DeepCopy(core.events.segment)
     },
     ["COMBATLOG"] = {
         label = "General",
@@ -338,13 +450,13 @@ core.configTree = {
         label = "Group",
         events = DeepCopy(core.events.group)
     },
+    ["CHALLENGE"] = {
+        label = "Mythic+ Dungeon",
+        events = DeepCopy(core.events.segment)
+    },
     ["RAID"] = {
         label = "Raid",
         events = DeepCopy(core.events.group)
-    },
-    ["CHALLENGE"] = {
-        label = "Mythic+ Dungeon",
-        events = DeepCopy(core.events.env)
     },
 }
 core.channels = {
@@ -353,6 +465,7 @@ core.channels = {
     ["SAY"] = "Say",
     ["EMOTE"] = "Emote",
     ["YELL"] = "Yell",
+    ["GUILD"] = "Guild",
 }
 core.channelsExtended = {
     ["WHISPER"] = "Whisper Nemesis (|c00ff0000May be unavailable|r)",
@@ -432,13 +545,13 @@ core.feastIDs = {
 -- All affix mobs
 core.affixMobs = {
     "Spiteful Shade",
-    "Incorporeal",
+    "Incorporeal Being",
     "Afflicted Soul",
 }
 
--- Affix mobs of interest
-core.affixMobsMarker = {
-    "Incorporeal",
+-- Affix mobs that cast
+core.affixMobsCasters = {
+    "Incorporeal Being",
     "Afflicted Soul",
 }
 
@@ -448,26 +561,128 @@ core.affixMobsHandles = {
         "HEAL",
         "DISPEL",
     },
+    ["Incorporeal Being"] = {
+        "CROWD_CONTROL",
+        "INTERRUPT"
+    },
+    ["Spiteful Shade"] = {
+        "CROWD_CONTROL",
+    },
 }
 
 -- Auras applied by affix mobs
 core.affixMobsAuras = {
     {
+        type = "HARMFUL",
         name = "Bursting",
         spellName = "Burst",
         spellId = 240443,
-        highStacks = 7,
+        highStacks = 3,
+    },
+    {
+        type = "HELPFUL",
+        name = "Bolstering",
+        spellName = "Bolster",
+        spellId = 209859,
+        highStacks = 5,
     }
 }
 
--- Raid markers to use for affix mobs (currently unused)
+-- Cache the affix mob aura spells to avoid repeated lookups
+core.affixMobsAuraSpells = {}
+
+for _, val in pairs(core.affixMobsAuras) do
+    core.affixMobsAuraSpells[val.spellId] = val
+    core.affixMobsAuraSpells[val.spellName] = val
+end
+
+-- Cache the affix mobs that cast to avoid repeated lookups
+core.affixMobsCastersLookup = {}
+
+for _, val in pairs(core.affixMobsCasters) do
+    core.affixMobsCastersLookup[val] = true
+end
+
+-- Cache the affix mobs to avoid repeated lookups
+core.affixMobsLookup = {}
+
+for _, val in pairs(core.affixMobs) do
+    core.affixMobsLookup[val] = true
+end
+
+-- Raid markers to use for affix mobs
 core.markers = {
-    1,
-    5,
-    7,
-    8,
+    1, -- Star
+    -- 2, -- Circle
+    3, -- Diamond
+    -- 4, -- Triangle
+    5, -- Moon
+    6, -- Square
+    7, -- Cross
+    8, -- Skull
+}
+
+-- Incorporeal Beings count as every creature type. List of all players' crowd control spells that work on them, which will fear, incapacitate, or stun for 8 seconds or more:
+core.incorporealBeingCCSpells = {
+    5782, -- Fear
+    8122, -- Psychic Scream
+    6358, -- Seduction
+    115268, -- Mesmerize
+    115078, -- Paralysis
+    20066, -- Repentance
+    9484, -- Shackle Undead
+    605, -- Mind Control
+    2094, -- Blind
+    1776, -- Gouge
+    6770, -- Sap
+    51514, -- Hex
+    217832, -- Imprison
+    118, -- Polymorph
+    28272, -- Polymorph (pig)
+    28271, -- Polymorph (turtle)
+    61305, -- Polymorph (black cat)
+    61721, -- Polymorph (rabbit)
+    61780, -- Polymorph (turkey)
+    161353, -- Polymorph (bear cub)
+    161354, -- Polymorph (monkey)
+    161355, -- Polymorph (penguin)
+    161372, -- Polymorph (peacock)
+    277787, -- Polymorph (baby direhorn)
+    277792, -- Polymorph (bumblebee)
+    10326, -- Turn Evil
+    1513, -- Scare Beast
+    14326, -- Scare Beast
+    14327, -- Scare Beast
+    14328, -- Scare Beast
+    14329, -- Scare Beast
+    27044, -- Scare Beast
+    49050, -- Scare Beast
+    50519, -- Scare Beast
+    50520, -- Scare Beast
+}
+
+core.eventSubscriptions = {
+    -- Enter / exit combat
+    "PLAYER_REGEN_ENABLED", -- Exit Combat
+    "PLAYER_REGEN_DISABLED", -- Enter Combat
+
+    -- Group
+    "PLAYER_ROLES_ASSIGNED", -- Role change
+    "ENCOUNTER_START", -- Boss start
+    "ENCOUNTER_END", -- Boss end
+    "CHALLENGE_MODE_START", -- M+ start
+    "CHALLENGE_MODE_COMPLETED", -- M+ complete
+
+    -- Unit Actions
+    "UNIT_SPELLCAST_START",
+    "UNIT_SPELLCAST_SUCCEEDED",
+    "UNIT_SPELLCAST_INTERRUPTED",
+
+    -- Self
+    "PLAYER_TARGET_CHANGED",
+    "COMBAT_LOG_EVENT_UNFILTERED",
 }
 
 NCEvent = {}
-NCMessage = {}
+NCController = {}
 NCSpell = {}

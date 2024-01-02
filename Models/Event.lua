@@ -36,7 +36,7 @@ function NemesisChat:InstantiateEvent()
 
         NemesisChat:InstantiateEvent()
 
-        NCMessage:Initialize()
+        NCController:Initialize()
         NCSpell:Initialize()
         NemesisChat:PopulateFriends()
     end
@@ -208,18 +208,22 @@ function NemesisChat:InstantiateEvent()
         NCEvent:SetEvent("DEATH")
         NCEvent:SetTargetFromSource(dest)
 
-        NCSegment:GlobalAddDeath(dest)
-
         if NCBoss:IsActive() then
             NCEvent:SetCategory("BOSS")
         end
+    end
+
+    -- Same as above, but the death was due to avoidable damage
+    function NCEvent:AvoidableDeath(dest)
+        NCEvent:Death(dest)
+        NCEvent:SetEvent("AVOIDABLE_DEATH")
     end
 
     -- Set the event's Target based on the input source (SELF|NEMESIS|BYSTANDER), and set a random Bystander/Nemesis if appropriate
     function NCEvent:SetTargetFromSource(source)
         local member = core.runtime.groupRoster[source]
 
-        if source == NemesisChat:GetMyName() then 
+        if source == NemesisChat:GetMyName() then
             NCEvent:SetTarget("SELF")
             NCEvent:RandomNemesis()
             NCEvent:RandomBystander()
@@ -263,7 +267,7 @@ function NemesisChat:InstantiateEvent()
             return false
         end
 
-        local availableMessages = NCMessage:GetConditionalMessages(profileMessages)
+        local availableMessages = NCController:GetConditionalMessages(profileMessages)
 
         return availableMessages ~= nil and #availableMessages > 0
     end

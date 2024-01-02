@@ -31,7 +31,7 @@ Nemesis Chat works in a fairly simple manner from a high level. However, the int
 
 ## Step 1: An event fires
 
-The first line in every event: `NCEvent:Initialize()` is called, which initializes ephemeral objects for later reference. This will entirely wipe `NCEvent`, `NCSpell`, and `NCMessage` for each and every event. Bottom line, these objects cannot be referenced from event to event; rather, they are **only** available for one event fire.
+The first line in every event: `NCEvent:Initialize()` is called, which initializes ephemeral objects for later reference. This will entirely wipe `NCEvent`, `NCSpell`, and `NCController` for each and every event. Bottom line, these objects cannot be referenced from event to event; rather, they are **only** available for one event fire.
 
 ## Step 2: Proper objects are hydrated
 
@@ -49,10 +49,10 @@ ncEvent = {
 },
 ```
 
-`NCMessage` is initialized with the following:
+`NCController` is initialized with the following:
 
 ```
-ncMessage = {
+NCController = {
     channel = "SAY",
     message = "",
     target = "",
@@ -190,9 +190,9 @@ It also tracks every segment which inherits from it, which allows updating all a
 
 ### Core
 
-First, we check for at least one configured message matching the Category, Event, and Target. If so, we check all conditions, and if there are multiple matches, we pick one of them at random. We then set the chosen string to `NCMessage.message`.
+First, we check for at least one configured message matching the Category, Event, and Target. If so, we check all conditions, and if there are multiple matches, we pick one of them at random. We then set the chosen string to `NCController.message`.
 
-Then we check if AI messages are enabled. If so, and `NCMessage.message` is not populated, we attempt to set `NCMessage.message` with an AI message's string. Currently, NC only supports taunts, but positive messages are defined and will be released soon.
+Then we check if AI messages are enabled. If so, and `NCController.message` is not populated, we attempt to set `NCController.message` with an AI message's string. Currently, NC only supports taunts, but positive messages are defined and will be released soon.
 
 The flow of message retrieval is as follows:
 
@@ -222,7 +222,7 @@ NC will check to ensure we're not spamming -- there is a hardcoded minimum of 1 
 
 NC will check to ensure that the player is not in combat if `Non-Combat Only` mode is enabled. This prevents messaging during combat, which means all messages will be discarded if the player is currently in combat. One exception to this is beginning a boss fight, as that event only fires upon entering combat with said boss.
 
-NC will do a quick check to ensure we send the message to the appropriate channel, validate that we do in fact have the proper data (such as `NCMessage.message`, `NCEvent.nemesis`, etc), and send the message.
+NC will do a quick check to ensure we send the message to the appropriate channel, validate that we do in fact have the proper data (such as `NCController.message`, `NCEvent.nemesis`, etc), and send the message.
 
 # General Concepts
 
@@ -240,7 +240,7 @@ NC attempts to avoid unnecessary memory bloat with ephemeral objects. This patte
 
 - `NCEvent`: This will initialize on every event. It holds crucial data in regards to what the event **actually is**. Because our events can come from **many** sources (combat event log, encounter start, challenge start, etc), this object allows us to normalize the flow across the board.
 - `NCSpell`: This will initialize on every event. It holds data specifically purposed for spell events, such as interrupts and feasts.
-- `NCMessage`: This will initialize on every event. It holds data specifically purposed for sending messages in-game. It is responsible for sending the message once upstream logic (`NCEvent` and `NCSpell`) has determined where to retrieve the message.
+- `NCController`: This will initialize on every event. It holds data specifically purposed for sending messages in-game. It is responsible for sending the message once upstream logic (`NCEvent` and `NCSpell`) has determined where to retrieve the message.
 - `NCDungeon`: This will initialize upon starting a Mythic + dungeon and on any event which triggers the `PLAYER_ENTERING_WORLD` event. It holds data specifically purposed for M+ dungeons, including its own kill count and death count.
 - `NCBoss`: This will initialize upon starting a boss fight and on any event which triggers the `PLAYER_ENTERING_WORLD` event. It holds data specifically purposed for boss fights.
 - `NCCombat`: This will initialize upon entering combat. It holds data specifically purposed for combat segments, like interrupts and avoidable damage.
@@ -267,7 +267,7 @@ For example, available events: Feasts are 100% custom logic, in which we simply 
 
 WeakAuras tends to lean into configurability and versatility, but still maintains a fairly easy-to-grasp UI/UX. NemesisChat currently leans opposite: A much easier interface with (for better or worse) less configurability / versatility. There is no opposition to more versatility, however, it should be widely understandable when configuring.
 
-However, some things are pretty easy and scalable. Adding new conditions is as easy as tossing them into the `core.messageConditions` object in `Init.lua`. They'll immediately appear in the configuration screen. The only other dependency would be creating the function matching the condition's value. These functions live in `NemesisChatMessage.lua`, near the end of the file, under `NCMessage.Condition`. For example, the condition for checking the Nemesis's role has a value of `NEMESIS_ROLE`. Inside `NCMessage.Condition`, you'll notice `["NEMESIS_ROLE"] = function() [...]` This function simply retrieves the name of the nemesis. Any new conditions will need to follow this same pattern.
+However, some things are pretty easy and scalable. Adding new conditions is as easy as tossing them into the `core.messageConditions` object in `Init.lua`. They'll immediately appear in the configuration screen. The only other dependency would be creating the function matching the condition's value. These functions live in `NemesisChatMessage.lua`, near the end of the file, under `NCController.Condition`. For example, the condition for checking the Nemesis's role has a value of `NEMESIS_ROLE`. Inside `NCController.Condition`, you'll notice `["NEMESIS_ROLE"] = function() [...]` This function simply retrieves the name of the nemesis. Any new conditions will need to follow this same pattern.
 
 Overall, a good number of changes would likely only take a few minutes after gaining familiarity with the codebase. I've tried to keep things as painless as possible for extension, but there are (sadly) still a few relics that will be rewritten in the future.
 
@@ -323,12 +323,12 @@ This compability check will not run when toggling config options, as it checks i
     label = "Nem. DPS (Current)",
     value = "NEMESIS_DPS",
     exec = function() return NCDetailsAPI:GetDPS(NCEvent:GetNemesis(), DETAILS_SEGMENTID_CURRENT) end,
-    operators = core.constants.EXTENDED_OPERATORS,
+    operators = core.constants.NUMERIC_OPERATORS,
     type = "NUMBER",
 })
 ```
 
-This method call is adding a new subject to conditions labeled `Nem. DPS (Current)`. The `exec` property is a function which will retrieve the value immediately prior to comparison. You may add any operators you want, but they must follow the standardized operators structure. Here, we just want our `EXTENDED_OPERATORS`, which are for comparing numeric values.
+This method call is adding a new subject to conditions labeled `Nem. DPS (Current)`. The `exec` property is a function which will retrieve the value immediately prior to comparison. You may add any operators you want, but they must follow the standardized operators structure. Here, we just want our `NUMERIC_OPERATORS`, which are for comparing numeric values.
 
 ```
 :AddReplacement({

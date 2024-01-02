@@ -1,0 +1,43 @@
+# 🎯 Key Changes
+
+- New UI with stats and the ability to report as desired.
+- New trackers:
+   - Crowd control
+   - Defensives
+   - Dispells
+- New replacements, events, conditions, etc.
+- Performance tracking which will attempt to rank players within the group based on:
+   - DPS (for DPS only)
+      - Tracks when a DPS is lower than tank and/or healer DPS
+      - Tracks when a DPS is significantly lower / higher than others in the group
+   - Affixes
+      - Attempts to understand which classes / specs should be exempt 
+      - Scoring based on handling affixes (CCing souls counts, for example)
+   - Avoidable Damage
+   - Crowd Control
+   - Deaths
+   - Usage of defensive abilities
+   - Dispells
+   - Interrupts
+   - Offheals
+   - Butt pulls
+   - And more!
+- Overperformer and underperformer tracking
+   - Ability to store in permanent DB
+   - DB synchronization with other players
+   - Reporting for when someone joins who was marked as either over/under performing recently
+   - Based on scoring of all of the above metrics
+   - Smart scoring -- for example, a Resto Druid will not be negatively scored for a lack of **interrupts** (yes, they can disrupt / CC)
+
+
+## 📢 Summary
+
+**2.0.0**: Fresh release.
+
+## 🩹 Patches
+
+None, 2.0.0 is fresh!
+
+## ⭐ Latest Versions
+
+### 2.0.0
