@@ -10,7 +10,7 @@
 
 ## 🩹 Patches
 
-- None yet, 1.9.0 is fresh!
+- **1.9.1**: Bug fix for non ElvUI users.
 
 ## ⭐ Latest Versions
 

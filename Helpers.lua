@@ -10,7 +10,7 @@ local addonName, core = ...;
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 
-local E = unpack(ElvUI)
+local E = ElvUI and unpack(ElvUI) or nil
 
 -----------------------------------------------------
 -- Blizzard functions
