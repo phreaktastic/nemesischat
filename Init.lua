@@ -166,18 +166,26 @@ core.units = {
         label = "Bystander",
         value = "BYSTANDER"
     },
-}
-core.unitsAffix = {
     {
         label = "Affix Mob",
         value = "AFFIX_MOB"
-    }
+    },
+    {
+        label = "Any Mob",
+        value = "ANY_MOB",
+    },
+    {
+        label = "Boss",
+        value = "BOSS",
+    },
 }
 core.constants = {}
 core.constants.NA = { 1 }
 core.constants.STANDARD = { 2, 3, 4, }
 core.constants.OTHERS = { 3, 4, }
-core.constants.AFFIXES = { 5 }
+core.constants.AFFIXMOBS = { 5 }
+core.constants.ENEMIES = { 5, 6, 7 }
+core.constants.ALLUNITS = { 2, 3, 4, 5, 6, 7 }
 core.constants.OPERATORS = {
     {
         label = "is",
@@ -186,6 +194,10 @@ core.constants.OPERATORS = {
     {
         label = "is NOT",
         value = "IS_NOT"
+    },
+    {
+        label = "exists",
+        value = "EXISTS"
     }
 }
 core.constants.NUMERIC_OPERATORS = {
@@ -296,10 +308,42 @@ core.events = {
             options = core.constants.OTHERS
         }
     },
+    guild = {
+        {
+            label = "Login",
+            value = "LOGIN",
+            options = core.constants.STANDARD
+        },
+        {
+            label = "Logout",
+            value = "LOGOUT",
+            options = core.constants.OTHERS
+        },
+    },
     combatLog = {
         {
             label = "Spell Cast Success",
             value = "SPELL_CAST_SUCCESS",
+            options = core.constants.ALLUNITS
+        },
+        {
+            label = "Begin Spellcasting",
+            value = "SPELL_CAST_START",
+            options = core.constants.ALLUNITS
+        },
+        {
+            label = "Aura Applied",
+            value = "AURA_APPLIED",
+            options = core.constants.ALLUNITS
+        },
+        {
+            label = "Receive Avoidable Damage",
+            value = "AVOIDABLE_DAMAGE",
+            options = core.constants.STANDARD
+        },
+        {
+            label = "Receive Damage",
+            value = "DAMAGE",
             options = core.constants.STANDARD
         },
         {
@@ -449,6 +493,10 @@ core.configTree = {
     ["GROUP"] = {
         label = "Group",
         events = DeepCopy(core.events.group)
+    },
+    ["GUILD"] = {
+        label = "Guild",
+        events = DeepCopy(core.events.guild)
     },
     ["CHALLENGE"] = {
         label = "Mythic+ Dungeon",
@@ -610,6 +658,13 @@ for _, val in pairs(core.affixMobs) do
     core.affixMobsLookup[val] = true
 end
 
+-- Cache core.roles to avoid repeated lookups
+core.rolesLookup = {}
+
+for _, val in pairs(core.roles) do
+    core.rolesLookup[val.value] = val.label
+end
+
 -- Raid markers to use for affix mobs
 core.markers = {
     1, -- Star
@@ -682,6 +737,10 @@ core.eventSubscriptions = {
     "PLAYER_TARGET_CHANGED",
     "COMBAT_LOG_EVENT_UNFILTERED",
 }
+
+NC_EVENT_TYPE_GROUP = 0
+NC_EVENT_TYPE_GUILD = 1
+NC_EVENT_TYPE_MAXIMUM = 1 -- Used for logic that validates event types, increase as more are added
 
 NCEvent = {}
 NCController = {}

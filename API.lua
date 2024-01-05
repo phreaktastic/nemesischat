@@ -476,7 +476,7 @@ function NemesisChatAPI:SetAPIConfigOptions()
     core.numericReplacements = MapMerge(core.numericReplacementsCore, numericReplacements)
 end
 
-function NemesisChatAPI:InitPreMessage()
+function NemesisChatAPI:InitializeReplacements()
     if not core.apis or type(core.apis) ~= "table" then
         return
     end
@@ -504,19 +504,8 @@ function NemesisChatAPI:InitPreMessage()
     
             for _, replacement in pairs(api.replacements) do
                 NCController:AddCustomReplacement("%[" .. replacement.value .. "%]", replacement.exec)
+                NCController:AddCustomReplacementExample("%[" .. replacement.value .. "%]", replacement.example)
             end
-        end
-    end
-end
-
-function NemesisChatAPI:InitPostMessage()
-    if not core.apis or type(core.apis) ~= "table" then
-        return
-    end
-
-    for name, api in pairs(core.apis) do
-        for _, hook in pairs(api.postMessageHooks) do
-            hook()
         end
     end
 end

@@ -852,27 +852,7 @@ function NemesisChat:UpdateMessagePreview()
         end
     end
 
-    -- This is on the refactor list
-    local chatMsg = message:gsub("%[TARGET%]", "Rabid Wombat")
-        :gsub("%[SELF%]", UnitName("player"))
-        :gsub("%[NEMESIS%]", nemesis)
-        :gsub("%[NEMESISDEATHS%]", math.random(1,16))
-        :gsub("%[KILLS%]", math.random(1,968))
-        :gsub("%[NEMESISKILLS%]", math.random(1,967))
-        :gsub("%[DUNGEONTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 844)))
-        :gsub("%[KEYSTONELEVEL%]", math.random(2,28))
-        :gsub("%[BOSSTIME%]", NemesisChat:GetDuration(GetTime() - math.random(101, 276)))
-        :gsub("%[BOSSNAME%]", "Magmorax")
-        :gsub("%[SPELL%]", spellLink)
-        :gsub("%[BYSTANDER%]", NemesisChat:GetRandomPartyBystander() or "DouglasQuaid")
-        :gsub("%[NEMESISDPS%]", NemesisChat:FormatNumber(math.random(17000,82000)))
-        :gsub("%[NEMESISDPSOVERALL%]", NemesisChat:FormatNumber(math.random(17000,82000)))
-        :gsub("%[DPS%]", NemesisChat:FormatNumber(math.random(57000,122000)))
-        :gsub("%[DPSOVERALL%]", NemesisChat:FormatNumber(math.random(57000,122000)))
-        :gsub("%[AVOIDABLEDAMAGE%]", NemesisChat:FormatNumber(math.random(200000,875000)))
-        :gsub("%[AVOIDABLEDAMAGEOVERALL%]", NemesisChat:FormatNumber(math.random(2000000,8750000)))
-        :gsub("%[NEMESISAVOIDABLEDAMAGE%]", NemesisChat:FormatNumber(math.random(500000,1875000)))
-        :gsub("%[NEMESISAVOIDABLEDAMAGEOVERALL%]", NemesisChat:FormatNumber(math.random(5000000,18750000)))
+    local chatMsg = NCController:GetReplacedString(message, true)
 
     messagePreview = color .. UnitName("player") .. spacer .. chatMsg .. "|r"
 end

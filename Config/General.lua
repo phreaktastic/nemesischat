@@ -119,6 +119,18 @@ core.options.args.generalGroup = {
                     set = function(_, value) NCConfig:SetDeathException(value) end,
                     disabled = function() return not NCConfig:IsNonCombatMode() end,
                 },
+                disclaimerPadding = {
+                    order = 4,
+                    type = "description",
+                    fontSize = "medium",
+                    name = " ",
+                },
+                disclaimer = {
+                    order = 5,
+                    type = "description",
+                    fontSize = "medium",
+                    name = "NOTE: Non-Combat Mode will still allow some messages to fire, such as messages triggered by mobs or bosses.",
+                },
             }
         },
         apis = {

@@ -15,6 +15,7 @@ local _, core = ...;
 local GetTime = GetTime
 
 core.runtimeDefaults = {
+    dbCacheExpiration = 600, -- 10 minutes
     myName = "",
     lastFeast = 0,
     lastFriendCheck = 0,
@@ -38,6 +39,11 @@ core.runtimeDefaults = {
         -- different interactions with friends, such as whispering them when they join a group.
         -- ["CharacterName"] = 1,
     },
+    guild = {
+        -- A simple cache for any online guild members, with their character names as the key. Allows for
+        -- different interactions with guild members, such as whispering them when they join a group.
+        -- ["characterName"] = {"guid" = guid, "isNemesis" = true/false},
+    },
     petOwners = {},
     ncEvent = {
         category = "",
@@ -51,6 +57,7 @@ core.runtimeDefaults = {
         message = "",
         target = "",
         customReplacements = {},
+        customReplacementExamples = {},
         excludedNemeses = {},
         excludedBystanders = {},
     },
@@ -79,6 +86,7 @@ core.runtimeDefaults = {
         spellId = 0,
         spellName = "",
         extraSpellId = 0,
+        damage = 0,
     },
     ncCombat = {
         inCombat = false,
@@ -321,6 +329,8 @@ NCRuntime = {
             NCInfo.CurrentPlayer = GetMyName()
             NCInfo:UpdatePlayerDropdown()
         end
+
+        self:CacheGroupRoster()
     end,
     AddGroupRosterPlayer = function(self, playerName)
         local isInGuild = UnitIsInMyGuild(playerName) ~= nil
@@ -348,7 +358,21 @@ NCRuntime = {
 
         NCInfo:UpdatePlayerDropdown()
 
+        self:CacheGroupRoster()
+
         return data
+    end,
+    UpdateGroupRosterRoles = function(self)
+        for key,val in pairs(core.runtime.groupRoster) do
+            val.role = UnitGroupRolesAssigned(key)
+        end
+    end,
+    CacheGroupRoster = function(self)
+        core.db.profile.cache.groupRoster = DeepCopy(core.runtime.groupRoster)
+        core.db.profile.cache.groupRosterTime = GetTime()
+    end,
+    GetGuildRoster = function(self)
+        return core.runtime.guild
     end,
     GetPulledUnits = function(self)
         return core.runtime.pulledUnits
@@ -433,12 +457,20 @@ NCRuntime = {
     end,
     ClearFriends = function(self)
         core.runtime.friends = {}
+
+        self:CacheFriends()
     end,
     AddFriend = function(self, playerName)
         core.runtime.friends[playerName] = true
+
+        self:CacheFriends()
     end,
     IsFriend = function(self, playerName)
         return core.runtime.friends[playerName] ~= nil
+    end,
+    CacheFriends = function(self)
+        core.db.profile.cache.friends = DeepCopy(core.runtime.friends)
+        core.db.profile.cache.friendsTime = GetTime()
     end,
     GetPetOwners = function(self)
         return core.runtime.petOwners

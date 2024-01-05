@@ -72,10 +72,6 @@ function NemesisChat:DisableNemesisButtons()
     return selectedNemesisName == nil or selectedNemesisName == ""
 end
 
-function NemesisChat:GetNemeses(info)
-    return core.db.profile.nemeses
-end
-
 function NemesisChat:GetNemesis(info, value)
     if selectedNemesisName then return selectedNemesisName end
 
