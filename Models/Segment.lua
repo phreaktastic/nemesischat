@@ -753,6 +753,19 @@ NCSegment = {
     end,
     ResetCallback = function(self, optIdentifier, optStart)
         -- Override me
-    end
+    end,
+    Restore = function(self, backup)
+        -- Don't restore the base segment
+        if self == NCSegment then
+            return
+        end
+
+        -- Grab everything from the backup
+        for k, v in pairs(backup) do
+            if type(v) ~= "function" and not string.find(k, "__") then
+                self[k] = v
+            end
+        end
+    end,
 }
 

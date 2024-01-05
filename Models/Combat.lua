@@ -47,6 +47,7 @@ function NCCombat:FinishCallback()
     end
 
     NCRuntime:CacheGroupRoster()
+    NCDungeon:UpdateCache()
 end
 
 function NCCombat:AnnounceAffixAuras()

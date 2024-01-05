@@ -11,11 +11,34 @@ local _, core = ...;
 -- Controller logic for handling events
 -----------------------------------------------------
 
-function NemesisChat:InstantiateMsg()
+function NemesisChat:InstantiateController()
     function NCController:Initialize()
         NCController = DeepCopy(core.runtimeDefaults.NCController)
 
-        NemesisChat:InstantiateMsg()
+        NemesisChat:InstantiateController()
+        NCController:RestoreCachedReplacements()
+    end
+
+    function NCController:RestoreCachedReplacements()
+        local cachedReplacementCount = NemesisChat:GetLength(core.db.profile.cache.controllerCustomReplacements)
+        local cachedExampleCount = NemesisChat:GetLength(core.db.profile.cache.controllerCustomReplacementExamples)
+        local cachedVersion = core.db.profile.cache.controllerCustomReplacementsVersion
+
+        if cachedReplacementCount == 0 or cachedExampleCount == 0 or cachedVersion ~= core.version then
+            NCController:GenerateCustomReplacements()
+            return
+        end
+
+        NCController:SetCustomReplacements(DeepCopy(core.db.profile.cache.controllerCustomReplacements))
+        NCController:SetCustomReplacementExamples(DeepCopy(core.db.profile.cache.controllerCustomReplacementExamples))
+    end
+
+    function NCController:GenerateCustomReplacements()
+        NemesisChatAPI:InitializeReplacements()
+
+        core.db.profile.cache.controllerCustomReplacements = DeepCopy(NCController.customReplacements)
+        core.db.profile.cache.controllerCustomReplacementExamples = DeepCopy(NCController.customReplacementExamples)
+        core.db.profile.cache.controllerCustomReplacementsVersion = core.version
     end
 
     function NCController:GetChannel()
@@ -64,6 +87,16 @@ function NemesisChat:InstantiateMsg()
         NCController.customReplacements[key] = value
     end
 
+    -- Set the custom replacement examples property, replacing any existing value(s)
+    function NCController:SetCustomReplacementExamples(customReplacementExamples)
+        NCController.customReplacementExamples = customReplacementExamples
+    end
+
+    -- Add a custom replacement example, giving sample replacements for a key
+    function NCController:AddCustomReplacementExample(key, value)
+        NCController.customReplacementExamples[key] = value
+    end
+
     function NCController:SetEventType(eventType)
         eventType = tonumber(eventType or "0") or 0
 
@@ -87,12 +120,12 @@ function NemesisChat:InstantiateMsg()
         NCController:SetMessage(NCController:GetReplacedString(NCController:GetMessage()))
     end
 
-    function NCController:GetReplacedString(input)
+    function NCController:GetReplacedString(input, useExamples)
         if input == "" then
             return ""
         end
 
-        if NCEvent:GetBystander() == nil then
+        if NCEvent:GetBystander() == nil and not useExamples then
             NCEvent:RandomBystander()
         end
 
@@ -104,15 +137,17 @@ function NemesisChat:InstantiateMsg()
         local msg = input
 
         -- Custom replacements, example: Details API [DPS] and [NEMESISDPS], this comes first as overrides are possible
-        for k, v in pairs(NCController.customReplacements) do
-            -- First check for condition specific replacements
-            if msg:match(k) then
-                local val = v()
-
-                if type(val) == "string" or type(val) == "number" then
-                    msg = msg:gsub(k, val)
-                else
-                    NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+        if not useExamples then
+            for k, v in pairs(NCController.customReplacements) do
+                -- First check for condition specific replacements
+                if msg:match(k) then
+                    local val = v()
+    
+                    if type(val) == "string" or type(val) == "number" then
+                        msg = msg:gsub(k, val)
+                    else
+                        NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+                    end
                 end
             end
         end
@@ -123,12 +158,20 @@ function NemesisChat:InstantiateMsg()
         -- One more pass on custom replacements, without condition replacement text, as a fallback
         for k, v in pairs(NCController.customReplacements) do
             if msg:match(k) then
-                local val = v()
+                local val
+
+                if useExamples == true and NCController.customReplacementExamples[k] ~= nil then
+                    val = NCController.customReplacementExamples[k]()
+                else
+                    val = v()
+                end
 
                 if type(val) == "string" or type(val) == "number" then
                     msg = msg:gsub(k, val)
                 else
-                    NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+                    if not useExamples then
+                        NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+                    end
                 end
             end
         end
@@ -177,6 +220,10 @@ function NemesisChat:InstantiateMsg()
         end
 
         if NCEvent:GetEvent() == "DEATH" and NCConfig:IsDeathException() then
+            return true
+        end
+
+        if NCEvent:GetTarget() == "BOSS" or NCEvent:GetTarget() == "ANY_MOB" then
             return true
         end
 
@@ -394,14 +441,13 @@ function NemesisChat:InstantiateMsg()
             return
         end
 
-        -- Custom replacements / hooks from APIs
-        NemesisChatAPI:InitPreMessage()
+        if not NCController.customReplacements then
+            NemesisChatAPI:InitializeReplacements()
+        end
 
         NCController:ReplaceStrings()
         NCController:CheckChannel()
         NCController:Send()
-
-        NemesisChatAPI:InitPostMessage()
     end
 
     function NCController:ValidMessage()

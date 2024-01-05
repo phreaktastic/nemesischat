@@ -211,9 +211,6 @@ function NemesisChat:InstantiateEvent()
         NCEvent:SetTargetFromSource(source)
 
         NCSpell:Spell(source, dest, spellId, spellName)
-
-        NemesisChat:Print("START", NCEvent:GetTarget(), NCSpell:GetSpellName(), NCSpell:GetTarget())
-        NCEvent:EventHasMessages()
     end
 
     -- Set the Category, Event, and Target for a group heal event
@@ -250,6 +247,18 @@ function NemesisChat:InstantiateEvent()
     function NCEvent:AvoidableDeath(dest)
         NCEvent:Death(dest)
         NCEvent:SetEvent("AVOIDABLE_DEATH")
+    end
+
+    -- Damage event
+    function NCEvent:Damage(source, dest, spellId, spellName, amount, avoidable)
+        NCEvent:SetEvent("DAMAGE")
+        NCEvent:SetTargetFromSource(dest)
+
+        if avoidable then
+            NCEvent:SetEvent("AVOIDABLE_DAMAGE")
+        end
+
+        NCSpell:Damage(source, dest, spellId, spellName, amount)
     end
 
     -- Set the event's Target based on the input source (SELF|NEMESIS|BYSTANDER), and set a random Bystander/Nemesis if appropriate
@@ -305,34 +314,26 @@ function NemesisChat:InstantiateEvent()
 
     function NCEvent:EventHasMessages()
         if NCEvent:GetCategory() == "" or NCEvent:GetEvent() == "" or NCEvent:GetTarget() == "" then
-            NemesisChat:Print("Event is missing data", NCEvent:GetCategory(), NCEvent:GetEvent(), NCEvent:GetTarget())
             return false
         end
 
         local category = core.db.profile.messages[NCEvent:GetCategory()]
 
-        if category == nil or #category == 0 then
-            NemesisChat:Print("Event has no messages (CATEGORY)", NCEvent:GetCategory(), NCEvent:GetEvent(), NCEvent:GetTarget())
-            
-            
+        if category == nil then
             return false
         end
 
         local event = category[NCEvent:GetEvent()]
 
-        if event == nil or #event == 0 then
-            NemesisChat:Print("Event has no messages (EVENT)", NCEvent:GetCategory(), NCEvent:GetEvent(), NCEvent:GetTarget())
+        if event == nil then
             return false
         end
 
         local profileMessages = event[NCEvent:GetTarget()]
 
         if profileMessages == nil or #profileMessages == 0 then
-            NemesisChat:Print("Event has no messages (TARGET)", NCEvent:GetCategory(), NCEvent:GetEvent(), NCEvent:GetTarget())
             return false
         end
-
-        NemesisChat:Print("Event has messages", NCEvent:GetCategory(), NCEvent:GetEvent(), NCEvent:GetTarget(), #profileMessages)
 
         local availableMessages = NCController:GetConditionalMessages(profileMessages)
 

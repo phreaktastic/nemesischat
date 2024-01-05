@@ -117,6 +117,26 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NCBoss:GetIdentifier() end,
         description = "The boss's name.",
         isNumeric = false,
+        example = function()
+            local examples = {
+                "Magmorax",
+                "Ragnaros",
+                "Kel'Thuzad",
+                "Illidan Stormrage",
+                "Arthas Menethil",
+                "Deathwing",
+                "Garrosh Hellscream",
+                "Gul'dan",
+                "Kil'jaeden",
+                "Argus the Unmaker",
+                "Jaina Proudmoore",
+                "Sylvanas Windrunner",
+                "Queen Azshara",
+                "N'Zoth the Corruptor",
+            }
+
+            return examples[math.random(1, #examples)]
+        end,
     })
     :AddReplacement({
         label = "Boss Time",
@@ -124,6 +144,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:GetDuration(NCBoss:GetStartTime()) end,
         description = "The amount of time that has passed since the boss fight started.",
         isNumeric = false,
+        example = function() return NemesisChat:GetDuration(GetTime() - math.random(101, 276)) end,
     })
     :AddReplacement({
         label = "Bystander Deaths",
@@ -131,6 +152,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCDungeon:GetDeaths(NCEvent:GetBystander()) or 0) end,
         description = "The number of times the Bystander has died in the current dungeon.",
         isNumeric = true,
+        example = function() return math.random(1, 10) end,
     })
     :AddReplacement({
         label = "Bystander Interrupts",
@@ -138,6 +160,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCCombat:GetInterrupts(NCEvent:GetBystander()) or 0) end,
         description = "The number of times the Bystander has interrupted an enemy spell cast in the current combat segment.",
         isNumeric = true,
+        example = function() return math.random(1, 3) end,
     })
     :AddReplacement({
         label = "Bystander Interrupts (Overall)",
@@ -145,6 +168,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCDungeon:GetInterrupts(NCEvent:GetBystander()) or 0) end,
         description = "The number of times the Bystander has interrupted an enemy spell cast in the current dungeon.",
         isNumeric = true,
+        example = function() return math.random(1, 350) end,
     })
     :AddReplacement({
         label = "Bystander Kills",
@@ -152,6 +176,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCDungeon:GetKills(NCEvent:GetBystander()) or 0) end,
         description = "The number of times the Bystander has killed a unit in the current dungeon.",
         isNumeric = true,
+        example = function() return math.random(1, 100) end,
     })
     :AddReplacement({
         label = "Bystander Name",
@@ -159,6 +184,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (Split(NCEvent:GetBystander(), "-")[1] or "") end,
         description = "The Bystander's name.",
         isNumeric = false,
+        example = function() return NemesisChat:GetRandomPartyBystander() or "ShmoopleDoop" end,
     })
     :AddReplacement({
         label = "Bystander Role",
@@ -166,6 +192,15 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return GetRole(NCEvent:GetBystander()) end,
         description = "The Bystander's role.",
         isNumeric = false,
+        example = function() 
+            local examples = {
+                "TANK",
+                "HEALER",
+                "DAMAGER",
+            }
+
+            return core.rolesLookup[examples[math.random(1, #examples)]] or "DPS"
+        end,
     })
     :AddReplacement({
         label = "Dungeon Time",
@@ -173,6 +208,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:GetDuration(NCDungeon:GetStartTime()) end,
         description = "The amount of time that has passed since the dungeon started.",
         isNumeric = false,
+        example = function() return NemesisChat:GetDuration(GetTime() - math.random(101, 1276)) end,
     })
     :AddReplacement({
         label = "Keystone Level",
@@ -180,6 +216,26 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NCDungeon:GetLevel() end,
         description = "The level of the keystone for the current dungeon.",
         isNumeric = true,
+        example = function()
+            local iLevel = GetAverageItemLevel()
+
+            -- This is AI generated, there's no real logic behind it
+            if iLevel <= 440 then
+                return math.random(1, 11)
+            elseif iLevel <= 450 then
+                return math.random(7, 13)
+            elseif iLevel <= 460 then
+                return math.random(11, 17)
+            elseif iLevel <= 470 then
+                return math.random(15, 19)
+            elseif iLevel <= 480 then
+                return math.random(18, 21)
+            elseif iLevel <= 490 then
+                return math.random(21, 28)
+            end
+
+            return math.random(1, 30)
+        end,
     })
     :AddReplacement({
         label = "My Deaths",
@@ -187,6 +243,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCDungeon:GetDeaths(GetMyName()) or 0) end,
         description = "The number of times you have died in the current dungeon.",
         isNumeric = true,
+        example = function() return math.random(1, 10) end,
     })
     :AddReplacement({
         label = "My Interrupts",
@@ -194,6 +251,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCCombat:GetInterrupts(GetMyName()) or 0) end,
         description = "The number of times you have interrupted an enemy spell cast in the current combat segment.",
         isNumeric = true,
+        example = function() return math.random(1, 3) end,
     })
     :AddReplacement({
         label = "My Interrupts (Overall)",
@@ -201,6 +259,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCDungeon:GetInterrupts(GetMyName()) or 0) end,
         description = "The number of times you have interrupted an enemy spell cast in the current dungeon.",
         isNumeric = true,
+        example = function() return math.random(1, 350) end,
     })
     :AddReplacement({
         label = "My Kills",
@@ -208,6 +267,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCDungeon:GetKills(GetMyName()) or 0) end,
         description = "The number of times you have killed a unit in the current dungeon.",
         isNumeric = true,
+        example = function() return math.random(1, 100) end,
     })
     :AddReplacement({
         label = "My Name",
@@ -215,6 +275,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return GetMyName() end,
         description = "Your character's name.",
         isNumeric = false,
+        example = function() return GetMyName() end,
     })
     :AddReplacement({
         label = "My Role",
@@ -222,6 +283,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return GetRole() end,
         description = "Your character's role.",
         isNumeric = false,
+        example = function() GetRole() end,
     })
     :AddReplacement({
         label = "Nemesis Deaths",
@@ -229,6 +291,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCDungeon:GetDeaths(NCEvent:GetNemesis()) or 0) end,
         description = "The number of times the Nemesis has died in the current dungeon.",
         isNumeric = true,
+        example = function() return math.random(10, 100) end,
     })
     :AddReplacement({
         label = "Nemesis Interrupts",
@@ -236,6 +299,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCCombat:GetInterrupts(NCEvent:GetNemesis()) or 0) end,
         description = "The number of times the Nemesis has interrupted an enemy spell cast in the current combat segment.",
         isNumeric = true,
+        example = function() return math.random(0, 2) end,
     })
     :AddReplacement({
         label = "Nemesis Interrupts (Overall)",
@@ -243,6 +307,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCDungeon:GetInterrupts(NCEvent:GetNemesis()) or 0) end,
         description = "The number of times the Nemesis has interrupted an enemy spell cast in the current dungeon.",
         isNumeric = true,
+        example = function() return math.random(1, 350) end,
     })
     :AddReplacement({
         label = "Nemesis Kills",
@@ -250,6 +315,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (NCDungeon:GetKills(NCEvent:GetNemesis()) or 0) end,
         description = "The number of times the Nemesis has killed a unit in the current dungeon.",
         isNumeric = true,
+        example = function() return math.random(1, 100) end,
     })
     :AddReplacement({
         label = "Nemesis Name",
@@ -257,6 +323,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (Split(NCEvent:GetNemesis(), "-")[1] or "") end,
         description = "The Nemesis's name.",
         isNumeric = false,
+        example = function() return NemesisChat:GetRandomPartyNemesis() or NemesisChat:GetRandomGuildNemesis() or "YoloSwagNoScope" end,
     })
     :AddReplacement({
         label = "Nemesis Role",
@@ -264,6 +331,15 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return GetRole(NCEvent:GetNemesis()) end,
         description = "The Nemesis's role.",
         isNumeric = false,
+        example = function() 
+            local examples = {
+                "TANK",
+                "HEALER",
+                "DAMAGER",
+            }
+
+            return core.rolesLookup[examples[math.random(1, #examples)]] or "DPS"
+        end,
     })
     :AddReplacement({
         label = "Spell Name",
@@ -271,6 +347,19 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() if NCEvent:GetEvent() == "INTERRUPT" then return (NCSpell:GetExtraSpellLink() or "Spell") else return (NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or "Spell") end end,
         description = "The name of the spell that was cast or interrupted.",
         isNumeric = false,
+        example = function()
+            local examples = {
+                204243,
+                200642,
+                200658,
+                225562,
+                225573,
+                201399,
+                201839,
+            }
+
+            return GetSpellLink(examples[math.random(1, #examples)])
+        end,
     })
     :AddReplacement({
         label = "Target Name",
@@ -278,6 +367,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (Split(NCSpell:GetTarget(), "-")[1] or "") end,
         description = "The name of the target of the spell that was cast or interrupted.",
         isNumeric = false,
+        example = function() return "Poor Unfortunate Soul" end,
     })
     :AddReplacement({
         label = "Source Name",
@@ -285,27 +375,40 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (Split(NCSpell:GetSource(), "-")[1] or "") end,
         description = "The name of the source of the spell that was cast or interrupted.",
         isNumeric = false,
+        example = function()
+            local examples = {
+                "Dreadfire Imp",
+                "Taintheart Summoner",
+                "Bloodtainted Burster",
+                "Infinite Timebender",
+                "Infinite Chronomancer",
+                "Time-Lost Waveshaper"
+            }
+        end,
     })
     :AddReplacement({
         label = "My Health",
         value = "HP",
-        exec = function() return NemesisChat:FormatNumber(UnitHealth(GetMyName())) or 0 end,
+        exec = function() return NemesisChat:FormatNumber(UnitHealth("player")) or 0 end,
         description = "The current health of your character.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(UnitHealth("player")) or 0 end,
     })
     :AddReplacement({
         label = "My Max Health",
         value = "MAXHP",
-        exec = function() return NemesisChat:FormatNumber(UnitHealthMax(GetMyName())) or 0 end,
+        exec = function() return NemesisChat:FormatNumber(UnitHealthMax("player")) or 0 end,
         description = "The maximum health of your character.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(UnitHealthMax("player")) or 0 end,
     })
     :AddReplacement({
         label = "My Health %",
         value = "HPPERCENT",
-        exec = function() return math.floor((UnitHealth(GetMyName()) / UnitHealthMax(GetMyName())) * 100) .. "%" end,
+        exec = function() return math.floor((UnitHealth("player") / UnitHealthMax("player")) * 100) .. "%" end,
         description = "The current health percentage of your character.",
         isNumeric = true,
+        example = function() return math.floor((UnitHealth("player") / UnitHealthMax("player")) * 100) .. "%" end,
     })
     :AddReplacement({
         label = "Bystander Health",
@@ -313,6 +416,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:FormatNumber(UnitHealth(NCEvent:GetBystander())) or 0 end,
         description = "The current health of the bystander.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(UnitHealth(NemesisChat:GetRandomPartyBystander() or NemesisChat:GetRandomGuildBystander()) or math.random(1, 1305725)) end,
     })
     :AddReplacement({
         label = "Bystander Max Health",
@@ -320,6 +424,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:FormatNumber(UnitHealthMax(NCEvent:GetBystander())) or 0 end,
         description = "The maximum health of the bystander.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(UnitHealthMax(NemesisChat:GetRandomPartyBystander() or NemesisChat:GetRandomGuildBystander()) or math.random(642765, 1305725)) end,
     })
     :AddReplacement({
         label = "Bystander Health %",
@@ -327,6 +432,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return math.floor((UnitHealth(NCEvent:GetBystander()) / UnitHealthMax(NCEvent:GetBystander())) * 100) .. "%" end,
         description = "The current health percentage of the bystander.",
         isNumeric = true,
+        example = function() return math.random(1, 100) .. "%" end,
     })
     :AddReplacement({
         label = "Nemesis Health",
@@ -334,6 +440,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:FormatNumber(UnitHealth(NCEvent:GetNemesis())) or 0 end,
         description = "The current health of the Nemesis.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(UnitHealth(NemesisChat:GetRandomPartyNemesis() or NemesisChat:GetRandomGuildNemesis()) or math.random(1, 1305725)) end,
     })
     :AddReplacement({
         label = "Nemesis Max Health",
@@ -341,6 +448,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:FormatNumber(UnitHealthMax(NCEvent:GetNemesis())) or 0 end,
         description = "The maximum health of the Nemesis.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(UnitHealthMax(NemesisChat:GetRandomPartyNemesis() or NemesisChat:GetRandomGuildNemesis()) or math.random(642765, 1305725)) end,
     })
     :AddReplacement({
         label = "Nemesis Health %",
@@ -348,6 +456,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return math.floor((UnitHealth(NCEvent:GetNemesis()) / UnitHealthMax(NCEvent:GetNemesis())) * 100) .. "%" end,
         description = "The current health percentage of the Nemesis.",
         isNumeric = true,
+        example = function() return math.random(1, 100) .. "%" end,
     })
     :AddReplacement({
         label = "My Race",
@@ -355,6 +464,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return UnitRace("player") end,
         description = "Your character's race.",
         isNumeric = false,
+        example = function() return UnitRace("player") end,
     })
     :AddReplacement({
         label = "My Class",
@@ -362,6 +472,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return UnitClass("player") end,
         description = "Your character's class.",
         isNumeric = false,
+        example = function() return UnitClass("player") end,
     })
     :AddReplacement({
         label = "My Spec",
@@ -369,6 +480,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return GetSpecializationNameForSpecID(GetSpecialization()) end,
         description = "Your character's specialization.",
         isNumeric = false,
+        example = function() return GetSpecializationNameForSpecID(GetSpecialization()) end,
     })
     :AddReplacement({
         label = "My Item Level",
@@ -376,6 +488,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return GetAverageItemLevel() end,
         description = "Your character's average item level.",
         isNumeric = true,
+        example = function() return GetAverageItemLevel() end,
     })
     :AddReplacement({
         label = "Nemesis Race",
@@ -383,6 +496,35 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return UnitRace(NCEvent:GetNemesis()) end,
         description = "The race of the Nemesis's character.",
         isNumeric = false,
+        example = function()
+            local exampleRaces = {
+                "Human",
+                "Dwarf",
+                "Night Elf",
+                "Gnome",
+                "Draenei",
+                "Worgen",
+                "Pandaren",
+                "Orc",
+                "Undead",
+                "Tauren",
+                "Troll",
+                "Blood Elf",
+                "Goblin",
+                "Nightborne",
+                "Highmountain Tauren",
+                "Void Elf",
+                "Lightforged Draenei",
+                "Zandalari Troll",
+                "Kul Tiran",
+                "Dark Iron Dwarf",
+                "Vulpera",
+                "Mag'har Orc",
+                "Mechagnome",
+            }
+
+            return exampleRaces[math.random(1, #exampleRaces)]
+        end,
     })
     :AddReplacement({
         label = "Nemesis Class",
@@ -390,6 +532,24 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return UnitClass(NCEvent:GetNemesis()) end,
         description = "The class of the Nemesis's character.",
         isNumeric = false,
+        example = function()
+            local exampleClasses = {
+                "Warrior",
+                "Paladin",
+                "Hunter",
+                "Rogue",
+                "Priest",
+                "Death Knight",
+                "Shaman",
+                "Mage",
+                "Warlock",
+                "Monk",
+                "Druid",
+                "Demon Hunter",
+            }
+
+            return exampleClasses[math.random(1, #exampleClasses)]
+        end,
     })
     :AddReplacement({
         label = "Bystander Race",
@@ -397,6 +557,35 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return UnitRace(NCEvent:GetBystander()) end,
         description = "The race of the Bystander's character.",
         isNumeric = false,
+        example = function()
+            local exampleRaces = {
+                "Human",
+                "Dwarf",
+                "Night Elf",
+                "Gnome",
+                "Draenei",
+                "Worgen",
+                "Pandaren",
+                "Orc",
+                "Undead",
+                "Tauren",
+                "Troll",
+                "Blood Elf",
+                "Goblin",
+                "Nightborne",
+                "Highmountain Tauren",
+                "Void Elf",
+                "Lightforged Draenei",
+                "Zandalari Troll",
+                "Kul Tiran",
+                "Dark Iron Dwarf",
+                "Vulpera",
+                "Mag'har Orc",
+                "Mechagnome",
+            }
+
+            return exampleRaces[math.random(1, #exampleRaces)]
+        end,
     })
     :AddReplacement({
         label = "Bystander Class",
@@ -404,6 +593,24 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return UnitClass(NCEvent:GetBystander()) end,
         description = "The class of the Bystander's character.",
         isNumeric = false,
+        example = function()
+            local exampleClasses = {
+                "Warrior",
+                "Paladin",
+                "Hunter",
+                "Rogue",
+                "Priest",
+                "Death Knight",
+                "Shaman",
+                "Mage",
+                "Warlock",
+                "Monk",
+                "Druid",
+                "Demon Hunter",
+            }
+
+            return exampleClasses[math.random(1, #exampleClasses)]
+        end,
     })
     :AddReplacement({
         value = "HP_CONDITION",

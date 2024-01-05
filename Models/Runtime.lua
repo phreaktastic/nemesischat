@@ -57,6 +57,7 @@ core.runtimeDefaults = {
         message = "",
         target = "",
         customReplacements = {},
+        customReplacementExamples = {},
         excludedNemeses = {},
         excludedBystanders = {},
     },
@@ -85,6 +86,7 @@ core.runtimeDefaults = {
         spellId = 0,
         spellName = "",
         extraSpellId = 0,
+        damage = 0,
     },
     ncCombat = {
         inCombat = false,
@@ -366,7 +368,7 @@ NCRuntime = {
         end
     end,
     CacheGroupRoster = function(self)
-        core.db.profile.cache.groupRoster = core.runtime.groupRoster
+        core.db.profile.cache.groupRoster = DeepCopy(core.runtime.groupRoster)
         core.db.profile.cache.groupRosterTime = GetTime()
     end,
     GetGuildRoster = function(self)
@@ -456,21 +458,18 @@ NCRuntime = {
     ClearFriends = function(self)
         core.runtime.friends = {}
 
-        -- self:CacheFriends()
+        self:CacheFriends()
     end,
     AddFriend = function(self, playerName)
         core.runtime.friends[playerName] = true
 
-        -- self:CacheFriends()
+        self:CacheFriends()
     end,
     IsFriend = function(self, playerName)
         return core.runtime.friends[playerName] ~= nil
     end,
     CacheFriends = function(self)
-        if not core.db.profile.cache then
-            core.db.profile.cache = {}
-        end
-        core.db.profile.cache.friends = core.runtime.friends
+        core.db.profile.cache.friends = DeepCopy(core.runtime.friends)
         core.db.profile.cache.friendsTime = GetTime()
     end,
     GetPetOwners = function(self)

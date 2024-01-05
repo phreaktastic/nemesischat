@@ -102,6 +102,18 @@ function NemesisChat:InstantiateSpell()
         return NCSpell:GetSource() ~= "" and NCSpell.active == true
     end
 
+    function NCSpell:GetDamage()
+        if NCSpell.damage == nil then
+            return 0
+        end
+        
+        return NCSpell.damage
+    end
+
+    function NCSpell:SetDamage(damage)
+        NCSpell.damage = damage
+    end
+
     -- Helper for setting Interrupt event properties
     function NCSpell:Interrupt(source, target, spellId, spellName, extraSpellId)
         NCSpell:SetSource(source)
@@ -126,5 +138,11 @@ function NemesisChat:InstantiateSpell()
         NCSpell:SetSpellId(spellId)
         NCSpell:SetSpellName(spellName)
         NCSpell:SetActive()
+    end
+
+    -- Helper for damaging spells
+    function NCSpell:Damage(source, dest, spellId, spellName, damage)
+        NCSpell:Spell(source, dest, spellId, spellName)
+        NCSpell:SetDamage(damage)
     end
 end

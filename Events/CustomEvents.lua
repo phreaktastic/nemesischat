@@ -21,9 +21,9 @@ function NemesisChat:HandleEvent()
     NCController:ConfigMessage()
 
     -- If AI messages are enabled, use them if a configured message couldn't be found
-    if core.db.profile.ai and not NCController:ValidMessage() then
-        NCController:AIMessage()
-    end
+    -- if core.db.profile.ai and not NCController:ValidMessage() then
+    --     NCController:AIMessage()
+    -- end
 
     -- If we still don't have a message, bail
     if not NCController:ValidMessage() then
@@ -86,7 +86,6 @@ function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
 end
 
 function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
-    NemesisChat:Print("GUILD_PLAYER_LOGIN", playerName, isNemesis)
     NCEvent:SetCategory("GUILD")
     NCEvent:SetEvent("LOGIN")
 
@@ -108,7 +107,6 @@ function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
 end
 
 function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
-    NemesisChat:Print("GUILD_PLAYER_LOGOUT", playerName, isNemesis)
     NCEvent:SetCategory("GUILD")
     NCEvent:SetEvent("LOGOUT")
 
@@ -127,4 +125,51 @@ function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
     end
 
     NemesisChat:HandleEvent()
+end
+
+function NemesisChat:CheckGuild()
+    local onlineGuildMembers = {}
+
+    -- Populate onlineGuildMembers with the current online guild members
+    for i = 1, GetNumGuildMembers() do
+        local name, _, _, _, _, _, _, _, isOnline, _, _, _, _, isMobile, _, _, guid = GetGuildRosterInfo(i)
+
+        if isOnline and not isMobile then
+            onlineGuildMembers[name] = {
+                guid = guid,
+                isNemesis = NCConfig:GetNemesis(name) ~= nil,
+            }
+        end
+    end
+
+    -- Compare onlineGuildMembers to core.runtime.guild, to see who has come online or gone offline
+    for name, data in pairs(core.runtime.guild) do
+        if not onlineGuildMembers[name] then
+            -- Player has gone offline
+            core.runtime.guild[name] = nil
+
+            NemesisChat:GUILD_PLAYER_LOGOUT(name, NCConfig:GetNemesis(name) ~= nil)
+        end
+    end
+
+    for name, data in pairs(onlineGuildMembers) do
+        if not core.runtime.guild[name] then
+            -- Player has come online
+            local isNemesis = NCConfig:GetNemesis(name) ~= nil
+
+            core.runtime.guild[name] = {
+                name = name,
+                isNemesis = isNemesis,
+            }
+
+            NemesisChat:GUILD_PLAYER_LOGIN(name, isNemesis)
+        end
+    end
+
+    -- Update the guild roster
+    core.runtime.guild = DeepCopy(onlineGuildMembers)
+
+    -- Update the guild roster in the DB cache, in case a reload occurs
+    core.db.profile.cache.guild = DeepCopy(onlineGuildMembers)
+    core.db.profile.cache.guildTime = GetTime()
 end

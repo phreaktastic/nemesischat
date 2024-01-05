@@ -83,3 +83,20 @@ end
 function NCDungeon:SetTimeLimit(timeLimit)
     NCDungeon.TimeLimit = timeLimit
 end
+
+function NCDungeon:GetTimeLeft()
+    return GetTime() - (NCDungeon:GetStartTime() + NCDungeon:GetTimeLimit())
+end
+
+function NCDungeon:UpdateCache()
+    core.db.profile.cache.NCDungeon = DeepCopy(NCDungeon)
+    core.db.profile.cache.NCDungeonTime = GetTime()
+end
+
+function NCDungeon:CheckCache()
+    if core.db.profile.cache.NCDungeon ~= nil and core.db.profile.cache.NCDungeon ~= {} and GetTime() - core.db.profile.cache.NCDungeonTime <= 600 then
+        local backup = DeepCopy(core.db.profile.cache.NCDungeon)
+    
+        NCDungeon:Restore(backup)
+    end
+end

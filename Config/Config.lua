@@ -15,10 +15,10 @@ core.defaults = {
 	profile = {
 		enabled = true,
         dbg = false,
-        nonCombatMode = false,
-        interruptException = false,
-        deathException = false,
-        ai = true,
+        nonCombatMode = true,
+        interruptException = true,
+        deathException = true,
+        ai = false,
         flagFriendsAsNemeses = false,
         flagGuildmatesAsNemeses = false,
         reportConfig = {
@@ -97,6 +97,19 @@ core.defaults = {
         leavers = {},
         lowPerformers = {},
         statsFrame = {},
+        cache = {
+            guild = {},
+            guildTime = 0,
+            friends = {},
+            friendsTime = 0,
+            groupRoster = {},
+            groupRosterTime = 0,
+            controllerCustomReplacements = {},
+            controllerCustomReplacementExamples = {},
+            controllerCustomReplacementsVersion = nil,
+            NCDungeon = {},
+            NCDungeonTime = 0,
+        },
 	},
 }
 

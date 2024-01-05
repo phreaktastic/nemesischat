@@ -342,8 +342,8 @@ core.events = {
             options = core.constants.STANDARD
         },
         {
-            label = "Receive Unavoidable Damage",
-            value = "UNAVOIDABLE_DAMAGE",
+            label = "Receive Damage",
+            value = "DAMAGE",
             options = core.constants.STANDARD
         },
         {
@@ -658,6 +658,13 @@ for _, val in pairs(core.affixMobs) do
     core.affixMobsLookup[val] = true
 end
 
+-- Cache core.roles to avoid repeated lookups
+core.rolesLookup = {}
+
+for _, val in pairs(core.roles) do
+    core.rolesLookup[val.value] = val.label
+end
+
 -- Raid markers to use for affix mobs
 core.markers = {
     1, -- Star
@@ -720,9 +727,6 @@ core.eventSubscriptions = {
     "ENCOUNTER_END", -- Boss end
     "CHALLENGE_MODE_START", -- M+ start
     "CHALLENGE_MODE_COMPLETED", -- M+ complete
-
-    -- Guild
-    "GUILD_EVENT_LOG_UPDATE",
 
     -- Unit Actions
     "UNIT_SPELLCAST_START",

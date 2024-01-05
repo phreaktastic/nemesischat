@@ -283,12 +283,12 @@ function NemesisChat:InitializeHelpers()
         end
 
         -- Unit is/has cast(ing) a spell, but are not in the party
-        if NCSpell:IsValidSpell() and not UnitInParty(NCSpell:GetSource()) then
-            if NCConfig:IsDebugging() then 
-                self:Print("Source is not in party.")
-            end
-            return true
-        end
+        -- if NCSpell:IsValidSpell() and not UnitInParty(NCSpell:GetSource()) then
+        --     if NCConfig:IsDebugging() then 
+        --         self:Print("Source is not in party.")
+        --     end
+        --     return true
+        -- end
 
         return false
     end
@@ -364,6 +364,8 @@ function NemesisChat:InitializeHelpers()
             if state then
                 state.lastDamageAvoidable = isAvoidable
             end
+
+            NCEvent:Damage(sourceName, destName, isAvoidable, damage)
         else
             -- Something unsupported.
             return
@@ -1251,13 +1253,29 @@ end
 -- Instantiate NC objects since they are ephemeral and will not persist through a UI load
 function NemesisChat:InstantiateCore()
     NCController = DeepCopy(core.runtimeDefaults.NCController)
-    NemesisChat:InstantiateMsg()
+    NemesisChat:InstantiateController()
+    NCController:Initialize()
 
     NCSpell = DeepCopy(core.runtimeDefaults.ncSpell)
     NemesisChat:InstantiateSpell()
 
     NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
     NemesisChat:InstantiateEvent()
+
+    if core.db.profile.cache.guild and GetTime() - core.db.profile.cache.guildTime <= core.runtime.dbCacheExpiration then
+        core.runtime.guild = DeepCopy(core.db.profile.cache.guild)
+    end
+    
+    if core.db.profile.cache.friends and GetTime() - core.db.profile.cache.friendsTime <= core.runtime.dbCacheExpiration then
+        core.runtime.friends = DeepCopy(core.db.profile.cache.friends)
+    end
+    
+    if core.db.profile.cache.groupRoster and GetTime() - core.db.profile.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
+        NemesisChat:Print("Recovered group roster from cache.")
+        core.runtime.groupRoster = DeepCopy(core.db.profile.cache.groupRoster)
+    end
+
+    NCDungeon:CheckCache()
 end
 
 function NemesisChat:Initialize()
@@ -1269,34 +1287,4 @@ function NemesisChat:Initialize()
     NemesisChat:RegisterToasts()
     NemesisChat:SetMyName()
     NCInfo:Initialize()
-
-    -- Possible model for future expansion
-    if core.db.profile.cache == nil then
-        core.db.profile.cache = {}
-    
-        -- Guild list cache
-        core.db.profile.cache.guild = {}
-        core.db.profile.cache.guildTime = 0
-    
-        -- Friends list cache
-        core.db.profile.cache.friends = {}
-        core.db.profile.cache.friendsTime = 0
-    
-        -- Group roster cache
-        core.db.profile.cache.groupRoster = {}
-        core.db.profile.cache.groupRosterTime = 0
-    end
-    
-    if core.db.profile.cache.guild and GetTime() - core.db.profile.cache.guildTime <= core.runtime.dbCacheExpiration then
-        core.runtime.guild = core.db.profile.cache.guild
-    end
-    
-    if core.db.profile.cache.friends and GetTime() - core.db.profile.cache.friendsTime <= core.runtime.dbCacheExpiration then
-        core.runtime.friends = core.db.profile.cache.friends
-    end
-    
-    if core.db.profile.cache.groupRoster and GetTime() - core.db.profile.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
-        NemesisChat:Print("Recovered group roster from cache.")
-        core.runtime.groupRoster = core.db.profile.cache.groupRoster
-    end
 end
