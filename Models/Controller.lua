@@ -144,14 +144,14 @@ function NemesisChat:InstantiateMsg()
         end
 
         -- Config driven minimum time between messages
-        if GetTime() - NCRuntime:GetLastMessage() < core.db.profile.default.minimumTime and not NCController:IsMinTimeException() then
+        if GetTime() - NCRuntime:GetLastMessage() < core.db.profile.minimumTime and not NCController:IsMinTimeException() then
             NCEvent:Initialize()
             return
         end
 
         -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
         -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
-        if core.db.profile.default.nonCombatMode and NCCombat:IsActive() and not NCController:IsNonCombatModeException() then
+        if core.db.profile.nonCombatMode and NCCombat:IsActive() and not NCController:IsNonCombatModeException() then
             NCEvent:Initialize()
             return
         end
@@ -211,18 +211,18 @@ function NemesisChat:InstantiateMsg()
     -- Set values for a random configured message
     function NCController:ConfigMessage()
         -- If a global chance is configured, respect it
-        if core.db.profile.default.useGlobalChance == true then
-            if not NemesisChat:Roll(core.db.profile.default.globalChance or 1) then
+        if core.db.profile.useGlobalChance == true then
+            if not NemesisChat:Roll(core.db.profile.globalChance or 1) then
                 NCEvent:Initialize()
                 return
             end
         end
 
-        if core.db.profile.default.messages[NCEvent:GetCategory()] == nil or core.db.profile.default.messages[NCEvent:GetCategory()][NCEvent:GetEvent()] == nil or core.db.profile.default.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()] == nil then
+        if core.db.profile.messages[NCEvent:GetCategory()] == nil or core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()] == nil or core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()] == nil then
             return
         end
 
-        local profileMessages = core.db.profile.default.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()]
+        local profileMessages = core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()]
 
         if profileMessages == nil then
             NCEvent:Initialize()
@@ -383,7 +383,7 @@ function NemesisChat:InstantiateMsg()
 
     -- Returns TRUE if messages are configured, FALSE otherwise
     function NCController:HasMessages()
-        local profileMessages = core.db.profile.default.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()]
+        local profileMessages = core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()]
 
         return (profileMessages ~= nil and #profileMessages >= 1)
     end

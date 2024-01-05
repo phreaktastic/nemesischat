@@ -309,7 +309,7 @@ function NemesisChat:InstantiateEvent()
             return false
         end
 
-        local category = core.db.profile.default.messages[NCEvent:GetCategory()]
+        local category = core.db.profile.messages[NCEvent:GetCategory()]
 
         if category == nil or #category == 0 then
             NemesisChat:Print("Event has no messages (CATEGORY)", NCEvent:GetCategory(), NCEvent:GetEvent(), NCEvent:GetTarget())

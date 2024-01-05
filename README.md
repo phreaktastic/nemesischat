@@ -209,7 +209,7 @@ Where:
 This flow in mind, the end result looks something like this:
 
 ```
-core.db.profile.default.messages["BOSS"]["DEATH"]["NEMESIS"]
+core.db.profile.messages["BOSS"]["DEATH"]["NEMESIS"]
 ```
 
 The above example would retrieve a player-configured message for a nemesis dying in a boss encounter.
@@ -286,7 +286,7 @@ First, we call `NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")`, which will
 })
 ```
 
-This adds a configuration toggle to Nemesis Chat's `General->APIs` section. Under the hood, it will reference/set `core.db.profile.default.APIS["NC_DETAILS"].NC_DETAILS_ENABLED` for this toggle. It can be checked / referenced / set at any time. The `primary` property allows this to function as the toggle for enabling / disabling the API. If multiple config toggles are set with `primary = true`, unexpected results will ensue. ONLY set this to `true` for the primary enable/disable toggle for the API.
+This adds a configuration toggle to Nemesis Chat's `General->APIs` section. Under the hood, it will reference/set `core.db.profile.APIS["NC_DETAILS"].NC_DETAILS_ENABLED` for this toggle. It can be checked / referenced / set at any time. The `primary` property allows this to function as the toggle for enabling / disabling the API. If multiple config toggles are set with `primary = true`, unexpected results will ensue. ONLY set this to `true` for the primary enable/disable toggle for the API.
 
 ```
 :AddCompatibilityCheck({
@@ -307,7 +307,7 @@ This method call is adding a compatibility check which will be run in core logic
 :AddCompatibilityCheck({
     configCheck = true,
     exec = function() 
-        if not core.db.profile.default.API["NC_DETAILS" .. NemesisChatAPI:GetAPI("NC_DETAILS").configOptions[1].value] then
+        if not core.db.profile.API["NC_DETAILS" .. NemesisChatAPI:GetAPI("NC_DETAILS").configOptions[1].value] then
             return false, "Details! API is not enabled."
         end
 

@@ -74,7 +74,7 @@ function GetMyName()
 end
 
 function IsNCEnabled()
-    return core.db.profile.default.enabled
+    return core.db.profile.enabled
 end
 
 function GetRole(player)

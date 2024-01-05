@@ -89,33 +89,33 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:TransmitLeavers()
-        if core.db.profile.default.leavers == nil or NCDungeon:IsActive() then
+        if core.db.profile.leavers == nil or NCDungeon:IsActive() then
             return
         end
 
         local _, online = GetNumGuildMembers()
 
         if online > 1 and NCRuntime:GetLastLeaverSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.default.leavers, "GUILD")
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "GUILD")
             NCRuntime:SetLastLeaverSyncType("GUILD")
         else
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.default.leavers, "YELL")
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "YELL")
             NCRuntime:SetLastLeaverSyncType("YELL")
         end
     end
 
     function NemesisChat:TransmitLowPerformers()
-        if core.db.profile.default.lowPerformers == nil or NCDungeon:IsActive() then
+        if core.db.profile.lowPerformers == nil or NCDungeon:IsActive() then
             return
         end
 
         local _, online = GetNumGuildMembers()
 
         if online > 1 and NCRuntime:GetLastLowPerformerSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.default.lowPerformers, "GUILD")
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "GUILD")
             NCRuntime:SetLastLowPerformerSyncType("GUILD")
         else
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.default.lowPerformers, "YELL")
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "YELL")
             NCRuntime:SetLastLowPerformerSyncType("YELL")
         end
     end
@@ -168,18 +168,18 @@ function NemesisChat:InitializeHelpers()
             return
         end
 
-        if core.db.profile.default[configKey] == nil then
-            core.db.profile.default[configKey] = {}
+        if core.db.profile[configKey] == nil then
+            core.db.profile[configKey] = {}
         end
 
         local count = 0
 
         for key,val in pairs(data) do
             count = count + 1
-            if core.db.profile.default[configKey][key] == nil then
-                core.db.profile.default[configKey][key] = val
+            if core.db.profile[configKey][key] == nil then
+                core.db.profile[configKey][key] = val
             else
-                core.db.profile.default[configKey][key] = ArrayMerge(core.db.profile.default[configKey][key], val)
+                core.db.profile[configKey][key] = ArrayMerge(core.db.profile[configKey][key], val)
             end
         end
     end
@@ -203,51 +203,51 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:AddLeaver(guid)
-        if core.db.profile.default.leavers == nil then
-            core.db.profile.default.leavers = {}
+        if core.db.profile.leavers == nil then
+            core.db.profile.leavers = {}
         end
 
-        if core.db.profile.default.leavers[guid] == nil then
-            core.db.profile.default.leavers[guid] = {}
+        if core.db.profile.leavers[guid] == nil then
+            core.db.profile.leavers[guid] = {}
         end
 
-        tinsert(core.db.profile.default.leavers[guid], math.ceil(GetTime() / 10) * 10)
+        tinsert(core.db.profile.leavers[guid], math.ceil(GetTime() / 10) * 10)
     end
 
     function NemesisChat:AddLowPerformer(guid)
-        if core.db.profile.default.lowPerformers == nil then
-            core.db.profile.default.lowPerformers = {}
+        if core.db.profile.lowPerformers == nil then
+            core.db.profile.lowPerformers = {}
         end
 
-        if core.db.profile.default.lowPerformers[guid] == nil then
-            core.db.profile.default.lowPerformers[guid] = {}
+        if core.db.profile.lowPerformers[guid] == nil then
+            core.db.profile.lowPerformers[guid] = {}
         end
 
-        tinsert(core.db.profile.default.lowPerformers[guid], math.ceil(GetTime() / 10) * 10)
+        tinsert(core.db.profile.lowPerformers[guid], math.ceil(GetTime() / 10) * 10)
     end
 
     function NemesisChat:LeaveCount(guid)
-        if core.db.profile.default.leavers == nil then
+        if core.db.profile.leavers == nil then
             return 0
         end
 
-        if core.db.profile.default.leavers[guid] == nil then
+        if core.db.profile.leavers[guid] == nil then
             return 0
         end
 
-        return #core.db.profile.default.leavers[guid]
+        return #core.db.profile.leavers[guid]
     end
 
     function NemesisChat:LowPerformerCount(guid)
-        if core.db.profile.default.lowPerformers == nil then
+        if core.db.profile.lowPerformers == nil then
             return 0
         end
 
-        if core.db.profile.default.lowPerformers[guid] == nil then
+        if core.db.profile.lowPerformers[guid] == nil then
             return 0
         end
 
-        return #core.db.profile.default.lowPerformers[guid]
+        return #core.db.profile.lowPerformers[guid]
     end
 
     function NemesisChat:InitializeTimers()
@@ -1271,32 +1271,32 @@ function NemesisChat:Initialize()
     NCInfo:Initialize()
 
     -- Possible model for future expansion
-    if core.db.profile.default.cache == nil then
-        core.db.profile.default.cache = {}
+    if core.db.profile.cache == nil then
+        core.db.profile.cache = {}
     
         -- Guild list cache
-        core.db.profile.default.cache.guild = {}
-        core.db.profile.default.cache.guildTime = 0
+        core.db.profile.cache.guild = {}
+        core.db.profile.cache.guildTime = 0
     
         -- Friends list cache
-        core.db.profile.default.cache.friends = {}
-        core.db.profile.default.cache.friendsTime = 0
+        core.db.profile.cache.friends = {}
+        core.db.profile.cache.friendsTime = 0
     
         -- Group roster cache
-        core.db.profile.default.cache.groupRoster = {}
-        core.db.profile.default.cache.groupRosterTime = 0
+        core.db.profile.cache.groupRoster = {}
+        core.db.profile.cache.groupRosterTime = 0
     end
     
-    if core.db.profile.default.cache.guild and GetTime() - core.db.profile.default.cache.guildTime <= core.runtime.dbCacheExpiration then
-        core.runtime.guild = core.db.profile.default.cache.guild
+    if core.db.profile.cache.guild and GetTime() - core.db.profile.cache.guildTime <= core.runtime.dbCacheExpiration then
+        core.runtime.guild = core.db.profile.cache.guild
     end
     
-    if core.db.profile.default.cache.friends and GetTime() - core.db.profile.default.cache.friendsTime <= core.runtime.dbCacheExpiration then
-        core.runtime.friends = core.db.profile.default.cache.friends
+    if core.db.profile.cache.friends and GetTime() - core.db.profile.cache.friendsTime <= core.runtime.dbCacheExpiration then
+        core.runtime.friends = core.db.profile.cache.friends
     end
     
-    if core.db.profile.default.cache.groupRoster and GetTime() - core.db.profile.default.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
+    if core.db.profile.cache.groupRoster and GetTime() - core.db.profile.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
         NemesisChat:Print("Recovered group roster from cache.")
-        core.runtime.groupRoster = core.db.profile.default.cache.groupRoster
+        core.runtime.groupRoster = core.db.profile.cache.groupRoster
     end
 end

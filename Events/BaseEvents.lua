@@ -211,7 +211,7 @@ end
 function NemesisChat:PLAYER_TARGET_CHANGED(_, unitTarget)
     local targetName = UnitName("target")
 
-    if not targetName or not core.affixMobsCastersLookup[targetName] or UnitIsDead("player") or not core.db.profile.default.reportConfig["AFFIXES"]["MARKERS"] then
+    if not targetName or not core.affixMobsCastersLookup[targetName] or UnitIsDead("player") or not core.db.profile.reportConfig["AFFIXES"]["MARKERS"] then
         return
     end
 
@@ -263,6 +263,6 @@ function NemesisChat:GUILD_EVENT_LOG_UPDATE()
     core.runtime.guild = onlineGuildMembers
 
     -- Update the guild roster in the DB cache, in case a reload occurs
-    core.db.profile.default.cache.guild = onlineGuildMembers
-    core.db.profile.default.cache.guildTime = GetTime()
+    core.db.profile.cache.guild = onlineGuildMembers
+    core.db.profile.cache.guildTime = GetTime()
 end

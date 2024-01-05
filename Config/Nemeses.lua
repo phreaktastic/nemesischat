@@ -88,18 +88,18 @@ function NemesisChat:GetAddNemesis(info)
 end
 
 function NemesisChat:RemoveNemesis(info, value)
-    if core.db.profile.default.dbg then 
+    if core.db.profile.dbg then 
         self:Print("Removing ", selectedNemesisName)
     end
 
-    core.db.profile.default.nemeses[selectedNemesisName] = nil
+    core.db.profile.nemeses[selectedNemesisName] = nil
     selectedNemesisName = ""
 end
 
 function NemesisChat:RenameNemesis(nemesisName)
-    core.db.profile.default.nemeses[selectedNemesisName] = nil
+    core.db.profile.nemeses[selectedNemesisName] = nil
 
-    core.db.profile.default.nemeses[nemesisName] = nemesisName
+    core.db.profile.nemeses[nemesisName] = nemesisName
     selectedNemesisName = nemesisName
 end
 
@@ -107,7 +107,7 @@ function NemesisChat:AddNemesis(nemesisName)
     if nemesisName == "" then
         return
     end
-    core.db.profile.default.nemeses[nemesisName] = nemesisName
+    core.db.profile.nemeses[nemesisName] = nemesisName
     selectedNemesisName = nemesisName
 end
 

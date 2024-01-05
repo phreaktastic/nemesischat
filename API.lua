@@ -116,7 +116,7 @@ function NemesisChatAPI:AddAPI(name, friendlyName)
     core.apis[name].IsEnabled = function(self)
         for _, configOption in pairs(core.apis[name].configOptions) do
             if configOption.primary then
-                return core.db.profile.default.API[name .. "_" .. configOption.value]
+                return core.db.profile.API[name .. "_" .. configOption.value]
             end
         end
 
@@ -345,7 +345,7 @@ function NemesisChatAPI:GetAPIConfigOptions()
                     name = configOption.label,
                     descStyle = "inline",
                     width = "full",
-                    get = function() return core.db.profile.default.API[name .. "_" .. configOption.value] end,
+                    get = function() return core.db.profile.API[name .. "_" .. configOption.value] end,
                     set = function(_, value) 
                         if value then
                             NemesisChat:Print(api.friendlyName .. " enabled.")
@@ -353,7 +353,7 @@ function NemesisChatAPI:GetAPIConfigOptions()
                             NemesisChat:Print(api.friendlyName .. " disabled.")
                         end
                         
-                        core.db.profile.default.API[name .. "_" .. configOption.value] = value 
+                        core.db.profile.API[name .. "_" .. configOption.value] = value 
                     end,
                     disabled = function() return not success end,
                 }

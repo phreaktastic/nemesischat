@@ -21,7 +21,7 @@ function NemesisChat:HandleEvent()
     NCController:ConfigMessage()
 
     -- If AI messages are enabled, use them if a configured message couldn't be found
-    if core.db.profile.default.ai and not NCController:ValidMessage() then
+    if core.db.profile.ai and not NCController:ValidMessage() then
         NCController:AIMessage()
     end
 

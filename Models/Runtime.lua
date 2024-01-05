@@ -366,8 +366,8 @@ NCRuntime = {
         end
     end,
     CacheGroupRoster = function(self)
-        core.db.profile.default.cache.groupRoster = core.runtime.groupRoster
-        core.db.profile.default.cache.groupRosterTime = GetTime()
+        core.db.profile.cache.groupRoster = core.runtime.groupRoster
+        core.db.profile.cache.groupRosterTime = GetTime()
     end,
     GetGuildRoster = function(self)
         return core.runtime.guild
@@ -456,22 +456,22 @@ NCRuntime = {
     ClearFriends = function(self)
         core.runtime.friends = {}
 
-        self:CacheFriends()
+        -- self:CacheFriends()
     end,
     AddFriend = function(self, playerName)
         core.runtime.friends[playerName] = true
 
-        self:CacheFriends()
+        -- self:CacheFriends()
     end,
     IsFriend = function(self, playerName)
         return core.runtime.friends[playerName] ~= nil
     end,
     CacheFriends = function(self)
-        if not core.db.profile.default.cache then
-            core.db.profile.default.cache = {}
+        if not core.db.profile.cache then
+            core.db.profile.cache = {}
         end
-        core.db.profile.default.cache.friends = core.runtime.friends
-        core.db.profile.default.cache.friendsTime = GetTime()
+        core.db.profile.cache.friends = core.runtime.friends
+        core.db.profile.cache.friendsTime = GetTime()
     end,
     GetPetOwners = function(self)
         return core.runtime.petOwners
