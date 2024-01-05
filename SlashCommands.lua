@@ -23,7 +23,7 @@ function NemesisChat:SlashCommand(msg)
 		NCConfig:SetShowInfoFrame(false)
 		NCInfo.StatsFrame:Hide()
 	else
-        if core.db.profile.dbg then
+        if core.db.profile.default.dbg then
             self:Print("Invalid command issued.")
         end
 	end

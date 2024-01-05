@@ -280,6 +280,13 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         isNumeric = false,
     })
     :AddReplacement({
+        label = "Source Name",
+        value = "SOURCE",
+        exec = function() return (Split(NCSpell:GetSource(), "-")[1] or "") end,
+        description = "The name of the source of the spell that was cast or interrupted.",
+        isNumeric = false,
+    })
+    :AddReplacement({
         label = "My Health",
         value = "HP",
         exec = function() return NemesisChat:FormatNumber(UnitHealth(GetMyName())) or 0 end,

@@ -72,10 +72,6 @@ function NemesisChat:DisableNemesisButtons()
     return selectedNemesisName == nil or selectedNemesisName == ""
 end
 
-function NemesisChat:GetNemeses(info)
-    return core.db.profile.nemeses
-end
-
 function NemesisChat:GetNemesis(info, value)
     if selectedNemesisName then return selectedNemesisName end
 
@@ -92,18 +88,18 @@ function NemesisChat:GetAddNemesis(info)
 end
 
 function NemesisChat:RemoveNemesis(info, value)
-    if core.db.profile.dbg then 
+    if core.db.profile.default.dbg then 
         self:Print("Removing ", selectedNemesisName)
     end
 
-    core.db.profile.nemeses[selectedNemesisName] = nil
+    core.db.profile.default.nemeses[selectedNemesisName] = nil
     selectedNemesisName = ""
 end
 
 function NemesisChat:RenameNemesis(nemesisName)
-    core.db.profile.nemeses[selectedNemesisName] = nil
+    core.db.profile.default.nemeses[selectedNemesisName] = nil
 
-    core.db.profile.nemeses[nemesisName] = nemesisName
+    core.db.profile.default.nemeses[nemesisName] = nemesisName
     selectedNemesisName = nemesisName
 end
 
@@ -111,7 +107,7 @@ function NemesisChat:AddNemesis(nemesisName)
     if nemesisName == "" then
         return
     end
-    core.db.profile.nemeses[nemesisName] = nemesisName
+    core.db.profile.default.nemeses[nemesisName] = nemesisName
     selectedNemesisName = nemesisName
 end
 

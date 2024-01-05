@@ -21,7 +21,7 @@ function NemesisChat:HandleEvent()
     NCController:ConfigMessage()
 
     -- If AI messages are enabled, use them if a configured message couldn't be found
-    if core.db.profile.ai and not NCController:ValidMessage() then
+    if core.db.profile.default.ai and not NCController:ValidMessage() then
         NCController:AIMessage()
     end
 
@@ -67,6 +67,50 @@ function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
     end
 
     NCEvent:SetEvent("LEAVE")
+
+    if isNemesis then
+        NCEvent:SetTarget("NEMESIS")
+        NCEvent:SetNemesis(playerName)
+        NCEvent:RandomBystander()
+    elseif playerName ~= GetMyName() then
+        NCEvent:SetTarget("BYSTANDER")
+        NCEvent:SetBystander(playerName)
+        NCEvent:RandomNemesis()
+    else
+        NCEvent:SetTarget("SELF")
+        NCEvent:RandomNemesis()
+        NCEvent:RandomBystander()
+    end
+
+    NemesisChat:HandleEvent()
+end
+
+function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
+    NemesisChat:Print("GUILD_PLAYER_LOGIN", playerName, isNemesis)
+    NCEvent:SetCategory("GUILD")
+    NCEvent:SetEvent("LOGIN")
+
+    if isNemesis then
+        NCEvent:SetTarget("NEMESIS")
+        NCEvent:SetNemesis(playerName)
+        NCEvent:RandomBystander()
+    elseif playerName ~= GetMyName() then
+        NCEvent:SetTarget("BYSTANDER")
+        NCEvent:SetBystander(playerName)
+        NCEvent:RandomNemesis()
+    else
+        NCEvent:SetTarget("SELF")
+        NCEvent:RandomNemesis()
+        NCEvent:RandomBystander()
+    end
+
+    NemesisChat:HandleEvent()
+end
+
+function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
+    NemesisChat:Print("GUILD_PLAYER_LOGOUT", playerName, isNemesis)
+    NCEvent:SetCategory("GUILD")
+    NCEvent:SetEvent("LOGOUT")
 
     if isNemesis then
         NCEvent:SetTarget("NEMESIS")

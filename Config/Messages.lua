@@ -301,8 +301,8 @@ function NemesisChat:GetCategories()
 
         for eKey, eVal in pairs(val.events) do
             for tKey, tVal in pairs(core.units) do
-                if core.db.profile.messages[key] and core.db.profile.messages[key][eVal.value] and core.db.profile.messages[key][eVal.value][tVal.value] ~= nil then
-                    count = count + #core.db.profile.messages[key][eVal.value][tVal.value]
+                if core.db.profile.default.messages[key] and core.db.profile.default.messages[key][eVal.value] and core.db.profile.default.messages[key][eVal.value][tVal.value] ~= nil then
+                    count = count + #core.db.profile.default.messages[key][eVal.value][tVal.value]
                 end
             end
         end
@@ -345,8 +345,8 @@ function NemesisChat:GetEvents()
         local count = 0
 
         for tKey, tVal in pairs(core.units) do
-            if core.db.profile.messages[selectedCategory] and core.db.profile.messages[selectedCategory][val.value] and core.db.profile.messages[selectedCategory][val.value][tVal.value] ~= nil then
-                count = count + #core.db.profile.messages[selectedCategory][val.value][tVal.value]
+            if core.db.profile.default.messages[selectedCategory] and core.db.profile.default.messages[selectedCategory][val.value] and core.db.profile.default.messages[selectedCategory][val.value][tVal.value] ~= nil then
+                count = count + #core.db.profile.default.messages[selectedCategory][val.value][tVal.value]
             end
         end
 
@@ -391,8 +391,8 @@ function NemesisChat:GetTargets()
         local option = core.units[val]
         local count = 0
 
-        if core.db.profile.messages[selectedCategory] and core.db.profile.messages[selectedCategory][selectedEvent] and core.db.profile.messages[selectedCategory][selectedEvent][option.value] ~= nil then
-            count = count + #core.db.profile.messages[selectedCategory][selectedEvent][option.value]
+        if core.db.profile.default.messages[selectedCategory] and core.db.profile.default.messages[selectedCategory][selectedEvent] and core.db.profile.default.messages[selectedCategory][selectedEvent][option.value] ~= nil then
+            count = count + #core.db.profile.default.messages[selectedCategory][selectedEvent][option.value]
         end
 
         if count > 0 then
@@ -430,7 +430,7 @@ function NemesisChat:IsTargetsHidden()
 end
 
 function NemesisChat:GetConfiguredMessages()
-    local msgs = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget]
+    local msgs = core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget]
     local available = {}
     
     for key, val in pairs(msgs or {}) do
@@ -447,7 +447,7 @@ end
 function NemesisChat:SetConfiguredMessage(info, value)
     selectedConfiguredMessage = value
 
-    local msg = DeepCopy(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(value)])
+    local msg = DeepCopy(core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(value)])
 
     if msg == nil then
         selectedConfiguredMessage = ""
@@ -464,7 +464,7 @@ function NemesisChat:SetConfiguredMessage(info, value)
 end
 
 function NemesisChat:ConfiguredMessagesDisabled()
-    return core.db.profile.messages[selectedCategory] == nil or core.db.profile.messages[selectedCategory][selectedEvent] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil
+    return core.db.profile.default.messages[selectedCategory] == nil or core.db.profile.default.messages[selectedCategory][selectedEvent] == nil or core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget] == nil
 end
 
 function NemesisChat:GetMessage()
@@ -512,11 +512,11 @@ function NemesisChat:SetChannel(info, value)
 end
 
 function NemesisChat:DeleteMessage()
-    if core.db.profile.messages[selectedCategory] == nil or core.db.profile.messages[selectedCategory][selectedEvent] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] == nil then
+    if core.db.profile.default.messages[selectedCategory] == nil or core.db.profile.default.messages[selectedCategory][selectedEvent] == nil or core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] == nil then
         return
     end
 
-    table.remove(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], tonumber(selectedConfiguredMessage))
+    table.remove(core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget], tonumber(selectedConfiguredMessage))
 
     selectedConfiguredMessage = ""
     selectedCondition = ""
@@ -560,7 +560,7 @@ end
 
 function NemesisChat:DiscardChanges()
     if selectedConfiguredMessage ~= "" then
-        local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)]
+        local msg = core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)]
 
         if msg == nil then
             selectedConfiguredMessage = ""
@@ -590,7 +590,7 @@ function NemesisChat:GetConditions()
         return {}
     end
 
-    local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)]
+    local msg = core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)]
     local conditions = {}
 
     if msg == nil or msg.conditions == nil or #msg.conditions == 0 then
@@ -841,7 +841,7 @@ function NemesisChat:UpdateMessagePreview()
     end
 
     if HasConditions() then
-        for key, val in pairs(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions) do
+        for key, val in pairs(core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions) do
             if val.left == "SPELL_ID" and val.operator == "IS" then
                 spellLink = GetSpellLink(tonumber(val.right))
             end
@@ -882,11 +882,11 @@ function HasConditions()
         return false
     end
 
-    if core.db.profile.messages[selectedCategory] == nil or core.db.profile.messages[selectedCategory][selectedEvent] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] == nil then
+    if core.db.profile.default.messages[selectedCategory] == nil or core.db.profile.default.messages[selectedCategory][selectedEvent] == nil or core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget] == nil or core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] == nil then
         return false
     end
 
-    return (#core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions or 0) > 0
+    return (#core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions or 0) > 0
 end
 
 function GetEventIndex()
@@ -915,25 +915,25 @@ function StoreMessage()
     saveMessage.conditions = messageConditions
 
     if selectedConfiguredMessage ~= "" then
-        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] = saveMessage
+        core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] = saveMessage
     else
         saveMessage.conditions = {}
-        table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], saveMessage)
-        NemesisChat:SetConfiguredMessage(nil, #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] .. "")
+        table.insert(core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget], saveMessage)
+        NemesisChat:SetConfiguredMessage(nil, #core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget] .. "")
     end
 end
 
 function BuildStorePath()
-    if core.db.profile.messages[selectedCategory] == nil then
-        core.db.profile.messages[selectedCategory] = {}
+    if core.db.profile.default.messages[selectedCategory] == nil then
+        core.db.profile.default.messages[selectedCategory] = {}
     end
 
-    if core.db.profile.messages[selectedCategory][selectedEvent] == nil then
-        core.db.profile.messages[selectedCategory][selectedEvent] = {}
+    if core.db.profile.default.messages[selectedCategory][selectedEvent] == nil then
+        core.db.profile.default.messages[selectedCategory][selectedEvent] = {}
     end
 
-    if core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil then
-        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] = {}
+    if core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget] == nil then
+        core.db.profile.default.messages[selectedCategory][selectedEvent][selectedTarget] = {}
     end
 end
 

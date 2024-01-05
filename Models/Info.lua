@@ -226,9 +226,9 @@ NCInfo = {
                 local checkbox = CreateFrame("CheckButton",nil,content,"ChatConfigCheckButtonTemplate")
                 checkbox:SetPoint("TOPLEFT",0,-(i-1)*self.CELL_HEIGHT)
                 checkbox:SetSize(14, 14)
-                checkbox:SetChecked(core.db.profile.infoClickCompare)
+                checkbox:SetChecked(core.db.profile.default.infoClickCompare)
                 checkbox:SetScript("OnClick", function(self)
-                    core.db.profile.infoClickCompare = self:GetChecked()
+                    core.db.profile.default.infoClickCompare = self:GetChecked()
                     NCInfo:Update()
                 end)
                 checkbox.text = checkbox:CreateFontString(nil,"ARTWORK","GameFontHighlight")
@@ -272,7 +272,7 @@ NCInfo = {
 
             content.rows[metric].columns[1]:SetText(self.METRIC_REPLACEMENTS[metric] or metric)
 
-            if core.db.profile.infoClickCompare then
+            if core.db.profile.default.infoClickCompare then
                 local delta = NCDungeon:GetStats(NCInfo.CurrentPlayer, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
 
                 if delta > 0 then
@@ -364,7 +364,7 @@ NCInfo = {
 
     ReportMetric = function(self, metric, player)
         local message = string.format("%s for %s (Dungeon): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
-        if core.db.profile.infoClickCompare then
+        if core.db.profile.default.infoClickCompare then
             local delta = NCDungeon:GetStats(player, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
             
             if delta > 0 then

@@ -89,33 +89,33 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:TransmitLeavers()
-        if core.db.profile.leavers == nil or NCDungeon:IsActive() then
+        if core.db.profile.default.leavers == nil or NCDungeon:IsActive() then
             return
         end
 
         local _, online = GetNumGuildMembers()
 
         if online > 1 and NCRuntime:GetLastLeaverSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "GUILD")
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.default.leavers, "GUILD")
             NCRuntime:SetLastLeaverSyncType("GUILD")
         else
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "YELL")
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.default.leavers, "YELL")
             NCRuntime:SetLastLeaverSyncType("YELL")
         end
     end
 
     function NemesisChat:TransmitLowPerformers()
-        if core.db.profile.lowPerformers == nil or NCDungeon:IsActive() then
+        if core.db.profile.default.lowPerformers == nil or NCDungeon:IsActive() then
             return
         end
 
         local _, online = GetNumGuildMembers()
 
         if online > 1 and NCRuntime:GetLastLowPerformerSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "GUILD")
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.default.lowPerformers, "GUILD")
             NCRuntime:SetLastLowPerformerSyncType("GUILD")
         else
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "YELL")
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.default.lowPerformers, "YELL")
             NCRuntime:SetLastLowPerformerSyncType("YELL")
         end
     end
@@ -133,18 +133,20 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
-        local decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
-        if not decoded then return end
-        local decompressed = LibDeflate:DecompressDeflate(decoded)
-        if not decompressed then return end
-        local success, data = LibSerialize:Deserialize(decompressed)
-        if not success then return end
+        if not prefix or not string.find(prefix, "NC_") then return end
 
         local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
 
         if sender == myFullName then
             return
         end
+
+        local decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
+        if not decoded then return end
+        local decompressed = LibDeflate:DecompressDeflate(decoded)
+        if not decompressed then return end
+        local success, data = LibSerialize:Deserialize(decompressed)
+        if not success then return end
 
         if prefix == "NC_LEAVERS" then
             NemesisChat:ProcessLeavers(data)
@@ -166,18 +168,18 @@ function NemesisChat:InitializeHelpers()
             return
         end
 
-        if core.db.profile[configKey] == nil then
-            core.db.profile[configKey] = {}
+        if core.db.profile.default[configKey] == nil then
+            core.db.profile.default[configKey] = {}
         end
 
         local count = 0
 
         for key,val in pairs(data) do
             count = count + 1
-            if core.db.profile[configKey][key] == nil then
-                core.db.profile[configKey][key] = val
+            if core.db.profile.default[configKey][key] == nil then
+                core.db.profile.default[configKey][key] = val
             else
-                core.db.profile[configKey][key] = ArrayMerge(core.db.profile[configKey][key], val)
+                core.db.profile.default[configKey][key] = ArrayMerge(core.db.profile.default[configKey][key], val)
             end
         end
     end
@@ -201,51 +203,51 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:AddLeaver(guid)
-        if core.db.profile.leavers == nil then
-            core.db.profile.leavers = {}
+        if core.db.profile.default.leavers == nil then
+            core.db.profile.default.leavers = {}
         end
 
-        if core.db.profile.leavers[guid] == nil then
-            core.db.profile.leavers[guid] = {}
+        if core.db.profile.default.leavers[guid] == nil then
+            core.db.profile.default.leavers[guid] = {}
         end
 
-        tinsert(core.db.profile.leavers[guid], math.ceil(GetTime() / 10) * 10)
+        tinsert(core.db.profile.default.leavers[guid], math.ceil(GetTime() / 10) * 10)
     end
 
     function NemesisChat:AddLowPerformer(guid)
-        if core.db.profile.lowPerformers == nil then
-            core.db.profile.lowPerformers = {}
+        if core.db.profile.default.lowPerformers == nil then
+            core.db.profile.default.lowPerformers = {}
         end
 
-        if core.db.profile.lowPerformers[guid] == nil then
-            core.db.profile.lowPerformers[guid] = {}
+        if core.db.profile.default.lowPerformers[guid] == nil then
+            core.db.profile.default.lowPerformers[guid] = {}
         end
 
-        tinsert(core.db.profile.lowPerformers[guid], math.ceil(GetTime() / 10) * 10)
+        tinsert(core.db.profile.default.lowPerformers[guid], math.ceil(GetTime() / 10) * 10)
     end
 
     function NemesisChat:LeaveCount(guid)
-        if core.db.profile.leavers == nil then
+        if core.db.profile.default.leavers == nil then
             return 0
         end
 
-        if core.db.profile.leavers[guid] == nil then
+        if core.db.profile.default.leavers[guid] == nil then
             return 0
         end
 
-        return #core.db.profile.leavers[guid]
+        return #core.db.profile.default.leavers[guid]
     end
 
     function NemesisChat:LowPerformerCount(guid)
-        if core.db.profile.lowPerformers == nil then
+        if core.db.profile.default.lowPerformers == nil then
             return 0
         end
 
-        if core.db.profile.lowPerformers[guid] == nil then
+        if core.db.profile.default.lowPerformers[guid] == nil then
             return 0
         end
 
-        return #core.db.profile.lowPerformers[guid]
+        return #core.db.profile.default.lowPerformers[guid]
     end
 
     function NemesisChat:InitializeTimers()
@@ -325,6 +327,9 @@ function NemesisChat:InitializeHelpers()
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)
+        -- Spell start
+        elseif subEvent == "SPELL_CAST_START" then
+            NCEvent:SpellStart(sourceName, destName, misc1, misc2)
         elseif subEvent == "SPELL_HEAL" then
             NCEvent:Heal(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "PARTY_KILL" then
@@ -376,7 +381,13 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:GetNonExcludedNemesis()
-        local nemeses = NemesisChat:GetPartyNemeses()
+        local nemeses
+
+        if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
+            nemeses = NemesisChat:GetPartyNemeses()
+        else
+            nemeses = NemesisChat:GetGuildNemeses()
+        end
 
         for player, _ in pairs(nemeses) do
             if not tContains(NCController.excludedNemeses, player) then
@@ -388,7 +399,13 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:GetNonExcludedBystander()
-        local bystanders = NemesisChat:GetPartyBystanders()
+        local bystanders
+
+        if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
+            bystanders = NemesisChat:GetPartyBystanders()
+        else
+            bystanders = NemesisChat:GetGuildBystanders()
+        end
 
         for player, _ in pairs(bystanders) do
             if not tContains(NCController.excludedBystanders, player) then
@@ -409,6 +426,16 @@ function NemesisChat:InitializeHelpers()
         return partyNemeses[NemesisChat:GetRandomKey(partyNemeses)]
     end
 
+    function NemesisChat:GetRandomGuildNemesis()
+        local guildNemeses = NemesisChat:GetGuildNemeses()
+
+        if not guildNemeses then
+            return nil
+        end
+
+        return guildNemeses[NemesisChat:GetRandomKey(guildNemeses)]
+    end
+
     function NemesisChat:GetRandomPartyBystander()
         local partyBystanders = NemesisChat:GetPartyBystanders()
 
@@ -419,6 +446,16 @@ function NemesisChat:InitializeHelpers()
         return partyBystanders[NemesisChat:GetRandomKey(partyBystanders)]
     end
 
+    function NemesisChat:GetRandomGuildBystander()
+        local guildBystanders = NemesisChat:GetGuildBystanders()
+
+        if not guildBystanders then
+            return nil
+        end
+
+        return guildBystanders[NemesisChat:GetRandomKey(guildBystanders)]
+    end
+
     function NemesisChat:GetPartyNemesesCount()
         return NemesisChat:GetLength(NemesisChat:GetPartyNemeses())
     end
@@ -427,6 +464,18 @@ function NemesisChat:InitializeHelpers()
         local nemeses = {}
 
         for key,val in pairs(NCRuntime:GetGroupRoster()) do
+            if val and val.isNemesis then
+                nemeses[key] = key
+            end
+        end
+
+        return nemeses
+    end
+
+    function NemesisChat:GetGuildNemeses()
+        local nemeses = {}
+
+        for key,val in pairs(NCRuntime:GetGuildRoster()) do
             if val and val.isNemesis then
                 nemeses[key] = key
             end
@@ -447,12 +496,20 @@ function NemesisChat:InitializeHelpers()
         return bystanders
     end
 
-    function NemesisChat:GetPartyBystandersCount()
-        return NemesisChat:GetLength(NemesisChat:GetPartyBystanders())
+    function NemesisChat:GetGuildBystanders()
+        local bystanders = {}
+
+        for key,val in pairs(NCRuntime:GetGuildRoster()) do
+            if key ~= GetMyName() and not val.isNemesis then
+                bystanders[key] = key
+            end
+        end
+
+        return bystanders
     end
 
-    function NemesisChat:GetNemeses()
-        return NCConfig:GetNemeses()
+    function NemesisChat:GetPartyBystandersCount()
+        return NemesisChat:GetLength(NemesisChat:GetPartyBystanders())
     end
 
     function NemesisChat:GetNemesesLength()
@@ -871,8 +928,14 @@ function NemesisChat:InitializeHelpers()
         if NemesisChat:IsHealerAlive() and NemesisChat:GetHealer() ~= playerName then
             local lastHealDelta = math.floor((GetTime() - player.lastHeal) * 100) / 100
 
-            if not UnitIsDead(playerName) and player.healthPercent <= 45 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
-                SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds!", "YELL")
+            if not UnitIsDead(playerName) and player.healthPercent <= 55 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
+                -- If playerName is a nemesis, different message 
+                if NemesisChat:GetNemeses()[playerName] ~= nil then
+                    SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds! Please do not heal them -- it's okay if they die.", "YELL")
+                else
+                    SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds!", "YELL")
+                end
+
                 player.lastDeltaReport = GetTime()
             end
         end
@@ -1139,6 +1202,22 @@ function NemesisChat:InitializeHelpers()
             NCSegment:GlobalAddAffix(auraHandlerName)
         end
     end
+
+    function NemesisChat:SilentGroupSync()
+        if not IsInGroup() then
+            return
+        end
+
+        NCRuntime:ClearGroupRoster()
+
+        local members = NemesisChat:GetPlayersInGroup()
+
+        for key,val in pairs(members) do
+            if val ~= nil and val ~= GetMyName() then
+                NCRuntime:AddGroupRosterPlayer(val)
+            end
+        end
+    end
 end
 
 -- Check combat log for application or dose of auras listed in core.affixMobsAuras
@@ -1190,4 +1269,34 @@ function NemesisChat:Initialize()
     NemesisChat:RegisterToasts()
     NemesisChat:SetMyName()
     NCInfo:Initialize()
+
+    -- Possible model for future expansion
+    if core.db.profile.default.cache == nil then
+        core.db.profile.default.cache = {}
+    
+        -- Guild list cache
+        core.db.profile.default.cache.guild = {}
+        core.db.profile.default.cache.guildTime = 0
+    
+        -- Friends list cache
+        core.db.profile.default.cache.friends = {}
+        core.db.profile.default.cache.friendsTime = 0
+    
+        -- Group roster cache
+        core.db.profile.default.cache.groupRoster = {}
+        core.db.profile.default.cache.groupRosterTime = 0
+    end
+    
+    if core.db.profile.default.cache.guild and GetTime() - core.db.profile.default.cache.guildTime <= core.runtime.dbCacheExpiration then
+        core.runtime.guild = core.db.profile.default.cache.guild
+    end
+    
+    if core.db.profile.default.cache.friends and GetTime() - core.db.profile.default.cache.friendsTime <= core.runtime.dbCacheExpiration then
+        core.runtime.friends = core.db.profile.default.cache.friends
+    end
+    
+    if core.db.profile.default.cache.groupRoster and GetTime() - core.db.profile.default.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
+        NemesisChat:Print("Recovered group roster from cache.")
+        core.runtime.groupRoster = core.db.profile.default.cache.groupRoster
+    end
 end

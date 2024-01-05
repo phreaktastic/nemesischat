@@ -15,6 +15,7 @@ NCDungeon = NCSegment:New()
 
 NCDungeon.Level = 0
 NCDungeon.Affixes = {}
+NCDungeon.TimeLimit = 0
 
 function NCDungeon:StartCallback()
     NCEvent:SetCategory("CHALLENGE")
@@ -25,11 +26,12 @@ function NCDungeon:StartCallback()
     NCDungeon:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
 
     local keystoneLevel, affixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
-    local name, _, _ = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
+    local name, _, timeLimit = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
 
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
     NCDungeon:SetKeystoneAffixes(affixIDs)
+    NCDungeon:SetTimeLimit(timeLimit)
 
     NCInfo:Update()
 end
@@ -64,4 +66,20 @@ end
 
 function NCDungeon:GetKeystoneAffixes()
     return NCDungeon.Affixes
+end
+
+function NCDungeon:GetTimeLimit()
+    return NCDungeon.TimeLimit
+end
+
+function NCDungeon:GetTimeLimitString()
+    local timeLimit = NCDungeon:GetTimeLimit()
+    local minutes = math.floor(timeLimit / 60)
+    local seconds = timeLimit - (minutes * 60)
+
+    return string.format("%02d:%02d", minutes, seconds)
+end
+
+function NCDungeon:SetTimeLimit(timeLimit)
+    NCDungeon.TimeLimit = timeLimit
 end

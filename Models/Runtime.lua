@@ -15,6 +15,7 @@ local _, core = ...;
 local GetTime = GetTime
 
 core.runtimeDefaults = {
+    dbCacheExpiration = 600, -- 10 minutes
     myName = "",
     lastFeast = 0,
     lastFriendCheck = 0,
@@ -37,6 +38,11 @@ core.runtimeDefaults = {
         -- A simple cache for any online friends, with their character names as the key. Allows for
         -- different interactions with friends, such as whispering them when they join a group.
         -- ["CharacterName"] = 1,
+    },
+    guild = {
+        -- A simple cache for any online guild members, with their character names as the key. Allows for
+        -- different interactions with guild members, such as whispering them when they join a group.
+        -- ["characterName"] = {"guid" = guid, "isNemesis" = true/false},
     },
     petOwners = {},
     ncEvent = {
@@ -321,6 +327,8 @@ NCRuntime = {
             NCInfo.CurrentPlayer = GetMyName()
             NCInfo:UpdatePlayerDropdown()
         end
+
+        self:CacheGroupRoster()
     end,
     AddGroupRosterPlayer = function(self, playerName)
         local isInGuild = UnitIsInMyGuild(playerName) ~= nil
@@ -348,7 +356,21 @@ NCRuntime = {
 
         NCInfo:UpdatePlayerDropdown()
 
+        self:CacheGroupRoster()
+
         return data
+    end,
+    UpdateGroupRosterRoles = function(self)
+        for key,val in pairs(core.runtime.groupRoster) do
+            val.role = UnitGroupRolesAssigned(key)
+        end
+    end,
+    CacheGroupRoster = function(self)
+        core.db.profile.default.cache.groupRoster = core.runtime.groupRoster
+        core.db.profile.default.cache.groupRosterTime = GetTime()
+    end,
+    GetGuildRoster = function(self)
+        return core.runtime.guild
     end,
     GetPulledUnits = function(self)
         return core.runtime.pulledUnits
@@ -433,12 +455,23 @@ NCRuntime = {
     end,
     ClearFriends = function(self)
         core.runtime.friends = {}
+
+        self:CacheFriends()
     end,
     AddFriend = function(self, playerName)
         core.runtime.friends[playerName] = true
+
+        self:CacheFriends()
     end,
     IsFriend = function(self, playerName)
         return core.runtime.friends[playerName] ~= nil
+    end,
+    CacheFriends = function(self)
+        if not core.db.profile.default.cache then
+            core.db.profile.default.cache = {}
+        end
+        core.db.profile.default.cache.friends = core.runtime.friends
+        core.db.profile.default.cache.friendsTime = GetTime()
     end,
     GetPetOwners = function(self)
         return core.runtime.petOwners

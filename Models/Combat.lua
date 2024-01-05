@@ -45,6 +45,8 @@ function NCCombat:FinishCallback()
     if NCConfig:ShouldShowInfoFrame() then
         NCInfo.StatsFrame:Show()
     end
+
+    NCRuntime:CacheGroupRoster()
 end
 
 function NCCombat:AnnounceAffixAuras()

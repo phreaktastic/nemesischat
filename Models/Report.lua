@@ -87,7 +87,7 @@ function NemesisChat:Report(event, success)
 
     for type, rankingType in pairs(TYPES) do
         local bucket, topMsg, botMsg
-        local config = core.db.profile.reportConfig[type][event]
+        local config = core.db.profile.default.reportConfig[type][event]
         local segName = "this combat segment"
 
         if not config then
@@ -149,11 +149,11 @@ function NemesisChat:Report(event, success)
 
         local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
 
-        if core.db.profile.reportConfig[type]["TOP"] == true and topMsg ~= nil then
+        if core.db.profile.default.reportConfig[type]["TOP"] == true and topMsg ~= nil then
             SendChatMessage("Nemesis Chat: " .. topMsg, channel)
         end
 
-        if core.db.profile.reportConfig[type]["BOTTOM"] == true and botMsg ~= nil then
+        if core.db.profile.default.reportConfig[type]["BOTTOM"] == true and botMsg ~= nil then
             SendChatMessage("Nemesis Chat: " .. botMsg, channel)
         end
     end
