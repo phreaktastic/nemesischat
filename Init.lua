@@ -195,10 +195,6 @@ core.constants.OPERATORS = {
         label = "is NOT",
         value = "IS_NOT"
     },
-    {
-        label = "exists",
-        value = "EXISTS"
-    }
 }
 core.constants.NUMERIC_OPERATORS = {
     {
@@ -416,7 +412,7 @@ core.messageConditions = {
         label = "Spell ID",
         value = "SPELL_ID",
         operators = core.constants.OPERATORS,
-        type = "NUMBER", 
+        type = "NUMBER",
     },
     {
         label = "Spell Name",
@@ -745,3 +741,5 @@ NC_EVENT_TYPE_MAXIMUM = 1 -- Used for logic that validates event types, increase
 NCEvent = {}
 NCController = {}
 NCSpell = {}
+
+C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)

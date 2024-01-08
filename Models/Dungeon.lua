@@ -28,12 +28,14 @@ function NCDungeon:StartCallback()
     local keystoneLevel, affixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
     local name, _, timeLimit = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
 
+    NCDungeon:ClearCache()
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
     NCDungeon:SetKeystoneAffixes(affixIDs)
     NCDungeon:SetTimeLimit(timeLimit)
 
     NCInfo:Update()
+    NCDungeon:UpdateCache()
 end
 
 function NCDungeon:FinishCallback(success)
@@ -89,14 +91,25 @@ function NCDungeon:GetTimeLeft()
 end
 
 function NCDungeon:UpdateCache()
-    core.db.profile.cache.NCDungeon = DeepCopy(NCDungeon)
-    core.db.profile.cache.NCDungeonTime = GetTime()
+    if NCDungeon:IsActive() then
+        if core.db.profile.cache.NCDungeon.Restore then
+            NCDungeon:Restore(NCDungeon)
+            core.db.profile.cache.NCDungeonTime = GetTime()
+        else
+            core.db.profile.cache.NCDungeon = NCSegment:New()
+            core.db.profile.cache.NCDungeon:Restore(NCDungeon)
+            core.db.profile.cache.NCDungeonTime = GetTime()
+        end
+    end
 end
 
 function NCDungeon:CheckCache()
-    if core.db.profile.cache.NCDungeon ~= nil and core.db.profile.cache.NCDungeon ~= {} and GetTime() - core.db.profile.cache.NCDungeonTime <= 600 then
-        local backup = DeepCopy(core.db.profile.cache.NCDungeon)
-    
-        NCDungeon:Restore(backup)
+    if core.db.profile.cache.NCDungeon ~= nil and core.db.profile.cache.NCDungeon ~= {} and GetTime() - core.db.profile.cache.NCDungeonTime <= 3600 then
+        NCDungeon:Restore(core.db.profile.cache.NCDungeon)
     end
+end
+
+function NCDungeon:ClearCache()
+    core.db.profile.cache.NCDungeon = {}
+    core.db.profile.cache.NCDungeonTime = 0
 end

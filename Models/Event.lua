@@ -261,6 +261,14 @@ function NemesisChat:InstantiateEvent()
         NCSpell:Damage(source, dest, spellId, spellName, amount)
     end
 
+    -- Aura applied
+    function NCEvent:Aura(source, dest, spellId, spellName)
+        NCEvent:SetEvent("AURA_APPLIED")
+        NCEvent:SetTargetFromSource(dest)
+
+        NCSpell:Spell(source, dest, spellId, spellName)
+    end
+
     -- Set the event's Target based on the input source (SELF|NEMESIS|BYSTANDER), and set a random Bystander/Nemesis if appropriate
     function NCEvent:SetTargetFromSource(source)
         local member = NCRuntime:GetGroupRosterPlayer(source)

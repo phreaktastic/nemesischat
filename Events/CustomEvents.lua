@@ -128,48 +128,63 @@ function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
 end
 
 function NemesisChat:CheckGuild()
-    local onlineGuildMembers = {}
+    if not IsInGuild() then
+        return
+    end
 
-    -- Populate onlineGuildMembers with the current online guild members
-    for i = 1, GetNumGuildMembers() do
+    local totalGuildMembers, onlineGuildMembers = GetNumGuildMembers()
+
+    -- The guild roster is empty
+    if totalGuildMembers == 0 or totalGuildMembers == 1 then
+        return
+    end
+
+    if not NemesisChat.guildRosterIndex then
+        NemesisChat.guildRosterIndex = 1
+    end
+
+    local cursor = NemesisChat.guildRosterIndex
+    local chunk = 10
+    local maxIndex = math.min(totalGuildMembers, NemesisChat.guildRosterIndex + chunk)
+
+    for i = cursor, maxIndex do
         local name, _, _, _, _, _, _, _, isOnline, _, _, _, _, isMobile, _, _, guid = GetGuildRosterInfo(i)
+        local memberOnline = isOnline and not isMobile
 
-        if isOnline and not isMobile then
-            onlineGuildMembers[name] = {
-                guid = guid,
-                isNemesis = NCConfig:GetNemesis(name) ~= nil,
-            }
-        end
-    end
+        -- Strip realm name from name
+        name = Ambiguate(name, "guild")
 
-    -- Compare onlineGuildMembers to core.runtime.guild, to see who has come online or gone offline
-    for name, data in pairs(core.runtime.guild) do
-        if not onlineGuildMembers[name] then
-            -- Player has gone offline
-            core.runtime.guild[name] = nil
+        local isNemesis = NCConfig:GetNemesis(name) ~= nil
 
-            NemesisChat:GUILD_PLAYER_LOGOUT(name, NCConfig:GetNemesis(name) ~= nil)
-        end
-    end
+        if core.runtime.guild[name] then
+            local changed = core.runtime.guild[name].online ~= memberOnline
 
-    for name, data in pairs(onlineGuildMembers) do
-        if not core.runtime.guild[name] then
-            -- Player has come online
-            local isNemesis = NCConfig:GetNemesis(name) ~= nil
-
+            if changed then
+                core.runtime.guild[name].online = memberOnline
+            
+                if memberOnline then
+                    NemesisChat:GUILD_PLAYER_LOGIN(name, isNemesis)
+                else
+                    NemesisChat:GUILD_PLAYER_LOGOUT(name, isNemesis)
+                end
+            end
+        else
             core.runtime.guild[name] = {
-                name = name,
+                online = memberOnline,
                 isNemesis = isNemesis,
+                guid = guid
             }
-
-            NemesisChat:GUILD_PLAYER_LOGIN(name, isNemesis)
         end
     end
-
-    -- Update the guild roster
-    core.runtime.guild = DeepCopy(onlineGuildMembers)
 
     -- Update the guild roster in the DB cache, in case a reload occurs
-    core.db.profile.cache.guild = DeepCopy(onlineGuildMembers)
+    core.db.profile.cache.guild = DeepCopy(core.runtime.guild)
     core.db.profile.cache.guildTime = GetTime()
+
+    -- Reset the guild roster index if it's at the end of the list
+    if maxIndex >= GetNumGuildMembers() then
+        NemesisChat.guildRosterIndex = 1
+    else
+        NemesisChat.guildRosterIndex = maxIndex + chunk
+    end
 end

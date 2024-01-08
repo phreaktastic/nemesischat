@@ -366,6 +366,8 @@ function NemesisChat:InitializeHelpers()
             end
 
             NCEvent:Damage(sourceName, destName, isAvoidable, damage)
+        elseif string.find(subEvent, "AURA_APPLIED") or string.find(subEvent, "AURA_DOSE") then
+            NCEvent:Aura(sourceName, destName, misc1, misc2)
         else
             -- Something unsupported.
             return
@@ -879,18 +881,22 @@ function NemesisChat:InitializeHelpers()
             if type(item) == "table" then
                 for key,val in pairs(item) do
                     if type(key) == "table" then
+                        self:Print("#### Table ####")
                         self:Print_r(key)
+                        self:Print("#### End Table ####")
                     else
                         if type(val) ~= "table" then
-                            self:Print(key .. ":", val)
+                            self:Print(key .. "(" .. type(val) .. "):", val)
                         else
+                            self:Print("#### Table ####")
                             self:Print(key .. ":")
                             self:Print_r(val)
+                            self:Print("#### End Table ####")
                         end
                     end
                 end
             else
-                self:Print(item)
+                self:Print("    " .. item)
             end
         end
     end
@@ -1265,13 +1271,12 @@ function NemesisChat:InstantiateCore()
     if core.db.profile.cache.guild and GetTime() - core.db.profile.cache.guildTime <= core.runtime.dbCacheExpiration then
         core.runtime.guild = DeepCopy(core.db.profile.cache.guild)
     end
-    
+
     if core.db.profile.cache.friends and GetTime() - core.db.profile.cache.friendsTime <= core.runtime.dbCacheExpiration then
         core.runtime.friends = DeepCopy(core.db.profile.cache.friends)
     end
-    
+
     if core.db.profile.cache.groupRoster and GetTime() - core.db.profile.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
-        NemesisChat:Print("Recovered group roster from cache.")
         core.runtime.groupRoster = DeepCopy(core.db.profile.cache.groupRoster)
     end
 

@@ -111,6 +111,13 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         operators = core.constants.OPERATORS,
         type = "INPUT",
     })
+    :AddSubject({
+        label = "Damage",
+        value = "DAMAGE_SUBJECT",
+        exec = function() return NCSpell:GetDamage() end,
+        operators = core.constants.NUMERIC_OPERATORS,
+        type = "NUMBER",
+    })
     :AddReplacement({
         label = "Boss Name",
         value = "BOSSNAME",
@@ -181,7 +188,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Bystander Name",
         value = "BYSTANDER",
-        exec = function() return (Split(NCEvent:GetBystander(), "-")[1] or "") end,
+        exec = function() return (Ambiguate(NCEvent:GetBystander(), "short") or "") end,
         description = "The Bystander's name.",
         isNumeric = false,
         example = function() return NemesisChat:GetRandomPartyBystander() or "ShmoopleDoop" end,
@@ -611,6 +618,14 @@ NemesisChatAPI:AddAPI("CORE", "Core")
 
             return exampleClasses[math.random(1, #exampleClasses)]
         end,
+    })
+    :AddReplacement({
+        label = "Damage",
+        value = "DAMAGE",
+        exec = function() return NemesisChat:FormatNumber(NCSpell:GetDamage()) or 0 end,
+        description = "The amount of damage dealt by the spell that was cast.",
+        isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(1, 1000000)) end,
     })
     :AddReplacement({
         value = "HP_CONDITION",
