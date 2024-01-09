@@ -948,7 +948,7 @@ function NemesisChat:InitializeHelpers()
 
             if not UnitIsDead(playerName) and player.healthPercent <= 55 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
                 -- If playerName is a nemesis, different message 
-                if NemesisChat:GetNemeses()[playerName] ~= nil then
+                if NCConfig:GetNemesis(playerName) ~= nil then
                     SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds! Please do not heal them -- it's okay if they die.", "YELL")
                 else
                     SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds!", "YELL")
