@@ -574,5 +574,8 @@ function NemesisChat:InstantiateController()
         ["NOT_AFFIX_CASTER"] = function(val1, val2)
             return core.affixMobsCastersLookup[val1] ~= true
         end,
+        ["IS_GROUP_LEAD"] = function(val1, val2)
+            return UnitIsGroupLeader(val1)
+        end,
     }
 end

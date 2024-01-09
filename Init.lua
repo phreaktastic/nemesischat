@@ -263,6 +263,10 @@ core.constants.UNIT_OPERATORS = {
         label = "is NOT an affix caster",
         value = "NOT_AFFIX_CASTER",
     },
+    {
+        label = "is group lead",
+        value = "IS_GROUP_LEAD",
+    }
 }
 core.events = {
     segment = {
