@@ -10,6 +10,27 @@
 
 ## 🩹 Patches
 
+- **1.9.2**: Hardening and optimization pass. Overview:
+   - Guild roster sync with a timer and chunking to ensure things are smooth.
+   - Removed the replacement logic from the controller bootstrapping logic. Now replacement logic is bootstrapped per loading screen. Huge optimization gain there!
+   - Added replacements and operators for group lead.
+   - All replacement text example logic is in the dynamic API / replacement blocks. Example text is much cleaner and easier to maintain now.
+   - Allow setting preferred marker for affix marking.
+   - Guild login / logout events.
+   - New triggers:
+      - Begin spellcast
+      - Aura applied (includes dose)
+      - Damage taken
+      - Avoidable damage taken
+   - Group member item level hardening. Persistent attempts at syncing. Details API in addition to ElvUI API.
+   - New sources!
+      - Boss
+      - Affix mob
+      - Any mob
+      - These new sources are available on any unit triggers (spellcast, begin spellcast, aura applied)
+   - Data caching for dungeons and groups. Persists data through interface reloads / relogs, and will attempt to restore cached data when possible. Not foolproof, but definitely a step in the right direction.
+   - Bugfixes and general optimizations.
+
 - **1.9.1**: Bug fix for non ElvUI users.
 
 ## ⭐ Latest Versions

@@ -1,5 +1,9 @@
 ![Nemesis Chat](NCLogo-transparent-text.png "Nemesis Chat Logo")
 
+# Heads up!
+
+Nemesis Chat is changing dramatically and this documentation is partially incorrect. This document will be updated with future refactors, but do keep in mind that in the meantime some inaccuracies will inevitably exist.
+
 # Index
 
 - [Basic Flow](#basic-flow)

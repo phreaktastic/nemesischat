@@ -15,6 +15,7 @@ local _, core = ...;
 local GetTime = GetTime
 
 core.runtimeDefaults = {
+    dbCacheExpiration = 600, -- 10 minutes
     myName = "",
     lastFeast = 0,
     lastFriendCheck = 0,
@@ -38,6 +39,11 @@ core.runtimeDefaults = {
         -- different interactions with friends, such as whispering them when they join a group.
         -- ["CharacterName"] = 1,
     },
+    guild = {
+        -- A simple cache for any online guild members, with their character names as the key. Allows for
+        -- different interactions with guild members, such as whispering them when they join a group.
+        -- ["characterName"] = {"guid" = guid, "isNemesis" = true/false},
+    },
     petOwners = {},
     ncEvent = {
         category = "",
@@ -51,6 +57,7 @@ core.runtimeDefaults = {
         message = "",
         target = "",
         customReplacements = {},
+        customReplacementExamples = {},
         excludedNemeses = {},
         excludedBystanders = {},
     },
@@ -79,6 +86,7 @@ core.runtimeDefaults = {
         spellId = 0,
         spellName = "",
         extraSpellId = 0,
+        damage = 0,
     },
     ncCombat = {
         inCombat = false,
@@ -284,6 +292,9 @@ NCRuntime = {
     GetGroupHealer = function(self)
         return core.runtime.groupHealer
     end,
+    GetGroupLead = function(self)
+        return core.runtime.groupLead
+    end,
     GetGroupRoster = function(self)
         return core.runtime.groupRoster
     end,
@@ -301,17 +312,10 @@ NCRuntime = {
         core.runtime.groupRosterCount = 0
         core.runtime.groupTank = nil
         core.runtime.groupHealer = nil
+        core.runtime.groupLead = nil
         
         -- We're at least one of the members
-        local me = {
-            guid = UnitGUID("player"),
-            isGuildmate = false,
-            isFriend = false,
-            isNemesis = false,
-            role = UnitGroupRolesAssigned("player"),
-        }
-
-        self:AddGroupRosterPlayer(GetMyName(), me)
+        self:AddGroupRosterPlayer(GetMyName())
     end,
     RemoveGroupRosterPlayer = function(self, playerName)
         core.runtime.groupRoster[playerName] = nil
@@ -321,11 +325,14 @@ NCRuntime = {
             NCInfo.CurrentPlayer = GetMyName()
             NCInfo:UpdatePlayerDropdown()
         end
+
+        self:CacheGroupRoster()
     end,
     AddGroupRosterPlayer = function(self, playerName)
-        local isInGuild = UnitIsInMyGuild(playerName) ~= nil
-        local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
+        local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
+        local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
         local itemLevel = NemesisChat:GetItemLevel(playerName)
+        local groupLead = UnitIsGroupLeader(playerName) ~= nil
         local data =  {
             guid = UnitGUID(playerName),
             isGuildmate = isInGuild,
@@ -335,6 +342,7 @@ NCRuntime = {
             itemLevel = itemLevel,
             race = UnitRace(playerName),
             class = UnitClass(playerName),
+            groupLead = groupLead,
         }
 
         core.runtime.groupRoster[playerName] = data
@@ -346,9 +354,33 @@ NCRuntime = {
             core.runtime.groupHealer = playerName
         end
 
+        if groupLead then
+            core.runtime.groupLead = playerName
+        end
+
         NCInfo:UpdatePlayerDropdown()
 
+        self:CacheGroupRoster()
+
         return data
+    end,
+    UpdateGroupRosterRoles = function(self)
+        for key,val in pairs(core.runtime.groupRoster) do
+            val.role = UnitGroupRolesAssigned(key)
+            val.groupLead = UnitIsGroupLeader(key) ~= nil
+
+            -- Re-attempt to get the item level
+            if not val.itemLevel then
+                val.itemLevel = NemesisChat:GetItemLevel(key)
+            end
+        end
+    end,
+    CacheGroupRoster = function(self)
+        core.db.profile.cache.groupRoster = DeepCopy(core.runtime.groupRoster)
+        core.db.profile.cache.groupRosterTime = GetTime()
+    end,
+    GetGuildRoster = function(self)
+        return core.runtime.guild
     end,
     GetPulledUnits = function(self)
         return core.runtime.pulledUnits
@@ -433,12 +465,20 @@ NCRuntime = {
     end,
     ClearFriends = function(self)
         core.runtime.friends = {}
+
+        self:CacheFriends()
     end,
     AddFriend = function(self, playerName)
         core.runtime.friends[playerName] = true
+
+        self:CacheFriends()
     end,
     IsFriend = function(self, playerName)
         return core.runtime.friends[playerName] ~= nil
+    end,
+    CacheFriends = function(self)
+        core.db.profile.cache.friends = DeepCopy(core.runtime.friends)
+        core.db.profile.cache.friendsTime = GetTime()
     end,
     GetPetOwners = function(self)
         return core.runtime.petOwners

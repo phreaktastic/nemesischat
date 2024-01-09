@@ -133,18 +133,20 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
-        local decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
-        if not decoded then return end
-        local decompressed = LibDeflate:DecompressDeflate(decoded)
-        if not decompressed then return end
-        local success, data = LibSerialize:Deserialize(decompressed)
-        if not success then return end
+        if not prefix or not string.find(prefix, "NC_") then return end
 
         local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
 
         if sender == myFullName then
             return
         end
+
+        local decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
+        if not decoded then return end
+        local decompressed = LibDeflate:DecompressDeflate(decoded)
+        if not decompressed then return end
+        local success, data = LibSerialize:Deserialize(decompressed)
+        if not success then return end
 
         if prefix == "NC_LEAVERS" then
             NemesisChat:ProcessLeavers(data)
@@ -281,12 +283,12 @@ function NemesisChat:InitializeHelpers()
         end
 
         -- Unit is/has cast(ing) a spell, but are not in the party
-        if NCSpell:IsValidSpell() and not UnitInParty(NCSpell:GetSource()) then
-            if NCConfig:IsDebugging() then 
-                self:Print("Source is not in party.")
-            end
-            return true
-        end
+        -- if NCSpell:IsValidSpell() and not UnitInParty(NCSpell:GetSource()) then
+        --     if NCConfig:IsDebugging() then 
+        --         self:Print("Source is not in party.")
+        --     end
+        --     return true
+        -- end
 
         return false
     end
@@ -325,6 +327,9 @@ function NemesisChat:InitializeHelpers()
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)
+        -- Spell start
+        elseif subEvent == "SPELL_CAST_START" then
+            NCEvent:SpellStart(sourceName, destName, misc1, misc2)
         elseif subEvent == "SPELL_HEAL" then
             NCEvent:Heal(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "PARTY_KILL" then
@@ -359,6 +364,10 @@ function NemesisChat:InitializeHelpers()
             if state then
                 state.lastDamageAvoidable = isAvoidable
             end
+
+            NCEvent:Damage(sourceName, destName, isAvoidable, damage)
+        elseif string.find(subEvent, "AURA_APPLIED") or string.find(subEvent, "AURA_DOSE") then
+            NCEvent:Aura(sourceName, destName, misc1, misc2)
         else
             -- Something unsupported.
             return
@@ -376,7 +385,13 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:GetNonExcludedNemesis()
-        local nemeses = NemesisChat:GetPartyNemeses()
+        local nemeses
+
+        if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
+            nemeses = NemesisChat:GetPartyNemeses()
+        else
+            nemeses = NemesisChat:GetGuildNemeses()
+        end
 
         for player, _ in pairs(nemeses) do
             if not tContains(NCController.excludedNemeses, player) then
@@ -388,7 +403,13 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:GetNonExcludedBystander()
-        local bystanders = NemesisChat:GetPartyBystanders()
+        local bystanders
+
+        if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
+            bystanders = NemesisChat:GetPartyBystanders()
+        else
+            bystanders = NemesisChat:GetGuildBystanders()
+        end
 
         for player, _ in pairs(bystanders) do
             if not tContains(NCController.excludedBystanders, player) then
@@ -409,6 +430,16 @@ function NemesisChat:InitializeHelpers()
         return partyNemeses[NemesisChat:GetRandomKey(partyNemeses)]
     end
 
+    function NemesisChat:GetRandomGuildNemesis()
+        local guildNemeses = NemesisChat:GetGuildNemeses()
+
+        if not guildNemeses then
+            return nil
+        end
+
+        return guildNemeses[NemesisChat:GetRandomKey(guildNemeses)]
+    end
+
     function NemesisChat:GetRandomPartyBystander()
         local partyBystanders = NemesisChat:GetPartyBystanders()
 
@@ -419,6 +450,16 @@ function NemesisChat:InitializeHelpers()
         return partyBystanders[NemesisChat:GetRandomKey(partyBystanders)]
     end
 
+    function NemesisChat:GetRandomGuildBystander()
+        local guildBystanders = NemesisChat:GetGuildBystanders()
+
+        if not guildBystanders then
+            return nil
+        end
+
+        return guildBystanders[NemesisChat:GetRandomKey(guildBystanders)]
+    end
+
     function NemesisChat:GetPartyNemesesCount()
         return NemesisChat:GetLength(NemesisChat:GetPartyNemeses())
     end
@@ -427,6 +468,18 @@ function NemesisChat:InitializeHelpers()
         local nemeses = {}
 
         for key,val in pairs(NCRuntime:GetGroupRoster()) do
+            if val and val.isNemesis then
+                nemeses[key] = key
+            end
+        end
+
+        return nemeses
+    end
+
+    function NemesisChat:GetGuildNemeses()
+        local nemeses = {}
+
+        for key,val in pairs(NCRuntime:GetGuildRoster()) do
             if val and val.isNemesis then
                 nemeses[key] = key
             end
@@ -447,12 +500,20 @@ function NemesisChat:InitializeHelpers()
         return bystanders
     end
 
-    function NemesisChat:GetPartyBystandersCount()
-        return NemesisChat:GetLength(NemesisChat:GetPartyBystanders())
+    function NemesisChat:GetGuildBystanders()
+        local bystanders = {}
+
+        for key,val in pairs(NCRuntime:GetGuildRoster()) do
+            if key ~= GetMyName() and not val.isNemesis then
+                bystanders[key] = key
+            end
+        end
+
+        return bystanders
     end
 
-    function NemesisChat:GetNemeses()
-        return NCConfig:GetNemeses()
+    function NemesisChat:GetPartyBystandersCount()
+        return NemesisChat:GetLength(NemesisChat:GetPartyBystanders())
     end
 
     function NemesisChat:GetNemesesLength()
@@ -627,16 +688,26 @@ function NemesisChat:InitializeHelpers()
         end
     end
 
-    -- Get a player's average item level. Currently only works if ElvUI is installed, may be expanded later.
+    -- Get a player's average item level. Currently only works if ElvUI or Details is installed, may be expanded later.
     function NemesisChat:GetItemLevel(unit)
+        if UnitIsUnit(unit, "player") then
+            return GetAverageItemLevel()
+        end
+
         if E and E.GetUnitItemLevel then
             local itemLevel, retryUnit, retryTable, iLevelDB = E:GetUnitItemLevel(unit)
 
             if itemLevel ~= "tooSoon" then
                 return itemLevel
             end
-            
-            return nil
+        end
+
+        if Details and Details.ilevel then
+            local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
+
+            if rosterPlayer ~= nil then
+                return Details.ilevel:GetIlvl(rosterPlayer.guid)
+            end
         end
 
         return nil
@@ -820,18 +891,22 @@ function NemesisChat:InitializeHelpers()
             if type(item) == "table" then
                 for key,val in pairs(item) do
                     if type(key) == "table" then
+                        self:Print("#### Table ####")
                         self:Print_r(key)
+                        self:Print("#### End Table ####")
                     else
                         if type(val) ~= "table" then
-                            self:Print(key .. ":", val)
+                            self:Print(key .. "(" .. type(val) .. "):", val)
                         else
+                            self:Print("#### Table ####")
                             self:Print(key .. ":")
                             self:Print_r(val)
+                            self:Print("#### End Table ####")
                         end
                     end
                 end
             else
-                self:Print(item)
+                self:Print("    " .. item)
             end
         end
     end
@@ -871,8 +946,14 @@ function NemesisChat:InitializeHelpers()
         if NemesisChat:IsHealerAlive() and NemesisChat:GetHealer() ~= playerName then
             local lastHealDelta = math.floor((GetTime() - player.lastHeal) * 100) / 100
 
-            if not UnitIsDead(playerName) and player.healthPercent <= 45 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
-                SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds!", "YELL")
+            if not UnitIsDead(playerName) and player.healthPercent <= 55 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
+                -- If playerName is a nemesis, different message 
+                if NCConfig:GetNemesis(playerName) ~= nil then
+                    SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds! Please do not heal them -- it's okay if they die.", "YELL")
+                else
+                    SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds!", "YELL")
+                end
+
                 player.lastDeltaReport = GetTime()
             end
         end
@@ -1139,6 +1220,42 @@ function NemesisChat:InitializeHelpers()
             NCSegment:GlobalAddAffix(auraHandlerName)
         end
     end
+
+    function NemesisChat:SilentGroupSync()
+        if not IsInGroup() then
+            return
+        end
+
+        NCRuntime:ClearGroupRoster()
+
+        local members = NemesisChat:GetPlayersInGroup()
+
+        for key,val in pairs(members) do
+            if val ~= nil and val ~= GetMyName() then
+                NCRuntime:AddGroupRosterPlayer(val)
+            end
+        end
+    end
+
+    function NemesisChat:AttemptSyncItemLevels()
+        if not IsInGroup() then
+            return
+        end
+
+        for key,val in pairs(NCRuntime:GetGroupRoster()) do
+            if val ~= nil and val.itemLevel == nil then
+                local itemLevel = NemesisChat:GetItemLevel(key)
+
+                if itemLevel ~= nil then
+                    val.itemLevel = itemLevel
+                end
+            end
+        end
+    end
+
+    function NemesisChat:LowPriorityTimer()
+        NemesisChat:AttemptSyncItemLevels()
+    end
 end
 
 -- Check combat log for application or dose of auras listed in core.affixMobsAuras
@@ -1172,13 +1289,28 @@ end
 -- Instantiate NC objects since they are ephemeral and will not persist through a UI load
 function NemesisChat:InstantiateCore()
     NCController = DeepCopy(core.runtimeDefaults.NCController)
-    NemesisChat:InstantiateMsg()
+    NemesisChat:InstantiateController()
+    NCController:Initialize()
 
     NCSpell = DeepCopy(core.runtimeDefaults.ncSpell)
     NemesisChat:InstantiateSpell()
 
     NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
     NemesisChat:InstantiateEvent()
+
+    if core.db.profile.cache.guild then
+        core.runtime.guild = DeepCopy(core.db.profile.cache.guild)
+    end
+
+    if core.db.profile.cache.friends then
+        core.runtime.friends = DeepCopy(core.db.profile.cache.friends)
+    end
+
+    if core.db.profile.cache.groupRoster and GetTime() - core.db.profile.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
+        core.runtime.groupRoster = DeepCopy(core.db.profile.cache.groupRoster)
+    end
+
+    NCDungeon:CheckCache()
 end
 
 function NemesisChat:Initialize()

@@ -15,6 +15,7 @@ NCDungeon = NCSegment:New()
 
 NCDungeon.Level = 0
 NCDungeon.Affixes = {}
+NCDungeon.TimeLimit = 0
 
 function NCDungeon:StartCallback()
     NCEvent:SetCategory("CHALLENGE")
@@ -25,13 +26,16 @@ function NCDungeon:StartCallback()
     NCDungeon:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
 
     local keystoneLevel, affixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
-    local name, _, _ = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
+    local name, _, timeLimit = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
 
+    NCDungeon:ClearCache()
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
     NCDungeon:SetKeystoneAffixes(affixIDs)
+    NCDungeon:SetTimeLimit(timeLimit)
 
     NCInfo:Update()
+    NCDungeon:UpdateCache()
 end
 
 function NCDungeon:FinishCallback(success)
@@ -44,6 +48,8 @@ function NCDungeon:FinishCallback(success)
     if success then
         NCEvent:SetEvent("SUCCESS")
     end
+
+    NCDungeon:UpdateCache()
 end
 
 function NCDungeon:ResetCallback()
@@ -64,4 +70,48 @@ end
 
 function NCDungeon:GetKeystoneAffixes()
     return NCDungeon.Affixes
+end
+
+function NCDungeon:GetTimeLimit()
+    return NCDungeon.TimeLimit
+end
+
+function NCDungeon:GetTimeLimitString()
+    local timeLimit = NCDungeon:GetTimeLimit()
+    local minutes = math.floor(timeLimit / 60)
+    local seconds = timeLimit - (minutes * 60)
+
+    return string.format("%02d:%02d", minutes, seconds)
+end
+
+function NCDungeon:SetTimeLimit(timeLimit)
+    NCDungeon.TimeLimit = timeLimit
+end
+
+function NCDungeon:GetTimeLeft()
+    return GetTime() - (NCDungeon:GetStartTime() + NCDungeon:GetTimeLimit())
+end
+
+function NCDungeon:UpdateCache()
+    if NCDungeon:IsActive() then
+        if core.db.profile.cache.NCDungeon.Restore then
+            NCDungeon:Restore(NCDungeon)
+            core.db.profile.cache.NCDungeonTime = GetTime()
+        else
+            core.db.profile.cache.NCDungeon = NCSegment:New()
+            core.db.profile.cache.NCDungeon:Restore(NCDungeon)
+            core.db.profile.cache.NCDungeonTime = GetTime()
+        end
+    end
+end
+
+function NCDungeon:CheckCache()
+    if core.db.profile.cache.NCDungeon ~= nil and core.db.profile.cache.NCDungeon ~= {} and GetTime() - core.db.profile.cache.NCDungeonTime <= 3600 then
+        NCDungeon:Restore(core.db.profile.cache.NCDungeon)
+    end
+end
+
+function NCDungeon:ClearCache()
+    core.db.profile.cache.NCDungeon = {}
+    core.db.profile.cache.NCDungeonTime = 0
 end

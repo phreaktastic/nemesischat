@@ -86,6 +86,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
         exec = function() return NemesisChat:FormatNumber(NCDetailsAPI:GetDPS((NCEvent:GetNemesis() or "Unknown"), DETAILS_SEGMENTID_CURRENT)) end,
         description = "The DPS of the Nemesis for the current fight.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(38472, 584736)) end,
     })
     :AddReplacement({
         label = "Bystander DPS",
@@ -93,6 +94,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
         exec = function() return NemesisChat:FormatNumber(NCDetailsAPI:GetDPS((NCEvent:GetBystander() or "Unknown"), DETAILS_SEGMENTID_CURRENT)) end,
         description = "The DPS of the Bystander for the current fight.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(38472, 584736)) end,
     })
     :AddReplacement({
         label = "My DPS",
@@ -100,6 +102,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
         exec = function() return NemesisChat:FormatNumber(NCDetailsAPI:GetDPS((GetMyName() or "Unknown"), DETAILS_SEGMENTID_CURRENT)) end,
         description = "Your DPS for the current fight.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(38472, 584736)) end,
     })
     :AddReplacement({
         label = "Nemesis DPS (Overall)",
@@ -107,6 +110,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
         exec = function() return NemesisChat:FormatNumber(NCDetailsAPI:GetDPS((NCEvent:GetNemesis() or "Unknown"), DETAILS_SEGMENTID_OVERALL)) end,
         description = "The DPS of the Nemesis overall.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(38472, 235873)) end,
     })
     :AddReplacement({
         label = "Bystander DPS (Overall)",
@@ -114,6 +118,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
         exec = function() return NemesisChat:FormatNumber(NCDetailsAPI:GetDPS((NCEvent:GetBystander() or "Unknown"), DETAILS_SEGMENTID_OVERALL)) end,
         description = "The DPS of the Bystander overall.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(38472, 235873)) end,
     })
     :AddReplacement({
         label = "My DPS Overall",
@@ -121,6 +126,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
         exec = function() return NemesisChat:FormatNumber(NCDetailsAPI:GetDPS((GetMyName() or "Unknown"), DETAILS_SEGMENTID_OVERALL)) end,
         description = "Your DPS overall.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(38472, 235873)) end,
     })
     :AddReplacement({
         value = "NEMESISDPS_CONDITION",

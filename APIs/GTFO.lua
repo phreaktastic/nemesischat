@@ -86,6 +86,7 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
         exec = function() return NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(NCEvent:GetNemesis() or "Unknown")) end,
         description = "The amount of avoidable damage the Nemesis has taken in the current combat segment.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(385472, 2358737)) end,
     })
     :AddReplacement({
         label = "Nemesis Avoidable Damage (Overall)",
@@ -93,6 +94,7 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
         exec = function() return NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(NCEvent:GetNemesis() or "Unknown")) end,
         description = "The amount of avoidable damage the Nemesis has taken in the current dungeon.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(385472, 2358737)) end,
     })
     :AddReplacement({
         label = "Bystander Avoidable Damage",
@@ -100,6 +102,7 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
         exec = function() return NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(NCEvent:GetBystander() or "Unknown")) end,
         description = "The amount of avoidable damage the Bystander has taken in the current combat segment.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(385472, 2358737)) end,
     })
     :AddReplacement({
         label = "Bystander Avoidable Damage (Overall)",
@@ -107,6 +110,7 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
         exec = function() return NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(NCEvent:GetBystander() or "Unknown")) end,
         description = "The amount of avoidable damage the Bystander has taken in the current dungeon.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(385472, 2358737)) end,
     })
     :AddReplacement({
         label = "My Avoidable Damage",
@@ -114,6 +118,7 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
         exec = function() return NemesisChat:FormatNumber(NCCombat:GetAvoidableDamage(GetMyName() or "Unknown")) end,
         description = "The amount of avoidable damage you have taken in the current combat segment.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(385472, 2358737)) end,
     })
     :AddReplacement({
         label = "My Avoidable Damage (Overall)",
@@ -121,6 +126,7 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
         exec = function() return NemesisChat:FormatNumber(NCDungeon:GetAvoidableDamage(GetMyName() or "Unknown")) end,
         description = "The amount of avoidable damage you have taken in the current dungeon.",
         isNumeric = true,
+        example = function() return NemesisChat:FormatNumber(math.random(385472, 2358737)) end,
     })
     :AddReplacement({
         value = "NEMESISAVOIDABLEDAMAGE_CONDITION",

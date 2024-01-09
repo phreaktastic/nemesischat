@@ -166,18 +166,26 @@ core.units = {
         label = "Bystander",
         value = "BYSTANDER"
     },
-}
-core.unitsAffix = {
     {
         label = "Affix Mob",
         value = "AFFIX_MOB"
-    }
+    },
+    {
+        label = "Any Mob",
+        value = "ANY_MOB",
+    },
+    {
+        label = "Boss",
+        value = "BOSS",
+    },
 }
 core.constants = {}
 core.constants.NA = { 1 }
 core.constants.STANDARD = { 2, 3, 4, }
 core.constants.OTHERS = { 3, 4, }
-core.constants.AFFIXES = { 5 }
+core.constants.AFFIXMOBS = { 5 }
+core.constants.ENEMIES = { 5, 6, 7 }
+core.constants.ALLUNITS = { 2, 3, 4, 5, 6, 7 }
 core.constants.OPERATORS = {
     {
         label = "is",
@@ -186,7 +194,7 @@ core.constants.OPERATORS = {
     {
         label = "is NOT",
         value = "IS_NOT"
-    }
+    },
 }
 core.constants.NUMERIC_OPERATORS = {
     {
@@ -255,6 +263,14 @@ core.constants.UNIT_OPERATORS = {
         label = "is NOT an affix caster",
         value = "NOT_AFFIX_CASTER",
     },
+    {
+        label = "is group lead",
+        value = "IS_GROUP_LEAD",
+    },
+    {
+        label = "is NOT group lead",
+        value = "NOT_GROUP_LEAD",
+    }
 }
 core.events = {
     segment = {
@@ -296,10 +312,42 @@ core.events = {
             options = core.constants.OTHERS
         }
     },
+    guild = {
+        {
+            label = "Login",
+            value = "LOGIN",
+            options = core.constants.STANDARD
+        },
+        {
+            label = "Logout",
+            value = "LOGOUT",
+            options = core.constants.OTHERS
+        },
+    },
     combatLog = {
         {
             label = "Spell Cast Success",
             value = "SPELL_CAST_SUCCESS",
+            options = core.constants.ALLUNITS
+        },
+        {
+            label = "Begin Spellcasting",
+            value = "SPELL_CAST_START",
+            options = core.constants.ALLUNITS
+        },
+        {
+            label = "Aura Applied",
+            value = "AURA_APPLIED",
+            options = core.constants.ALLUNITS
+        },
+        {
+            label = "Receive Avoidable Damage",
+            value = "AVOIDABLE_DAMAGE",
+            options = core.constants.STANDARD
+        },
+        {
+            label = "Receive Damage",
+            value = "DAMAGE",
             options = core.constants.STANDARD
         },
         {
@@ -372,7 +420,7 @@ core.messageConditions = {
         label = "Spell ID",
         value = "SPELL_ID",
         operators = core.constants.OPERATORS,
-        type = "NUMBER", 
+        type = "NUMBER",
     },
     {
         label = "Spell Name",
@@ -449,6 +497,10 @@ core.configTree = {
     ["GROUP"] = {
         label = "Group",
         events = DeepCopy(core.events.group)
+    },
+    ["GUILD"] = {
+        label = "Guild",
+        events = DeepCopy(core.events.guild)
     },
     ["CHALLENGE"] = {
         label = "Mythic+ Dungeon",
@@ -610,16 +662,63 @@ for _, val in pairs(core.affixMobs) do
     core.affixMobsLookup[val] = true
 end
 
+-- Cache core.roles to avoid repeated lookups
+core.rolesLookup = {}
+
+for _, val in pairs(core.roles) do
+    core.rolesLookup[val.value] = val.label
+end
+
 -- Raid markers to use for affix mobs
 core.markers = {
-    1, -- Star
-    -- 2, -- Circle
-    3, -- Diamond
-    -- 4, -- Triangle
-    5, -- Moon
-    6, -- Square
-    7, -- Cross
-    8, -- Skull
+    {
+        index = 1,
+        name = "Star",
+        value = "star",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
+    },
+    {
+        index = 2,
+        name = "Circle",
+        value = "circle",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_2",
+    },
+    {
+        index = 3,
+        name = "Diamond",
+        value = "diamond",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_3",
+    },
+    {
+        index = 4,
+        name = "Triangle",
+        value = "triangle",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_4",
+    },
+    {
+        index = 5,
+        name = "Moon",
+        value = "moon",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_5",
+    },
+    {
+        index = 6,
+        name = "Square",
+        value = "square",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6",
+    },
+    {
+        index = 7,
+        name = "Cross",
+        value = "cross",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_7",
+    },
+    {
+        index = 8,
+        name = "Skull",
+        value = "skull",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
+    },
 }
 
 -- Incorporeal Beings count as every creature type. List of all players' crowd control spells that work on them, which will fear, incapacitate, or stun for 8 seconds or more:
@@ -683,6 +782,13 @@ core.eventSubscriptions = {
     "COMBAT_LOG_EVENT_UNFILTERED",
 }
 
+NC_EVENT_TYPE_GROUP = 0
+NC_EVENT_TYPE_GUILD = 1
+NC_EVENT_TYPE_MAXIMUM = 1 -- Used for logic that validates event types, increase as more are added
+
 NCEvent = {}
 NCController = {}
 NCSpell = {}
+
+C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
+C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)

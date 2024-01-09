@@ -51,6 +51,10 @@ function NemesisChat:InstantiateEvent()
 
     function NCEvent:SetCategory(category)
         NCEvent.category = category
+
+        if category == "GUILD" then
+            NCController:SetEventType(NC_EVENT_TYPE_GUILD)
+        end
     end
 
     function NCEvent:GetEvent()
@@ -102,6 +106,15 @@ function NemesisChat:InstantiateEvent()
         end
     end
 
+    -- Set the event's nemesis to a random nemesis in the guild
+    function NCEvent:RandomGuildNemesis()
+        local nemesis = NemesisChat:GetRandomGuildNemesis()
+
+        if nemesis ~= nil and nemesis ~= "" then
+            NCEvent.nemesis = nemesis
+        end
+    end
+
     function NCEvent:GetBystander()
         if NCEvent.bystander == nil then 
             return ""
@@ -121,6 +134,15 @@ function NemesisChat:InstantiateEvent()
     -- Set the event's bystander to a random bystander in the party
     function NCEvent:RandomBystander()
         local bystander = NemesisChat:GetRandomPartyBystander()
+
+        if bystander ~= nil and bystander ~= "" then
+            NCEvent:SetBystander(bystander)
+        end
+    end
+
+    -- Set the event's bystander to a random bystander in the guild
+    function NCEvent:RandomGuildBystander()
+        local bystander = NemesisChat:GetRandomGuildBystander()
 
         if bystander ~= nil and bystander ~= "" then
             NCEvent:SetBystander(bystander)
@@ -183,6 +205,14 @@ function NemesisChat:InstantiateEvent()
         NCSpell:Feast(source, spellId)
     end
 
+    -- Begin spellcasting 
+    function NCEvent:SpellStart(source, dest, spellId, spellName)
+        NCEvent:SetEvent("SPELL_CAST_START")
+        NCEvent:SetTargetFromSource(source)
+
+        NCSpell:Spell(source, dest, spellId, spellName)
+    end
+
     -- Set the Category, Event, and Target for a group heal event
     function NCEvent:Heal(source, dest, spellId, spellName, healAmount)
         NCEvent:SetEvent("HEAL")
@@ -219,9 +249,29 @@ function NemesisChat:InstantiateEvent()
         NCEvent:SetEvent("AVOIDABLE_DEATH")
     end
 
+    -- Damage event
+    function NCEvent:Damage(source, dest, spellId, spellName, amount, avoidable)
+        NCEvent:SetEvent("DAMAGE")
+        NCEvent:SetTargetFromSource(dest)
+
+        if avoidable then
+            NCEvent:SetEvent("AVOIDABLE_DAMAGE")
+        end
+
+        NCSpell:Damage(source, dest, spellId, spellName, amount)
+    end
+
+    -- Aura applied
+    function NCEvent:Aura(source, dest, spellId, spellName)
+        NCEvent:SetEvent("AURA_APPLIED")
+        NCEvent:SetTargetFromSource(dest)
+
+        NCSpell:Spell(source, dest, spellId, spellName)
+    end
+
     -- Set the event's Target based on the input source (SELF|NEMESIS|BYSTANDER), and set a random Bystander/Nemesis if appropriate
     function NCEvent:SetTargetFromSource(source)
-        local member = core.runtime.groupRoster[source]
+        local member = NCRuntime:GetGroupRosterPlayer(source)
 
         if source == NemesisChat:GetMyName() then
             NCEvent:SetTarget("SELF")
@@ -237,6 +287,32 @@ function NemesisChat:InstantiateEvent()
                 NCEvent:SetBystander(source)
                 NCEvent:RandomNemesis()
             end
+        else
+            -- If we're not in combat, we don't care about the event
+            if not NCCombat:IsActive() or not IsInInstance() then
+                NCEvent:Initialize()
+                return
+            end
+
+            -- Enemy mob, can be a boss, affix mob, or trash mob. Random Bystander and Nemesis.
+            if NCBoss:IsActive() and source == NCBoss:GetIdentifier() then
+                NCEvent:SetTarget("BOSS")
+
+                if not self:EventHasMessages() then
+                    NCEvent:SetTarget("ANY_MOB")
+                end
+            elseif core.affixMobsLookup[source] ~= nil then
+                NCEvent:SetTarget("AFFIX")
+
+                if not self:EventHasMessages() then
+                    NCEvent:SetTarget("ANY_MOB")
+                end
+            else
+                NCEvent:SetTarget("ANY_MOB")
+            end
+
+            NCEvent:RandomNemesis()
+            NCEvent:RandomBystander()
         end
     end
 
@@ -251,13 +327,13 @@ function NemesisChat:InstantiateEvent()
 
         local category = core.db.profile.messages[NCEvent:GetCategory()]
 
-        if category == nil or #category == 0 then
+        if category == nil then
             return false
         end
 
         local event = category[NCEvent:GetEvent()]
 
-        if event == nil or #event == 0 then
+        if event == nil then
             return false
         end
 
@@ -280,12 +356,12 @@ function NemesisChat:InstantiateEvent()
     function NCEvent:CombatStart()
         NCEvent:SetCategory("COMBATLOG")
         NCEvent:SetEvent("COMBAT_START")
-        NCEvent:SetEvent("NA")
+        NCEvent:SetTarget("NA")
     end
 
     function NCEvent:CombatEnd()
         NCEvent:SetCategory("COMBATLOG")
         NCEvent:SetEvent("COMBAT_END")
-        NCEvent:SetEvent("NA")
+        NCEvent:SetTarget("NA")
     end
 end
