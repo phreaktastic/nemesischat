@@ -48,6 +48,8 @@ function NCDungeon:FinishCallback(success)
     if success then
         NCEvent:SetEvent("SUCCESS")
     end
+
+    NCDungeon:UpdateCache()
 end
 
 function NCDungeon:ResetCallback()

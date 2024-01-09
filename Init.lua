@@ -663,14 +663,54 @@ end
 
 -- Raid markers to use for affix mobs
 core.markers = {
-    1, -- Star
-    -- 2, -- Circle
-    3, -- Diamond
-    -- 4, -- Triangle
-    5, -- Moon
-    6, -- Square
-    7, -- Cross
-    8, -- Skull
+    {
+        index = 1,
+        name = "Star",
+        value = "star",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_1",
+    },
+    {
+        index = 2,
+        name = "Circle",
+        value = "circle",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_2",
+    },
+    {
+        index = 3,
+        name = "Diamond",
+        value = "diamond",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_3",
+    },
+    {
+        index = 4,
+        name = "Triangle",
+        value = "triangle",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_4",
+    },
+    {
+        index = 5,
+        name = "Moon",
+        value = "moon",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_5",
+    },
+    {
+        index = 6,
+        name = "Square",
+        value = "square",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6",
+    },
+    {
+        index = 7,
+        name = "Cross",
+        value = "cross",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_7",
+    },
+    {
+        index = 8,
+        name = "Skull",
+        value = "skull",
+        icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
+    },
 }
 
 -- Incorporeal Beings count as every creature type. List of all players' crowd control spells that work on them, which will fear, incapacitate, or stun for 8 seconds or more:

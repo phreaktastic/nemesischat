@@ -627,6 +627,17 @@ core.options.args.reportsGroup = {
                             get = function() return core.db.profile.reportConfig["AFFIXES"]["MARKERS"] end,
                             set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["MARKERS"] = value end,
                         },
+                        affixMarkerToUse = {
+                            order = 7,
+                            type = "select",
+                            name = "Marker to Use",
+                            desc = "Select the marker to use for marking affix mobs",
+                            descStyle = "inline",
+                            width = "full",
+                            values = function() return NemesisChat:GetMarkerOptionsWithIcons() end,
+                            get = function() return core.db.profile.reportConfig["AFFIXES"]["MARKER"] end,
+                            set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["MARKER"] = value end,
+                        },
                     }
                 },
                 what = {
@@ -701,3 +712,13 @@ core.options.args.reportsGroup = {
         }
     },
 }
+
+function NemesisChat:GetMarkerOptionsWithIcons()
+    local options = {}
+
+    for key,val in ipairs(core.markers) do
+        options[key] = val.name
+    end
+
+    return options
+end

@@ -688,7 +688,7 @@ function NemesisChat:InitializeHelpers()
         end
     end
 
-    -- Get a player's average item level. Currently only works if ElvUI is installed, may be expanded later.
+    -- Get a player's average item level. Currently only works if ElvUI or Details is installed, may be expanded later.
     function NemesisChat:GetItemLevel(unit)
         if E and E.GetUnitItemLevel then
             local itemLevel, retryUnit, retryTable, iLevelDB = E:GetUnitItemLevel(unit)
@@ -698,6 +698,12 @@ function NemesisChat:InitializeHelpers()
             end
             
             return nil
+        elseif Details and Details.ilevel then
+            local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
+
+            if rosterPlayer ~= nil then
+                return Details.ilevel:GetIlvl(rosterPlayer.guid)
+            end
         end
 
         return nil
@@ -1268,11 +1274,11 @@ function NemesisChat:InstantiateCore()
     NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
     NemesisChat:InstantiateEvent()
 
-    if core.db.profile.cache.guild and GetTime() - core.db.profile.cache.guildTime <= core.runtime.dbCacheExpiration then
+    if core.db.profile.cache.guild then
         core.runtime.guild = DeepCopy(core.db.profile.cache.guild)
     end
 
-    if core.db.profile.cache.friends and GetTime() - core.db.profile.cache.friendsTime <= core.runtime.dbCacheExpiration then
+    if core.db.profile.cache.friends then
         core.runtime.friends = DeepCopy(core.db.profile.cache.friends)
     end
 

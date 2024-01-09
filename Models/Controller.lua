@@ -16,29 +16,7 @@ function NemesisChat:InstantiateController()
         NCController = DeepCopy(core.runtimeDefaults.NCController)
 
         NemesisChat:InstantiateController()
-        NCController:RestoreCachedReplacements()
-    end
-
-    function NCController:RestoreCachedReplacements()
-        local cachedReplacementCount = NemesisChat:GetLength(core.db.profile.cache.controllerCustomReplacements)
-        local cachedExampleCount = NemesisChat:GetLength(core.db.profile.cache.controllerCustomReplacementExamples)
-        local cachedVersion = core.db.profile.cache.controllerCustomReplacementsVersion
-
-        if cachedReplacementCount == 0 or cachedExampleCount == 0 or cachedVersion ~= core.version then
-            NCController:GenerateCustomReplacements()
-            return
-        end
-
-        NCController:SetCustomReplacements(DeepCopy(core.db.profile.cache.controllerCustomReplacements))
-        NCController:SetCustomReplacementExamples(DeepCopy(core.db.profile.cache.controllerCustomReplacementExamples))
-    end
-
-    function NCController:GenerateCustomReplacements()
         NemesisChatAPI:InitializeReplacements()
-
-        core.db.profile.cache.controllerCustomReplacements = DeepCopy(NCController.customReplacements)
-        core.db.profile.cache.controllerCustomReplacementExamples = DeepCopy(NCController.customReplacementExamples)
-        core.db.profile.cache.controllerCustomReplacementsVersion = core.version
     end
 
     function NCController:GetChannel()

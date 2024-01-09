@@ -105,7 +105,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                 local leaves = NemesisChat:LeaveCount(player.guid) or 0
                 local lowPerforms = NemesisChat:LowPerformerCount(player.guid) or 0
     
-                if #joins <= 3 then
+                if #joins < 3 then
                     NemesisChat:PLAYER_JOINS_GROUP(val, player.isNemesis)
                 end
 
@@ -131,7 +131,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
                 local timeLeft = NCDungeon:GetTimeLeft()
 
-                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 and timeLeft <= 180 then
+                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 and timeLeft >= 180 then
                     self:Print("Added leaver to DB:", val)
                     SendChatMessage("Nemesis Chat: " .. val .. " has left the group with a dungeon in progress, and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
                     NemesisChat:AddLeaver(player.guid)
@@ -217,6 +217,9 @@ function NemesisChat:PLAYER_TARGET_CHANGED(_, unitTarget)
         return
     end
 
-    SetRaidTarget("target", 5)
-    SendChatMessage("Nemesis Chat: I am currently handling {moon}MOON{moon}!", NemesisChat:GetActualChannel("GROUP"))
+    local configMarker = core.db.profile.reportConfig["AFFIXES"]["MARKER"] or 5
+    local marker = core.markers[configMarker]
+
+    SetRaidTarget("target", marker.index)
+    SendChatMessage(string.format("Nemesis Chat: I am currently handling {%s} %s {%s}!", marker.value, marker.name, marker.value), NemesisChat:GetActualChannel("GROUP"))
 end
