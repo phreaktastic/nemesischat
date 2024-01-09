@@ -577,5 +577,8 @@ function NemesisChat:InstantiateController()
         ["IS_GROUP_LEAD"] = function(val1, val2)
             return UnitIsGroupLeader(val1)
         end,
+        ["NOT_GROUP_LEAD"] = function(val1, val2)
+            return not UnitIsGroupLeader(val1)
+        end,
     }
 end

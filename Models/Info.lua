@@ -343,8 +343,9 @@ NCInfo = {
 
             for _, name in pairs(players) do
                 local info = UIDropDownMenu_CreateInfo()
-                local role = NCInfo.ROLE_REPLACEMENTS[mergedData[name].role or "OTHER"]
-                info.text = name .. " (" .. (role or "unknown") .. ")"
+                local role = UnitClass(name) .. " " ..NCInfo.ROLE_REPLACEMENTS[mergedData[name].role or "OTHER"]
+
+                info.text = name .. " (" .. role .. ")"
                 info.value = name
                 info.checked = (name == NCInfo.CurrentPlayer)
                 info.func = function(self)
@@ -371,6 +372,8 @@ NCInfo = {
                 message = message .. string.format(" (%s higher than mine)", NemesisChat:FormatNumber(delta))
             elseif delta < 0 then
                 message = message .. string.format(" (%s lower than mine)", NemesisChat:FormatNumber(math.abs(delta)))
+            else
+                message = message .. " (same as mine)"
             end
         end
         SendChatMessage(message, NemesisChat:GetActualChannel("GROUP"))

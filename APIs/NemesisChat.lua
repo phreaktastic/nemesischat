@@ -628,6 +628,14 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         example = function() return NemesisChat:FormatNumber(math.random(1, 1000000)) end,
     })
     :AddReplacement({
+        label = "Group Lead",
+        value = "GROUPLEAD",
+        exec = function() return NCRuntime:GetGroupLead() end,
+        description = "The name of the player who is the leader of the group.",
+        isNumeric = false,
+        example = function() return NCRuntime:GetGroupLead() or "GroupLeeeedz" end,
+    })
+    :AddReplacement({
         value = "HP_CONDITION",
         exec = function() return UnitHealth(GetMyName()) or 0 end,
     })

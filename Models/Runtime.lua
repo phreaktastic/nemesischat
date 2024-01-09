@@ -292,6 +292,9 @@ NCRuntime = {
     GetGroupHealer = function(self)
         return core.runtime.groupHealer
     end,
+    GetGroupLead = function(self)
+        return core.runtime.groupLead
+    end,
     GetGroupRoster = function(self)
         return core.runtime.groupRoster
     end,
@@ -309,17 +312,10 @@ NCRuntime = {
         core.runtime.groupRosterCount = 0
         core.runtime.groupTank = nil
         core.runtime.groupHealer = nil
+        core.runtime.groupLead = nil
         
         -- We're at least one of the members
-        local me = {
-            guid = UnitGUID("player"),
-            isGuildmate = false,
-            isFriend = false,
-            isNemesis = false,
-            role = UnitGroupRolesAssigned("player"),
-        }
-
-        self:AddGroupRosterPlayer(GetMyName(), me)
+        self:AddGroupRosterPlayer(GetMyName())
     end,
     RemoveGroupRosterPlayer = function(self, playerName)
         core.runtime.groupRoster[playerName] = nil
@@ -333,9 +329,10 @@ NCRuntime = {
         self:CacheGroupRoster()
     end,
     AddGroupRosterPlayer = function(self, playerName)
-        local isInGuild = UnitIsInMyGuild(playerName) ~= nil
-        local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
+        local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
+        local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
         local itemLevel = NemesisChat:GetItemLevel(playerName)
+        local groupLead = UnitIsGroupLeader(playerName) ~= nil
         local data =  {
             guid = UnitGUID(playerName),
             isGuildmate = isInGuild,
@@ -345,6 +342,7 @@ NCRuntime = {
             itemLevel = itemLevel,
             race = UnitRace(playerName),
             class = UnitClass(playerName),
+            groupLead = groupLead,
         }
 
         core.runtime.groupRoster[playerName] = data
@@ -356,6 +354,10 @@ NCRuntime = {
             core.runtime.groupHealer = playerName
         end
 
+        if groupLead then
+            core.runtime.groupLead = playerName
+        end
+
         NCInfo:UpdatePlayerDropdown()
 
         self:CacheGroupRoster()
@@ -365,6 +367,12 @@ NCRuntime = {
     UpdateGroupRosterRoles = function(self)
         for key,val in pairs(core.runtime.groupRoster) do
             val.role = UnitGroupRolesAssigned(key)
+            val.groupLead = UnitIsGroupLeader(key) ~= nil
+
+            -- Re-attempt to get the item level
+            if not val.itemLevel then
+                val.itemLevel = NemesisChat:GetItemLevel(key)
+            end
         end
     end,
     CacheGroupRoster = function(self)

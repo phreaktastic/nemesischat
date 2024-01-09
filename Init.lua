@@ -266,6 +266,10 @@ core.constants.UNIT_OPERATORS = {
     {
         label = "is group lead",
         value = "IS_GROUP_LEAD",
+    },
+    {
+        label = "is NOT group lead",
+        value = "NOT_GROUP_LEAD",
     }
 }
 core.events = {
@@ -787,3 +791,4 @@ NCController = {}
 NCSpell = {}
 
 C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
+C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)

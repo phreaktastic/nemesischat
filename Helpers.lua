@@ -690,15 +690,19 @@ function NemesisChat:InitializeHelpers()
 
     -- Get a player's average item level. Currently only works if ElvUI or Details is installed, may be expanded later.
     function NemesisChat:GetItemLevel(unit)
+        if UnitIsUnit(unit, "player") then
+            return GetAverageItemLevel()
+        end
+
         if E and E.GetUnitItemLevel then
             local itemLevel, retryUnit, retryTable, iLevelDB = E:GetUnitItemLevel(unit)
 
             if itemLevel ~= "tooSoon" then
                 return itemLevel
             end
-            
-            return nil
-        elseif Details and Details.ilevel then
+        end
+
+        if Details and Details.ilevel then
             local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
 
             if rosterPlayer ~= nil then
@@ -1231,6 +1235,26 @@ function NemesisChat:InitializeHelpers()
                 NCRuntime:AddGroupRosterPlayer(val)
             end
         end
+    end
+
+    function NemesisChat:AttemptSyncItemLevels()
+        if not IsInGroup() then
+            return
+        end
+
+        for key,val in pairs(NCRuntime:GetGroupRoster()) do
+            if val ~= nil and val.itemLevel == nil then
+                local itemLevel = NemesisChat:GetItemLevel(key)
+
+                if itemLevel ~= nil then
+                    val.itemLevel = itemLevel
+                end
+            end
+        end
+    end
+
+    function NemesisChat:LowPriorityTimer()
+        NemesisChat:AttemptSyncItemLevels()
     end
 end
 
