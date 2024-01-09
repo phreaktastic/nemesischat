@@ -135,7 +135,7 @@ function NemesisChat:CheckGuild()
     local totalGuildMembers, onlineGuildMembers = GetNumGuildMembers()
 
     -- The guild roster is empty
-    if totalGuildMembers == 0 or totalGuildMembers == 1 then
+    if totalGuildMembers <= 1 then
         return
     end
 
