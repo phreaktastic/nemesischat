@@ -786,6 +786,12 @@ NC_EVENT_TYPE_GROUP = 0
 NC_EVENT_TYPE_GUILD = 1
 NC_EVENT_TYPE_MAXIMUM = 1 -- Used for logic that validates event types, increase as more are added
 
+-- We reference this in a few areas, if Details is not installed, we need to set these to something
+if not DETAILS_SEGMENTID_OVERALL then
+    DETAILS_SEGMENTID_OVERALL = -1
+    DETAILS_SEGMENTID_CURRENT = 0
+end
+
 NCEvent = {}
 NCController = {}
 NCSpell = {}

@@ -95,18 +95,16 @@ end
 function NCDungeon:UpdateCache()
     if NCDungeon:IsActive() then
         if core.db.profile.cache.NCDungeon.Restore then
-            NCDungeon:Restore(NCDungeon)
-            core.db.profile.cache.NCDungeonTime = GetTime()
+            core.db.profile.cache.NCDungeon:Restore(NCDungeon)
         else
             core.db.profile.cache.NCDungeon = NCSegment:New()
             core.db.profile.cache.NCDungeon:Restore(NCDungeon)
-            core.db.profile.cache.NCDungeonTime = GetTime()
         end
     end
 end
 
 function NCDungeon:CheckCache()
-    if core.db.profile.cache.NCDungeon ~= nil and core.db.profile.cache.NCDungeon ~= {} and GetTime() - core.db.profile.cache.NCDungeonTime <= 3600 then
+    if core.db.profile.cache.NCDungeon ~= nil and core.db.profile.cache.NCDungeon ~= {} then
         NCDungeon:Restore(core.db.profile.cache.NCDungeon)
     end
 end
