@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.3**: Bugfix for the UI panel, dungeon relog caching logic, and use without Details.
 - **1.9.2**: Hardening and optimization pass. Overview:
    - Guild roster sync with a timer and chunking to ensure things are smooth.
    - Removed the replacement logic from the controller bootstrapping logic. Now replacement logic is bootstrapped per loading screen. Huge optimization gain there!

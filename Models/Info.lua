@@ -344,7 +344,7 @@ NCInfo = {
             for _, name in pairs(players) do
                 local info = UIDropDownMenu_CreateInfo()
                 local player = mergedData[name]
-                local role = (player.class or "Unknown") .. " " ..NCInfo.ROLE_REPLACEMENTS[mergedData[name].role or "OTHER"]
+                local role = (player and player.class or "Unknown") .. " " ..NCInfo.ROLE_REPLACEMENTS[player and player.role or "OTHER"]
 
                 info.text = name .. " (" .. role .. ")"
                 info.value = name
