@@ -706,7 +706,7 @@ function NemesisChat:InitializeHelpers()
             local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
 
             if rosterPlayer ~= nil then
-                return Details.ilevel:GetIlvl(rosterPlayer.guid)
+                return Details.ilevel:GetIlvl(rosterPlayer.guid).ilvl or nil
             end
         end
 
