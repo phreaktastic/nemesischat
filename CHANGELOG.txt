@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.8**: Hotfix for the breakage of some replacements in 1.9.7.
 - **1.9.7**: 
    - Fix for occurrences where NC would spam warnings when an API addon was disabled.
    - General hardening and optimizations.
@@ -39,7 +40,6 @@
       - These new sources are available on any unit triggers (spellcast, begin spellcast, aura applied)
    - Data caching for dungeons and groups. Persists data through interface reloads / relogs, and will attempt to restore cached data when possible. Not foolproof, but definitely a step in the right direction.
    - Bugfixes and general optimizations.
-
 - **1.9.1**: Bug fix for non ElvUI users.
 
 ## ⭐ Latest Versions
