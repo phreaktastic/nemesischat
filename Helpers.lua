@@ -694,8 +694,15 @@ function NemesisChat:InitializeHelpers()
             return GetAverageItemLevel()
         end
 
+        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
+        local rosterIlvl = rosterPlayer and rosterPlayer.itemLevel or nil
+
+        if rosterIlvl ~= nil and rosterIlvl > 0 then
+            return rosterPlayer.itemLevel
+        end
+
         if E and E.GetUnitItemLevel then
-            local itemLevel, retryUnit, retryTable, iLevelDB = E:GetUnitItemLevel(unit)
+            local itemLevel = E:GetUnitItemLevel(unit)
 
             if itemLevel ~= "tooSoon" then
                 return itemLevel

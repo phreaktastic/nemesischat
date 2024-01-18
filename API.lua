@@ -490,32 +490,35 @@ function NemesisChatAPI:InitializeReplacements()
     end
 
     for name, api in pairs(core.apis) do
-        local isCompatible = true
+        if api:IsEnabled() then
+            local isCompatible = true
 
-        for _, check in pairs(api.compatibilityChecks) do
-            local success, message = check.exec()
+            for _, check in pairs(api.compatibilityChecks) do
+                local success, message = check.exec()
 
-            if not success then
-                if not check.configCheck then
-                    NemesisChat:Print(api.friendlyName .. " compatibility check FAILED: " .. message)
+                if not success then
+                    if not check.configCheck then
+                        NemesisChat:Print(api.friendlyName .. " compatibility check FAILED: " .. message)
+                    end
+                    
+                    isCompatible = false
+                    break
                 end
-                
-                isCompatible = false
-                break
             end
-        end
 
-        if isCompatible then
-            for _, hook in pairs(api.preMessageHooks) do
-                hook()
+            if isCompatible then
+                for _, hook in pairs(api.preMessageHooks) do
+                    hook()
+                end
+        
+                for _, replacement in pairs(api.replacements) do
+                    NCController:AddCustomReplacement("%[" .. replacement.value .. "%]", replacement.exec)
+                    NCController:AddCustomReplacementExample("%[" .. replacement.value .. "%]", replacement.example)
+                end
+            else
+                api:Disable()
             end
-    
-            for _, replacement in pairs(api.replacements) do
-                NCController:AddCustomReplacement("%[" .. replacement.value .. "%]", replacement.exec)
-                NCController:AddCustomReplacementExample("%[" .. replacement.value .. "%]", replacement.example)
-            end
-        else
-            api:Disable()
         end
+        
     end
 end

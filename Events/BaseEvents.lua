@@ -96,8 +96,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
         end
 
         NemesisChat:CheckGroup()
-        
-    else
+    elseif #joins > 0 or #leaves > 0 then
         for key,val in pairs(joins) do
             if val ~= nil and val ~= GetMyName() then
                 local player = NCRuntime:AddGroupRosterPlayer(val)
