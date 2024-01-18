@@ -1,4 +1,4 @@
-## Interface: 100200
+## Interface: 100250
 ## Version: 1.9.7
 ## Title: |cff00ccffNemesis Chat|r
 ## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp

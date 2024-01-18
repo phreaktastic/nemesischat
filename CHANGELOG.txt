@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.9**: Compatibility with latest patch (sorry, forgot to update the supported version).
 - **1.9.8**: Hotfix for the breakage of some replacements in 1.9.7.
 - **1.9.7**: 
    - Fix for occurrences where NC would spam warnings when an API addon was disabled.
