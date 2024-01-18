@@ -158,6 +158,7 @@ core.runtimeDefaults = {
         conditions = {}
     },
     messageCondition = {
+        leftCategory = "Nemesis",
         left = "NEMESIS_ROLE",
         operator = "IS",
         right = "DAMAGER",

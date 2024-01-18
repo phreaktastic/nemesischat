@@ -401,88 +401,9 @@ core.roles = {
         value = "HEALER",
     },
 }
-core.messageConditions = {
-    {
-        label = "Nemesis Role",
-        value = "NEMESIS_ROLE",
-        operators = core.constants.OPERATORS,
-        type = "SELECT",
-        options = DeepCopy(core.roles),
-    },
-    {
-        label = "Bystander Role",
-        value = "BYSTANDER_ROLE",
-        operators = core.constants.OPERATORS,
-        type = "SELECT",
-        options = DeepCopy(core.roles),
-    },
-    {
-        label = "Spell ID",
-        value = "SPELL_ID",
-        operators = core.constants.OPERATORS,
-        type = "NUMBER",
-    },
-    {
-        label = "Spell Name",
-        value = "SPELL_NAME",
-        operators = core.constants.OPERATORS,
-        type = "INPUT",
-    },
-    {
-        label = "Spell Target",
-        value = "SPELL_TARGET",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
-        type = "INPUT",
-    },
-    {
-        label = "Players In Group",
-        value = "GROUP_COUNT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER", 
-    },
-    {
-        label = "Nemeses In Group",
-        value = "NEMESES_COUNT",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER", 
-    },
-    {
-        label = "My Interrupts (Combat)",
-        value = "INTERRUPTS",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER", 
-    },
-    {
-        label = "Nem. Interrupts (Combat)",
-        value = "NEMESIS_INTERRUPTS",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER", 
-    },
-    {
-        label = "Bys. Interrupts (Combat)",
-        value = "BYSTANDER_INTERRUPTS",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER", 
-    },
-    {
-        label = "My Interrupts (Overall)",
-        value = "INTERRUPTS_OVERALL",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER", 
-    },
-    {
-        label = "Nem. Interrupts (Overall)",
-        value = "NEMESIS_INTERRUPTS_OVERALL",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER", 
-    },
-    {
-        label = "Bys. Interrupts (Overall)",
-        value = "BYSTANDER_INTERRUPTS_OVERALL",
-        operators = ArrayMerge(core.constants.OPERATORS, core.constants.NUMERIC_OPERATORS),
-        type = "NUMBER", 
-    },
-}
+
+-- This will be populated upon bootstrapping APIs
+core.messageConditions = {}
 
 -- This is what the configuration screen is built from.
 core.configTree = {
@@ -518,6 +439,9 @@ core.channels = {
     ["EMOTE"] = "Emote",
     ["YELL"] = "Yell",
     ["GUILD"] = "Guild",
+    ["OFFICER"] = "Officer",
+    ["RAID_WARNING"] = "Raid Warning",
+    ["VOICE_TEXT"] = "TTS / Voice Text",
 }
 core.channelsExtended = {
     ["WHISPER"] = "Whisper Nemesis (|c00ff0000May be unavailable|r)",
