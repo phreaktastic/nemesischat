@@ -14,6 +14,7 @@
    - Fix for occurrences where NC would spam warnings when an API addon was disabled.
    - General hardening and optimizations.
    - Condition subject categories, things should be **far** less cluttered now.
+   - Lots more condition subjects.
 - **1.9.6**: More bugfixes.
 - **1.9.5**: Fix for non-ElvUI users who leverage Details! for item level retrieval.
 - **1.9.4**: More minor bugfixes.
