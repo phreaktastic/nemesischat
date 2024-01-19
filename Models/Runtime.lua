@@ -126,8 +126,6 @@ core.runtimeDefaults = {
             --     end,
             -- }
         },
-        preMessageHooks = {},
-        postMessageHooks = {},
         subjects = {
             -- {
             --     label = "Nemesis DPS",

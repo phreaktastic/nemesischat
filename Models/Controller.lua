@@ -533,5 +533,17 @@ function NemesisChat:InstantiateController()
         ["NOT_GROUP_LEAD"] = function(val1, val2)
             return not UnitIsGroupLeader(val1)
         end,
+        ["HAS_BUFF"] = function(val1, val2)
+            return NemesisChat:HasBuff(val1, val2)
+        end,
+        ["NOT_HAS_BUFF"] = function(val1, val2)
+            return not NemesisChat:HasBuff(val1, val2)
+        end,
+        ["HAS_DEBUFF"] = function(val1, val2)
+            return NemesisChat:HasDebuff(val1, val2)
+        end,
+        ["NOT_HAS_DEBUFF"] = function(val1, val2)
+            return not NemesisChat:HasDebuff(val1, val2)
+        end,
     }
 end

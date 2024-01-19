@@ -10,6 +10,16 @@
 
 ## 🩹 Patches
 
+- **1.9.10**: 
+   - Removed all API pre/post message logic to be in line with the new paradigm (this simply has too much margin for heavy performance impact)
+   - New condition subjects:
+      - In dungeon
+      - In boss fight
+      - In combat 
+   - New unit conditions:
+      - Has buff/debuff
+      - Does NOT have buff/debuff 
+   - When creating triggered messages, if you have a condition based on a spell being cast with the ID / name as the condition, NC will give a spell link specific to that spell. If it's not a valid spell, it will tell you it is invalid.
 - **1.9.9**: Compatibility with latest patch (sorry, forgot to update the supported version).
 - **1.9.8**: Hotfix for the breakage of some replacements in 1.9.7.
 - **1.9.7**: 

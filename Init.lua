@@ -180,12 +180,28 @@ core.units = {
     },
 }
 core.constants = {}
+core.constants.BOOLEAN_OPTIONS = {
+    {
+        label = "True",
+        value = true
+    },
+    {
+        label = "False",
+        value = false
+    }
+}
 core.constants.NA = { 1 }
 core.constants.STANDARD = { 2, 3, 4, }
 core.constants.OTHERS = { 3, 4, }
 core.constants.AFFIXMOBS = { 5 }
 core.constants.ENEMIES = { 5, 6, 7 }
 core.constants.ALLUNITS = { 2, 3, 4, 5, 6, 7 }
+core.constants.IS = {
+    {
+        label = "is",
+        value = "IS"
+    },
+}
 core.constants.OPERATORS = {
     {
         label = "is",
@@ -270,7 +286,23 @@ core.constants.UNIT_OPERATORS = {
     {
         label = "is NOT group lead",
         value = "NOT_GROUP_LEAD",
-    }
+    },
+    {
+        label = "has buff",
+        value = "HAS_BUFF",
+    },
+    {
+        label = "does NOT have buff",
+        value = "NOT_HAS_BUFF",
+    },
+    {
+        label = "has debuff",
+        value = "HAS_DEBUFF",
+    },
+    {
+        label = "does NOT have debuff",
+        value = "NOT_HAS_DEBUFF",
+    },
 }
 core.events = {
     segment = {
