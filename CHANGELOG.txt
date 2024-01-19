@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.11**: Fix for Spell ID replacement.
 - **1.9.10**: 
    - Removed all API pre/post message logic to be in line with the new paradigm (this simply has too much margin for heavy performance impact)
    - New condition subjects:
