@@ -148,7 +148,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Spell ID",
         value = "SPELL_ID",
         category = "Spell",
-        exec = function() return NCSpell:GetSpellID() .. "" end,
+        exec = function() return NCSpell:GetSpellId() .. "" end,
         operators = core.constants.OPERATORS,
         type = "NUMBER",
     })
