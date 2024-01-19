@@ -37,18 +37,6 @@ function NemesisChatAPI:AddAPI(name, friendlyName)
         return self
     end
 
-    core.apis[name].AddPreMessageHook = function(self, func)
-        NemesisChatAPI:AddPreMessageHook(name, func)
-
-        return self
-    end
-
-    core.apis[name].AddPostMessageHook = function(self, func)
-        NemesisChatAPI:AddPostMessageHook(name, func)
-
-        return self
-    end
-
     core.apis[name].AddSubject = function(self, subject)
         NemesisChatAPI:AddSubject(name, subject)
 
@@ -206,50 +194,6 @@ function NemesisChatAPI:GetCompatibilityChecks(name)
     end
 
     return core.apis[name].compatibilityChecks
-end
-
-function NemesisChatAPI:AddPreMessageHook(name, func)
-    if not NemesisChatAPI:HasAPI(name) then
-        return
-    end
-
-    if not core.apis[name].preMessageHooks then
-        core.apis[name].preMessageHooks = {}
-    end
-
-    table.insert(core.apis[name].preMessageHooks, func)
-
-    return NemesisChatAPI
-end
-
-function NemesisChatAPI:GetPreMessageHooks(name)
-    if not NemesisChatAPI:HasAPI(name) then
-        return
-    end
-
-    return core.apis[name].preMessageHooks
-end
-
-function NemesisChatAPI:AddPostMessageHook(name, func)
-    if not NemesisChatAPI:HasAPI(name) then
-        return
-    end
-
-    if not core.apis[name].postMessageHooks then
-        core.apis[name].postMessageHooks = {}
-    end
-
-    table.insert(core.apis[name].postMessageHooks, func)
-
-    return NemesisChatAPI
-end
-
-function NemesisChatAPI:GetPostMessageHooks(name)
-    if not NemesisChatAPI:HasAPI(name) then
-        return
-    end
-
-    return core.apis[name].postMessageHooks
 end
 
 function NemesisChatAPI:AddSubject(name, subject)
@@ -507,10 +451,6 @@ function NemesisChatAPI:InitializeReplacements()
             end
 
             if isCompatible then
-                for _, hook in pairs(api.preMessageHooks) do
-                    hook()
-                end
-        
                 for _, replacement in pairs(api.replacements) do
                     NCController:AddCustomReplacement("%[" .. replacement.value .. "%]", replacement.exec)
                     NCController:AddCustomReplacementExample("%[" .. replacement.value .. "%]", replacement.example)

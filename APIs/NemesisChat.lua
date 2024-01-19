@@ -365,16 +365,27 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         value = "DUNGEON_ACTIVE",
         category = "Dungeon / Encounter",
         exec = function() return NCDungeon:IsActive() end,
-        operators = core.constants.BOOLEAN_OPERATORS,
-        type = "BOOLEAN",
+        operators = core.constants.IS,
+        type = "SELECT",
+        options = DeepCopy(core.constants.BOOLEAN_OPTIONS)
     })
     :AddSubject({
         label = "In Boss Fight",
         value = "BOSS_ACTIVE",
         category = "Dungeon / Encounter",
         exec = function() return NCBoss:IsActive() end,
-        operators = core.constants.BOOLEAN_OPERATORS,
-        type = "BOOLEAN",
+        operators = core.constants.IS,
+        type = "SELECT",
+        options = DeepCopy(core.constants.BOOLEAN_OPTIONS)
+    })
+    :AddSubject({
+        label = "In Combat",
+        value = "COMBAT_ACTIVE",
+        category = "Combat",
+        exec = function() return NCCombat:IsActive() end,
+        operators = core.constants.IS,
+        type = "SELECT",
+        options = DeepCopy(core.constants.BOOLEAN_OPTIONS)
     })
     :AddReplacement({
         label = "Boss Name",
@@ -613,6 +624,10 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         description = "The name of the spell that was cast or interrupted.",
         isNumeric = false,
         example = function()
+            if NCRuntime.previewSpell then
+                return GetSpellLink(NCRuntime.previewSpell) or "!!INVALID SPELL!!"
+            end
+
             local examples = {
                 204243,
                 200642,
@@ -649,6 +664,8 @@ NemesisChatAPI:AddAPI("CORE", "Core")
                 "Infinite Chronomancer",
                 "Time-Lost Waveshaper"
             }
+
+            return examples[math.random(1, #examples)]
         end,
     })
     :AddReplacement({

@@ -895,9 +895,20 @@ function NemesisChat:UpdateMessagePreview()
 
     if messageChannel == "EMOTE" then spacer = " " end
 
+    if HasConditions() then
+        for key, val in pairs(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions) do
+            if (val.left == "SPELL_ID" or val.left == "SPELL_NAME") and val.operator == "IS" then
+                NCRuntime.previewSpell = val.right
+                break
+            end
+        end
+    end
+
     local chatMsg = NCController:GetReplacedString(message, true)
 
     messagePreview = color .. UnitName("player") .. spacer .. chatMsg .. "|r"
+
+    NCRuntime.previewSpell = nil
 end
 
 function HasConditions()

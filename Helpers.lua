@@ -1299,6 +1299,26 @@ function NemesisChat:CheckAffixAuras()
     end
 end
 
+function NemesisChat:UnitHasAura(unit, auraName, auraType)
+    if string.lower(auraType) == "buff" then
+        auraType = "HELPFUL"
+    elseif string.lower(auraType) == "debuff" then
+        auraType = "HARMFUL"
+    end
+
+    local _, _, count = AuraUtil.FindAuraByName(auraName, unit, auraType)
+
+    return count ~= nil and tonumber(count) > 0, count
+end
+
+function NemesisChat:UnitHasBuff(unit, buffName)
+    return NemesisChat:UnitHasAura(unit, buffName, "buff")
+end
+
+function NemesisChat:UnitHasDebuff(unit, debuffName)
+    return NemesisChat:UnitHasAura(unit, debuffName, "debuff")
+end
+
 -- Instantiate NC objects since they are ephemeral and will not persist through a UI load
 function NemesisChat:InstantiateCore()
     NCController = DeepCopy(core.runtimeDefaults.NCController)
