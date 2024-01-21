@@ -89,7 +89,7 @@ function NCDungeon:SetTimeLimit(timeLimit)
 end
 
 function NCDungeon:GetTimeLeft()
-    return GetTime() - (NCDungeon:GetStartTime() + NCDungeon:GetTimeLimit())
+    return (NCDungeon:GetStartTime() + NCDungeon:GetTimeLimit()) - GetTime()
 end
 
 function NCDungeon:UpdateCache()

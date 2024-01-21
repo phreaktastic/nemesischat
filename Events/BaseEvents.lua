@@ -130,7 +130,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
                 local timeLeft = NCDungeon:GetTimeLeft()
 
-                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 and timeLeft >= 180 then
+                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 and timeLeft >= 180 and not IsInRaid() then
                     self:Print("Added leaver to DB:", val)
                     SendChatMessage("Nemesis Chat: " .. val .. " has left the group with a dungeon in progress, and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
                     NemesisChat:AddLeaver(player.guid)

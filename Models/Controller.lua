@@ -434,19 +434,7 @@ function NemesisChat:InstantiateController()
 
     -- Condition methods
     NCController.Condition = {
-        -- Subjects
-        ["HEALTH_PERCENT"] = function()
-            -- Return as string so input comparisons work properly
-            return math.floor((UnitHealth(GetMyName()) / UnitHealthMax(GetMyName())) * 100) .. ""
-        end,
-        ["NEMESIS_HEALTH_PERCENT"] = function()
-            -- Return as string so input comparisons work properly
-            return math.floor((UnitHealth(NCEvent:GetNemesis()) / UnitHealthMax(NCEvent:GetNemesis())) * 100) .. ""
-        end,
-        ["BYSTANDER_HEALTH_PERCENT"] = function()
-            -- Return as string so input comparisons work properly
-            return math.floor((UnitHealth(NCEvent:GetBystander()) / UnitHealthMax(NCEvent:GetBystander())) * 100) .. ""
-        end,
+        -- Subjects are all handled in the API now
 
         -- Operators
         ["IS"] = function(val1, val2)
