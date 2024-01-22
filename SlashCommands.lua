@@ -22,6 +22,19 @@ function NemesisChat:SlashCommand(msg)
 	elseif cmd == "hideinfo" then
 		NCConfig:SetShowInfoFrame(false)
 		NCInfo.StatsFrame:Hide()
+	elseif cmd == "wipe" then
+		local name = UnitName(args)
+		local guid = UnitGUID(name)
+
+		if not guid then
+			self:Print("Invalid unit.")
+			return
+		end
+
+		core.db.profile.lowPerformers[guid] = nil
+		core.db.profile.leavers[guid] = nil
+
+		self:Print("Wiped data for " .. name .. " (" .. guid .. ")")
 	else
         if core.db.profile.dbg then
             self:Print("Invalid command issued.")

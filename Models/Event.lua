@@ -176,11 +176,11 @@ function NemesisChat:InstantiateEvent()
     function NCEvent:Spell(source, dest, spellId, spellName)
         local feast = core.feastIDs[spellId]
 
-        -- We don't care about casts from non-grouped players
-        if not UnitInParty(source) then
-            NCEvent:Initialize()
-            return
-        end
+        -- We don't care about casts from non-grouped players / mobs to non-grouped players / mobs
+        -- if not UnitInParty(source) and not UnitInParty(dest) then
+        --     NCEvent:Initialize()
+        --     return
+        -- end
 
         NCEvent:SetEvent("SPELL_CAST_SUCCESS")
         NCEvent:SetTargetFromSource(source)
