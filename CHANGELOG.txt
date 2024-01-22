@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.13**: Fix for left column in UI. Added more logic for leavers; if someone disconnected and another leaves, the person who DCed will be added instead of the leaver.
 - **1.9.12**: Fix for dungeon leaver logic to ensure it only fires within a M+ dungeon, if the time left is >= 3 min.
 - **1.9.11**: Fix for Spell ID replacement.
 - **1.9.10**: 

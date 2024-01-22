@@ -130,10 +130,32 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
                 local timeLeft = NCDungeon:GetTimeLeft()
 
-                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 and timeLeft >= 180 and not IsInRaid() then
-                    self:Print("Added leaver to DB:", val)
-                    SendChatMessage("Nemesis Chat: " .. val .. " has left the group with a dungeon in progress, and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
-                    NemesisChat:AddLeaver(player.guid)
+                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 and timeLeft >= 360 and not IsInRaid() then
+                    -- First check if anyone in the party is offline, and if so, report THEM instead of the leaver
+                    local offlineName, offlineGuid, leaverGuid, leaverName = nil, nil, nil, nil
+
+                    for key,val in pairs(NCRuntime:GetGroupRoster()) do
+                        if val ~= nil and val.guid ~= nil and val.guid ~= player.guid and not UnitIsConnected(key) then
+                            offlineName = key
+                            offlineGuid = val.guid
+                            break
+                        end
+                    end
+
+                    if offlineGuid ~= nil then
+                        leaverGuid = offlineGuid
+                        leaverName = offlineName
+
+                        SendChatMessage("Nemesis Chat: " .. leaverName .. " has disconnected with a dungeon in progress, and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
+                    else
+                        leaverGuid = player.guid
+                        leaverName = val
+
+                        SendChatMessage("Nemesis Chat: " .. leaverName .. " has left the group with a dungeon in progress, and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
+                    end
+
+                    self:Print("Added leaver to DB:", leaverName, leaverGuid)
+                    NemesisChat:AddLeaver(leaverGuid)
                 end
     
                 NCRuntime:RemoveGroupRosterPlayer(val)

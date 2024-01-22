@@ -188,6 +188,7 @@ NCInfo = {
         local content = f.scrollFrame.scrollChild
         local i = 1
         local ROW_WIDTH = content:GetWidth()
+        local leftColWidth = 128
 
         local red = {0.85,0.6,0.5}
         local green = {0.5,0.85,0.6}
@@ -310,9 +311,9 @@ NCInfo = {
                 GameTooltip:Hide()
             end)
 
-            content.rows[metric].columns[1]:SetWidth(96)
+            content.rows[metric].columns[1]:SetWidth(leftColWidth)
             content.rows[metric].columns[1]:SetJustifyH("LEFT")
-            content.rows[metric].columns[2]:SetWidth(ROW_WIDTH - 96)
+            content.rows[metric].columns[2]:SetWidth(ROW_WIDTH - leftColWidth)
             content.rows[metric].columns[2]:SetJustifyH("RIGHT")
             content.rows[metric].columns[2]:SetMaxLines(1)
 
