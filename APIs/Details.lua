@@ -41,6 +41,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddSubject({
         label = "Nem. DPS (Current)",
         value = "NEMESIS_DPS",
+        category = "DPS",
         exec = function() return NCDetailsAPI:GetDPS(NCEvent:GetNemesis() or "Unknown", DETAILS_SEGMENTID_CURRENT) end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
@@ -48,6 +49,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddSubject({
         label = "Bys. DPS (Current)",
         value = "BYSTANDER_DPS",
+        category = "DPS",
         exec = function() return NCDetailsAPI:GetDPS(NCEvent:GetBystander() or "Unknown", DETAILS_SEGMENTID_CURRENT) end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
@@ -55,6 +57,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddSubject({
         label = "My DPS (Current)",
         value = "MY_DPS",
+        category = "DPS",
         exec = function() return NCDetailsAPI:GetDPS(GetMyName() or "Unknown", DETAILS_SEGMENTID_CURRENT) end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
@@ -62,6 +65,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddSubject({
         label = "Nem. DPS (Overall)",
         value = "NEMESIS_DPS_OVERALL",
+        category = "DPS",
         exec = function() return NCDetailsAPI:GetDPS(NCEvent:GetNemesis() or "Unknown", DETAILS_SEGMENTID_OVERALL) end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
@@ -69,6 +73,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddSubject({
         label = "My DPS (Overall)",
         value = "MY_DPS_OVERALL",
+        category = "DPS",
         exec = function() return NCDetailsAPI:GetDPS(GetMyName() or "Unknown", DETAILS_SEGMENTID_OVERALL) end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
@@ -76,6 +81,7 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddSubject({
         label = "Bys. DPS (Overall)",
         value = "BYSTANDER_DPS_OVERALL",
+        category = "DPS",
         exec = function() return NCDetailsAPI:GetDPS(NCEvent:GetBystander() or "Unknown", DETAILS_SEGMENTID_OVERALL) end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",

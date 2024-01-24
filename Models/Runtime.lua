@@ -332,6 +332,7 @@ NCRuntime = {
         local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
         local itemLevel = NemesisChat:GetItemLevel(playerName)
         local groupLead = UnitIsGroupLeader(playerName) ~= nil
+        local class, rawClass = UnitClass(playerName)
         local data =  {
             guid = UnitGUID(playerName),
             isGuildmate = isInGuild,
@@ -340,7 +341,8 @@ NCRuntime = {
             role = UnitGroupRolesAssigned(playerName),
             itemLevel = itemLevel,
             race = UnitRace(playerName),
-            class = UnitClass(playerName),
+            class = class,
+            rawClass = rawClass,
             groupLead = groupLead,
         }
 

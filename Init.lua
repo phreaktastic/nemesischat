@@ -473,7 +473,7 @@ core.channels = {
     ["GUILD"] = "Guild",
     ["OFFICER"] = "Officer",
     ["RAID_WARNING"] = "Raid Warning",
-    ["VOICE_TEXT"] = "TTS / Voice Text",
+    -- ["VOICE_TEXT"] = "TTS / Voice Text",
 }
 core.channelsExtended = {
     ["WHISPER"] = "Whisper Nemesis (|c00ff0000May be unavailable|r)",
@@ -493,6 +493,11 @@ core.reference = {
         ["WHISPER"] = "|cffff80ff",
         ["WHISPER_NEMESIS"] = "|cffff80ff",
         ["WHISPER_BYSTANDER"] = "|cffff80ff",
+        ["GUILD"] = "|cff40ff40",
+        ["OFFICER"] = "|cff40c040",
+        ["RAID"] = "|cffff7f00",
+        ["RAID_WARNING"] = "|cffff4800",
+        ["VOICE_TEXT"] = "|cffcccccc",
     }
 }
 
