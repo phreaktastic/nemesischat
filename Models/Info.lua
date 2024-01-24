@@ -27,6 +27,7 @@ NCInfo = {
     TOTAL_WIDTH = 200,
     TOTAL_HEIGHT = 210,
     DROPDOWN_WIDTH = 128,
+    DROPDOWN_LEFT = 0,
 
     METRIC_REPLACEMENTS = {
         ["AvoidableDamage"] = "Avoidable Damage",
@@ -61,7 +62,7 @@ NCInfo = {
         end)
         f:SetClampedToScreen(true)
         f:SetUserPlaced(true)
-        f:SetFrameStrata("BACKGROUND")
+        f:SetFrameStrata("LOW")
         f:SetBackdrop({
             bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
             edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -106,19 +107,7 @@ NCInfo = {
         f.playerDropdown:SetPoint("TOPLEFT",0,-4)
         f.playerDropdown:SetPoint("BOTTOMRIGHT",0,0)
         f.playerDropdown:SetScript("OnShow", function(self)
-            UIDropDownMenu_Initialize(self, function(self, level, menuList)
-                for name, _ in pairs(NCRuntime:GetGroupRoster()) do
-                    local info = UIDropDownMenu_CreateInfo()
-                    info.text = name
-                    info.value = name
-                    info.checked = (name == NCInfo.CurrentPlayer)
-                    info.func = function(self)
-                        NCInfo.CurrentPlayer = self.value
-                        NCInfo:Update()
-                    end
-                    UIDropDownMenu_AddButton(info)
-                end
-            end, "OTHER")
+            NCInfo:UpdatePlayerDropdown()
         end)
         UIDropDownMenu_SetWidth(f.playerDropdown, self.TOTAL_WIDTH - 48)
         UIDropDownMenu_SetText(f.playerDropdown, self.CurrentPlayer)
@@ -175,6 +164,8 @@ NCInfo = {
             NCInfo:Update()
 
             UIDropDownMenu_SetWidth(NCInfo.StatsFrame.playerDropdown, NCInfo.DROPDOWN_WIDTH)
+
+            f.playerDropdown:SetPoint("TOPLEFT",NCInfo.DROPDOWN_LEFT,-4)
         end)
 
         f.scrollFrame.scrollChild.rows = {}
@@ -331,6 +322,7 @@ NCInfo = {
             end
         end
 
+        NCInfo:UpdatePlayerDropdown()
         UIDropDownMenu_SetText(f.playerDropdown, NCInfo.CurrentPlayer)
     end,
 
@@ -339,18 +331,24 @@ NCInfo = {
         UIDropDownMenu_Initialize(NCInfo.StatsFrame.playerDropdown, function(self, level, menuList)
             local roster = NCRuntime:GetGroupRoster()
             local snapshot = NCDungeon.RosterSnapshot
-            local mergedData = MapMerge(roster, snapshot)
-            local players = GetHashmapKeys(mergedData)
+            local mergedData = MapMerge(snapshot, roster)
 
-            for _, name in pairs(players) do
+            for name, player in pairs(mergedData) do
+                local infoClass, infoRawClass = UnitClass(name)
                 local info = UIDropDownMenu_CreateInfo()
-                local player = mergedData[name]
-                local class = (player and player.class) or UnitClass(name) or "Unknown"
-                local role = (player and player.role) or UnitGroupRolesAssigned(name) or "OTHER"
+                local mergedPlayer = mergedData[name]
+                local class = player.class or (mergedPlayer and mergedPlayer.class) or infoClass or "Unknown"
+                local rawClass = player.rawClass or (mergedPlayer and mergedPlayer.rawClass) or infoRawClass or "Unknown"
+                local role = player.role or (mergedPlayer and mergedPlayer.role) or UnitGroupRolesAssigned(name) or "OTHER"
                 local replacedRole = NCInfo.ROLE_REPLACEMENTS[role] or "OTHER"
                 local infoString = class .. " " .. replacedRole
+                local colorized = NCColors.ClassColor(rawClass, name .. " (" .. infoString .. ")")
 
-                info.text = name .. " (" .. infoString .. ")"
+                if name == GetMyName() then
+                    colorized = NCColors.Emphasize(colorized)
+                end
+
+                info.text = colorized
                 info.value = name
                 info.checked = (name == NCInfo.CurrentPlayer)
                 info.func = function(self)
@@ -366,6 +364,11 @@ NCInfo = {
         self.SCROLLVIEW_HEIGHT = self.TOTAL_HEIGHT - self.HEADER_HEIGHT - self.HEADER_BUFFER - self.FOOTER_HEIGHT - self.FOOTER_BUFFER
         self.SCROLLVIEW_TOP = self.HEADER_HEIGHT + self.HEADER_BUFFER
         self.SCROLLVIEW_BOTTOM = self.FOOTER_HEIGHT + self.FOOTER_BUFFER
+        self.DROPDOWN_LEFT = (self.TOTAL_WIDTH - self.DROPDOWN_WIDTH) / 2 - (self.DROPDOWN_WIDTH / 4)
+
+        if self.DROPDOWN_LEFT < 0 then
+            self.DROPDOWN_LEFT = 0
+        end
     end,
 
     ReportMetric = function(self, metric, player)
