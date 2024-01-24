@@ -1268,7 +1268,6 @@ function NemesisChat:InitializeHelpers()
 
     function NemesisChat:LowPriorityTimer()
         NemesisChat:AttemptSyncItemLevels()
-        -- NCInfo:UpdatePlayerDropdown()
     end
 end
 
