@@ -50,8 +50,6 @@ function NCDungeon:FinishCallback(success)
     end
 
     NCDungeon:UpdateCache()
-
-    NemesisChat:Print("Dungeon completed in " .. NemesisChat:GetDuration(GetTime() - NCDungeon:GetStartTime()) .. "!", success, NCDungeon:IsActive())
 end
 
 function NCDungeon:ResetCallback()
@@ -99,13 +97,11 @@ function NCDungeon:GetTimeLeft()
 end
 
 function NCDungeon:UpdateCache()
-    if NCDungeon:IsActive() then
-        if core.db.profile.cache.NCDungeon.Restore then
-            core.db.profile.cache.NCDungeon:Restore(NCDungeon)
-        else
-            core.db.profile.cache.NCDungeon = NCSegment:New()
-            core.db.profile.cache.NCDungeon:Restore(NCDungeon)
-        end
+    if core.db.profile.cache.NCDungeon.Restore then
+        core.db.profile.cache.NCDungeon:Restore(NCDungeon)
+    else
+        core.db.profile.cache.NCDungeon = NCSegment:New()
+        core.db.profile.cache.NCDungeon:Restore(NCDungeon)
     end
 end
 

@@ -22,6 +22,8 @@ function NemesisChat:SlashCommand(msg)
 	elseif cmd == "hideinfo" then
 		NCConfig:SetShowInfoFrame(false)
 		NCInfo.StatsFrame:Hide()
+	elseif cmd == "dbinfo" then
+		NemesisChat:Print("Leavers:", #core.db.profile.leavers, "Low performers:", #core.db.profile.lowPerformers)
 	elseif cmd == "wipe" then
 		local name = UnitName(args)
 		local guid = UnitGUID(name)

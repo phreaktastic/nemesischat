@@ -14,6 +14,8 @@ function NemesisChat:OnInitialize()
 
     NemesisChat:RegisterChatCommand("nc", "SlashCommand")
     NemesisChat:RegisterChatCommand("nemesischat", "SlashCommand")
+
+    NCMigration:Run()
 end
 
 function NemesisChat:OnEnable()

@@ -20,12 +20,13 @@ NCInfo = {
     SCROLLVIEW_BOTTOM = 0,
     DISPLAY_WIDTH = 200,
     CELL_HEIGHT = 14,
-    HEADER_HEIGHT = 0,
-    HEADER_BUFFER = 48,
+    HEADER_HEIGHT = 24,
+    HEADER_BUFFER = 32,
     FOOTER_HEIGHT = 16,
     FOOTER_BUFFER = 0,
     TOTAL_WIDTH = 200,
     TOTAL_HEIGHT = 210,
+    DROPDOWN_TOP = 0,
     DROPDOWN_WIDTH = 128,
     DROPDOWN_LEFT = 0,
 
@@ -79,18 +80,18 @@ NCInfo = {
         f:SetBackdropColor(0,0,0,0.4)
         f:SetBackdropBorderColor(0,0,0,1)
 
-        f.header = f:CreateFontString(nil,"ARTWORK","GameFontNormalLarge")
-        f.header:SetPoint("TOPLEFT",8,16)
-        f.header:SetPoint("TOPRIGHT",-8,16)
-        f.header:SetText("NemesisChat")
-        f.header:SetTextColor(0.50,0.60,1)
-        f.header:SetJustifyH("CENTER")
-        f.header:SetScript("OnMouseDown", function(self, button)
+        f.title = f:CreateFontString(nil,"ARTWORK","GameFontNormalLarge")
+        f.title:SetPoint("TOPLEFT",8,16)
+        f.title:SetPoint("TOPRIGHT",-8,16)
+        f.title:SetText("NemesisChat")
+        f.title:SetTextColor(0.50,0.60,1)
+        f.title:SetJustifyH("CENTER")
+        f.title:SetScript("OnMouseDown", function(self, button)
             if button == "LeftButton" then
                 NCInfo.StatsFrame:StartMoving()
             end
         end)
-        f.header:SetScript("OnMouseUp", function(self, button)
+        f.title:SetScript("OnMouseUp", function(self, button)
             NCInfo.StatsFrame:StopMovingOrSizing()
         end)
 
@@ -102,10 +103,27 @@ NCInfo = {
             NCInfo.StatsFrame:Hide()
         end)
 
-        -- Add a dropdown menu to select the player
-        f.playerDropdown = CreateFrame("Frame", "NemesisChatStatsFramePlayerDropdown", f, "UIDropDownMenuTemplate")
-        f.playerDropdown:SetPoint("TOPLEFT",0,-4)
-        f.playerDropdown:SetPoint("BOTTOMRIGHT",0,0)
+        f.headerFrame = CreateFrame("Frame",nil,f)
+        f.headerFrame:SetPoint("TOPLEFT",4,-4)
+        f.headerFrame:SetPoint("TOPRIGHT",-4,-4)
+        f.headerFrame:SetHeight(self.HEADER_HEIGHT)
+
+        f.header = f.headerFrame:CreateFontString(nil,"ARTWORK","GameFontNormalLarge")
+        f.header:SetPoint("TOPLEFT",0,0)
+        f.header:SetPoint("TOPRIGHT",0,0)
+        f.header:SetText(NCDungeon:GetIdentifier() .. " +" .. NCDungeon:GetLevel())
+        f.header:SetTextColor(1,0.60,0)
+        f.header:SetJustifyH("CENTER")
+
+        f.dropdownFrame = CreateFrame("Frame",nil,f)
+        f.dropdownFrame:SetPoint("TOPLEFT",0,-(self.HEADER_HEIGHT))
+        f.dropdownFrame:SetPoint("TOPRIGHT",0,-(self.HEADER_HEIGHT))
+        f.dropdownFrame:SetSize(self.TOTAL_WIDTH, self.SCROLLVIEW_TOP - self.DROPDOWN_TOP)
+
+        -- Dropdown menu to select the player
+        f.playerDropdown = CreateFrame("Frame", "NemesisChatStatsFramePlayerDropdown", f.dropdownFrame, "UIDropDownMenuTemplate")
+        f.playerDropdown:SetPoint("TOPLEFT",0,0)
+        f.playerDropdown:SetPoint("TOPRIGHT",0,0)
         f.playerDropdown:SetScript("OnShow", function(self)
             NCInfo:UpdatePlayerDropdown()
         end)
@@ -113,11 +131,13 @@ NCInfo = {
         UIDropDownMenu_SetText(f.playerDropdown, self.CurrentPlayer)
         f.playerDropdown:Show()
 
+        -- Scroll frame
         f.scrollFrame = CreateFrame("ScrollFrame",nil,f,"UIPanelScrollFrameTemplate")
         f.scrollFrame:SetPoint("TOPLEFT",8,-(self.SCROLLVIEW_TOP))
         f.scrollFrame:SetPoint("BOTTOMRIGHT",-26, self.SCROLLVIEW_BOTTOM)
         f.scrollFrame:SetSize(self.TOTAL_WIDTH - 34, self.TOTAL_HEIGHT - self.SCROLLVIEW_TOP - self.SCROLLVIEW_BOTTOM)
 
+        -- Scroll frame content
         f.scrollFrame.scrollChild = CreateFrame("Frame",nil,f.scrollFrame)
         f.scrollFrame.scrollChild:SetPoint("TOPLEFT",5,-5)
         f.scrollFrame.scrollChild:SetPoint("BOTTOMRIGHT",-5, -5)
@@ -127,6 +147,7 @@ NCInfo = {
         f.scrollFrame:Show()
         f.scrollFrame.scrollChild:Show()
 
+        -- Resizer, bottom right
         f.resizeButton = CreateFrame("Button",nil,f)
         f.resizeButton:SetPoint("BOTTOMRIGHT",0,0)
         f.resizeButton:SetSize(16,16)
@@ -191,13 +212,19 @@ NCInfo = {
         local race = playerInfo.race or UnitRace(NCInfo.CurrentPlayer) or "Unknown"
         local class = playerInfo.class or UnitClass(NCInfo.CurrentPlayer) or "Unknown"
 
+        if NCDungeon:GetIdentifier() == "Unknown" then
+            f.header:SetText("Dungeon Stats / Info")
+        else
+            f.header:SetText(NCDungeon:GetIdentifier() .. " +" .. NCDungeon:GetLevel())
+        end
+
         -- Player information -- group roster race, class, and role
         if not infoFrame then
             local button = CreateFrame("Button",nil,f)
-            
+
             button:SetSize(NCInfo.TOTAL_WIDTH, self.CELL_HEIGHT)
-            button:SetPoint("TOPLEFT",0,-34)
-            button:SetPoint("TOPRIGHT",0,-34)
+            button:SetPoint("TOPLEFT",0,-(self.HEADER_HEIGHT + self.HEADER_BUFFER + 2))
+            button:SetPoint("TOPRIGHT",0,-(self.HEADER_HEIGHT + self.HEADER_BUFFER + 2))
 
             button.text = button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             button.text:SetPoint("LEFT",0,0)
@@ -205,7 +232,7 @@ NCInfo = {
             button.text:SetWidth(NCInfo.TOTAL_WIDTH)
             button.text:SetHeight(self.CELL_HEIGHT)
             button.text:SetJustifyH("CENTER")
-            
+
             infoFrame = button
             f.infoFrame = infoFrame
             f.infoFrame:Show()
@@ -248,7 +275,7 @@ NCInfo = {
 
             if not content.rows[metric] then
                 local button = CreateFrame("Button",nil,content)
-                
+
                 button:SetSize(ROW_WIDTH, self.CELL_HEIGHT)
                 button:SetPoint("TOPLEFT",0,-(i-1)*self.CELL_HEIGHT)
                 button.columns = {}
@@ -362,9 +389,10 @@ NCInfo = {
 
     InitializeVars = function(self)
         self.SCROLLVIEW_HEIGHT = self.TOTAL_HEIGHT - self.HEADER_HEIGHT - self.HEADER_BUFFER - self.FOOTER_HEIGHT - self.FOOTER_BUFFER
-        self.SCROLLVIEW_TOP = self.HEADER_HEIGHT + self.HEADER_BUFFER
+        self.SCROLLVIEW_TOP = self.HEADER_HEIGHT + self.HEADER_BUFFER + (self.CELL_HEIGHT * 2)
         self.SCROLLVIEW_BOTTOM = self.FOOTER_HEIGHT + self.FOOTER_BUFFER
         self.DROPDOWN_LEFT = (self.TOTAL_WIDTH - self.DROPDOWN_WIDTH) / 2 - (self.DROPDOWN_WIDTH / 4)
+        self.DROPDOWN_TOP = self.SCROLLVIEW_TOP - 32
 
         if self.DROPDOWN_LEFT < 0 then
             self.DROPDOWN_LEFT = 0
