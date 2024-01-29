@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.16**: Small patch for clearing the UI panel 🤏
 - **1.9.15**: 
    - Fix for early dungeon leaver detection and for dungeon caching, and tightened up the logic. To be marked as a leaver, all of the following must be true:
       - Keystone <= +20

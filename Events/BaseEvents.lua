@@ -29,7 +29,7 @@ end
 function NemesisChat:CHALLENGE_MODE_START()
     NemesisChat:CheckGroup()
     NCEvent:Initialize()
-    NCDungeon:Reset("", true)
+    NCDungeon:Reset("M+ Dungeon", true)
     NemesisChat:HandleEvent()
 end
 

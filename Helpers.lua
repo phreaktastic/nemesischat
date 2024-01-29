@@ -908,8 +908,12 @@ function NemesisChat:InitializeHelpers()
                         self:Print_r(key)
                         self:Print("#### End Table ####")
                     else
-                        if type(val) ~= "table" then
-                            self:Print(key .. "(" .. type(val) .. "):", val)
+                        if type(val) == "boolean" then
+                            self:Print("    - " .. key .. "(" .. type(val) .. "):", tostring(val))
+                        elseif type(val) == "function" then
+                            self:Print("    - " .. key .. "(function)")
+                        elseif type(val) ~= "table" then
+                            self:Print("    - " .. key .. "(" .. type(val) .. "):", val)
                         else
                             self:Print("#### Table ####")
                             self:Print(key .. ":")
@@ -918,8 +922,12 @@ function NemesisChat:InitializeHelpers()
                         end
                     end
                 end
+            elseif type (item) == "function" then
+                self:Print("Function")
+            elseif type(item) == "boolean" then
+                self:Print(tostring(item))
             else
-                self:Print("    " .. item)
+                self:Print(item)
             end
         end
     end
