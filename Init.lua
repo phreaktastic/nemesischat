@@ -111,7 +111,7 @@ end
 function Split(str, sep)
     local result = {}
     local regex = ("([^%s]+)"):format(sep)
-    
+
     for each in str:gmatch(regex) do
         table.insert(result, each)
     end

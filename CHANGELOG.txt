@@ -10,6 +10,14 @@
 
 ## 🩹 Patches
 
+- **1.9.15**: 
+   - Fix for early dungeon leaver detection and for dungeon caching, and tightened up the logic. To be marked as a leaver, all of the following must be true:
+      - Keystone <= +20
+      - Dungeon must be active
+      - Time remaining must be <= 6 min
+      - Must have a full group
+   - For this version, **all leavers and low performers have been wiped**. People were added as the criteria were a WIP, so it's only fair to wipe the DB altogether.
+   - Another pass on the info pane to provide more clarity into what information is being displayed
 - **1.9.14**: 
    - Fix for Details API subjects in conditions. 
    - Colorization of UI panel names and more congruency with it. 

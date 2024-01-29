@@ -130,14 +130,14 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
                 local timeLeft = NCDungeon:GetTimeLeft()
 
-                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 and timeLeft >= 360 and not IsInRaid() then
+                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 and timeLeft >= 360 and not IsInRaid() and NCDungeon:GetLevel() <= 20 then
                     -- First check if anyone in the party is offline, and if so, report THEM instead of the leaver
                     local offlineName, offlineGuid, leaverGuid, leaverName = nil, nil, nil, nil
 
-                    for key,val in pairs(NCRuntime:GetGroupRoster()) do
-                        if val ~= nil and val.guid ~= nil and val.guid ~= player.guid and not UnitIsConnected(key) then
-                            offlineName = key
-                            offlineGuid = val.guid
+                    for oKey,oVal in pairs(NCRuntime:GetGroupRoster()) do
+                        if oVal ~= nil and oVal.guid ~= nil and oVal.guid ~= player.guid and not UnitIsConnected(oKey) then
+                            offlineName = oKey
+                            offlineGuid = oVal.guid
                             break
                         end
                     end
@@ -146,12 +146,12 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                         leaverGuid = offlineGuid
                         leaverName = offlineName
 
-                        SendChatMessage("Nemesis Chat: " .. leaverName .. " has disconnected with a dungeon in progress, and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
+                        SendChatMessage("Nemesis Chat: " .. leaverName .. " has disconnected with a dungeon in progress (" .. NemesisChat:GetDuration(timeLeft) .. " left) and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
                     else
                         leaverGuid = player.guid
                         leaverName = val
 
-                        SendChatMessage("Nemesis Chat: " .. leaverName .. " has left the group with a dungeon in progress, and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
+                        SendChatMessage("Nemesis Chat: " .. leaverName .. " has left the group with a dungeon in progress (" .. NemesisChat:GetDuration(timeLeft) .. " left) and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
                     end
 
                     self:Print("Added leaver to DB:", leaverName, leaverGuid)

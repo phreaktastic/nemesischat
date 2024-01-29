@@ -1269,6 +1269,33 @@ function NemesisChat:InitializeHelpers()
     function NemesisChat:LowPriorityTimer()
         NemesisChat:AttemptSyncItemLevels()
     end
+
+    function NemesisChat:Print(...)
+        local notfound, c, message = true, ChatTypeInfo.SYSTEM, ""
+
+        for _, msg in pairs({...}) do
+            if message == "" then
+                message = msg
+            else
+                message = message .. " " .. msg
+            end
+        end
+
+        message = NCColors.Emphasize("NemesisChat: ") .. message
+
+        for i=1, NUM_CHAT_WINDOWS do
+            -- if _G['ChatFrame'..i]:IsEventRegistered('CHAT_MSG_SYSTEM') then
+            --     notfound = false
+            --     _G['ChatFrame'..i]:AddMessage(message, c.r, c.g, c.b, c.id)
+            -- end
+
+            _G['ChatFrame'..i]:AddMessage(message, 1, 1, 1, c.id)
+        end
+
+        -- if notfound then
+        --     DEFAULT_CHAT_FRAME:AddMessage(message, c.r, c.g, c.b, c.id)
+        -- end
+    end
 end
 
 -- Check combat log for application or dose of auras listed in core.affixMobsAuras

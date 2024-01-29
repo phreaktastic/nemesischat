@@ -92,7 +92,7 @@ NCSegment = {
     StartPreHook = function(self)
         -- Override me
     end,
-    Start = function(self) 
+    Start = function(self)
         self:Reset()
         self:StartPreHook()
         self.StartTime = GetTime()
