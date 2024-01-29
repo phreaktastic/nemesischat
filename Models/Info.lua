@@ -22,7 +22,7 @@ NCInfo = {
     CELL_HEIGHT = 14,
     HEADER_HEIGHT = 24,
     HEADER_BUFFER = 32,
-    FOOTER_HEIGHT = 16,
+    FOOTER_HEIGHT = 18,
     FOOTER_BUFFER = 0,
     TOTAL_WIDTH = 200,
     TOTAL_HEIGHT = 210,
@@ -45,6 +45,7 @@ NCInfo = {
     },
 
     CurrentPlayer = nil,
+    Title = "Dungeon Info & Stats",
 
     StatsFrame = CreateFrame("MessageFrame", "NemesisChatStatsFrame", UIParent, "BackdropTemplate"),
 
@@ -147,6 +148,27 @@ NCInfo = {
         f.scrollFrame:Show()
         f.scrollFrame.scrollChild:Show()
 
+        -- Bottom frame
+        f.footerFrame = CreateFrame("Frame",nil,f,"BackdropTemplate")
+        f.footerFrame:SetPoint("BOTTOMLEFT",0,0)
+        f.footerFrame:SetPoint("BOTTOMRIGHT",0,0)
+        f.footerFrame:SetHeight(self.FOOTER_HEIGHT)
+        f.footerFrame:SetBackdrop({
+            bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true,
+            tileSize = 2,
+            edgeSize = 2,
+            insets = {
+                left = 0,
+                right = 0,
+                top = 1,
+                bottom = 0
+            }
+        })
+        f.footerFrame:SetBackdropColor(0,0,0,0.15)
+        f.footerFrame:SetBackdropBorderColor(0,0,0,1)
+
         -- Resizer, bottom right
         f.resizeButton = CreateFrame("Button",nil,f)
         f.resizeButton:SetPoint("BOTTOMRIGHT",0,0)
@@ -189,6 +211,29 @@ NCInfo = {
             f.playerDropdown:SetPoint("TOPLEFT",NCInfo.DROPDOWN_LEFT,-4)
         end)
 
+        -- Clear button, bottom right, to the left of the Resizer
+        f.clearButton = CreateFrame("Button",nil,f)
+        f.clearButton:SetPoint("BOTTOMRIGHT",-16,0)
+        f.clearButton:SetSize(16,16)
+        f.clearButton:SetNormalTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+        f.clearButton:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+        f.clearButton:SetPushedTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+        f.clearButton:SetScript("OnClick", function(self)
+            NCDungeon:ClearCache()
+            NCDungeon:Reset()
+            NCDungeon:SetIdentifier(nil)
+            NCDungeon:UpdateCache()
+            NCInfo:Update()
+        end)
+        f.clearButton:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+            GameTooltip:AddLine("Clear all data")
+            GameTooltip:Show()
+        end)
+        f.clearButton:SetScript("OnLeave", function(self)
+            GameTooltip:Hide()
+        end)
+
         f.scrollFrame.scrollChild.rows = {}
 
         self:Update()
@@ -212,10 +257,14 @@ NCInfo = {
         local race = playerInfo.race or UnitRace(NCInfo.CurrentPlayer) or "Unknown"
         local class = playerInfo.class or UnitClass(NCInfo.CurrentPlayer) or "Unknown"
 
-        if NCDungeon:GetIdentifier() == "Unknown" then
-            f.header:SetText("Dungeon Stats / Info")
+        if NCDungeon:GetIdentifier() == "" then
+            f.header:SetText("Dungeon Info & Stats")
         else
-            f.header:SetText(NCDungeon:GetIdentifier() .. " +" .. NCDungeon:GetLevel())
+            if NCDungeon:GetLevel() == 0 then
+                f.header:SetText(NCDungeon:GetIdentifier())
+            else
+                f.header:SetText(NCDungeon:GetIdentifier() .. " +" .. NCDungeon:GetLevel())
+            end
         end
 
         -- Player information -- group roster race, class, and role
