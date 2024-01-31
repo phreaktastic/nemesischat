@@ -191,7 +191,8 @@ function NemesisChat:InstantiateEvent()
             return
         end
 
-        local isReplace = (GetTime() - NCRuntime:GetLastFeast() <= 20)
+        -- Feasts last 2 min, so a new feast within 2 min of the last one is a replacement. 100 sec should be reasonable here.
+        local isReplace = (GetTime() - NCRuntime:GetLastFeast() <= 100)
         NCRuntime:UpdateLastFeast()
 
         if isReplace then

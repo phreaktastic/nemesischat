@@ -223,6 +223,9 @@ NCInfo = {
             NCDungeon:Reset()
             NCDungeon:SetIdentifier(nil)
             NCDungeon:UpdateCache()
+            NemesisChat:InstantiateCore()
+            NemesisChat:SilentGroupSync()
+            NemesisChat:CheckGroup()
             NCInfo:Update()
         end)
         f.clearButton:SetScript("OnEnter", function(self)
@@ -416,12 +419,12 @@ NCInfo = {
                 local class = player.class or (mergedPlayer and mergedPlayer.class) or infoClass or "Unknown"
                 local rawClass = player.rawClass or (mergedPlayer and mergedPlayer.rawClass) or infoRawClass or "Unknown"
                 local role = player.role or (mergedPlayer and mergedPlayer.role) or UnitGroupRolesAssigned(name) or "OTHER"
-                local replacedRole = NCInfo.ROLE_REPLACEMENTS[role] or "OTHER"
+                local replacedRole = NCInfo.ROLE_REPLACEMENTS[role] or "Other"
                 local infoString = class .. " " .. replacedRole
                 local colorized = NCColors.ClassColor(rawClass, name .. " (" .. infoString .. ")")
 
                 if name == GetMyName() then
-                    colorized = NCColors.Emphasize(colorized)
+                    colorized = NCColors.Emphasize(name)
                 end
 
                 info.text = colorized
@@ -449,6 +452,11 @@ NCInfo = {
     end,
 
     ReportMetric = function(self, metric, player)
+        if player == GetMyName() then
+            SendChatMessage(string.format("My %s (Dungeon): %s", (self.METRIC_REPLACEMENTS[metric] or metric), NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric))), NemesisChat:GetActualChannel("GROUP"))
+            return
+        end
+
         local message = string.format("%s for %s (Dungeon): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
         if core.db.profile.infoClickCompare then
             local delta = NCDungeon:GetStats(player, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)
