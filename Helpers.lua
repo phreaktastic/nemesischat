@@ -327,6 +327,15 @@ function NemesisChat:InitializeHelpers()
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)
+
+            -- This needs to be handled in a more modular way
+            if misc2 == "Blessing of Freedom" and tContains(NCDungeon:GetKeystoneAffixes(), 134) then
+                if sourceName ~= destName then
+                    NCSegment:GlobalAddAffix(sourceName, 10)
+                else
+                    -- Currently not awarding any affix points for casting on self, esp when it's easy to spec into
+                end
+            end
         -- Spell start
         elseif subEvent == "SPELL_CAST_START" then
             NCEvent:SpellStart(sourceName, destName, misc1, misc2)
