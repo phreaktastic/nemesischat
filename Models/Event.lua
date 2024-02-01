@@ -199,7 +199,7 @@ function NemesisChat:InstantiateEvent()
             NCEvent:SetEvent("REFEAST")
         elseif feast == 1 then
             NCEvent:SetEvent("FEAST")
-        else 
+        else
             NCEvent:SetEvent("OLDFEAST")
         end
 
