@@ -44,6 +44,10 @@ core.runtimeDefaults = {
         -- different interactions with guild members, such as whispering them when they join a group.
         -- ["characterName"] = {"guid" = guid, "isNemesis" = true/false},
     },
+    lastSync = {
+        -- A simple cache for the last time we synced with a particular player, with their character names as the key.
+        -- ["CharacterName-Realm"] = 0,
+    },
     petOwners = {},
     ncEvent = {
         category = "",
