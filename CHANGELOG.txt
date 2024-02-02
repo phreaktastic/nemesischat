@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.18**: Patch for errors incurred when running a certain combination of addons.
 - **1.9.17**: Small patch for clarity in the UI panel and making sure BoF adds affix points when cast on allies to counter entangling.
 - **1.9.16**: Small patch for clearing the UI panel 🤏
 - **1.9.15**: 
