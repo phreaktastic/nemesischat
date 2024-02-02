@@ -451,10 +451,10 @@ core.configTree = {
         label = "Group",
         events = DeepCopy(core.events.group)
     },
-    -- ["GUILD"] = {
-    --     label = "Guild",
-    --     events = DeepCopy(core.events.guild)
-    -- },
+    ["GUILD"] = {
+        label = "Guild",
+        events = DeepCopy(core.events.guild)
+    },
     ["CHALLENGE"] = {
         label = "Mythic+ Dungeon",
         events = DeepCopy(core.events.segment)
