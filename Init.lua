@@ -756,3 +756,6 @@ end
 NCEvent = {}
 NCController = {}
 NCSpell = {}
+
+C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
+C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
