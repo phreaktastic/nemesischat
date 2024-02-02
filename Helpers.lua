@@ -137,9 +137,17 @@ function NemesisChat:InitializeHelpers()
 
         local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
 
-        if sender == myFullName then
+        if not NCRuntime.lastSync then
+            NCRuntime.lastSync = {}
+        end
+
+        if sender == myFullName or NCCombat:IsActive() or (NCRuntime.lastSync[sender] and GetTime() - NCRuntime.lastSync[sender] <= 300) then
             return
         end
+
+        NCRuntime.lastSync[sender] = GetTime()
+
+        NemesisChat:Print("Synchronizing data received from " .. sender)
 
         local decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
         if not decoded then return end
