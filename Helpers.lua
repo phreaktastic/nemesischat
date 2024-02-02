@@ -141,7 +141,8 @@ function NemesisChat:InitializeHelpers()
             NCRuntime.lastSync = {}
         end
 
-        if sender == myFullName or NCCombat:IsActive() or (NCRuntime.lastSync[sender] and GetTime() - NCRuntime.lastSync[sender] <= 300) then
+        -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
+        if sender == myFullName or NCCombat:IsActive() or (NCRuntime.lastSync[sender] and GetTime() - NCRuntime.lastSync[sender] <= 1800) then
             return
         end
 
