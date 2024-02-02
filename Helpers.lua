@@ -1400,5 +1400,3 @@ function NemesisChat:Initialize()
     NemesisChat:SetMyName()
     NCInfo:Initialize()
 end
-
-NemesisChat:Print("HELPERS LOADED")
