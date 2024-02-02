@@ -217,14 +217,14 @@ function NemesisChat:UNIT_SPELLCAST_SUCCEEDED(_, unitTarget, castGUID, spellID)
     end
 end
 
-function NemesisChat:UNIT_SPELLCAST_INTERRUPTED(_, unitTarget, castGUID, spellID)
-    local casterName = UnitName(unitTarget)
+function NemesisChat:UNIT_SPELLCAST_INTERRUPTED(_, unitId, spellName, rank, lineId, spellId)
+    local casterName = UnitName(unitId)
 
     if not core.affixMobsCastersLookup[casterName] then
         return
     end
 
-    local castInterruptedGuid = UnitGUID(unitTarget)
+    local castInterruptedGuid = UnitGUID(unitId)
     
     if NCConfig:IsReportingAffixes_CastFailed() and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
         SendChatMessage("Nemesis Chat: " .. casterName .. " cast interrupted, but not incapacitated/dead!", "YELL")

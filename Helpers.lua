@@ -1313,6 +1313,14 @@ function NemesisChat:InitializeHelpers()
         --     DEFAULT_CHAT_FRAME:AddMessage(message, c.r, c.g, c.b, c.id)
         -- end
     end
+
+    if not NemesisChat.guildCheckTimer then
+        NemesisChat.guildCheckTimer = C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
+    end
+    
+    if not NemesisChat.lowPriorityTimer then
+        NemesisChat.lowPriorityTimer = C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
+    end
 end
 
 -- Check combat log for application or dose of auras listed in core.affixMobsAuras
@@ -1400,3 +1408,5 @@ function NemesisChat:Initialize()
     NemesisChat:SetMyName()
     NCInfo:Initialize()
 end
+
+NemesisChat:Print("HELPERS LOADED")

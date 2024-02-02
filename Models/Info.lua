@@ -27,7 +27,7 @@ NCInfo = {
     TOTAL_WIDTH = 200,
     TOTAL_HEIGHT = 210,
     DROPDOWN_TOP = 0,
-    DROPDOWN_WIDTH = 128,
+    DROPDOWN_WIDTH = 144,
     DROPDOWN_LEFT = 0,
 
     METRIC_REPLACEMENTS = {
@@ -443,7 +443,7 @@ NCInfo = {
         self.SCROLLVIEW_HEIGHT = self.TOTAL_HEIGHT - self.HEADER_HEIGHT - self.HEADER_BUFFER - self.FOOTER_HEIGHT - self.FOOTER_BUFFER
         self.SCROLLVIEW_TOP = self.HEADER_HEIGHT + self.HEADER_BUFFER + (self.CELL_HEIGHT * 2)
         self.SCROLLVIEW_BOTTOM = self.FOOTER_HEIGHT + self.FOOTER_BUFFER
-        self.DROPDOWN_LEFT = (self.TOTAL_WIDTH - self.DROPDOWN_WIDTH) / 2 - (self.DROPDOWN_WIDTH / 4)
+        self.DROPDOWN_LEFT = (self.TOTAL_WIDTH - self.DROPDOWN_WIDTH) / 2 - (self.DROPDOWN_WIDTH / 5)
         self.DROPDOWN_TOP = self.SCROLLVIEW_TOP - 32
 
         if self.DROPDOWN_LEFT < 0 then
