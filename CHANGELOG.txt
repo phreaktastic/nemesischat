@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.22**: Likely the final optimization pass for the day.
 - **1.9.21**: Optimization for synchronization to prevent large influxes of memory usage and potential hitching. 
    - In general, memory usage will be far better moving forward as I will not be relying upon LUA garbage collection.
    - Optimizations are still in progress and memory usage will likely be reduced by ~60% overall. In the meantime, please know I take it seriously and apologize for inflated memory usage.

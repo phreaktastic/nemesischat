@@ -84,7 +84,7 @@ function NemesisChat:InitializeHelpers()
 
         -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
         if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and GetTime() - core.db.global.lastSync[sender] <= 1800) then
-            --return
+            return
         end
 
         core.db.global.lastSync[sender] = GetTime()
