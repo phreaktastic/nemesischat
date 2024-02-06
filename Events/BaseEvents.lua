@@ -168,7 +168,7 @@ end
 function NemesisChat:PLAYER_REGEN_DISABLED()
     NCEvent:Initialize()
     NCCombat:Reset("Combat Segment " .. GetTime(), true)
-    
+
     NCRuntime:ClearPlayerStates()
     NemesisChat:HandleEvent()
 end
@@ -194,6 +194,10 @@ function NemesisChat:CHAT_MSG_ADDON(_, prefix, payload, distribution, sender)
 end
 
 function NemesisChat:UNIT_SPELLCAST_START(_, unitTarget, castGUID, spellID)
+    if not IsInInstance() then
+        return
+    end
+
     local casterName = UnitName(unitTarget)
 
     if not core.affixMobsCastersLookup[casterName] then
@@ -206,6 +210,10 @@ function NemesisChat:UNIT_SPELLCAST_START(_, unitTarget, castGUID, spellID)
 end
 
 function NemesisChat:UNIT_SPELLCAST_SUCCEEDED(_, unitTarget, castGUID, spellID)
+    if not IsInInstance() then
+        return
+    end
+
     local casterName = UnitName(unitTarget)
 
     if not core.affixMobsCastersLookup[casterName] then
@@ -218,6 +226,10 @@ function NemesisChat:UNIT_SPELLCAST_SUCCEEDED(_, unitTarget, castGUID, spellID)
 end
 
 function NemesisChat:UNIT_SPELLCAST_INTERRUPTED(_, unitId, spellName, rank, lineId, spellId)
+    if not IsInInstance() then
+        return
+    end
+
     local casterName = UnitName(unitId)
 
     if not core.affixMobsCastersLookup[casterName] then
@@ -232,6 +244,10 @@ function NemesisChat:UNIT_SPELLCAST_INTERRUPTED(_, unitId, spellName, rank, line
 end
 
 function NemesisChat:PLAYER_TARGET_CHANGED(_, unitTarget)
+    if not IsInInstance() then
+        return
+    end
+
     local targetName = UnitName("target")
 
     if not targetName or not core.affixMobsCastersLookup[targetName] or UnitIsDead("player") or not core.db.profile.reportConfig["AFFIXES"]["MARKERS"] then
