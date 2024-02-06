@@ -11,9 +11,6 @@ local _, core = ...;
 -- Model for interacting with runtime data
 -----------------------------------------------------
 
--- Blizzard functions
-local GetTime = GetTime
-
 core.runtimeDefaults = {
     dbCacheExpiration = 600, -- 10 minutes
     myName = "",

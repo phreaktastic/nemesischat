@@ -143,36 +143,38 @@ function NemesisChat:CheckGuild()
         NemesisChat.guildRosterIndex = 1
     end
 
+    core.db.global.guildRow = {}
+
     local cursor = NemesisChat.guildRosterIndex
     local chunk = 10
     local maxIndex = math.min(totalGuildMembers, NemesisChat.guildRosterIndex + chunk)
 
     for i = cursor, maxIndex do
-        local name, _, _, _, _, _, _, _, isOnline, _, _, _, _, isMobile, _, _, guid = GetGuildRosterInfo(i)
-        local memberOnline = isOnline and not isMobile
+        core.db.global.guildRow.name, _, _, _, _, _, _, _, core.db.global.guildRow.isOnline, _, _, _, _, core.db.global.guildRow.isMobile, _, _, core.db.global.guildRow.guid = GetGuildRosterInfo(i)
+        core.db.global.guildRow.memberOnline = core.db.global.guildRow.isOnline and not core.db.global.guildRow.isMobile
 
         -- Strip realm name from name
-        name = Ambiguate(name, "guild")
+        core.db.global.guildRow.name = Ambiguate(core.db.global.guildRow.name, "guild")
 
-        local isNemesis = NCConfig:GetNemesis(name) ~= nil
+        core.db.global.guildRow.isNemesis = NCConfig:GetNemesis(core.db.global.guildRow.name) ~= nil
 
-        if core.runtime.guild[name] then
-            local changed = core.runtime.guild[name].online ~= memberOnline
+        if core.runtime.guild[core.db.global.guildRow.name] then
+            local changed = core.runtime.guild[core.db.global.guildRow.name].online ~= core.db.global.guildRow.memberOnline
 
             if changed then
-                core.runtime.guild[name].online = memberOnline
+                core.runtime.guild[core.db.global.guildRow.name].online = core.db.global.guildRow.memberOnline
             
-                if memberOnline then
-                    NemesisChat:GUILD_PLAYER_LOGIN(name, isNemesis)
+                if core.db.global.guildRow.memberOnline then
+                    NemesisChat:GUILD_PLAYER_LOGIN(core.db.global.guildRow.name, core.db.global.guildRow.isNemesis)
                 else
-                    NemesisChat:GUILD_PLAYER_LOGOUT(name, isNemesis)
+                    NemesisChat:GUILD_PLAYER_LOGOUT(core.db.global.guildRow.name, core.db.global.guildRow.isNemesis)
                 end
             end
         else
-            core.runtime.guild[name] = {
-                online = memberOnline,
-                isNemesis = isNemesis,
-                guid = guid
+            core.runtime.guild[core.db.global.guildRow.name] = {
+                online = core.db.global.guildRow.memberOnline,
+                isNemesis = core.db.global.guildRow.isNemesis,
+                guid = core.db.global.guildRow.guid
             }
         end
     end

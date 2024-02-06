@@ -10,8 +10,11 @@
 
 ## 🩹 Patches
 
-- **1.9.20**: More optimization for less memory & CPU usage
-- **1.9.19**: Optimizing data synchronization
+- **1.9.21**: Optimization for synchronization to prevent large influxes of memory usage and potential hitching. 
+   - In general, memory usage will be far better moving forward as I will not be relying upon LUA garbage collection.
+   - Optimizations are still in progress and memory usage will likely be reduced by ~60% overall. In the meantime, please know I take it seriously and apologize for inflated memory usage.
+- **1.9.20**: More optimization for less memory & CPU usage.
+- **1.9.19**: Optimizing data synchronization.
 - **1.9.18**: Patch for errors incurred when running a certain combination of addons.
 - **1.9.17**: Small patch for clarity in the UI panel and making sure BoF adds affix points when cast on allies to counter entangling.
 - **1.9.16**: Small patch for clearing the UI panel 🤏

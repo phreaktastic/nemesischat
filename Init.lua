@@ -45,7 +45,9 @@ function ArrayMerge(...)
 
     for _, t in pairs(tables) do
         for _, val in pairs(t) do
-            table.insert(returnTable, val)
+            if not tContains(returnTable, val) then
+                table.insert(returnTable, val)
+            end
         end
     end
 
