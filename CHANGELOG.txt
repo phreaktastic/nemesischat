@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.20**: More optimization for less memory & CPU usage
 - **1.9.19**: Optimizing data synchronization
 - **1.9.18**: Patch for errors incurred when running a certain combination of addons.
 - **1.9.17**: Small patch for clarity in the UI panel and making sure BoF adds affix points when cast on allies to counter entangling.

@@ -137,18 +137,18 @@ function NemesisChat:InitializeHelpers()
 
         local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
 
-        if not NCRuntime.lastSync then
-            NCRuntime.lastSync = {}
+        if not core.db.global.lastSync then
+            core.db.global.lastSync = {}
         end
 
         -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
-        if sender == myFullName or NCCombat:IsActive() or (NCRuntime.lastSync[sender] and GetTime() - NCRuntime.lastSync[sender] <= 1800) then
+        if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and GetTime() - core.db.global.lastSync[sender] <= 1800) then
             return
         end
 
-        NCRuntime.lastSync[sender] = GetTime()
+        core.db.global.lastSync[sender] = GetTime()
 
-        NemesisChat:Print("Synchronizing data received from " .. sender)
+        NemesisChat:Print("Synchronizing data received from " .. Ambiguate(sender, "guild"))
 
         local decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
         if not decoded then return end
@@ -304,6 +304,10 @@ function NemesisChat:InitializeHelpers()
 
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
+        if not IsInInstance() then
+            return
+        end
+
         local _, subEvent, eventType, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _ = CombatLogGetCurrentEventInfo()
         local isPull, _, pullPlayerName, mobName = NemesisChat:IsPull()
 
@@ -746,10 +750,22 @@ function NemesisChat:InitializeHelpers()
 
     -- Check the roster and (un/re)subscribe events appropriately
     function NemesisChat:CheckGroup()
-        local count = NCRuntime:GetGroupRosterCountOthers()
+        local shouldSubscribe = NCRuntime:GetGroupRosterCountOthers() > 0
+
+        if NCRuntime.lastCheckSubscribe == shouldSubscribe then
+            return
+        end
+
+        NCRuntime.lastCheckSubscribe = shouldSubscribe
+
+        if shouldSubscribe and IsNCEnabled() then
+            NemesisChat:Print("Group state changed, re-subscribing to group based events.")
+        else
+            NemesisChat:Print("Group state changed, un-subscribing from group based events.")
+        end
 
         for _, event in pairs(core.eventSubscriptions) do
-            if count > 0 and IsNCEnabled() then
+            if shouldSubscribe and IsNCEnabled() then
                 NemesisChat:RegisterEvent(event)
             else
                 NemesisChat:UnregisterEvent(event)
