@@ -11,25 +11,6 @@ local _, core = ...;
 -- Event getters, setters, and helper methods
 -----------------------------------------------------
 
-local UnitIsUnconscious = UnitIsUnconscious
-local CombatLogGetCurrentEventInfo =  CombatLogGetCurrentEventInfo
-local UnitThreatSituation = UnitThreatSituation
-local IsInGroup = IsInGroup
-local IsInInstance = IsInInstance
-local UnitInParty = UnitInParty
-local UnitGroupRolesAssigned = UnitGroupRolesAssigned
-local UnitClassification = UnitClassification
-local UnitName = UnitName
-local UnitHealth = UnitHealth
-local UnitHealthMax = UnitHealthMax
-local UnitPower = UnitPower
-local UnitPowerMax = UnitPowerMax
-local UnitPowerType = UnitPowerType
-local GetTime = GetTime
-local SendChatMessage = SendChatMessage
-local IsInGroup = IsInGroup
-local IsInRaid = IsInRaid
-
 function NemesisChat:InstantiateEvent()
     function NCEvent:Initialize()
         NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)

@@ -11,9 +11,6 @@ local _, core = ...;
 -- Model for interacting with user config
 -----------------------------------------------------
 
--- Blizzard functions
-local GetTime = GetTime
-
 NCConfig = {
     IsEnabled = function(self)
         return core.db.profile.enabled
