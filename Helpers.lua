@@ -100,11 +100,16 @@ function NemesisChat:InitializeHelpers()
         core.runtime.sync.success, core.runtime.sync.data = LibSerialize:Deserialize(core.runtime.sync.decompressed)
         if not core.runtime.sync.success then return end
 
+        core.runtime.sync.decoded = ""
+        core.runtime.sync.decompressed = ""
+
         if prefix == "NC_LEAVERS" then
             NemesisChat:ProcessLeavers(core.runtime.sync.data)
         elseif prefix == "NC_LOWPERFORMERS" then
             NemesisChat:ProcessLowPerformers(core.runtime.sync.data)
         end
+
+        core.runtime.sync.data = {}
     end
 
     function NemesisChat:ProcessLeavers(leavers)
@@ -131,9 +136,22 @@ function NemesisChat:InitializeHelpers()
             if core.db.profile[configKey][key] == nil then
                 core.db.profile[configKey][key] = val
             else
-                core.db.profile[configKey][key] = ArrayMerge(core.db.profile[configKey][key], val)
+                core.runtime.sync.combinedRow = ArrayMerge(core.db.profile[configKey][key], val)
+                core.db.profile[configKey][key] = core.runtime.sync.combinedRow
             end
         end
+
+        core.runtime.sync.combinedRow = {}
+
+        NemesisChat:Print("Synchronized", count, "rows of data.")
+    end
+
+    function NemesisChat:PrintNumberOfLeavers()
+        NemesisChat:Print("Leavers:", #core.db.profile.leavers)
+    end
+
+    function NemesisChat:PrintNumberOfLowPerformers()
+        NemesisChat:Print("Leavers:", #core.db.profile.lowPerformers)
     end
 
     function NemesisChat:RegisterPrefixes()
