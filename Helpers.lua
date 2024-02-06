@@ -84,7 +84,7 @@ function NemesisChat:InitializeHelpers()
 
         -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
         if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and GetTime() - core.db.global.lastSync[sender] <= 1800) then
-            return
+            --return
         end
 
         core.db.global.lastSync[sender] = GetTime()
@@ -100,8 +100,9 @@ function NemesisChat:InitializeHelpers()
         core.runtime.sync.success, core.runtime.sync.data = LibSerialize:Deserialize(core.runtime.sync.decompressed)
         if not core.runtime.sync.success then return end
 
-        core.runtime.sync.decoded = ""
-        core.runtime.sync.decompressed = ""
+        payload = nil
+        core.runtime.sync.decoded = nil
+        core.runtime.sync.decompressed = nil
 
         if prefix == "NC_LEAVERS" then
             NemesisChat:ProcessLeavers(core.runtime.sync.data)
@@ -109,15 +110,23 @@ function NemesisChat:InitializeHelpers()
             NemesisChat:ProcessLowPerformers(core.runtime.sync.data)
         end
 
-        core.runtime.sync.data = {}
+        core.runtime.sync.data = nil
     end
 
     function NemesisChat:ProcessLeavers(leavers)
+        NemesisChat:Print("Processing leavers.")
+
         NemesisChat:ProcessReceivedData("leavers", leavers)
+
+        leavers = nil
     end
 
     function NemesisChat:ProcessLowPerformers(lowPerformers)
+        NemesisChat:Print("Processing low performers.")
+
         NemesisChat:ProcessReceivedData("lowPerformers", lowPerformers)
+
+        lowPerformers = nil
     end
 
     function NemesisChat:ProcessReceivedData(configKey, data)
@@ -142,16 +151,32 @@ function NemesisChat:InitializeHelpers()
         end
 
         core.runtime.sync.combinedRow = {}
-
-        NemesisChat:Print("Synchronized", count, "rows of data.")
     end
 
     function NemesisChat:PrintNumberOfLeavers()
-        NemesisChat:Print("Leavers:", #core.db.profile.leavers)
+        NemesisChat:Print("Leavers:", #NemesisChat:GetKeys(core.db.profile.leavers))
     end
 
     function NemesisChat:PrintNumberOfLowPerformers()
-        NemesisChat:Print("Leavers:", #core.db.profile.lowPerformers)
+        NemesisChat:Print("Low Performers:", #NemesisChat:GetKeys(core.db.profile.lowPerformers))
+    end
+
+    function NemesisChat:PrintSyncKeys()
+        NemesisChat:Print("LEAVER KEYS")
+
+        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.leavers))
+
+        for key,val in pairs(core.db.profile.leavers) do
+            NemesisChat:Print(key, ":", #val)
+        end
+
+        NemesisChat:Print("LOW PERFORMER KEYS")
+
+        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.lowPerformers))
+
+        for key,val in pairs(core.db.profile.lowPerformers) do
+            NemesisChat:Print(key, ":", #val)
+        end
     end
 
     function NemesisChat:RegisterPrefixes()
@@ -187,12 +212,17 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:EncodeLeavers()
+        if not core.db.profile.leavers or core.db.profile.leavers == {} then
+            core.db.profile.leaversEncoded = nil
+            return
+        end
+
         core.db.profile.leaversSerialized = LibSerialize:Serialize(core.db.profile.leavers)
         core.db.profile.leaversCompressed = LibDeflate:CompressDeflate(core.db.profile.leaversSerialized)
         core.db.profile.leaversEncoded = LibDeflate:EncodeForWoWAddonChannel(core.db.profile.leaversCompressed)
 
-        core.db.profile.leaversSerialized = ""
-        core.db.profile.leaversCompressed = ""
+        core.db.profile.leaversSerialized = nil
+        core.db.profile.leaversCompressed = nil
     end
 
     function NemesisChat:AddLowPerformer(guid)
@@ -210,12 +240,17 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:EncodeLowPerformers()
+        if not core.db.profile.lowPerformers or core.db.profile.lowPerformers == {} then
+            core.db.profile.lowPerformersEncoded = nil
+            return
+        end
+
         core.db.profile.lowPerformersSerialized = LibSerialize:Serialize(core.db.profile.lowPerformers)
         core.db.profile.lowPerformersCompressed = LibDeflate:CompressDeflate(core.db.profile.lowPerformersSerialized)
         core.db.profile.lowPerformersEncoded = LibDeflate:EncodeForWoWAddonChannel(core.db.profile.lowPerformersCompressed)
 
-        core.db.profile.lowPerformersSerialized = ""
-        core.db.profile.lowPerformersCompressed = ""
+        core.db.profile.lowPerformersSerialized = nil
+        core.db.profile.lowPerformersCompressed = nil
     end
 
     function NemesisChat:EncodeAddonMessageData()
