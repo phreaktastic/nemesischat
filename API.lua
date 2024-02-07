@@ -119,6 +119,14 @@ function NemesisChatAPI:AddAPI(name, friendlyName)
         end
     end
 
+    core.apis[name].Enable = function(self)
+        for _, configOption in pairs(core.apis[name].configOptions) do
+            if configOption.primary then
+                core.db.profile.API[name .. "_" .. configOption.value] = true
+            end
+        end
+    end
+
     core.apis[name].GetOption = function(self, optionName)
         return core.db.profile.API[name .. "_" .. optionName]
     end
