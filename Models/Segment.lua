@@ -89,6 +89,8 @@ NCSegment = {
 
     DetailsSegment = DETAILS_SEGMENTID_CURRENT,
 
+    IsSegment = true,
+
     StartPreHook = function(self)
         -- Override me
     end,
@@ -744,6 +746,7 @@ NCSegment = {
 
         self.Identifier = identifier
         self.Rankings = NCRankings:New(self)
+        self.IsSegment = true
 
         self:ResetCallback(optIdentifier, optStart)
 
@@ -766,6 +769,8 @@ NCSegment = {
                 self[k] = v
             end
         end
+        
+        self.IsSegment = true
     end,
 }
 
