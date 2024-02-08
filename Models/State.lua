@@ -17,12 +17,14 @@ core.stateDefaults = {
         isGuildmate = false,
         isFriend = false,
         isNemesis = false,
+        isTank = false,
+        isHealer = false,
+        isLead = false,
         role = "",
         itemLevel = 0,
         race = "",
         class = "",
         rawClass = "",
-        groupLead = false,
         health = 0,
         maxHealth = 0,
         power = 0,
@@ -52,17 +54,19 @@ core.stateDefaults = {
         lead = "",
         tank = "",
         healer = "",
-
     },
+    guild = {},
     dungeon = {},
     boss = {},
-    guild = {},
 }
 
 NCState = DeepCopy(core.stateDefaults)
 
 function NCState:Reset()
-    NCState = DeepCopy(core.stateDefaults)
+    -- We don't want to alter state functions, just the data
+    for k, v in pairs(core.stateDefaults) do
+        NCState[k] = DeepCopy(v)
+    end
 end
 
 function NCState:ClearGroup()
@@ -82,12 +86,14 @@ function NCState:AddPlayerToGroup(playerName)
         isGuildmate = isInGuild,
         isFriend = NCRuntime:IsFriend(playerName),
         isNemesis = isNemesis,
+        isTank = UnitGroupRolesAssigned(playerName) == "TANK",
+        isHealer = UnitGroupRolesAssigned(playerName) == "HEALER",
         role = UnitGroupRolesAssigned(playerName),
         itemLevel = itemLevel,
         race = UnitRace(playerName),
         class = class,
         rawClass = rawClass,
-        groupLead = groupLead,
+        isLead = groupLead,
         health = UnitHealth(playerName),
         maxHealth = UnitHealthMax(playerName),
         power = UnitPower(playerName),
@@ -142,5 +148,204 @@ function NCState:RemovePlayerFromGroup(playerName)
 end
 
 function NCState:CacheGroup()
-    core.db.profile.cache.groupRoster = NCState.group.players
+    NCCache:Push(NC_CACHE_KEY_GROUP, NCState.group)
+end
+
+function NCState:RestoreGroup()
+    local group = NCCache:Pull(NC_CACHE_KEY_GROUP)
+
+    if group then
+        NCState.group = group
+    end
+end
+
+function NCState:UpdatePlayerHealth(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.health = UnitHealth(playerName)
+        player.maxHealth = UnitHealthMax(playerName)
+    end
+end
+
+function NCState:UpdatePlayerPower(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.power = UnitPower(playerName)
+        player.maxPower = UnitPowerMax(playerName)
+    end
+end
+
+function NCState:UpdatePlayerCombat(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.combat = UnitAffectingCombat(playerName)
+    end
+end
+
+function NCState:UpdatePlayerDead(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.dead = UnitIsDeadOrGhost(playerName)
+    end
+end
+
+function NCState:UpdatePlayerRole(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.role = UnitGroupRolesAssigned(playerName)
+    end
+end
+
+function NCState:UpdateAllPlayerRoles()
+    for playerName, player in pairs(NCState.group.players) do
+        player.role = UnitGroupRolesAssigned(playerName)
+        player.isLead = UnitIsGroupLeader(playerName) ~= nil
+        player.isTank = player.role == "TANK"
+        player.isHealer = player.role == "HEALER"
+    end
+end
+
+function NCState:UpdatePlayerItemLevel(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.itemLevel = NemesisChat:GetItemLevel(playerName)
+    end
+end
+
+function NCState:UpdatePlayerLastHeal(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.lastHeal = GetTime()
+    end
+end
+
+function NCState:UpdatePlayerLastDamage(playerName, spellId)
+    local player = NCState.group.players[playerName]
+    local isAvoidable = (GTFO and GTFO.SpellID[tostring(spellId)] ~= nil)
+
+    if player then
+        player.lastDamage = GetTime()
+        player.lastDamageAvoidable = isAvoidable
+    end
+end
+
+function NCState:UpdatePlayerLastSpellReceived(playerName, spellId, spellName, damage)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.lastSpellReceived = {
+            spellId = spellId,
+            spellName = spellName,
+            damage = damage,
+        }
+    end
+end
+
+function NCState:UpdatePlayerLastSpellCast(playerName, spellId, spellName, damage)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.lastSpellCast = {
+            spellId = spellId,
+            spellName = spellName,
+            damage = damage,
+        }
+    end
+end
+
+function NCState:GetPlayerState(playerName)
+    return NCState.group.players[playerName]
+end
+
+function NCState:GetGroupState()
+    return NCState.group
+end
+
+function NCState:GetGroupSizeOthers()
+    return NCState.group.size - 1
+end
+
+function NCState:GetGroupSize()
+    return NCState.group.size
+end
+
+function NCState:GetGroupLead()
+    return NCState.group.lead
+end
+
+function NCState:GetGroupTank()
+    return NCState.group.tank
+end
+
+function NCState:GetGroupHealer()
+    return NCState.group.healer
+end
+
+function NCState:GetGroupPlayers()
+    return NCState.group.players
+end
+
+function NCState:GetGroupPlayerNames()
+    local players = {}
+
+    for playerName, _ in pairs(NCState.group.players) do
+        table.insert(players, playerName)
+    end
+
+    return players
+end
+
+function NCState:GetGroupNemeses()
+    local nemeses = {}
+
+    for playerName, player in pairs(NCState.group.players) do
+        if player.isNemesis then
+            table.insert(nemeses, playerName)
+        end
+    end
+
+    return nemeses
+end
+
+function NCState:GetGroupGuildmates()
+    local guildmates = {}
+
+    for playerName, player in pairs(NCState.group.players) do
+        if player.isGuildmate then
+            table.insert(guildmates, playerName)
+        end
+    end
+
+    return guildmates
+end
+
+function NCState:GetGroupFriends()
+    local friends = {}
+
+    for playerName, player in pairs(NCState.group.players) do
+        if player.isFriend then
+            table.insert(friends, playerName)
+        end
+    end
+
+    return friends
+end
+
+function NCState:GetGroupBystanders()
+    local bystanders = {}
+
+    for playerName, player in pairs(NCState.group.players) do
+        if not player.isNemesis then
+            table.insert(bystanders, playerName)
+        end
+    end
+
+    return bystanders
 end
