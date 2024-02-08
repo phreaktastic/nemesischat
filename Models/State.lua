@@ -81,8 +81,40 @@ core.stateDefaults = {
 
 NCState = DeepCopy(core.stateDefaults)
 
-NCState.GuildChecker = C_Timer.NewTicker(0.1, function() NCState:CheckGuild() end)
-NCState.LowerPriorityChecker = C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
+NCState.HighPriorityTimer = C_Timer.NewTicker(0.1, function() NCState:HighPriorityTasks() end)
+NCState.MediumPriorityTimer = C_Timer.NewTicker(0.5, function() NCState:MediumPriorityTasks() end)
+-- NCState.LowPriorityTimer = C_Timer.NewTicker(1, function() NCState:LowPriorityTasks() end)
+NCState.NoPriorityTimer = C_Timer.NewTicker(5, function() NCState:NoPriorityTasks() end)
+
+-- 5 second timer
+function NCState:NoPriorityTasks()
+    if not IsInGroup() then
+        return
+    end
+
+    NCState:AttemptSyncItemLevels()
+end
+
+-- 1 second timer
+function NCState:LowPriorityTasks()
+    if not IsInGroup() then
+        return
+    end
+end
+
+-- 0.5 second timer
+function NCState:MediumPriorityTasks()
+    if not IsInGroup() then
+        return
+    end
+
+    NCState:UpdateAllPlayersAlive()
+end
+
+-- 0.1 second timer
+function NCState:HighPriorityTasks()
+    NCState:CheckGuild()
+end
 
 function NCState:Reset()
     -- We don't want to alter state functions, just the data
@@ -231,6 +263,24 @@ function NCState:UpdateAllPlayerRoles()
         player.isTank = player.role == "TANK"
         player.isHealer = player.role == "HEALER"
     end
+end
+
+function NCState:UpdateAllPlayersAlive()
+    if NCState.group.allAlive or not IsInGroup() then
+        return
+    end
+
+    local allAlive = true
+
+    for playerName, _ in pairs(NCState.group.players) do
+        if UnitIsDeadOrGhost(playerName) then
+            allAlive = false
+            break
+        end
+    end
+
+    NCState.group.allAlive = allAlive
+
 end
 
 function NCState:UpdatePlayerItemLevel(playerName)
