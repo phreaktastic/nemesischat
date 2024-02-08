@@ -265,66 +265,6 @@ function NemesisChat:InitializeHelpers()
         return NCConfig:GetNemeses()
     end
 
-    function NemesisChat:GetRandomNemesis()
-        return NemesisChat:GetRandomKey(NemesisChat:GetNemeses())
-    end
-
-    function NemesisChat:GetNonExcludedNemesis()
-        local nemeses
-
-        if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
-            nemeses = NemesisChat:GetPartyNemeses()
-        else
-            nemeses = NemesisChat:GetGuildNemeses()
-        end
-
-        for player, _ in pairs(nemeses) do
-            if not tContains(NCController.excludedNemeses, player) then
-                return player
-            end
-        end
-
-        return nil
-    end
-
-    function NemesisChat:GetNonExcludedBystander()
-        local bystanders
-
-        if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
-            bystanders = NemesisChat:GetPartyBystanders()
-        else
-            bystanders = NemesisChat:GetGuildBystanders()
-        end
-
-        for player, _ in pairs(bystanders) do
-            if not tContains(NCController.excludedBystanders, player) then
-                return player
-            end
-        end
-
-        return nil
-    end
-
-    function NemesisChat:GetRandomPartyNemesis()
-        local partyNemeses = NemesisChat:GetPartyNemeses()
-
-        if not partyNemeses then 
-            return nil
-        end
-
-        return partyNemeses[NemesisChat:GetRandomKey(partyNemeses)]
-    end
-
-    function NemesisChat:GetRandomGuildNemesis()
-        local guildNemeses = NemesisChat:GetGuildNemeses()
-
-        if not guildNemeses then
-            return nil
-        end
-
-        return guildNemeses[NemesisChat:GetRandomKey(guildNemeses)]
-    end
-
     function NemesisChat:GetRandomPartyBystander()
         local partyBystanders = NemesisChat:GetPartyBystanders()
 

@@ -599,7 +599,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (Split(NCEvent:GetNemesis(), "-")[1] or "") end,
         description = "The Nemesis's name.",
         isNumeric = false,
-        example = function() return NemesisChat:GetRandomPartyNemesis() or NemesisChat:GetRandomGuildNemesis() or "YoloSwagNoScope" end,
+        example = function() return NCState:GetRandomGroupNemesis() or NCState:GetRandomGuildNemesis() or "YoloSwagNoScope" end,
     })
     :AddReplacement({
         label = "Nemesis Role",
@@ -722,7 +722,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:FormatNumber(UnitHealth(NCEvent:GetNemesis())) or 0 end,
         description = "The current health of the Nemesis.",
         isNumeric = true,
-        example = function() return NemesisChat:FormatNumber(UnitHealth(NemesisChat:GetRandomPartyNemesis() or NemesisChat:GetRandomGuildNemesis()) or math.random(1, 1305725)) end,
+        example = function() return NemesisChat:FormatNumber(UnitHealth(NCState:GetRandomGroupNemesis() or NCState:GetRandomGuildNemesis()) or math.random(1, 1305725)) end,
     })
     :AddReplacement({
         label = "Nemesis Max Health",
@@ -730,7 +730,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:FormatNumber(UnitHealthMax(NCEvent:GetNemesis())) or 0 end,
         description = "The maximum health of the Nemesis.",
         isNumeric = true,
-        example = function() return NemesisChat:FormatNumber(UnitHealthMax(NemesisChat:GetRandomPartyNemesis() or NemesisChat:GetRandomGuildNemesis()) or math.random(642765, 1305725)) end,
+        example = function() return NemesisChat:FormatNumber(UnitHealthMax(NCState:GetRandomGroupNemesis() or NCState:GetRandomGuildNemesis()) or math.random(642765, 1305725)) end,
     })
     :AddReplacement({
         label = "Nemesis Health %",

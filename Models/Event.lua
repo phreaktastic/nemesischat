@@ -89,7 +89,7 @@ function NemesisChat:InstantiateEvent()
 
     -- Set the event's nemesis to a random nemesis in the guild
     function NCEvent:RandomGuildNemesis()
-        local nemesis = NemesisChat:GetRandomGuildNemesis()
+        local nemesis = NCState:GetRandomGroupNemesis()
 
         if nemesis ~= nil and nemesis ~= "" then
             NCEvent.nemesis = nemesis
