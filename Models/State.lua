@@ -77,10 +77,26 @@ core.stateDefaults = {
         healer = "",
         allAlive = true,
     },
-    guild = {},
-    friends = {},
-    dungeon = {},
-    boss = {},
+    guild = {
+        -- [playerName] = { isOnline, isNemesis, guid }
+    },
+    friends = {
+        -- Array of player names
+    },
+    dungeon = {
+        -- name,
+        -- level,
+        -- difficulty,
+        -- timer,
+        -- time,
+    },
+    boss = {
+        -- name,
+        -- health,
+        -- maxHealth,
+        -- power,
+        -- maxPower,
+    },
 }
 
 NCState = DeepCopy(core.stateDefaults)
@@ -451,6 +467,12 @@ function NCState:GetGroupNemeses()
     return nemeses
 end
 
+function NCState:GetGroupNemesesCount()
+    local nemeses = NCState:GetGroupNemeses()
+
+    return #nemeses
+end
+
 function NCState:GetGuildNemeses()
     local nemeses = {}
 
@@ -461,6 +483,16 @@ function NCState:GetGuildNemeses()
     end
 
     return nemeses
+end
+
+function NCState:GetGuildNemesesCount()
+    local nemeses = NCState:GetGuildNemeses()
+
+    return #nemeses
+end
+
+function NCState:HasGroupNemeses()
+    return NCState:GetGroupNemesesCount() > 0
 end
 
 function NCState:GetRandomGroupNemesis()
@@ -525,6 +557,16 @@ function NCState:GetGroupFriends()
     return friends
 end
 
+function NCState:GetGroupFriendsCount()
+    local friends = NCState:GetGroupFriends()
+
+    return #friends
+end
+
+function NCState:HasGroupFriends()
+    return NCState:GetGroupFriendsCount() > 0
+end
+
 function NCState:GetGroupBystanders()
     local bystanders = {}
 
@@ -537,6 +579,16 @@ function NCState:GetGroupBystanders()
     return bystanders
 end
 
+function NCState:GetGroupBystandersCount()
+    local bystanders = NCState:GetGroupBystanders()
+
+    return #bystanders
+end
+
+function NCState:HasGroupBystanders()
+    return NCState:GetGroupBystandersCount() > 0
+end
+
 function NCState:GetGuildBystanders()
     local bystanders = {}
 
@@ -547,7 +599,16 @@ function NCState:GetGuildBystanders()
     end
 
     return bystanders
+end
 
+function NCState:GetGuildBystandersCount()
+    local bystanders = NCState:GetGuildBystanders()
+
+    return #bystanders
+end
+
+function NCState:HasGuildBystanders()
+    return NCState:GetGuildBystandersCount() > 0
 end
 
 function NCState:GetRandomGroupBystander()

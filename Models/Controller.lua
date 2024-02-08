@@ -312,10 +312,10 @@ function NemesisChat:InstantiateController()
         end
 
         -- Keep rolling through Nemeses to see if one matches conditions
-        if #returnMessages == 0 and NCEvent:GetTarget() ~= "NEMESIS" and NemesisChat:GetPartyNemesesCount() > 1 then
+        if #returnMessages == 0 and NCEvent:GetTarget() ~= "NEMESIS" and NCState:GetGroupNemesesCount() > 1 then
             table.insert(NCController.excludedNemeses, NCEvent:GetNemesis())
 
-            local newNemesis = NemesisChat:GetNonExcludedNemesis()
+            local newNemesis = NCState:GetNonExcludedNemesis()
 
             if newNemesis ~= nil then
                 NCEvent:SetNemesis(newNemesis)
@@ -325,10 +325,10 @@ function NemesisChat:InstantiateController()
         end
 
         -- Keep rolling through Bystanders to see if one matches conditions
-        if #returnMessages == 0 and NCEvent:GetTarget() ~= "BYSTANDER" and NemesisChat:GetPartyBystandersCount() > 1 then
+        if #returnMessages == 0 and NCEvent:GetTarget() ~= "BYSTANDER" and NCState:GetGroupBystandersCount() > 1 then
             table.insert(NCController.excludedBystanders, NCEvent:GetBystander())
 
-            local newBystander = NemesisChat:GetNonExcludedBystander()
+            local newBystander = NCState:GetNonExcludedBystander()
 
             if newBystander ~= nil then
                 NCEvent:SetBystander(newBystander)
@@ -344,11 +344,11 @@ function NemesisChat:InstantiateController()
         local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_NEMESIS" and (NCEvent:GetTarget() == "SELF" or NCEvent:GetTarget() == "NA"))
         local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_BYSTANDER" and (NCEvent:GetTarget() == "SELF" or NCEvent:GetTarget() == "NA"))
 
-        if includesNemesis and not NemesisChat:HasPartyNemeses() then
+        if includesNemesis and not NCState:HasGroupNemeses() then
             return false
         end
 
-        if includesBystander and not NemesisChat:HasPartyBystanders() then
+        if includesBystander and not NCState:HasGroupBystanders() then
             return false
         end
 
