@@ -17,7 +17,7 @@ local _, core = ...;
 NCCache = {}
 
 function NCCache:Push(key, data)
-    local isSegment = data.IsSegment and data.IsSegment or false
+    local isSegment = data.IsSegment or false
 
     if not core.db.profile.cache then core.db.profile.cache = {} end
 
@@ -39,12 +39,36 @@ function NCCache:Pull(key)
     return core.db.profile.cache[key]
 end
 
-function NCCache:RestoreSegment(key, data)
+function NCCache:RestoreSegment(key)
+    local model = self:GetSegmentFromKey(key)
+
+    if not model then
+        NemesisChat:Print("No segment found for key:", key)
+        return
+    end
+
     if not core.db.profile.cache then core.db.profile.cache = {} end
 
     if core.db.profile.cache[key] and core.db.profile.cache[key].Restore then
-        core.db.profile.cache[key].Restore(data)
-    else
-        core.db.profile.cache[key] = NCSegment:New(data:GetIdentifier())
+        model:Restore(core.db.profile.cache[key])
+        return
     end
+
+    NemesisChat:Print("Attempted restore on key that is not a segment. Key:", key)
+end
+
+function NCCache:Clear(key)
+    if not core.db.profile.cache then core.db.profile.cache = {} end
+
+    core.db.profile.cache[key] = nil
+end
+
+function NCCache:GetSegmentFromKey(key)
+    if key == NC_CACHE_KEY_BOSS then
+        return NCBoss
+    elseif key == NC_CACHE_KEY_DUNGEON then
+        return NCDungeon
+    end
+
+    return nil
 end
