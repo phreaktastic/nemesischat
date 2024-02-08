@@ -184,7 +184,7 @@ function NemesisChat:InstantiateEvent()
             NCEvent:SetEvent("OLDFEAST")
         end
 
-        NCSpell:Feast(source, spellId)
+        NCSpell:Feast(source, spellId, spellName)
     end
 
     -- Begin spellcasting 
@@ -205,6 +205,9 @@ function NemesisChat:InstantiateEvent()
         NemesisChat:SetLastHealPlayerState(source, dest)
 
         NCSpell:Spell(source, dest, spellId, spellName)
+
+        NCState:UpdatePlayerLastHealCast(source, dest, spellId, spellName, healAmount)
+        NCState:UpdatePlayerLastHealReceived(dest, spellId, spellName, healAmount)
     end
 
     -- Set the Category, Event, and Target for a group enemy kill event
@@ -223,6 +226,8 @@ function NemesisChat:InstantiateEvent()
         if NCBoss:IsActive() then
             NCEvent:SetCategory("BOSS")
         end
+
+        NCState:UpdatePlayerDead(dest)
     end
 
     -- Same as above, but the death was due to avoidable damage

@@ -411,6 +411,8 @@ function NemesisChat:InitializeHelpers()
 
             if isAvoidable then
                 NCSegment:GlobalAddAvoidableDamage(damage, destName)
+            else
+                NCSegment:GlobalAddDamage(damage, destName)
             end
 
             if state then
@@ -702,14 +704,14 @@ function NemesisChat:InitializeHelpers()
 
     -- Check if all players within the group are dead
     function NemesisChat:IsWipe()
-        if not UnitIsDead("player") then 
+        if not UnitIsDead("player") then
             return false
         end
 
         local players = NemesisChat:GetPlayersInGroup()
-        
+
         for key,val in pairs(players) do
-            if not UnitIsDead(val) then 
+            if not UnitIsDead(val) then
                 return false
             end
         end
@@ -1312,42 +1314,6 @@ function NemesisChat:InitializeHelpers()
         if isAuraHandled then
             NCSegment:GlobalAddAffix(auraHandlerName)
         end
-    end
-
-    function NemesisChat:SilentGroupSync()
-        if not IsInGroup() then
-            return
-        end
-
-        NCRuntime:ClearGroupRoster()
-
-        local members = NemesisChat:GetPlayersInGroup()
-
-        for key,val in pairs(members) do
-            if val ~= nil and val ~= GetMyName() then
-                NCRuntime:AddGroupRosterPlayer(val)
-            end
-        end
-    end
-
-    function NemesisChat:AttemptSyncItemLevels()
-        if not IsInGroup() then
-            return
-        end
-
-        for key,val in pairs(NCRuntime:GetGroupRoster()) do
-            if val ~= nil and val.itemLevel == nil then
-                local itemLevel = NemesisChat:GetItemLevel(key)
-
-                if itemLevel ~= nil then
-                    val.itemLevel = itemLevel
-                end
-            end
-        end
-    end
-
-    function NemesisChat:LowPriorityTimer()
-        NemesisChat:AttemptSyncItemLevels()
     end
 
     function NemesisChat:Print(...)

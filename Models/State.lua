@@ -32,18 +32,35 @@ core.stateDefaults = {
         powerType = 0,
         combat = false,
         dead = false,
-        lastHeal = 0,
-        lastDamage = 0,
-        lastDamageAvoidable = false,
-        lastSpellReceived = {
+        lastHealCast = {
+            -- spellId,
+            -- spellName,
+            -- amount,
+            -- target,
+        },
+        lastHealReceived = {
+            -- spellId,
+            -- spellName,
+            -- amount,
+        },
+        lastDamageReceived = {
+            -- spellId,
+            -- spellName,
+            -- damage,
+            -- avoidable,
+        },
+        lastDamageDealt = {
             -- spellId,
             -- spellName,
             -- damage,
         },
+        lastSpellReceived = {
+            -- spellId,
+            -- spellName,
+        },
         lastSpellCast = {
             -- spellId,
             -- spellName,
-            -- damage,
         },
     },
     group = {
@@ -54,6 +71,7 @@ core.stateDefaults = {
         lead = "",
         tank = "",
         healer = "",
+        allAlive = true,
     },
     guild = {},
     friends = {},
@@ -62,6 +80,9 @@ core.stateDefaults = {
 }
 
 NCState = DeepCopy(core.stateDefaults)
+
+NCState.GuildChecker = C_Timer.NewTicker(0.1, function() NCState:CheckGuild() end)
+NCState.LowerPriorityChecker = C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
 
 function NCState:Reset()
     -- We don't want to alter state functions, just the data
@@ -191,6 +212,7 @@ function NCState:UpdatePlayerDead(playerName)
 
     if player then
         player.dead = UnitIsDeadOrGhost(playerName)
+        NCState.group.allAlive = not player.dead
     end
 end
 
@@ -219,44 +241,77 @@ function NCState:UpdatePlayerItemLevel(playerName)
     end
 end
 
-function NCState:UpdatePlayerLastHeal(playerName)
+function NCState:UpdatePlayerLastHealCast(playerName, target, spellId, spellName, amount)
     local player = NCState.group.players[playerName]
 
     if player then
-        player.lastHeal = GetTime()
+        player.lastHeal = {
+            spellId = spellId,
+            spellName = spellName,
+            amount = amount,
+            target = target,
+        }
     end
 end
 
-function NCState:UpdatePlayerLastDamage(playerName, spellId)
+function NCState:UpdatePlayerLastHealReceived(playerName, spellId, spellName, amount)
     local player = NCState.group.players[playerName]
-    local isAvoidable = (GTFO and GTFO.SpellID[tostring(spellId)] ~= nil)
 
     if player then
-        player.lastDamage = GetTime()
-        player.lastDamageAvoidable = isAvoidable
+        player.lastHeal = {
+            spellId = spellId,
+            spellName = spellName,
+            amount = amount,
+        }
     end
 end
 
-function NCState:UpdatePlayerLastSpellReceived(playerName, spellId, spellName, damage)
+function NCState:UpdatePlayerLastDamageReceived(playerName, spellId, spellName, damage)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        local isAvoidable = (GTFO and GTFO.SpellID[tostring(spellId)] ~= nil)
+
+        player.lastDamage = {
+            spellId = spellId,
+            spellName = spellName,
+            avoidable = isAvoidable,
+            damage = damage,
+        }
+    end
+end
+
+function NCState:UpdatePlayerLastDamageDealt(playerName, spellId, spellName, damage)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.lastDamage = {
+            spellId = spellId,
+            spellName = spellName,
+            damage = damage,
+        }
+    end
+
+end
+
+function NCState:UpdatePlayerLastSpellReceived(playerName, spellId, spellName)
     local player = NCState.group.players[playerName]
 
     if player then
         player.lastSpellReceived = {
             spellId = spellId,
             spellName = spellName,
-            damage = damage,
         }
     end
 end
 
-function NCState:UpdatePlayerLastSpellCast(playerName, spellId, spellName, damage)
+function NCState:UpdatePlayerLastSpellCast(playerName, spellId, spellName)
     local player = NCState.group.players[playerName]
 
     if player then
         player.lastSpellCast = {
             spellId = spellId,
             spellName = spellName,
-            damage = damage,
         }
     end
 end
@@ -462,7 +517,7 @@ function NCState:GetPlayerGUID(playerName)
     return ""
 end
 
-function NCState:GetPlayerIsGuildmate(playerName)
+function NCState:PlayerIsGuildmate(playerName)
     local player = NCState.group.players[playerName]
 
     if player then
@@ -472,7 +527,7 @@ function NCState:GetPlayerIsGuildmate(playerName)
     return false
 end
 
-function NCState:GetPlayerIsFriend(playerName)
+function NCState:PlayerIsFriend(playerName)
     local player = NCState.group.players[playerName]
 
     if player then
@@ -482,7 +537,7 @@ function NCState:GetPlayerIsFriend(playerName)
     return false
 end
 
-function NCState:GetPlayerIsNemesis(playerName)
+function NCState:PlayerIsNemesis(playerName)
     local player = NCState.group.players[playerName]
 
     if player then
@@ -492,7 +547,7 @@ function NCState:GetPlayerIsNemesis(playerName)
     return false
 end
 
-function NCState:GetPlayerIsTank(playerName)
+function NCState:PlayerIsTank(playerName)
     local player = NCState.group.players[playerName]
 
     if player then
@@ -502,7 +557,7 @@ function NCState:GetPlayerIsTank(playerName)
     return false
 end
 
-function NCState:GetPlayerIsHealer(playerName)
+function NCState:PlayerIsHealer(playerName)
     local player = NCState.group.players[playerName]
 
     if player then
@@ -512,7 +567,7 @@ function NCState:GetPlayerIsHealer(playerName)
     return false
 end
 
-function NCState:GetPlayerIsLead(playerName)
+function NCState:PlayerIsLead(playerName)
     local player = NCState.group.players[playerName]
 
     if player then
@@ -532,14 +587,75 @@ function NCState:GetPlayerRole(playerName)
     return ""
 end
 
-function NCState:GetPlayerItemLevel(playerName)
-    local player = NCState.group.players[playerName]
-
-    if player then
-        return player.itemLevel
+function NCState:GetItemLevel(unit)
+    if UnitIsUnit(unit, "player") then
+        return GetAverageItemLevel()
     end
 
-    return 0
+    local E = _G.ElvUI or nil
+    local Details = _G.Details or nil
+    local rosterPlayer = NCState:GetPlayerState(unit)
+    local rosterIlvl = rosterPlayer and rosterPlayer.itemLevel or nil
+
+    if rosterIlvl ~= nil and rosterIlvl > 0 then
+        return rosterPlayer.itemLevel
+    end
+
+    if E and E.GetUnitItemLevel then
+        local itemLevel = E:GetUnitItemLevel(unit)
+
+        if itemLevel ~= "tooSoon" then
+            return itemLevel
+        end
+    end
+
+    if Details and Details.ilevel then
+        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
+
+        if rosterPlayer ~= nil then
+            local detailsIlvlTable = Details.ilevel:GetIlvl(rosterPlayer.guid)
+
+            if not detailsIlvlTable or not detailsIlvlTable.ilvl then
+                return nil
+            end
+
+            return detailsIlvlTable.ilvl
+        end
+    end
+
+    return nil
+end
+
+function NCState:AttemptSyncItemLevels()
+    if not IsInGroup() then
+        return
+    end
+
+    for key,val in pairs(NCState:GetGroupState()) do
+        if val ~= nil and val.itemLevel == nil then
+            local itemLevel = NCState:GetItemLevel(key)
+
+            if itemLevel ~= nil then
+                val.itemLevel = itemLevel
+            end
+        end
+    end
+end
+
+function NCState:SilentGroupSync()
+    if not IsInGroup() then
+        return
+    end
+
+    NCState:ClearGroup()
+
+    local members = NCState:GetPlayersInGroup()
+
+    for key,val in pairs(members) do
+        if val ~= nil and val ~= GetMyName() then
+            NCState:AddPlayerToGroup(val)
+        end
+    end
 end
 
 function NCState:GetPlayerRace(playerName)
@@ -642,7 +758,7 @@ function NCState:GetPlayerPowerType(playerName)
     return 0
 end
 
-function NCState:GetPlayerCombat(playerName)
+function NCState:PlayerInCombat(playerName)
     local player = NCState.group.players[playerName]
 
     if player then
@@ -652,7 +768,7 @@ function NCState:GetPlayerCombat(playerName)
     return false
 end
 
-function NCState:GetPlayerDead(playerName)
+function NCState:PlayerIsDead(playerName)
     local player = NCState.group.players[playerName]
 
     if player then
@@ -712,12 +828,89 @@ function NCState:GetPlayerLastSpellCast(playerName)
     return {}
 end
 
-function NCState:GetPlayerIsInGroup(playerName)
+function NCState:PlayerIsInGroup(playerName)
     return NCState.group.players[playerName] ~= nil
 end
 
-function NCState:GetPlayerIsInGroupAndNotMe(playerName)
+function NCState:PlayerIsInGroupAndNotMe(playerName)
     return NCState.group.players[playerName] ~= nil and not UnitIsUnit(playerName, "player")
+end
+
+function NCState:GetPlayersInGroup()
+    local plist = {}
+
+    if IsInRaid() then
+        for i=1,40 do
+            if (UnitName('raid'..i)) then
+                local n,s = UnitName('raid'..i)
+                local playerName = n
+
+                if s then 
+                    playerName = playerName .. "-" .. s
+                end
+
+                if playerName ~= "Unknown" then
+                    plist[playerName] = playerName
+                end
+            end
+        end
+    elseif IsInGroup() then
+        for i=1,5 do
+            if (UnitName('party'..i)) then
+                local n,s = UnitName('party'..i)
+                local playerName = n
+
+                if s then 
+                    playerName = playerName .. "-" .. s
+                end
+
+                if playerName ~= "Unknown" then
+                    plist[playerName] = playerName
+                end
+            end
+        end
+    end
+
+    return plist
+end
+
+function NCState:GetRosterDelta()
+    local newRoster = NCState:GetPlayersInGroup()
+    local oldRoster = NemesisChat:GetDoubleMap(NCState:GetGroupState())
+    local joined = {}
+    local left = {}
+
+    -- Get joins
+    for key,val in pairs(newRoster) do 
+        if oldRoster[val] == nil and val ~= GetMyName() then
+            tinsert(joined, val)
+        end
+    end
+
+    -- Get leaves
+    for key,val in pairs(oldRoster) do
+        if newRoster[val] == nil and val ~= GetMyName() then
+            tinsert(left, val)
+        end
+    end
+
+    return joined,left
+end
+
+function NCState:IsWipe()
+    if not UnitIsDead("player") then
+        return false
+    end
+
+    local players = NemesisChat:GetPlayersInGroup()
+
+    for key,val in pairs(players) do
+        if not UnitIsDead(val) then
+            return false
+        end
+    end
+
+    return true
 end
 
 function NCState:UpsertGuildPlayer(playerName, isOnline, isNemesis, guid)

@@ -125,10 +125,8 @@ function NemesisChat:InstantiateSpell()
     end
 
     -- Helper for setting Feast event properties
-    function NCSpell:Feast(source, spellId)
-        NCSpell:SetSource(source)
-        NCSpell:SetSpellId(spellId)
-        NCSpell:SetActive()
+    function NCSpell:Feast(source, spellId, spellName)
+        NCSpell:Spell(source, source, spellId, spellName)
     end
 
     -- Helper for non-feast spells
@@ -138,11 +136,17 @@ function NemesisChat:InstantiateSpell()
         NCSpell:SetSpellId(spellId)
         NCSpell:SetSpellName(spellName)
         NCSpell:SetActive()
+
+        NCState:UpdatePlayerLastSpellCast(source, spellId, spellName)
+        NCState:UpdatePlayerLastSpellReceived(dest, spellId, spellName)
     end
 
     -- Helper for damaging spells
     function NCSpell:Damage(source, dest, spellId, spellName, damage)
         NCSpell:Spell(source, dest, spellId, spellName)
         NCSpell:SetDamage(damage)
+
+        NCState:UpdatePlayerLastDamageReceived(dest, spellId, spellName, damage)
+        NCState:UpdatePlayerLastDamageDealt(source, spellId, spellName, damage)
     end
 end
