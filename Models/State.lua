@@ -349,3 +349,272 @@ function NCState:GetGroupBystanders()
 
     return bystanders
 end
+
+function NCState:GetPlayerGUID(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.guid
+    end
+
+    return ""
+end
+
+function NCState:GetPlayerIsGuildmate(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.isGuildmate
+    end
+
+    return false
+end
+
+function NCState:GetPlayerIsFriend(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.isFriend
+    end
+
+    return false
+end
+
+function NCState:GetPlayerIsNemesis(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.isNemesis
+    end
+
+    return false
+end
+
+function NCState:GetPlayerIsTank(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.isTank
+    end
+
+    return false
+end
+
+function NCState:GetPlayerIsHealer(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.isHealer
+    end
+
+    return false
+end
+
+function NCState:GetPlayerIsLead(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.isLead
+    end
+
+    return false
+end
+
+function NCState:GetPlayerRole(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.role
+    end
+
+    return ""
+end
+
+function NCState:GetPlayerItemLevel(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.itemLevel
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerRace(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.race
+    end
+
+    return ""
+end
+
+function NCState:GetPlayerClass(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.class
+    end
+
+    return ""
+end
+
+function NCState:GetPlayerRawClass(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.rawClass
+    end
+
+    return ""
+end
+
+function NCState:GetPlayerHealth(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.health
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerMaxHealth(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.maxHealth
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerHealthPercentage(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return (player.health / player.maxHealth) * 100
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerPower(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.power
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerMaxPower(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.maxPower
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerPowerPercentage(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return (player.power / player.maxPower) * 100
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerPowerType(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.powerType
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerCombat(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.combat
+    end
+
+    return false
+end
+
+function NCState:GetPlayerDead(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.dead
+    end
+
+    return false
+end
+
+function NCState:GetPlayerLastHeal(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.lastHeal
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerLastDamage(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.lastDamage
+    end
+
+    return 0
+end
+
+function NCState:GetPlayerLastDamageAvoidable(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.lastDamageAvoidable
+    end
+
+    return false
+end
+
+function NCState:GetPlayerLastSpellReceived(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.lastSpellReceived
+    end
+
+    return {}
+end
+
+function NCState:GetPlayerLastSpellCast(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        return player.lastSpellCast
+    end
+
+    return {}
+end
+
+function NCState:GetPlayerIsInGroup(playerName)
+    return NCState.group.players[playerName] ~= nil
+end
+
+function NCState:GetPlayerIsInGroupAndNotMe(playerName)
+    return NCState.group.players[playerName] ~= nil and not UnitIsUnit(playerName, "player")
+end
+
