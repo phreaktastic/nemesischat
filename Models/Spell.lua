@@ -146,7 +146,7 @@ function NemesisChat:InstantiateSpell()
         NCSpell:Spell(source, dest, spellId, spellName)
         NCSpell:SetDamage(damage)
 
-        NCState:UpdatePlayerLastDamageReceived(dest, spellId, spellName, damage)
+        NCState:UpdatePlayerLastDamageReceived(source, dest, spellId, spellName, damage)
         NCState:UpdatePlayerLastDamageDealt(source, spellId, spellName, damage)
     end
 end

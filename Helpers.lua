@@ -23,167 +23,6 @@ local scanTipTitles = {}
 -----------------------------------------------------
 function NemesisChat:InitializeHelpers()
 
-    function NemesisChat:TransmitSyncData()
-        if NCRuntime:GetLastSyncType() == "" or NCRuntime:GetLastSyncType() == nil or NCRuntime:GetLastSyncType() == "LEAVERS" then
-            NCRuntime:SetLastSyncType("LOWPERFORMERS")
-            NemesisChat:TransmitLowPerformers()
-        else
-            NCRuntime:SetLastSyncType("LEAVERS")
-            NemesisChat:TransmitLeavers()
-        end
-    end
-
-    function NemesisChat:TransmitLeavers()
-        if core.db.profile.leavers == nil or core.db.profile.leaversSerialized == nil or NCDungeon:IsActive() then
-            return
-        end
-
-        local _, online = GetNumGuildMembers()
-
-        if online > 1 and NCRuntime:GetLastLeaverSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "GUILD")
-            NCRuntime:SetLastLeaverSyncType("GUILD")
-        else
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "YELL")
-            NCRuntime:SetLastLeaverSyncType("YELL")
-        end
-    end
-
-    function NemesisChat:TransmitLowPerformers()
-        if core.db.profile.lowPerformers == nil or core.db.profile.lowPerformersSerialized == nil or NCDungeon:IsActive() then
-            return
-        end
-
-        local _, online = GetNumGuildMembers()
-
-        if online > 1 and NCRuntime:GetLastLowPerformerSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "GUILD")
-            NCRuntime:SetLastLowPerformerSyncType("GUILD")
-        else
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "YELL")
-            NCRuntime:SetLastLowPerformerSyncType("YELL")
-        end
-    end
-
-    function NemesisChat:Transmit(prefix, payload, distribution, target)
-        if target and distribution == "WHISPER" then
-            self:SendCommMessage(prefix, payload, distribution, target)
-        else
-            self:SendCommMessage(prefix, payload, distribution)
-        end
-    end
-
-    function NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
-        if not prefix or not string.find(prefix, "NC_") then return end
-
-        local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
-
-        if not core.db.global.lastSync then
-            core.db.global.lastSync = {}
-        end
-
-        -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
-        if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and GetTime() - core.db.global.lastSync[sender] <= 1800) then
-            return
-        end
-
-        core.db.global.lastSync[sender] = GetTime()
-
-        NemesisChat:Print("Synchronizing data received from " .. Ambiguate(sender, "guild"))
-
-        core.runtime.sync = {}
-
-        core.runtime.sync.decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
-        if not core.runtime.sync.decoded then return end
-        core.runtime.sync.decompressed = LibDeflate:DecompressDeflate(core.runtime.sync.decoded)
-        if not core.runtime.sync.decompressed then return end
-        core.runtime.sync.success, core.runtime.sync.data = LibSerialize:Deserialize(core.runtime.sync.decompressed)
-        if not core.runtime.sync.success then return end
-
-        payload = nil
-        core.runtime.sync.decoded = nil
-        core.runtime.sync.decompressed = nil
-
-        if prefix == "NC_LEAVERS" then
-            NemesisChat:ProcessLeavers(core.runtime.sync.data)
-        elseif prefix == "NC_LOWPERFORMERS" then
-            NemesisChat:ProcessLowPerformers(core.runtime.sync.data)
-        end
-
-        core.runtime.sync.data = nil
-    end
-
-    function NemesisChat:ProcessLeavers(leavers)
-        NemesisChat:Print("Processing leavers.")
-
-        NemesisChat:ProcessReceivedData("leavers", leavers)
-
-        leavers = nil
-    end
-
-    function NemesisChat:ProcessLowPerformers(lowPerformers)
-        NemesisChat:Print("Processing low performers.")
-
-        NemesisChat:ProcessReceivedData("lowPerformers", lowPerformers)
-
-        lowPerformers = nil
-    end
-
-    function NemesisChat:ProcessReceivedData(configKey, data)
-        if data == nil or type(data) ~= "table" then
-            return
-        end
-
-        if core.db.profile[configKey] == nil then
-            core.db.profile[configKey] = {}
-        end
-
-        local count = 0
-
-        for key,val in pairs(data) do
-            count = count + 1
-            if core.db.profile[configKey][key] == nil then
-                core.db.profile[configKey][key] = val
-            else
-                core.runtime.sync.combinedRow = ArrayMerge(core.db.profile[configKey][key], val)
-                core.db.profile[configKey][key] = core.runtime.sync.combinedRow
-            end
-        end
-
-        core.runtime.sync.combinedRow = {}
-    end
-
-    function NemesisChat:PrintNumberOfLeavers()
-        NemesisChat:Print("Leavers:", #NemesisChat:GetKeys(core.db.profile.leavers))
-    end
-
-    function NemesisChat:PrintNumberOfLowPerformers()
-        NemesisChat:Print("Low Performers:", #NemesisChat:GetKeys(core.db.profile.lowPerformers))
-    end
-
-    function NemesisChat:PrintSyncKeys()
-        NemesisChat:Print("LEAVER KEYS")
-
-        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.leavers))
-
-        for key,val in pairs(core.db.profile.leavers) do
-            NemesisChat:Print(key, ":", #val)
-        end
-
-        NemesisChat:Print("LOW PERFORMER KEYS")
-
-        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.lowPerformers))
-
-        for key,val in pairs(core.db.profile.lowPerformers) do
-            NemesisChat:Print(key, ":", #val)
-        end
-    end
-
-    function NemesisChat:RegisterPrefixes()
-        C_ChatInfo.RegisterAddonMessagePrefix("NC_LEAVERS")
-        C_ChatInfo.RegisterAddonMessagePrefix("NC_LOWPERFORMERS")
-    end
-
     function NemesisChat:RegisterToasts()
         NemesisChat:RegisterToast("Pull", function(toast, player, mob)
             toast:SetTitle("|cffff4040Potentially Dangerous Pull|r")
@@ -191,10 +30,6 @@ function NemesisChat:InitializeHelpers()
             toast:SetIconTexture([[Interface\ICONS\INV_10_Engineering2_BoxOfBombs_Dangerous_Color3]])
             toast:SetUrgencyLevel("emergency")
         end)
-    end
-
-    function NemesisChat:ShowStatsFrame()
-        
     end
 
     function NemesisChat:AddLeaver(guid)
@@ -287,10 +122,6 @@ function NemesisChat:InitializeHelpers()
         end
 
         return #core.db.profile.lowPerformers[guid]
-    end
-
-    function NemesisChat:InitializeTimers()
-        self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitSyncData", 60)
     end
 
     function NemesisChat:GetMyName()

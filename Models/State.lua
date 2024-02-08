@@ -27,6 +27,8 @@ core.stateDefaults = {
         rawClass = "",
         health = 0,
         maxHealth = 0,
+        absorb = 0,
+        healAbsorb = 0,
         power = 0,
         maxPower = 0,
         powerType = 0,
@@ -44,6 +46,7 @@ core.stateDefaults = {
             -- amount,
         },
         lastDamageReceived = {
+            -- source,
             -- spellId,
             -- spellName,
             -- damage,
@@ -55,6 +58,7 @@ core.stateDefaults = {
             -- damage,
         },
         lastSpellReceived = {
+            -- source,
             -- spellId,
             -- spellName,
         },
@@ -150,6 +154,8 @@ function NCState:AddPlayerToGroup(playerName)
         isLead = groupLead,
         health = UnitHealth(playerName),
         maxHealth = UnitHealthMax(playerName),
+        absorb = UnitGetTotalAbsorbs(playerName),
+        healAbsorb = UnitGetTotalHealAbsorbs(playerName),
         power = UnitPower(playerName),
         maxPower = UnitPowerMax(playerName),
         powerType = UnitPowerType(playerName),
@@ -222,6 +228,15 @@ function NCState:UpdatePlayerHealth(playerName)
     end
 end
 
+function NCState:UpdatePlayerAbsorb(playerName)
+    local player = NCState.group.players[playerName]
+
+    if player then
+        player.absorb = UnitGetTotalAbsorbs(playerName)
+        player.healAbsorb = UnitGetTotalHealAbsorbs(playerName)
+    end
+end
+
 function NCState:UpdatePlayerPower(playerName)
     local player = NCState.group.players[playerName]
 
@@ -280,7 +295,12 @@ function NCState:UpdateAllPlayersAlive()
     end
 
     NCState.group.allAlive = allAlive
+end
 
+function NCState:UpdateAllPlayersAbsorb()
+    for playerName, _ in pairs(NCState.group.players) do
+        NCState:UpdatePlayerAbsorb(playerName)
+    end
 end
 
 function NCState:UpdatePlayerItemLevel(playerName)
@@ -304,30 +324,38 @@ function NCState:UpdatePlayerLastHealCast(playerName, target, spellId, spellName
     end
 end
 
-function NCState:UpdatePlayerLastHealReceived(playerName, spellId, spellName, amount)
+function NCState:UpdatePlayerLastHealReceived(source, playerName, spellId, spellName, amount)
     local player = NCState.group.players[playerName]
 
     if player then
         player.lastHeal = {
+            source = source,
             spellId = spellId,
             spellName = spellName,
             amount = amount,
         }
+
+        self:UpdatePlayerAbsorb(playerName)
+        self:UpdatePlayerHealth(playerName)
     end
 end
 
-function NCState:UpdatePlayerLastDamageReceived(playerName, spellId, spellName, damage)
+function NCState:UpdatePlayerLastDamageReceived(source, playerName, spellId, spellName, damage)
     local player = NCState.group.players[playerName]
 
     if player then
         local isAvoidable = (GTFO and GTFO.SpellID[tostring(spellId)] ~= nil)
 
         player.lastDamage = {
+            source = source,
             spellId = spellId,
             spellName = spellName,
             avoidable = isAvoidable,
             damage = damage,
         }
+
+        self:UpdatePlayerAbsorb(playerName)
+        self:UpdatePlayerHealth(playerName)
     end
 end
 
@@ -352,6 +380,8 @@ function NCState:UpdatePlayerLastSpellReceived(playerName, spellId, spellName)
             spellId = spellId,
             spellName = spellName,
         }
+
+        self:UpdatePlayerAbsorb(playerName)
     end
 end
 

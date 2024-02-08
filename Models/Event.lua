@@ -207,7 +207,7 @@ function NemesisChat:InstantiateEvent()
         NCSpell:Spell(source, dest, spellId, spellName)
 
         NCState:UpdatePlayerLastHealCast(source, dest, spellId, spellName, healAmount)
-        NCState:UpdatePlayerLastHealReceived(dest, spellId, spellName, healAmount)
+        NCState:UpdatePlayerLastHealReceived(source, dest, spellId, spellName, healAmount)
     end
 
     -- Set the Category, Event, and Target for a group enemy kill event

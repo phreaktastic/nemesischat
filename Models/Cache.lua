@@ -20,29 +20,27 @@ NC_CACHE_KEY_FRIENDS = "friends"
 NC_CACHE_KEY_DUNGEON = "dungeon"
 NC_CACHE_KEY_BOSS = "boss"
 
-NCCache = {}
+NCCache = {
+    db = NCDB:New("cache"),
+}
 
 function NCCache:Push(key, data)
     local isSegment = data.IsSegment or false
 
-    if not core.db.profile.cache then core.db.profile.cache = {} end
-
     if isSegment then
-        if core.db.profile.cache[key] and core.db.profile.cache[key].Restore then
-            core.db.profile.cache[key].Restore(data)
+        if self.db:GetComplexKey(key .. ".Restore") then
+            self.db:GetKey(key):Restore(data)
         else
-            core.db.profile.cache[key] = NCSegment:New(data:GetIdentifier())
-            core.db.profile.cache[key]:Restore(data)
+            self.db:SetKey(key, NCSegment:New(data:GetIdentifier()))
+            self.db:GetKey(key):Restore(data)
         end
     else
-        core.db.profile.cache[key] = data
+        self.db:SetKey(key, data)
     end
 end
 
 function NCCache:Pull(key)
-    if not core.db.profile.cache then core.db.profile.cache = {} end
-
-    return core.db.profile.cache[key]
+    return self.db:GetKey(key)
 end
 
 function NCCache:RestoreSegment(key)
@@ -53,10 +51,8 @@ function NCCache:RestoreSegment(key)
         return
     end
 
-    if not core.db.profile.cache then core.db.profile.cache = {} end
-
-    if core.db.profile.cache[key] and core.db.profile.cache[key].Restore then
-        model:Restore(core.db.profile.cache[key])
+    if self.db:GetComplexKey(key .. ".Restore") and model.Restore then
+        model:Restore(self.db:GetKey(key))
         return
     end
 
@@ -64,9 +60,7 @@ function NCCache:RestoreSegment(key)
 end
 
 function NCCache:Clear(key)
-    if not core.db.profile.cache then core.db.profile.cache = {} end
-
-    core.db.profile.cache[key] = nil
+    self.db:DeleteKey(key)
 end
 
 function NCCache:GetSegmentFromKey(key)
