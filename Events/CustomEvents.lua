@@ -159,7 +159,7 @@ function NemesisChat:CheckGuild()
         core.db.global.guildRow.isNemesis = NCConfig:GetNemesis(core.db.global.guildRow.name) ~= nil
 
         if core.runtime.guild[core.db.global.guildRow.name] then
-            local changed = core.runtime.guild[core.db.global.guildRow.name].online ~= core.db.global.guildRow.memberOnline
+            local changed = NCState:UpsertGuildPlayer(core.db.global.guildRow.name, core.db.global.guildRow.memberOnline, core.db.global.guildRow.isNemesis, core.db.global.guildRow.guid)
 
             if changed then
                 core.runtime.guild[core.db.global.guildRow.name].online = core.db.global.guildRow.memberOnline

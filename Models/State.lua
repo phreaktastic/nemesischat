@@ -314,6 +314,56 @@ function NCState:GetGroupNemeses()
     return nemeses
 end
 
+function NCState:GetGuildNemeses()
+    local nemeses = {}
+
+    for playerName, player in pairs(NCState.guild) do
+        if player.isNemesis then
+            table.insert(nemeses, playerName)
+        end
+    end
+
+    return nemeses
+end
+
+function NCState:GetRandomGroupNemesis()
+    local nemeses = NCState:GetGroupNemeses()
+
+    if #nemeses > 0 then
+        return nemeses[math.random(#nemeses)]
+    end
+
+    return ""
+end
+
+function NCState:GetRandomGuildNemesis()
+    local nemeses = NCState:GetGuildNemeses()
+
+    if #nemeses > 0 then
+        return nemeses[math.random(#nemeses)]
+    end
+
+    return ""
+end
+
+function NCState:GetNonExcludedNemesis()
+    local nemeses
+
+        if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
+            nemeses = NCState:GetGroupNemeses()
+        else
+            nemeses = NCState:GetGuildNemeses()
+        end
+
+        for player, _ in pairs(nemeses) do
+            if not tContains(NCController.excludedNemeses, player) then
+                return player
+            end
+        end
+
+        return nil
+end
+
 function NCState:GetGroupGuildmates()
     local guildmates = {}
 
@@ -348,6 +398,57 @@ function NCState:GetGroupBystanders()
     end
 
     return bystanders
+end
+
+function NCState:GetGuildBystanders()
+    local bystanders = {}
+
+    for playerName, player in pairs(NCState.guild) do
+        if not player.isNemesis then
+            table.insert(bystanders, playerName)
+        end
+    end
+
+    return bystanders
+
+end
+
+function NCState:GetRandomGroupBystander()
+    local bystanders = NCState:GetGroupBystanders()
+
+    if #bystanders > 0 then
+        return bystanders[math.random(#bystanders)]
+    end
+
+    return ""
+end
+
+function NCState:GetRandomGuildBystander()
+    local bystanders = NCState:GetGuildBystanders()
+
+    if #bystanders > 0 then
+        return bystanders[math.random(#bystanders)]
+    end
+
+    return ""
+end
+
+function NCState:GetNonExcludedBystander()
+    local bystanders
+
+    if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
+        bystanders = NCState:GetGroupBystanders()
+    else
+        bystanders = NCState:GetGuildBystanders()
+    end
+
+    for player, _ in pairs(bystanders) do
+        if not tContains(NCController.excludedBystanders, player) then
+            return player
+        end
+    end
+
+    return nil
 end
 
 function NCState:GetPlayerGUID(playerName)
@@ -618,3 +719,22 @@ function NCState:GetPlayerIsInGroupAndNotMe(playerName)
     return NCState.group.players[playerName] ~= nil and not UnitIsUnit(playerName, "player")
 end
 
+function NCState:UpsertGuildPlayer(playerName, isOnline, isNemesis, guid)
+    local changed = false
+
+    if not NCState.guild[playerName] then
+        NCState.guild[playerName] = {
+            isOnline = isOnline,
+            isNemesis = isNemesis,
+            guid = guid,
+        }
+    else
+        changed = NCState.guild[playerName].isOnline ~= isOnline
+
+        NCState.guild[playerName].isOnline = isOnline
+        NCState.guild[playerName].isNemesis = isNemesis
+        NCState.guild[playerName].guid = guid
+    end
+
+    return changed
+end
