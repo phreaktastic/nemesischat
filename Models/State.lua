@@ -45,17 +45,17 @@ core.stateDefaults = {
             -- spellName,
             -- amount,
         },
+        lastDamageDealt = {
+            -- spellId,
+            -- spellName,
+            -- damage,
+        },
         lastDamageReceived = {
             -- source,
             -- spellId,
             -- spellName,
             -- damage,
             -- avoidable,
-        },
-        lastDamageDealt = {
-            -- spellId,
-            -- spellName,
-            -- damage,
         },
         lastSpellReceived = {
             -- source,
@@ -161,9 +161,10 @@ function NCState:AddPlayerToGroup(playerName)
         powerType = UnitPowerType(playerName),
         combat = false,
         dead = false,
-        lastHeal = 0,
-        lastDamage = 0,
-        lastDamageAvoidable = false,
+        lastHealCast = {},
+        lastHealReceived = {},
+        lastDamageDealt = {},
+        lastDamageReceived = {},
         lastSpellReceived = {},
         lastSpellCast = {},
     }
