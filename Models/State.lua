@@ -56,6 +56,7 @@ core.stateDefaults = {
         healer = "",
     },
     guild = {},
+    friends = {},
     dungeon = {},
     boss = {},
 }
@@ -77,14 +78,14 @@ end
 
 function NCState:AddPlayerToGroup(playerName)
     local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
-    local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
+    local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCState:IsFriend(playerName) and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
     local itemLevel = NemesisChat:GetItemLevel(playerName)
     local groupLead = UnitIsGroupLeader(playerName) ~= nil
     local class, rawClass = UnitClass(playerName)
     local data =  {
         guid = UnitGUID(playerName),
         isGuildmate = isInGuild,
-        isFriend = NCRuntime:IsFriend(playerName),
+        isFriend = NCState:IsFriend(playerName),
         isNemesis = isNemesis,
         isTank = UnitGroupRolesAssigned(playerName) == "TANK",
         isHealer = UnitGroupRolesAssigned(playerName) == "HEALER",
@@ -737,4 +738,115 @@ function NCState:UpsertGuildPlayer(playerName, isOnline, isNemesis, guid)
     end
 
     return changed
+end
+
+function NCState:PopulateFriends()
+    local _, onlineBnetFriends = BNGetNumFriends()
+
+    NCRuntime:ClearFriends()
+
+    for i = 1, onlineBnetFriends do
+        local info = C_BattleNet.GetFriendAccountInfo(i)
+        if info and info.gameAccountInfo then
+            local character, client = info.gameAccountInfo.characterName, info.gameAccountInfo.clientProgram or ""
+
+            -- Only add WoW characters
+            if character and client == BNET_CLIENT_WOW then
+                -- Account for realm names, since our roster does as well
+                character = Ambiguate(character, "guild")
+
+                NCState:AddFriend(character)
+            end
+        end
+    end
+
+    NCCache:Push(NC_CACHE_KEY_FRIENDS, NCState.friends)
+end
+
+function NCState:RestoreFriends()
+    local friends = NCCache:Pull(NC_CACHE_KEY_FRIENDS)
+
+    if friends then
+        NCState.friends = friends
+    end
+end
+
+function NCState:AddFriend(playerName)
+    if not NCState.friends then NCState.friends = {} end
+
+    tinsert(NCState.friends, playerName)
+end
+
+function NCState:IsFriend(playerName)
+    if not NCState.friends then NCState.friends = {} end
+
+    return tContains(NCState.friends, playerName)
+end
+
+function NCState:CheckGuild()
+    if not IsInGuild() then
+        return
+    end
+
+    local totalGuildMembers, onlineGuildMembers = GetNumGuildMembers()
+
+    -- The guild roster is empty
+    if not totalGuildMembers or totalGuildMembers <= 1 then
+        return
+    end
+
+    if not NemesisChat.guildRosterIndex then
+        NemesisChat.guildRosterIndex = 1
+    end
+
+    core.db.global.guildRow = {}
+
+    local cursor = NemesisChat.guildRosterIndex
+    local chunk = 10
+    local maxIndex = math.min(totalGuildMembers, NemesisChat.guildRosterIndex + chunk)
+
+    for i = cursor, maxIndex do
+        core.db.global.guildRow.name, _, _, _, _, _, _, _, core.db.global.guildRow.isOnline, _, _, _, _, core.db.global.guildRow.isMobile, _, _, core.db.global.guildRow.guid = GetGuildRosterInfo(i)
+        core.db.global.guildRow.memberOnline = core.db.global.guildRow.isOnline and not core.db.global.guildRow.isMobile
+        core.db.global.guildRow.name = Ambiguate(core.db.global.guildRow.name, "guild")
+        core.db.global.guildRow.isNemesis = NCConfig:GetNemesis(core.db.global.guildRow.name) ~= nil
+
+        NCState:UpdateGuildPlayer(core.db.global.guildRow.name, core.db.global.guildRow.memberOnline, core.db.global.guildRow.isNemesis, core.db.global.guildRow.guid)
+    end
+
+    -- Update the guild roster in the DB cache, in case a reload occurs
+    NCCache:Push(NC_CACHE_KEY_GUILD, core.runtime.guild)
+
+    -- Reset the guild roster index if it's at the end of the list
+    if maxIndex >= GetNumGuildMembers() then
+        NemesisChat.guildRosterIndex = 1
+    else
+        NemesisChat.guildRosterIndex = maxIndex + chunk
+    end
+end
+
+function NCState:RestoreGuild()
+    local guild = NCCache:Pull(NC_CACHE_KEY_GUILD)
+
+    if guild then
+        NCState.guild = guild
+    end
+end
+
+function NCState:UpdateGuildPlayer(playerName, isOnline, isNemesis, guid)
+    local changed = NCState:UpsertGuildPlayer(playerName, isOnline, isNemesis, guid)
+
+    if changed then
+        if isOnline then
+            NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
+        else
+            NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
+        end
+    end
+end
+
+function NCState:RestoreAll()
+    NCState:RestoreGroup()
+    NCState:RestoreFriends()
+    NCState:RestoreGuild()
 end

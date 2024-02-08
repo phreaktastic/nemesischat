@@ -14,6 +14,12 @@ local _, core = ...;
 -- to do a /reload and not lose any data.
 -----------------------------------------------------
 
+NC_CACHE_KEY_GROUP = "group"
+NC_CACHE_KEY_GUILD = "guild"
+NC_CACHE_KEY_FRIENDS = "friends"
+NC_CACHE_KEY_DUNGEON = "dungeon"
+NC_CACHE_KEY_BOSS = "boss"
+
 NCCache = {}
 
 function NCCache:Push(key, data)

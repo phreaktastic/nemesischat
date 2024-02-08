@@ -749,12 +749,6 @@ NC_EVENT_TYPE_GROUP = 0
 NC_EVENT_TYPE_GUILD = 1
 NC_EVENT_TYPE_MAXIMUM = 1 -- Used for logic that validates event types, increase as more are added
 
-NC_CACHE_KEY_GROUP = "group"
-NC_CACHE_KEY_GUILD = "guild"
-NC_CACHE_KEY_FRIENDS = "friends"
-NC_CACHE_KEY_DUNGEON = "dungeon"
-NC_CACHE_KEY_BOSS = "boss"
-
 -- We reference this in a few areas, if Details is not installed, we need to set these to something
 if not DETAILS_SEGMENTID_OVERALL then
     DETAILS_SEGMENTID_OVERALL = -1
