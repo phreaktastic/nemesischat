@@ -10,9 +10,6 @@
 -----------------------------------------------------
 local _, core = ...;
 
-local tContains = tContains
-local SendChatMessage = SendChatMessage
-
 local DETAILS_SEGMENTID_CURRENT = DETAILS_SEGMENTID_CURRENT
 local DETAILS_SEGMENTID_OVERALL = DETAILS_SEGMENTID_OVERALL
 

@@ -37,18 +37,6 @@ function NemesisChatAPI:AddAPI(name, friendlyName)
         return self
     end
 
-    core.apis[name].AddPreMessageHook = function(self, func)
-        NemesisChatAPI:AddPreMessageHook(name, func)
-
-        return self
-    end
-
-    core.apis[name].AddPostMessageHook = function(self, func)
-        NemesisChatAPI:AddPostMessageHook(name, func)
-
-        return self
-    end
-
     core.apis[name].AddSubject = function(self, subject)
         NemesisChatAPI:AddSubject(name, subject)
 
@@ -131,6 +119,22 @@ function NemesisChatAPI:AddAPI(name, friendlyName)
         end
     end
 
+    core.apis[name].Enable = function(self)
+        for _, configOption in pairs(core.apis[name].configOptions) do
+            if configOption.primary then
+                core.db.profile.API[name .. "_" .. configOption.value] = true
+            end
+        end
+    end
+
+    core.apis[name].GetOption = function(self, optionName)
+        return core.db.profile.API[name .. "_" .. optionName]
+    end
+
+    core.apis[name].SetOption = function(self, optionName, value)
+        core.db.profile.API[name .. "_" .. optionName] = value
+    end
+
     return core.apis[name]
 end
 
@@ -206,50 +210,6 @@ function NemesisChatAPI:GetCompatibilityChecks(name)
     end
 
     return core.apis[name].compatibilityChecks
-end
-
-function NemesisChatAPI:AddPreMessageHook(name, func)
-    if not NemesisChatAPI:HasAPI(name) then
-        return
-    end
-
-    if not core.apis[name].preMessageHooks then
-        core.apis[name].preMessageHooks = {}
-    end
-
-    table.insert(core.apis[name].preMessageHooks, func)
-
-    return NemesisChatAPI
-end
-
-function NemesisChatAPI:GetPreMessageHooks(name)
-    if not NemesisChatAPI:HasAPI(name) then
-        return
-    end
-
-    return core.apis[name].preMessageHooks
-end
-
-function NemesisChatAPI:AddPostMessageHook(name, func)
-    if not NemesisChatAPI:HasAPI(name) then
-        return
-    end
-
-    if not core.apis[name].postMessageHooks then
-        core.apis[name].postMessageHooks = {}
-    end
-
-    table.insert(core.apis[name].postMessageHooks, func)
-
-    return NemesisChatAPI
-end
-
-function NemesisChatAPI:GetPostMessageHooks(name)
-    if not NemesisChatAPI:HasAPI(name) then
-        return
-    end
-
-    return core.apis[name].postMessageHooks
 end
 
 function NemesisChatAPI:AddSubject(name, subject)
@@ -490,32 +450,31 @@ function NemesisChatAPI:InitializeReplacements()
     end
 
     for name, api in pairs(core.apis) do
-        local isCompatible = true
+        if api:IsEnabled() or name == "CORE" then
+            local isCompatible = true
 
-        for _, check in pairs(api.compatibilityChecks) do
-            local success, message = check.exec()
+            for _, check in pairs(api.compatibilityChecks) do
+                local success, message = check.exec()
 
-            if not success then
-                if not check.configCheck then
-                    NemesisChat:Print(api.friendlyName .. " compatibility check FAILED: " .. message)
+                if not success then
+                    if not check.configCheck then
+                        NemesisChat:Print(api.friendlyName .. " compatibility check FAILED: " .. message)
+                    end
+                    
+                    isCompatible = false
+                    break
                 end
-                
-                isCompatible = false
-                break
             end
-        end
 
-        if isCompatible then
-            for _, hook in pairs(api.preMessageHooks) do
-                hook()
+            if isCompatible then
+                for _, replacement in pairs(api.replacements) do
+                    NCController:AddCustomReplacement("%[" .. replacement.value .. "%]", replacement.exec)
+                    NCController:AddCustomReplacementExample("%[" .. replacement.value .. "%]", replacement.example)
+                end
+            else
+                api:Disable()
             end
-    
-            for _, replacement in pairs(api.replacements) do
-                NCController:AddCustomReplacement("%[" .. replacement.value .. "%]", replacement.exec)
-                NCController:AddCustomReplacementExample("%[" .. replacement.value .. "%]", replacement.example)
-            end
-        else
-            api:Disable()
         end
+        
     end
 end

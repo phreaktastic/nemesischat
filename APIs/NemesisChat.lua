@@ -16,6 +16,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Nemesis",
         value = "NEMESIS_PLAYER",
+        category = "Nemesis",
         exec = function() return NCEvent:GetNemesis() end,
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
         type = "INPUT",
@@ -23,6 +24,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Bystander",
         value = "BYSTANDER_PLAYER",
+        category = "Bystander",
         exec = function() return NCEvent:GetBystander() end,
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
         type = "INPUT",
@@ -30,6 +32,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Boss Name",
         value = "BOSS_NAME",
+        category = "Dungeon / Encounter",
         exec = function() return NCBoss:GetIdentifier() end,
         operators = core.constants.OPERATORS,
         type = "INPUT",
@@ -37,6 +40,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Keystone Level",
         value = "KEYSTONE_LEVEL",
+        category = "Dungeon / Encounter",
         exec = function() return NCDungeon:GetLevel() end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
@@ -44,6 +48,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Dungeon Time",
         value = "DUNGEON_TIME",
+        category = "Dungeon / Encounter",
         exec = function() return NCDungeon:GetStartTime() end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
@@ -51,6 +56,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Boss Time",
         value = "BOSS_TIME",
+        category = "Dungeon / Encounter",
         exec = function() return NCBoss:GetStartTime() end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
@@ -58,6 +64,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "My Race",
         value = "RACE",
+        category = "Me",
         exec = function() return UnitRace("player") end,
         operators = core.constants.OPERATORS,
         type = "INPUT",
@@ -65,6 +72,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "My Class",
         value = "CLASS",
+        category = "Me",
         exec = function() return UnitClass("player") end,
         operators = core.constants.OPERATORS,
         type = "INPUT",
@@ -72,6 +80,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "My Spec",
         value = "SPEC",
+        category = "Me",
         exec = function() return GetSpecializationNameForSpecID(GetSpecialization()) end,
         operators = core.constants.OPERATORS,
         type = "INPUT",
@@ -79,6 +88,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "My Item Level",
         value = "ILVL",
+        category = "Me",
         exec = function() return GetAverageItemLevel() end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
@@ -86,6 +96,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Nemesis Race",
         value = "NEMESIS_RACE",
+        category = "Nemesis",
         exec = function() return UnitRace(NCEvent:GetNemesis()) end,
         operators = core.constants.OPERATORS,
         type = "INPUT",
@@ -93,6 +104,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Nemesis Class",
         value = "NEMESIS_CLASS",
+        category = "Nemesis",
         exec = function() return UnitClass(NCEvent:GetNemesis()) end,
         operators = core.constants.OPERATORS,
         type = "INPUT",
@@ -100,23 +112,280 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddSubject({
         label = "Bystander Race",
         value = "BYSTANDER_RACE",
+        category = "Bystander",
         exec = function() return UnitRace(NCEvent:GetBystander()) end,
         operators = core.constants.OPERATORS,
         type = "INPUT",
     })
     :AddSubject({
+        label = "Nemesis Role",
+        value = "NEMESIS_ROLE",
+        category = "Nemesis",
+        exec = function() return GetRole(NCEvent:GetNemesis()) end,
+        operators = core.constants.OPERATORS,
+        type = "SELECT",
+        options = DeepCopy(core.roles)
+    })
+    :AddSubject({
+        label = "Bystander Role",
+        value = "BYSTANDER_ROLE",
+        category = "Bystander",
+        exec = function() return GetRole(NCEvent:GetBystander()) end,
+        operators = core.constants.OPERATORS,
+        type = "SELECT",
+        options = DeepCopy(core.roles)
+    })
+    :AddSubject({
+        label = "My Role",
+        value = "ROLE",
+        category = "Me",
+        exec = function() return GetRole() end,
+        operators = core.constants.OPERATORS,
+        type = "SELECT",
+        options = DeepCopy(core.roles)
+    })
+    :AddSubject({
+        label = "Spell ID",
+        value = "SPELL_ID",
+        category = "Spell",
+        exec = function() return NCSpell:GetSpellId() .. "" end,
+        operators = core.constants.OPERATORS,
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Spell Name",
+        value = "SPELL_NAME",
+        category = "Spell",
+        exec = function() return NCSpell:GetSpellName() or "Spell" end,
+        operators = core.constants.OPERATORS,
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "Spell Target",
+        value = "SPELL_TARGET",
+        category = "Spell",
+        exec = function() return NCSpell:GetTarget() end,
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "Spell Source",
+        value = "SPELL_SOURCE",
+        category = "Spell",
+        exec = function() return NCSpell:GetSource() end,
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "Players in Group",
+        value = "GROUP_COUNT",
+        category = "Group",
+        exec = function() return NCRuntime:GetGroupRosterCount() or 0 end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Group Lead",
+        value = "GROUP_LEAD",
+        category = "Group",
+        exec = function() return NCRuntime:GetGroupLead() end,
+        operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "Nemeses in Group",
+        value = "NEMESES_COUNT",
+        category = "Group",
+        exec = function() return NemesisChat:GetPartyNemesesCount() .. "" end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Bystanders in Group",
+        value = "BYSTANDERS_COUNT",
+        category = "Group",
+        exec = function() return NemesisChat:GetPartyBystandersCount() .. "" end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "My Interrupts (Combat)",
+        value = "INTERRUPTS",
+        category = "Combat",
+        exec = function() return (NCCombat:GetInterrupts(GetMyName()) or 0) .. "" end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "My Interrupts (Dungeon)",
+        value = "INTERRUPTS_OVERALL",
+        category = "Combat",
+        exec = function() return (NCDungeon:GetInterrupts(GetMyName()) or 0) .. "" end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Nem. Interrupts (Combat)",
+        value = "NEMESIS_INTERRUPTS",
+        category = "Combat",
+        exec = function() return (NCCombat:GetInterrupts(NCEvent:GetNemesis()) or 0) .. "" end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Nem. Interrupts (Dungeon)",
+        value = "NEMESIS_INTERRUPTS_OVERALL",
+        category = "Combat",
+        exec = function() return (NCDungeon:GetInterrupts(NCEvent:GetNemesis()) or 0) .. "" end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Bys. Interrupts (Combat)",
+        value = "BYSTANDER_INTERRUPTS",
+        category = "Combat",
+        exec = function() return (NCCombat:GetInterrupts(NCEvent:GetBystander()) or 0) .. "" end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Bys. Interrupts (Dungeon)",
+        value = "BYSTANDER_INTERRUPTS_OVERALL",
+        category = "Combat",
+        exec = function() return (NCDungeon:GetInterrupts(NCEvent:GetBystander()) or 0) .. "" end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
         label = "Bystander Class",
         value = "BYSTANDER_CLASS",
+        category = "Bystander",
         exec = function() return UnitClass(NCEvent:GetBystander()) end,
         operators = core.constants.OPERATORS,
         type = "INPUT",
     })
     :AddSubject({
-        label = "Damage",
+        label = "Spell Damage",
         value = "DAMAGE_SUBJECT",
+        category = "Spell",
         exec = function() return NCSpell:GetDamage() end,
         operators = core.constants.NUMERIC_OPERATORS,
         type = "NUMBER",
+    })
+    :AddSubject({
+        label = "My Health",
+        value = "HP",
+        category = "Me",
+        exec = function() return UnitHealth("player") end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "My Max Health",
+        value = "MAX_HP",
+        category = "Me",
+        exec = function() return UnitHealthMax("player") end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "My Health %",
+        value = "HP_PERCENT",
+        category = "Me",
+        exec = function() return math.floor((UnitHealth("player") / UnitHealthMax("player")) * 100) end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Bystander Health",
+        value = "BYSTANDER_HP",
+        category = "Bystander",
+        exec = function() return UnitHealth(NCEvent:GetBystander()) end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Bystander Max Health",
+        value = "BYSTANDER_MAX_HP",
+        category = "Bystander",
+        exec = function() return UnitHealthMax(NCEvent:GetBystander()) end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Bystander Health %",
+        value = "BYSTANDER_HP_PERCENT",
+        category = "Bystander",
+        exec = function() return math.floor((UnitHealth(NCEvent:GetBystander()) / UnitHealthMax(NCEvent:GetBystander())) * 100) end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Nemesis Health",
+        value = "NEMESIS_HP",
+        category = "Nemesis",
+        exec = function() return UnitHealth(NCEvent:GetNemesis()) end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Nemesis Max Health",
+        value = "NEMESIS_MAX_HP",
+        category = "Nemesis",
+        exec = function() return UnitHealthMax(NCEvent:GetNemesis()) end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Nemesis Health %",
+        value = "NEMESIS_HP_PERCENT",
+        category = "Nemesis",
+        exec = function() return math.floor((UnitHealth(NCEvent:GetNemesis()) / UnitHealthMax(NCEvent:GetNemesis())) * 100) end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Boss Health %",
+        value = "BOSS_HP_PERCENT",
+        category = "Dungeon / Encounter",
+        exec = function() if not NCBoss:IsActive() then return 0 end return math.floor((UnitHealth(NCBoss:GetIdentifier()) / UnitHealthMax(NCBoss:GetIdentifier())) * 100) end,
+        operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
+        type = "NUMBER",
+    })
+    :AddSubject({
+        label = "Dungeon",
+        value = "DUNGEON",
+        category = "Dungeon / Encounter",
+        exec = function() return NCDungeon:GetIdentifier() end,
+        operators = core.constants.OPERATORS,
+        type = "INPUT",
+    })
+    :AddSubject({
+        label = "In M+ Dungeon",
+        value = "DUNGEON_ACTIVE",
+        category = "Dungeon / Encounter",
+        exec = function() return NCDungeon:IsActive() end,
+        operators = core.constants.IS,
+        type = "SELECT",
+        options = DeepCopy(core.constants.BOOLEAN_OPTIONS)
+    })
+    :AddSubject({
+        label = "In Boss Fight",
+        value = "BOSS_ACTIVE",
+        category = "Dungeon / Encounter",
+        exec = function() return NCBoss:IsActive() end,
+        operators = core.constants.IS,
+        type = "SELECT",
+        options = DeepCopy(core.constants.BOOLEAN_OPTIONS)
+    })
+    :AddSubject({
+        label = "In Combat",
+        value = "COMBAT_ACTIVE",
+        category = "Combat",
+        exec = function() return NCCombat:IsActive() end,
+        operators = core.constants.IS,
+        type = "SELECT",
+        options = DeepCopy(core.constants.BOOLEAN_OPTIONS)
     })
     :AddReplacement({
         label = "Boss Name",
@@ -355,6 +624,10 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         description = "The name of the spell that was cast or interrupted.",
         isNumeric = false,
         example = function()
+            if NCRuntime.previewSpell then
+                return GetSpellLink(NCRuntime.previewSpell) or "!!INVALID SPELL!!"
+            end
+
             local examples = {
                 204243,
                 200642,
@@ -391,6 +664,8 @@ NemesisChatAPI:AddAPI("CORE", "Core")
                 "Infinite Chronomancer",
                 "Time-Lost Waveshaper"
             }
+
+            return examples[math.random(1, #examples)]
         end,
     })
     :AddReplacement({

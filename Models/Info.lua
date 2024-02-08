@@ -20,13 +20,15 @@ NCInfo = {
     SCROLLVIEW_BOTTOM = 0,
     DISPLAY_WIDTH = 200,
     CELL_HEIGHT = 14,
-    HEADER_HEIGHT = 0,
-    HEADER_BUFFER = 48,
-    FOOTER_HEIGHT = 16,
+    HEADER_HEIGHT = 24,
+    HEADER_BUFFER = 32,
+    FOOTER_HEIGHT = 18,
     FOOTER_BUFFER = 0,
     TOTAL_WIDTH = 200,
     TOTAL_HEIGHT = 210,
-    DROPDOWN_WIDTH = 128,
+    DROPDOWN_TOP = 0,
+    DROPDOWN_WIDTH = 144,
+    DROPDOWN_LEFT = 0,
 
     METRIC_REPLACEMENTS = {
         ["AvoidableDamage"] = "Avoidable Damage",
@@ -43,6 +45,7 @@ NCInfo = {
     },
 
     CurrentPlayer = nil,
+    Title = "Dungeon Info & Stats",
 
     StatsFrame = CreateFrame("MessageFrame", "NemesisChatStatsFrame", UIParent, "BackdropTemplate"),
 
@@ -61,7 +64,7 @@ NCInfo = {
         end)
         f:SetClampedToScreen(true)
         f:SetUserPlaced(true)
-        f:SetFrameStrata("BACKGROUND")
+        f:SetFrameStrata("LOW")
         f:SetBackdrop({
             bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
             edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -78,18 +81,18 @@ NCInfo = {
         f:SetBackdropColor(0,0,0,0.4)
         f:SetBackdropBorderColor(0,0,0,1)
 
-        f.header = f:CreateFontString(nil,"ARTWORK","GameFontNormalLarge")
-        f.header:SetPoint("TOPLEFT",8,16)
-        f.header:SetPoint("TOPRIGHT",-8,16)
-        f.header:SetText("NemesisChat")
-        f.header:SetTextColor(0.50,0.60,1)
-        f.header:SetJustifyH("CENTER")
-        f.header:SetScript("OnMouseDown", function(self, button)
+        f.title = f:CreateFontString(nil,"ARTWORK","GameFontNormalLarge")
+        f.title:SetPoint("TOPLEFT",8,16)
+        f.title:SetPoint("TOPRIGHT",-8,16)
+        f.title:SetText("NemesisChat")
+        f.title:SetTextColor(0.50,0.60,1)
+        f.title:SetJustifyH("CENTER")
+        f.title:SetScript("OnMouseDown", function(self, button)
             if button == "LeftButton" then
                 NCInfo.StatsFrame:StartMoving()
             end
         end)
-        f.header:SetScript("OnMouseUp", function(self, button)
+        f.title:SetScript("OnMouseUp", function(self, button)
             NCInfo.StatsFrame:StopMovingOrSizing()
         end)
 
@@ -101,34 +104,41 @@ NCInfo = {
             NCInfo.StatsFrame:Hide()
         end)
 
-        -- Add a dropdown menu to select the player
-        f.playerDropdown = CreateFrame("Frame", "NemesisChatStatsFramePlayerDropdown", f, "UIDropDownMenuTemplate")
-        f.playerDropdown:SetPoint("TOPLEFT",0,-4)
-        f.playerDropdown:SetPoint("BOTTOMRIGHT",0,0)
+        f.headerFrame = CreateFrame("Frame",nil,f)
+        f.headerFrame:SetPoint("TOPLEFT",4,-4)
+        f.headerFrame:SetPoint("TOPRIGHT",-4,-4)
+        f.headerFrame:SetHeight(self.HEADER_HEIGHT)
+
+        f.header = f.headerFrame:CreateFontString(nil,"ARTWORK","GameFontNormalLarge")
+        f.header:SetPoint("TOPLEFT",0,0)
+        f.header:SetPoint("TOPRIGHT",0,0)
+        f.header:SetText(NCDungeon:GetIdentifier() .. " +" .. NCDungeon:GetLevel())
+        f.header:SetTextColor(1,0.60,0)
+        f.header:SetJustifyH("CENTER")
+
+        f.dropdownFrame = CreateFrame("Frame",nil,f)
+        f.dropdownFrame:SetPoint("TOPLEFT",0,-(self.HEADER_HEIGHT))
+        f.dropdownFrame:SetPoint("TOPRIGHT",0,-(self.HEADER_HEIGHT))
+        f.dropdownFrame:SetSize(self.TOTAL_WIDTH, self.SCROLLVIEW_TOP - self.DROPDOWN_TOP)
+
+        -- Dropdown menu to select the player
+        f.playerDropdown = CreateFrame("Frame", "NemesisChatStatsFramePlayerDropdown", f.dropdownFrame, "UIDropDownMenuTemplate")
+        f.playerDropdown:SetPoint("TOPLEFT",0,0)
+        f.playerDropdown:SetPoint("TOPRIGHT",0,0)
         f.playerDropdown:SetScript("OnShow", function(self)
-            UIDropDownMenu_Initialize(self, function(self, level, menuList)
-                for name, _ in pairs(NCRuntime:GetGroupRoster()) do
-                    local info = UIDropDownMenu_CreateInfo()
-                    info.text = name
-                    info.value = name
-                    info.checked = (name == NCInfo.CurrentPlayer)
-                    info.func = function(self)
-                        NCInfo.CurrentPlayer = self.value
-                        NCInfo:Update()
-                    end
-                    UIDropDownMenu_AddButton(info)
-                end
-            end, "OTHER")
+            NCInfo:UpdatePlayerDropdown()
         end)
         UIDropDownMenu_SetWidth(f.playerDropdown, self.TOTAL_WIDTH - 48)
         UIDropDownMenu_SetText(f.playerDropdown, self.CurrentPlayer)
         f.playerDropdown:Show()
 
+        -- Scroll frame
         f.scrollFrame = CreateFrame("ScrollFrame",nil,f,"UIPanelScrollFrameTemplate")
         f.scrollFrame:SetPoint("TOPLEFT",8,-(self.SCROLLVIEW_TOP))
         f.scrollFrame:SetPoint("BOTTOMRIGHT",-26, self.SCROLLVIEW_BOTTOM)
         f.scrollFrame:SetSize(self.TOTAL_WIDTH - 34, self.TOTAL_HEIGHT - self.SCROLLVIEW_TOP - self.SCROLLVIEW_BOTTOM)
 
+        -- Scroll frame content
         f.scrollFrame.scrollChild = CreateFrame("Frame",nil,f.scrollFrame)
         f.scrollFrame.scrollChild:SetPoint("TOPLEFT",5,-5)
         f.scrollFrame.scrollChild:SetPoint("BOTTOMRIGHT",-5, -5)
@@ -138,6 +148,28 @@ NCInfo = {
         f.scrollFrame:Show()
         f.scrollFrame.scrollChild:Show()
 
+        -- Bottom frame
+        f.footerFrame = CreateFrame("Frame",nil,f,"BackdropTemplate")
+        f.footerFrame:SetPoint("BOTTOMLEFT",0,0)
+        f.footerFrame:SetPoint("BOTTOMRIGHT",0,0)
+        f.footerFrame:SetHeight(self.FOOTER_HEIGHT)
+        f.footerFrame:SetBackdrop({
+            bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true,
+            tileSize = 2,
+            edgeSize = 2,
+            insets = {
+                left = 0,
+                right = 0,
+                top = 1,
+                bottom = 0
+            }
+        })
+        f.footerFrame:SetBackdropColor(0,0,0,0.15)
+        f.footerFrame:SetBackdropBorderColor(0,0,0,1)
+
+        -- Resizer, bottom right
         f.resizeButton = CreateFrame("Button",nil,f)
         f.resizeButton:SetPoint("BOTTOMRIGHT",0,0)
         f.resizeButton:SetSize(16,16)
@@ -175,6 +207,34 @@ NCInfo = {
             NCInfo:Update()
 
             UIDropDownMenu_SetWidth(NCInfo.StatsFrame.playerDropdown, NCInfo.DROPDOWN_WIDTH)
+
+            f.playerDropdown:SetPoint("TOPLEFT",NCInfo.DROPDOWN_LEFT,-4)
+        end)
+
+        -- Clear button, bottom right, to the left of the Resizer
+        f.clearButton = CreateFrame("Button",nil,f)
+        f.clearButton:SetPoint("BOTTOMRIGHT",-16,0)
+        f.clearButton:SetSize(16,16)
+        f.clearButton:SetNormalTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+        f.clearButton:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+        f.clearButton:SetPushedTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+        f.clearButton:SetScript("OnClick", function(self)
+            NCDungeon:ClearCache()
+            NCDungeon:Reset()
+            NCDungeon:SetIdentifier(nil)
+            NCDungeon:UpdateCache()
+            NemesisChat:InstantiateCore()
+            NemesisChat:SilentGroupSync()
+            NemesisChat:CheckGroup()
+            NCInfo:Update()
+        end)
+        f.clearButton:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+            GameTooltip:AddLine("Clear all data")
+            GameTooltip:Show()
+        end)
+        f.clearButton:SetScript("OnLeave", function(self)
+            GameTooltip:Hide()
         end)
 
         f.scrollFrame.scrollChild.rows = {}
@@ -188,6 +248,7 @@ NCInfo = {
         local content = f.scrollFrame.scrollChild
         local i = 1
         local ROW_WIDTH = content:GetWidth()
+        local leftColWidth = 128
 
         local red = {0.85,0.6,0.5}
         local green = {0.5,0.85,0.6}
@@ -199,13 +260,23 @@ NCInfo = {
         local race = playerInfo.race or UnitRace(NCInfo.CurrentPlayer) or "Unknown"
         local class = playerInfo.class or UnitClass(NCInfo.CurrentPlayer) or "Unknown"
 
+        if NCDungeon:GetIdentifier() == "" then
+            f.header:SetText("Dungeon Info & Stats")
+        else
+            if NCDungeon:GetLevel() == 0 then
+                f.header:SetText(NCDungeon:GetIdentifier())
+            else
+                f.header:SetText(NCDungeon:GetIdentifier() .. " +" .. NCDungeon:GetLevel())
+            end
+        end
+
         -- Player information -- group roster race, class, and role
         if not infoFrame then
             local button = CreateFrame("Button",nil,f)
-            
+
             button:SetSize(NCInfo.TOTAL_WIDTH, self.CELL_HEIGHT)
-            button:SetPoint("TOPLEFT",0,-34)
-            button:SetPoint("TOPRIGHT",0,-34)
+            button:SetPoint("TOPLEFT",0,-(self.HEADER_HEIGHT + self.HEADER_BUFFER + 2))
+            button:SetPoint("TOPRIGHT",0,-(self.HEADER_HEIGHT + self.HEADER_BUFFER + 2))
 
             button.text = button:CreateFontString(nil,"ARTWORK","GameFontHighlight")
             button.text:SetPoint("LEFT",0,0)
@@ -213,7 +284,7 @@ NCInfo = {
             button.text:SetWidth(NCInfo.TOTAL_WIDTH)
             button.text:SetHeight(self.CELL_HEIGHT)
             button.text:SetJustifyH("CENTER")
-            
+
             infoFrame = button
             f.infoFrame = infoFrame
             f.infoFrame:Show()
@@ -256,7 +327,7 @@ NCInfo = {
 
             if not content.rows[metric] then
                 local button = CreateFrame("Button",nil,content)
-                
+
                 button:SetSize(ROW_WIDTH, self.CELL_HEIGHT)
                 button:SetPoint("TOPLEFT",0,-(i-1)*self.CELL_HEIGHT)
                 button.columns = {}
@@ -310,9 +381,9 @@ NCInfo = {
                 GameTooltip:Hide()
             end)
 
-            content.rows[metric].columns[1]:SetWidth(96)
+            content.rows[metric].columns[1]:SetWidth(leftColWidth)
             content.rows[metric].columns[1]:SetJustifyH("LEFT")
-            content.rows[metric].columns[2]:SetWidth(ROW_WIDTH - 96)
+            content.rows[metric].columns[2]:SetWidth(ROW_WIDTH - leftColWidth)
             content.rows[metric].columns[2]:SetJustifyH("RIGHT")
             content.rows[metric].columns[2]:SetMaxLines(1)
 
@@ -330,6 +401,7 @@ NCInfo = {
             end
         end
 
+        NCInfo:UpdatePlayerDropdown()
         UIDropDownMenu_SetText(f.playerDropdown, NCInfo.CurrentPlayer)
     end,
 
@@ -338,18 +410,24 @@ NCInfo = {
         UIDropDownMenu_Initialize(NCInfo.StatsFrame.playerDropdown, function(self, level, menuList)
             local roster = NCRuntime:GetGroupRoster()
             local snapshot = NCDungeon.RosterSnapshot
-            local mergedData = MapMerge(roster, snapshot)
-            local players = GetHashmapKeys(mergedData)
+            local mergedData = MapMerge(snapshot, roster)
 
-            for _, name in pairs(players) do
+            for name, player in pairs(mergedData) do
+                local infoClass, infoRawClass = UnitClass(name)
                 local info = UIDropDownMenu_CreateInfo()
-                local player = mergedData[name]
-                local class = (player and player.class) or UnitClass(name) or "Unknown"
-                local role = (player and player.role) or UnitGroupRolesAssigned(name) or "OTHER"
-                local replacedRole = NCInfo.ROLE_REPLACEMENTS[role] or "OTHER"
+                local mergedPlayer = mergedData[name]
+                local class = player.class or (mergedPlayer and mergedPlayer.class) or infoClass or "Unknown"
+                local rawClass = player.rawClass or (mergedPlayer and mergedPlayer.rawClass) or infoRawClass or "Unknown"
+                local role = player.role or (mergedPlayer and mergedPlayer.role) or UnitGroupRolesAssigned(name) or "OTHER"
+                local replacedRole = NCInfo.ROLE_REPLACEMENTS[role] or "Other"
                 local infoString = class .. " " .. replacedRole
+                local colorized = NCColors.ClassColor(rawClass, name .. " (" .. infoString .. ")")
 
-                info.text = name .. " (" .. infoString .. ")"
+                if name == GetMyName() then
+                    colorized = NCColors.Emphasize(name)
+                end
+
+                info.text = colorized
                 info.value = name
                 info.checked = (name == NCInfo.CurrentPlayer)
                 info.func = function(self)
@@ -363,11 +441,22 @@ NCInfo = {
 
     InitializeVars = function(self)
         self.SCROLLVIEW_HEIGHT = self.TOTAL_HEIGHT - self.HEADER_HEIGHT - self.HEADER_BUFFER - self.FOOTER_HEIGHT - self.FOOTER_BUFFER
-        self.SCROLLVIEW_TOP = self.HEADER_HEIGHT + self.HEADER_BUFFER
+        self.SCROLLVIEW_TOP = self.HEADER_HEIGHT + self.HEADER_BUFFER + (self.CELL_HEIGHT * 2)
         self.SCROLLVIEW_BOTTOM = self.FOOTER_HEIGHT + self.FOOTER_BUFFER
+        self.DROPDOWN_LEFT = (self.TOTAL_WIDTH - self.DROPDOWN_WIDTH) / 2 - (self.DROPDOWN_WIDTH / 5)
+        self.DROPDOWN_TOP = self.SCROLLVIEW_TOP - 32
+
+        if self.DROPDOWN_LEFT < 0 then
+            self.DROPDOWN_LEFT = 0
+        end
     end,
 
     ReportMetric = function(self, metric, player)
+        if player == GetMyName() then
+            SendChatMessage(string.format("My %s (Dungeon): %s", (self.METRIC_REPLACEMENTS[metric] or metric), NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric))), NemesisChat:GetActualChannel("GROUP"))
+            return
+        end
+
         local message = string.format("%s for %s (Dungeon): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
         if core.db.profile.infoClickCompare then
             local delta = NCDungeon:GetStats(player, metric) - NCDungeon:GetStats(NemesisChat:GetMyName(), metric)

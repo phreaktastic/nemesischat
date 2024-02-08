@@ -11,9 +11,6 @@ local _, core = ...;
 -- Model for interacting with runtime data
 -----------------------------------------------------
 
--- Blizzard functions
-local GetTime = GetTime
-
 core.runtimeDefaults = {
     dbCacheExpiration = 600, -- 10 minutes
     myName = "",
@@ -43,6 +40,10 @@ core.runtimeDefaults = {
         -- A simple cache for any online guild members, with their character names as the key. Allows for
         -- different interactions with guild members, such as whispering them when they join a group.
         -- ["characterName"] = {"guid" = guid, "isNemesis" = true/false},
+    },
+    lastSync = {
+        -- A simple cache for the last time we synced with a particular player, with their character names as the key.
+        -- ["CharacterName-Realm"] = 0,
     },
     petOwners = {},
     ncEvent = {
@@ -126,8 +127,6 @@ core.runtimeDefaults = {
             --     end,
             -- }
         },
-        preMessageHooks = {},
-        postMessageHooks = {},
         subjects = {
             -- {
             --     label = "Nemesis DPS",
@@ -158,6 +157,7 @@ core.runtimeDefaults = {
         conditions = {}
     },
     messageCondition = {
+        leftCategory = "Nemesis",
         left = "NEMESIS_ROLE",
         operator = "IS",
         right = "DAMAGER",
@@ -333,6 +333,7 @@ NCRuntime = {
         local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
         local itemLevel = NemesisChat:GetItemLevel(playerName)
         local groupLead = UnitIsGroupLeader(playerName) ~= nil
+        local class, rawClass = UnitClass(playerName)
         local data =  {
             guid = UnitGUID(playerName),
             isGuildmate = isInGuild,
@@ -341,7 +342,8 @@ NCRuntime = {
             role = UnitGroupRolesAssigned(playerName),
             itemLevel = itemLevel,
             race = UnitRace(playerName),
-            class = UnitClass(playerName),
+            class = class,
+            rawClass = rawClass,
             groupLead = groupLead,
         }
 

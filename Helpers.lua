@@ -11,67 +11,12 @@ local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 
 local E = ElvUI and unpack(ElvUI) or nil
+local GTFO = GTFO and unpack(GTFO) or nil
 
------------------------------------------------------
--- Blizzard functions
------------------------------------------------------
-local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
-local GetTime = GetTime
-local IsInGroup = IsInGroup
-local IsInRaid = IsInRaid
-local UnitGroupRolesAssigned = UnitGroupRolesAssigned
-local UnitIsInMyGuild = UnitIsInMyGuild
-local UnitInParty = UnitInParty
-local UnitIsDead = UnitIsDead
-local UnitName = UnitName
-local tContains = tContains
-local tinsert = tinsert
-local GetNormalizedRealmName = GetNormalizedRealmName
-local BNGetNumFriends = BNGetNumFriends
-local C_BattleNet = C_BattleNet
-local BNET_CLIENT_WOW = BNET_CLIENT_WOW
-local LE_PARTY_CATEGORY_INSTANCE = LE_PARTY_CATEGORY_INSTANCE
-local UNKNOWNOBJECT = UNKNOWNOBJECT
-local WorldFrame = WorldFrame
-local CreateFrame = CreateFrame
-local SendChatMessage = SendChatMessage
-local UnitHealth = UnitHealth
-local UnitHealthMax = UnitHealthMax
-local UnitPower = UnitPower
-local UnitPowerMax = UnitPowerMax
-local UnitPowerType = UnitPowerType
-local UnitIsUnconscious = UnitIsUnconscious
-local SetRaidTarget = SetRaidTarget
-local IsInInstance = IsInInstance
-local UnitClassification = UnitClassification
-local UnitGUID = UnitGUID
-local C_ChatInfo = C_ChatInfo
-local GetNumGuildMembers = GetNumGuildMembers
-local AuraUtil = AuraUtil
-
--- APIs
-local GTFO = GTFO
-
--- Core
-local math = math
-local format = format
-local tonumber = tonumber
-local tostring = tostring
-local pairs = pairs
-local table = table
-local string = string
-
------------------------------------------------------
--- Local variables
------------------------------------------------------
 local scanTipName = format("%s_ScanTooltip", addonName)
 local scanTipText = format("%sTextLeft2", scanTipName)
 local scanTip = CreateFrame("GameTooltip", scanTipName, WorldFrame, "GameTooltipTemplate")
 local scanTipTitles = {}
-
-for i = 1, 48 do
-    scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
-end
 
 -----------------------------------------------------
 -- Core global helper functions
@@ -89,46 +34,42 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:TransmitLeavers()
-        if core.db.profile.leavers == nil or NCDungeon:IsActive() then
+        if core.db.profile.leavers == nil or core.db.profile.leaversSerialized == nil or NCDungeon:IsActive() then
             return
         end
 
         local _, online = GetNumGuildMembers()
 
         if online > 1 and NCRuntime:GetLastLeaverSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "GUILD")
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "GUILD")
             NCRuntime:SetLastLeaverSyncType("GUILD")
         else
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leavers, "YELL")
+            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "YELL")
             NCRuntime:SetLastLeaverSyncType("YELL")
         end
     end
 
     function NemesisChat:TransmitLowPerformers()
-        if core.db.profile.lowPerformers == nil or NCDungeon:IsActive() then
+        if core.db.profile.lowPerformers == nil or core.db.profile.lowPerformersSerialized == nil or NCDungeon:IsActive() then
             return
         end
 
         local _, online = GetNumGuildMembers()
 
         if online > 1 and NCRuntime:GetLastLowPerformerSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "GUILD")
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "GUILD")
             NCRuntime:SetLastLowPerformerSyncType("GUILD")
         else
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformers, "YELL")
+            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "YELL")
             NCRuntime:SetLastLowPerformerSyncType("YELL")
         end
     end
 
     function NemesisChat:Transmit(prefix, payload, distribution, target)
-        local serialized = LibSerialize:Serialize(payload)
-        local compressed = LibDeflate:CompressDeflate(serialized)
-        local encoded = LibDeflate:EncodeForWoWAddonChannel(compressed)
-
         if target and distribution == "WHISPER" then
-            self:SendCommMessage(prefix, encoded, distribution, target)
+            self:SendCommMessage(prefix, payload, distribution, target)
         else
-            self:SendCommMessage(prefix, encoded, distribution)
+            self:SendCommMessage(prefix, payload, distribution)
         end
     end
 
@@ -137,30 +78,55 @@ function NemesisChat:InitializeHelpers()
 
         local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
 
-        if sender == myFullName then
+        if not core.db.global.lastSync then
+            core.db.global.lastSync = {}
+        end
+
+        -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
+        if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and GetTime() - core.db.global.lastSync[sender] <= 1800) then
             return
         end
 
-        local decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
-        if not decoded then return end
-        local decompressed = LibDeflate:DecompressDeflate(decoded)
-        if not decompressed then return end
-        local success, data = LibSerialize:Deserialize(decompressed)
-        if not success then return end
+        core.db.global.lastSync[sender] = GetTime()
+
+        NemesisChat:Print("Synchronizing data received from " .. Ambiguate(sender, "guild"))
+
+        core.runtime.sync = {}
+
+        core.runtime.sync.decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
+        if not core.runtime.sync.decoded then return end
+        core.runtime.sync.decompressed = LibDeflate:DecompressDeflate(core.runtime.sync.decoded)
+        if not core.runtime.sync.decompressed then return end
+        core.runtime.sync.success, core.runtime.sync.data = LibSerialize:Deserialize(core.runtime.sync.decompressed)
+        if not core.runtime.sync.success then return end
+
+        payload = nil
+        core.runtime.sync.decoded = nil
+        core.runtime.sync.decompressed = nil
 
         if prefix == "NC_LEAVERS" then
-            NemesisChat:ProcessLeavers(data)
+            NemesisChat:ProcessLeavers(core.runtime.sync.data)
         elseif prefix == "NC_LOWPERFORMERS" then
-            NemesisChat:ProcessLowPerformers(data)
+            NemesisChat:ProcessLowPerformers(core.runtime.sync.data)
         end
+
+        core.runtime.sync.data = nil
     end
 
     function NemesisChat:ProcessLeavers(leavers)
+        NemesisChat:Print("Processing leavers.")
+
         NemesisChat:ProcessReceivedData("leavers", leavers)
+
+        leavers = nil
     end
 
     function NemesisChat:ProcessLowPerformers(lowPerformers)
+        NemesisChat:Print("Processing low performers.")
+
         NemesisChat:ProcessReceivedData("lowPerformers", lowPerformers)
+
+        lowPerformers = nil
     end
 
     function NemesisChat:ProcessReceivedData(configKey, data)
@@ -179,8 +145,37 @@ function NemesisChat:InitializeHelpers()
             if core.db.profile[configKey][key] == nil then
                 core.db.profile[configKey][key] = val
             else
-                core.db.profile[configKey][key] = ArrayMerge(core.db.profile[configKey][key], val)
+                core.runtime.sync.combinedRow = ArrayMerge(core.db.profile[configKey][key], val)
+                core.db.profile[configKey][key] = core.runtime.sync.combinedRow
             end
+        end
+
+        core.runtime.sync.combinedRow = {}
+    end
+
+    function NemesisChat:PrintNumberOfLeavers()
+        NemesisChat:Print("Leavers:", #NemesisChat:GetKeys(core.db.profile.leavers))
+    end
+
+    function NemesisChat:PrintNumberOfLowPerformers()
+        NemesisChat:Print("Low Performers:", #NemesisChat:GetKeys(core.db.profile.lowPerformers))
+    end
+
+    function NemesisChat:PrintSyncKeys()
+        NemesisChat:Print("LEAVER KEYS")
+
+        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.leavers))
+
+        for key,val in pairs(core.db.profile.leavers) do
+            NemesisChat:Print(key, ":", #val)
+        end
+
+        NemesisChat:Print("LOW PERFORMER KEYS")
+
+        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.lowPerformers))
+
+        for key,val in pairs(core.db.profile.lowPerformers) do
+            NemesisChat:Print(key, ":", #val)
         end
     end
 
@@ -212,6 +207,22 @@ function NemesisChat:InitializeHelpers()
         end
 
         tinsert(core.db.profile.leavers[guid], math.ceil(GetTime() / 10) * 10)
+
+        NemesisChat:EncodeLeavers()
+    end
+
+    function NemesisChat:EncodeLeavers()
+        if not core.db.profile.leavers or core.db.profile.leavers == {} then
+            core.db.profile.leaversEncoded = nil
+            return
+        end
+
+        core.db.profile.leaversSerialized = LibSerialize:Serialize(core.db.profile.leavers)
+        core.db.profile.leaversCompressed = LibDeflate:CompressDeflate(core.db.profile.leaversSerialized)
+        core.db.profile.leaversEncoded = LibDeflate:EncodeForWoWAddonChannel(core.db.profile.leaversCompressed)
+
+        core.db.profile.leaversSerialized = nil
+        core.db.profile.leaversCompressed = nil
     end
 
     function NemesisChat:AddLowPerformer(guid)
@@ -224,6 +235,34 @@ function NemesisChat:InitializeHelpers()
         end
 
         tinsert(core.db.profile.lowPerformers[guid], math.ceil(GetTime() / 10) * 10)
+
+        NemesisChat:EncodeLowPerformers()
+    end
+
+    function NemesisChat:EncodeLowPerformers()
+        if not core.db.profile.lowPerformers or core.db.profile.lowPerformers == {} then
+            core.db.profile.lowPerformersEncoded = nil
+            return
+        end
+
+        core.db.profile.lowPerformersSerialized = LibSerialize:Serialize(core.db.profile.lowPerformers)
+        core.db.profile.lowPerformersCompressed = LibDeflate:CompressDeflate(core.db.profile.lowPerformersSerialized)
+        core.db.profile.lowPerformersEncoded = LibDeflate:EncodeForWoWAddonChannel(core.db.profile.lowPerformersCompressed)
+
+        core.db.profile.lowPerformersSerialized = nil
+        core.db.profile.lowPerformersCompressed = nil
+    end
+
+    function NemesisChat:EncodeAddonMessageData()
+        NemesisChat:Print("Encoding synchronization data.")
+
+        if not core.db.profile.leaversEncoded then
+            NemesisChat:EncodeLeavers()
+        end
+
+        if not core.db.profile.lowPerformersEncoded then
+            NemesisChat:EncodeLowPerformers()
+        end
     end
 
     function NemesisChat:LeaveCount(guid)
@@ -295,6 +334,10 @@ function NemesisChat:InitializeHelpers()
 
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
+        if not IsInInstance() then
+            return
+        end
+
         local _, subEvent, eventType, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _ = CombatLogGetCurrentEventInfo()
         local isPull, _, pullPlayerName, mobName = NemesisChat:IsPull()
 
@@ -327,6 +370,15 @@ function NemesisChat:InitializeHelpers()
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "SPELL_CAST_SUCCESS" then
             NCEvent:Spell(sourceName, destName, misc1, misc2)
+
+            -- This needs to be handled in a more modular way
+            if misc2 == "Blessing of Freedom" and tContains(NCDungeon:GetKeystoneAffixes(), 134) then
+                if sourceName ~= destName then
+                    NCSegment:GlobalAddAffix(sourceName, 10)
+                else
+                    -- Currently not awarding any affix points for casting on self, esp when it's easy to spec into
+                end
+            end
         -- Spell start
         elseif subEvent == "SPELL_CAST_START" then
             NCEvent:SpellStart(sourceName, destName, misc1, misc2)
@@ -694,8 +746,15 @@ function NemesisChat:InitializeHelpers()
             return GetAverageItemLevel()
         end
 
+        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
+        local rosterIlvl = rosterPlayer and rosterPlayer.itemLevel or nil
+
+        if rosterIlvl ~= nil and rosterIlvl > 0 then
+            return rosterPlayer.itemLevel
+        end
+
         if E and E.GetUnitItemLevel then
-            local itemLevel, retryUnit, retryTable, iLevelDB = E:GetUnitItemLevel(unit)
+            local itemLevel = E:GetUnitItemLevel(unit)
 
             if itemLevel ~= "tooSoon" then
                 return itemLevel
@@ -721,10 +780,22 @@ function NemesisChat:InitializeHelpers()
 
     -- Check the roster and (un/re)subscribe events appropriately
     function NemesisChat:CheckGroup()
-        local count = NCRuntime:GetGroupRosterCountOthers()
+        local shouldSubscribe = NCRuntime:GetGroupRosterCountOthers() > 0
+
+        if NCRuntime.lastCheckSubscribe == shouldSubscribe then
+            return
+        end
+
+        NCRuntime.lastCheckSubscribe = shouldSubscribe
+
+        if shouldSubscribe and IsNCEnabled() then
+            NemesisChat:Print("Group state changed, re-subscribing to group based events.")
+        else
+            NemesisChat:Print("Group state changed, un-subscribing from group based events.")
+        end
 
         for _, event in pairs(core.eventSubscriptions) do
-            if count > 0 and IsNCEnabled() then
+            if shouldSubscribe and IsNCEnabled() then
                 NemesisChat:RegisterEvent(event)
             else
                 NemesisChat:UnregisterEvent(event)
@@ -796,6 +867,10 @@ function NemesisChat:InitializeHelpers()
 
     -- Get the owner of a pet from cache, and if it doesn't exist in cache, set it and return the owner
     function NemesisChat:GetPetOwner(petGuid)
+        for i = 1, 48 do
+            scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
+        end
+
         NCRuntime:CheckPetOwners()
 
         local owner = NCRuntime:GetPetOwner(petGuid)
@@ -813,6 +888,10 @@ function NemesisChat:InitializeHelpers()
 
     -- Pull the owner of a pet from the tooltip
     function NemesisChat:ScanTooltipForPetOwner(guid)
+        for i = 1, 48 do
+            scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
+        end
+
         local text = _G[scanTipText]
         if(guid and text) then
             scanTip:SetOwner( WorldFrame, "ANCHOR_NONE" )
@@ -901,8 +980,12 @@ function NemesisChat:InitializeHelpers()
                         self:Print_r(key)
                         self:Print("#### End Table ####")
                     else
-                        if type(val) ~= "table" then
-                            self:Print(key .. "(" .. type(val) .. "):", val)
+                        if type(val) == "boolean" then
+                            self:Print("    - " .. key .. "(" .. type(val) .. "):", tostring(val))
+                        elseif type(val) == "function" then
+                            self:Print("    - " .. key .. "(function)")
+                        elseif type(val) ~= "table" then
+                            self:Print("    - " .. key .. "(" .. type(val) .. "):", val)
                         else
                             self:Print("#### Table ####")
                             self:Print(key .. ":")
@@ -911,8 +994,12 @@ function NemesisChat:InitializeHelpers()
                         end
                     end
                 end
+            elseif type (item) == "function" then
+                self:Print("Function")
+            elseif type(item) == "boolean" then
+                self:Print(tostring(item))
             else
-                self:Print("    " .. item)
+                self:Print(item)
             end
         end
     end
@@ -1262,6 +1349,33 @@ function NemesisChat:InitializeHelpers()
     function NemesisChat:LowPriorityTimer()
         NemesisChat:AttemptSyncItemLevels()
     end
+
+    function NemesisChat:Print(...)
+        local notfound, c, message = true, ChatTypeInfo.SYSTEM, ""
+
+        for _, msg in pairs({...}) do
+            if message == "" then
+                message = msg
+            else
+                message = message .. " " .. msg
+            end
+        end
+
+        message = NCColors.Emphasize("NemesisChat: ") .. message
+
+        for i=1, NUM_CHAT_WINDOWS do
+            -- if _G['ChatFrame'..i]:IsEventRegistered('CHAT_MSG_SYSTEM') then
+            --     notfound = false
+            --     _G['ChatFrame'..i]:AddMessage(message, c.r, c.g, c.b, c.id)
+            -- end
+
+            _G['ChatFrame'..i]:AddMessage(message, 1, 1, 1, c.id)
+        end
+
+        -- if notfound then
+        --     DEFAULT_CHAT_FRAME:AddMessage(message, c.r, c.g, c.b, c.id)
+        -- end
+    end
 end
 
 -- Check combat log for application or dose of auras listed in core.affixMobsAuras
@@ -1290,6 +1404,26 @@ function NemesisChat:CheckAffixAuras()
             end
         end
     end
+end
+
+function NemesisChat:UnitHasAura(unit, auraName, auraType)
+    if string.lower(auraType) == "buff" then
+        auraType = "HELPFUL"
+    elseif string.lower(auraType) == "debuff" then
+        auraType = "HARMFUL"
+    end
+
+    local _, _, count = AuraUtil.FindAuraByName(auraName, unit, auraType)
+
+    return count ~= nil and tonumber(count) > 0, count
+end
+
+function NemesisChat:UnitHasBuff(unit, buffName)
+    return NemesisChat:UnitHasAura(unit, buffName, "buff")
+end
+
+function NemesisChat:UnitHasDebuff(unit, debuffName)
+    return NemesisChat:UnitHasAura(unit, debuffName, "debuff")
 end
 
 -- Instantiate NC objects since they are ephemeral and will not persist through a UI load

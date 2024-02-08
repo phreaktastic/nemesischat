@@ -434,66 +434,7 @@ function NemesisChat:InstantiateController()
 
     -- Condition methods
     NCController.Condition = {
-        -- Subjects
-        ["NEMESIS_ROLE"] = function()
-            return GetRole(NCEvent:GetNemesis())
-        end,
-        ["BYSTANDER_ROLE"] = function()
-            return GetRole(NCEvent:GetBystander())
-        end,
-        ["SPELL_ID"] = function()
-            -- Return as string so input comparisons work properly
-            return NCSpell:GetSpellId() .. ""
-        end,
-        ["SPELL_NAME"] = function()
-            return NCSpell:GetSpellName()
-        end,
-        ["SPELL_TARGET"] = function()
-            return NCSpell:GetTarget()
-        end,
-        ["GROUP_COUNT"] = function()
-            return NCRuntime:GetGroupRosterCount() or 0
-        end,
-        ["NEMESES_COUNT"] = function()
-            -- Return as string so input comparisons work properly
-            return NemesisChat:GetPartyNemesesCount() .. ""
-        end,
-        ["INTERRUPTS"] = function()
-            -- Return as string so input comparisons work properly
-            return NCCombat:GetInterrupts(GetMyName()) .. ""
-        end,
-        ["INTERRUPTS_OVERALL"] = function()
-            -- Return as string so input comparisons work properly
-            return NCDungeon:GetInterrupts(GetMyName()) .. ""
-        end,
-        ["NEMESIS_INTERRUPTS"] = function()
-            -- Return as string so input comparisons work properly
-            return NCCombat:GetInterrupts(NCEvent:GetNemesis()) .. ""
-        end,
-        ["NEMESIS_INTERRUPTS_OVERALL"] = function()
-            -- Return as string so input comparisons work properly
-            return NCDungeon:GetInterrupts(NCEvent:GetNemesis()) .. ""
-        end,
-        ["BYSTANDER_INTERRUPTS"] = function()
-            -- Return as string so input comparisons work properly
-            return NCCombat:GetInterrupts(NCEvent:GetBystander()) .. ""
-        end,
-        ["BYSTANDER_INTERRUPTS_OVERALL"] = function()
-            -- Return as string so input comparisons work properly
-            return NCDungeon:GetInterrupts(NCEvent:GetBystander()) .. ""
-        end,
-        ["HEALTH_PERCENT"] = function()
-            -- Return as string so input comparisons work properly
-            return math.floor((UnitHealth(GetMyName()) / UnitHealthMax(GetMyName())) * 100) .. ""
-        end,
-        ["NEMESIS_HEALTH_PERCENT"] = function()
-            -- Return as string so input comparisons work properly
-            return math.floor((UnitHealth(NCEvent:GetNemesis()) / UnitHealthMax(NCEvent:GetNemesis())) * 100) .. ""
-        end,
-        ["BYSTANDER_HEALTH_PERCENT"] = function()
-            -- Return as string so input comparisons work properly
-            return math.floor((UnitHealth(NCEvent:GetBystander()) / UnitHealthMax(NCEvent:GetBystander())) * 100) .. ""
-        end,
+        -- Subjects are all handled in the API now
 
         -- Operators
         ["IS"] = function(val1, val2)
@@ -579,6 +520,18 @@ function NemesisChat:InstantiateController()
         end,
         ["NOT_GROUP_LEAD"] = function(val1, val2)
             return not UnitIsGroupLeader(val1)
+        end,
+        ["HAS_BUFF"] = function(val1, val2)
+            return NemesisChat:HasBuff(val1, val2)
+        end,
+        ["NOT_HAS_BUFF"] = function(val1, val2)
+            return not NemesisChat:HasBuff(val1, val2)
+        end,
+        ["HAS_DEBUFF"] = function(val1, val2)
+            return NemesisChat:HasDebuff(val1, val2)
+        end,
+        ["NOT_HAS_DEBUFF"] = function(val1, val2)
+            return not NemesisChat:HasDebuff(val1, val2)
         end,
     }
 end

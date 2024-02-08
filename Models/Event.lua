@@ -11,25 +11,6 @@ local _, core = ...;
 -- Event getters, setters, and helper methods
 -----------------------------------------------------
 
-local UnitIsUnconscious = UnitIsUnconscious
-local CombatLogGetCurrentEventInfo =  CombatLogGetCurrentEventInfo
-local UnitThreatSituation = UnitThreatSituation
-local IsInGroup = IsInGroup
-local IsInInstance = IsInInstance
-local UnitInParty = UnitInParty
-local UnitGroupRolesAssigned = UnitGroupRolesAssigned
-local UnitClassification = UnitClassification
-local UnitName = UnitName
-local UnitHealth = UnitHealth
-local UnitHealthMax = UnitHealthMax
-local UnitPower = UnitPower
-local UnitPowerMax = UnitPowerMax
-local UnitPowerType = UnitPowerType
-local GetTime = GetTime
-local SendChatMessage = SendChatMessage
-local IsInGroup = IsInGroup
-local IsInRaid = IsInRaid
-
 function NemesisChat:InstantiateEvent()
     function NCEvent:Initialize()
         NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
@@ -176,11 +157,11 @@ function NemesisChat:InstantiateEvent()
     function NCEvent:Spell(source, dest, spellId, spellName)
         local feast = core.feastIDs[spellId]
 
-        -- We don't care about casts from non-grouped players
-        if not UnitInParty(source) then
-            NCEvent:Initialize()
-            return
-        end
+        -- We don't care about casts from non-grouped players / mobs to non-grouped players / mobs
+        -- if not UnitInParty(source) and not UnitInParty(dest) then
+        --     NCEvent:Initialize()
+        --     return
+        -- end
 
         NCEvent:SetEvent("SPELL_CAST_SUCCESS")
         NCEvent:SetTargetFromSource(source)
@@ -191,14 +172,15 @@ function NemesisChat:InstantiateEvent()
             return
         end
 
-        local isReplace = (GetTime() - NCRuntime:GetLastFeast() <= 20)
+        -- Feasts last 2 min, so a new feast within 2 min of the last one is a replacement. 100 sec should be reasonable here.
+        local isReplace = (GetTime() - NCRuntime:GetLastFeast() <= 100)
         NCRuntime:UpdateLastFeast()
 
         if isReplace then
             NCEvent:SetEvent("REFEAST")
         elseif feast == 1 then
             NCEvent:SetEvent("FEAST")
-        else 
+        else
             NCEvent:SetEvent("OLDFEAST")
         end
 

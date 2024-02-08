@@ -84,6 +84,14 @@ core.options.args.messagesGroup = {
             disabled = "NoMessageSelected",
             hidden = "NoMessageSelected"
         },
+        messagesDuplicate = {
+            order = 8.5,
+            type = "execute",
+            func = "DuplicateMessage",
+            name = "Duplicate",
+            disabled = "NoMessageSelected",
+            hidden = "NoMessageSelected"
+        },
         messagesConfigured = {
             order = 9,
             type = "select",
@@ -534,6 +542,20 @@ function NemesisChat:DeselectMessage()
     messageLabel = ""
 end
 
+function NemesisChat:DuplicateMessage()
+    if core.db.profile.messages[selectedCategory] == nil or core.db.profile.messages[selectedCategory][selectedEvent] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] == nil then
+        return
+    end
+
+    local msg = DeepCopy(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)])
+
+    msg.label = msg.label .. " (Copy)"
+
+    table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], msg)
+
+    selectedConfiguredMessage = #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] .. ""
+end
+
 function NemesisChat:GetMessageLabel()
     return messageLabel
 end
@@ -624,13 +646,42 @@ function NemesisChat:GetConditionSubjects()
         return {}
     end
 
-    subjects = {}
+    local condition = messageConditions[tonumber(selectedCondition)]
+    local coreCondition = GetCondition(condition.left)
+
+    condition.leftCategory = condition.leftCategory or coreCondition.category or nil
+
+    if condition.leftCategory == "<GET_CATEGORIES" then
+        return NemesisChat:GetConditionSubjectCategories()
+    end
+
+    local subjects = {
+        ["<GET_CATEGORIES"] = "|c00ffcc00<< " .. condition.leftCategory .. "|r"
+    }
 
     for key, val in pairs(core.messageConditions) do
-        subjects[val.value] = val.label
+        if val.category == condition.leftCategory then
+            subjects[val.value] = val.label
+        end
     end
 
     return subjects
+end
+
+function NemesisChat:GetConditionSubjectCategories()
+    if selectedCondition == "" then
+        return {}
+    end
+
+    local categories = {}
+
+    for _, val in pairs(core.messageConditions) do
+        if val.category ~= nil and not categories[val.category] then
+            categories[val.category] = "|c00ffcc00" .. val.category .. " >>|r"
+        end
+    end
+
+    return categories
 end
 
 function NemesisChat:GetConditionSubject()
@@ -649,6 +700,20 @@ function NemesisChat:SetConditionSubject(info, value)
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
+
+    if value == "<GET_CATEGORIES" then
+        condition.leftCategory = value
+        return
+    end
+
+    local categories = {}
+
+    for _,val in pairs(core.messageConditions) do
+        if value == val.category then
+            condition.leftCategory = val.category
+            return
+        end
+    end
 
     condition.left = value
 
@@ -825,29 +890,16 @@ function NemesisChat:UpdateMessagePreview()
         return ""
     end
 
-    local nemesis = NemesisChat:GetRandomNemesis()
     local spacer = ": "
     local color = core.reference.colors[messageChannel] or core.reference.colors["SAY"]
-    local spellLink = GetSpellLink(408358)
 
     if messageChannel == "EMOTE" then spacer = " " end
 
-    if selectedEvent == "OLDFEAST" then
-        spellLink = GetSpellLink(126494)
-    elseif selectedEvent == "FEAST" then
-        spellLink = GetSpellLink(382423)
-    elseif selectedEvent == "REFEAST" then
-        spellLink = GetSpellLink(382427)
-    end
-
     if HasConditions() then
         for key, val in pairs(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions) do
-            if val.left == "SPELL_ID" and val.operator == "IS" then
-                spellLink = GetSpellLink(tonumber(val.right))
-            end
-
-            if val.left == "SPELL_NAME" and val.operator == "IS" then
-                spellLink = GetSpellLink(val.right)
+            if (val.left == "SPELL_ID" or val.left == "SPELL_NAME") and val.operator == "IS" then
+                NCRuntime.previewSpell = val.right
+                break
             end
         end
     end
@@ -855,6 +907,8 @@ function NemesisChat:UpdateMessagePreview()
     local chatMsg = NCController:GetReplacedString(message, true)
 
     messagePreview = color .. UnitName("player") .. spacer .. chatMsg .. "|r"
+
+    NCRuntime.previewSpell = nil
 end
 
 function HasConditions()

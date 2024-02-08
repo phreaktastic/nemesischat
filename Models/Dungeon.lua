@@ -89,17 +89,19 @@ function NCDungeon:SetTimeLimit(timeLimit)
 end
 
 function NCDungeon:GetTimeLeft()
-    return GetTime() - (NCDungeon:GetStartTime() + NCDungeon:GetTimeLimit())
+    if not NCDungeon:IsActive() then
+        return 0
+    end
+
+    return (NCDungeon:GetStartTime() + NCDungeon:GetTimeLimit()) - GetTime()
 end
 
 function NCDungeon:UpdateCache()
-    if NCDungeon:IsActive() then
-        if core.db.profile.cache.NCDungeon.Restore then
-            core.db.profile.cache.NCDungeon:Restore(NCDungeon)
-        else
-            core.db.profile.cache.NCDungeon = NCSegment:New()
-            core.db.profile.cache.NCDungeon:Restore(NCDungeon)
-        end
+    if core.db.profile.cache.NCDungeon.Restore then
+        core.db.profile.cache.NCDungeon:Restore(NCDungeon)
+    else
+        core.db.profile.cache.NCDungeon = NCSegment:New()
+        core.db.profile.cache.NCDungeon:Restore(NCDungeon)
     end
 end
 
@@ -112,4 +114,5 @@ end
 function NCDungeon:ClearCache()
     core.db.profile.cache.NCDungeon = {}
     core.db.profile.cache.NCDungeonTime = 0
+    NCDungeon.RosterSnapshot = {}
 end
