@@ -14,6 +14,7 @@ core.version = GetAddOnMetadata(addonName, 'Version')
 -----------------------------------------------------
 NemesisChat = LibStub("AceAddon-3.0"):NewAddon("NemesisChat", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceTimer-3.0", "LibToast-1.0")
 LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
+core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
 
 -----------------------------------------------------
 -- Global functions

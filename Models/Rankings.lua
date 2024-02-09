@@ -532,7 +532,7 @@ NCRankings = {
             local topPlayer = nil
             local botPlayer = nil
 
-            for playerName, playerData in pairs(NCState:GetGroupState()) do
+            for playerName, playerData in pairs(NCState:GetGroupPlayers()) do
                 self.All[metricKey][playerName] = (self._segment:GetStats(playerName, metricKey) or nil)
 
                 topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.role, playerName, topVal, botVal, topPlayer, botPlayer)

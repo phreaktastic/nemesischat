@@ -408,7 +408,7 @@ NCInfo = {
     UpdatePlayerDropdown = function(self)
         UIDropDownMenu_SetText(NCInfo.StatsFrame.playerDropdown, NCInfo.CurrentPlayer)
         UIDropDownMenu_Initialize(NCInfo.StatsFrame.playerDropdown, function(self, level, menuList)
-            local roster = NCState:GetGroupState()
+            local roster = NCState:GetGroupPlayers()
             local snapshot = NCDungeon.RosterSnapshot
             local mergedData = MapMerge(snapshot, roster)
 

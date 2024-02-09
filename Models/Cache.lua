@@ -24,8 +24,16 @@ NCCache = {
     db = NCDB:New("cache"),
 }
 
+local LibSerialize = LibStub("LibSerialize")
+
 function NCCache:Push(key, data)
-    local isSegment = data.IsSegment or false
+    local isSegment = type(data) == "table" and data.IsSegment or false
+
+    if type(data) == "table" then
+        data.CACHE_TIMESTAMP = GetTime()
+        data.CACHE_VERSION = core.version
+        data = LibSerialize:Serialize(data)
+    end
 
     if isSegment then
         if self.db:GetPath(key .. ".Restore") then
@@ -40,7 +48,23 @@ function NCCache:Push(key, data)
 end
 
 function NCCache:Pull(key)
-    return self.db:GetKey(key)
+    local data = self.db:GetKey(key)
+
+    if not data then
+        return nil
+    end
+
+    if type(data) == "string" then
+        local deserialized = LibSerialize:Deserialize(data)
+
+        if data.CACHE_VERSION ~= core.version then
+            return nil
+        end
+
+        return deserialized
+    else
+        return data
+    end
 end
 
 function NCCache:RestoreSegment(key)
@@ -71,4 +95,34 @@ function NCCache:GetSegmentFromKey(key)
     end
 
     return nil
+end
+
+function NCCache:Exists(key)
+    return self.db:IsKeyEmpty(key)
+end
+
+function NCCache:GetTimestamp(key)
+    local data = self.db:GetKey(key)
+
+    if not data then
+        return nil
+    end
+
+    if type(data) == "string" then
+        local deserialized = LibSerialize:Deserialize(data)
+
+        return deserialized.CACHE_TIMESTAMP
+    else
+        return data.CACHE_TIMESTAMP
+    end
+end
+
+function NCCache:GetPushDelta(key)
+    local timestamp = self:GetTimestamp(key)
+
+    if not timestamp then
+        return 999999999
+    end
+
+    return GetTime() - timestamp
 end

@@ -17,6 +17,10 @@ local LibDeflate = LibStub("LibDeflate")
 C_ChatInfo.RegisterAddonMessagePrefix("NC_LEAVERS")
 C_ChatInfo.RegisterAddonMessagePrefix("NC_LOWPERFORMERS")
 
+function NemesisChat:TransmitSyncData()
+    NCSync:TransmitSyncData()
+end
+
 NCSync = {
     lastSyncType = "",
     lastLeaverSynctype = "",

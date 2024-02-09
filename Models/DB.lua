@@ -169,12 +169,12 @@ end
 
 -- Check if the base path + prefix is nil or an empty table
 function NCDB:IsEmpty()
-    return core.db[self.basePath][self.prefix] == nil or next(core.db[self.basePath][self.prefix]) == nil
+    return core.db[self.basePath][self.prefix] == nil or core.db[self.basePath][self.prefix] == ""
 end
 
 -- Check if a key is nil or an empty table
 function NCDB:IsKeyEmpty(key)
-    return core.db[self.basePath][self.prefix][key] == nil or next(core.db[self.basePath][self.prefix][key]) == nil
+    return core.db[self.basePath][self.prefix][key] == nil or core.db[self.basePath][self.prefix][key] == ""
 end
 
 -- Check if a complex key is nil or an empty table

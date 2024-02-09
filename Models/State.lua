@@ -12,6 +12,7 @@ local _, core = ...;
 -----------------------------------------------------
 
 core.stateDefaults = {
+    groupCacheExpiration = 1800,
     lastCheckSubscribe = false,
     player = {
         guid = "",
@@ -135,6 +136,10 @@ end
 -- 0.1 second timer
 function NCState:HighPriorityTasks()
     NCState:CheckGuild()
+end
+
+function NCState:GetGroupCacheExpiration()
+    return NCState.groupCacheExpiration
 end
 
 function NCState:Reset()
@@ -418,7 +423,7 @@ function NCState:GetPlayerState(playerName)
     return NCState.group.players[playerName]
 end
 
-function NCState:GetGroupState()
+function NCState:GetGroupPlayers()
     return NCState.group
 end
 
@@ -440,10 +445,6 @@ end
 
 function NCState:GetGroupHealer()
     return NCState.group.healer
-end
-
-function NCState:GetGroupPlayers()
-    return NCState.group.players
 end
 
 function NCState:GetGroupPlayerNames()
@@ -774,7 +775,7 @@ function NCState:AttemptSyncItemLevels()
         return
     end
 
-    for key,val in pairs(NCState:GetGroupState()) do
+    for key,val in pairs(NCState:GetGroupPlayers()) do
         if val ~= nil and val.itemLevel == nil then
             local itemLevel = NCState:GetItemLevel(key)
 
@@ -1019,7 +1020,7 @@ end
 
 function NCState:GetRosterDelta()
     local newRoster = NCState:GetPlayersInGroup()
-    local oldRoster = NemesisChat:GetDoubleMap(NCState:GetGroupState())
+    local oldRoster = NemesisChat:GetDoubleMap(NCState:GetGroupPlayers())
     local joined = {}
     local left = {}
 

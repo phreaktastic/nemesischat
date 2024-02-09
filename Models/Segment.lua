@@ -100,7 +100,7 @@ NCSegment = {
         self.StartTime = GetTime()
         self:SetActive()
         self:StartCallback()
-        self.RosterSnapshot = DeepCopy(NCState:GetGroupState())
+        self.RosterSnapshot = DeepCopy(NCState:GetGroupPlayers())
     end,
     StartCallback = function(self)
         -- Override me

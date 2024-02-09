@@ -5,18 +5,10 @@
 -----------------------------------------------------
 -- Namespaces
 -----------------------------------------------------
-local addonName, core = ...;
+local _, core = ...;
 
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
-
-local E = ElvUI and unpack(ElvUI) or nil
-local GTFO = GTFO and unpack(GTFO) or nil
-
-local scanTipName = format("%s_ScanTooltip", addonName)
-local scanTipText = format("%sTextLeft2", scanTipName)
-local scanTip = CreateFrame("GameTooltip", scanTipName, WorldFrame, "GameTooltipTemplate")
-local scanTipTitles = {}
 
 -----------------------------------------------------
 -- Core global helper functions
@@ -365,16 +357,16 @@ function NemesisChat:InstantiateCore()
     NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
     NemesisChat:InstantiateEvent()
 
-    if core.db.profile.cache.guild then
-        core.runtime.guild = DeepCopy(core.db.profile.cache.guild)
+    if NCCache:Exists(NC_CACHE_KEY_GUILD) then
+        core.runtime.guild = DeepCopy(NCCache:Pull(NC_CACHE_KEY_GUILD))
     end
 
-    if core.db.profile.cache.friends then
-        core.runtime.friends = DeepCopy(core.db.profile.cache.friends)
+    if NCCache:Exists(NC_CACHE_KEY_FRIENDS) then
+        core.runtime.friends = DeepCopy(NCCache:Pull(NC_CACHE_KEY_FRIENDS))
     end
 
-    if core.db.profile.cache.groupRoster and GetTime() - core.db.profile.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
-        core.runtime.groupRoster = DeepCopy(core.db.profile.cache.groupRoster)
+    if NCCache:Exists(NC_CACHE_KEY_GROUP) and NCCache:GetPushDelta(NC_CACHE_KEY_GROUP) <= NCState:GetGroupCacheExpiration() then
+        core.runtime.groupRoster = DeepCopy(NCCache:Get(NC_CACHE_KEY_GROUP))
     end
 
     NCDungeon:CheckCache()
@@ -383,8 +375,6 @@ end
 function NemesisChat:Initialize()
     NemesisChat:InitializeConfig()
     NemesisChat:InitializeHelpers()
-    NemesisChat:InitializeTimers()
-    NemesisChat:RegisterPrefixes()
     NemesisChat:RegisterToasts()
     NemesisChat:SetMyName()
     NCInfo:Initialize()

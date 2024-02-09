@@ -56,7 +56,7 @@ function NCCombat:AnnounceAffixAuras()
     end
 
     for _, auraData in pairs(core.affixMobsAuras) do
-        for playerName, playerData in pairs(NCState:GetGroupState()) do
+        for playerName, playerData in pairs(NCState:GetGroupPlayers()) do
             local _, _, count = AuraUtil.FindAuraByName(auraData.spellName, playerName, "HARMFUL")
 
             if count ~= nil and tonumber(count) >= auraData.highStacks then
