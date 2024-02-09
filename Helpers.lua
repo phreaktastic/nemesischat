@@ -173,7 +173,6 @@ function NemesisChat:InitializeHelpers()
         local isPull, _, pullPlayerName, mobName = NemesisChat:IsPull()
 
         NemesisChat:SetMyName()
-        NemesisChat:UpdateGroupState()
         NemesisChat:ActionScoring()
         NemesisChat:CheckAffixes()
 
