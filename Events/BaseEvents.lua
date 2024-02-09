@@ -23,7 +23,7 @@ function NemesisChat:PLAYER_ENTERING_WORLD()
 end
 
 function NemesisChat:COMBAT_LOG_EVENT_UNFILTERED()
-    NemesisChat:PopulateCombatEventDetails()
+    NCCombatLogEvent:Fire()
 end
 
 function NemesisChat:CHALLENGE_MODE_START()

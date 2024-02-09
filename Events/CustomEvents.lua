@@ -13,7 +13,7 @@ local _, core = ...;
 
 function NemesisChat:HandleEvent()
     -- Exit if we're not in a group, the event is not supported, config isn't setup, etc.
-	if NemesisChat:ShouldExitEventHandler() then
+	if NCCombatLogEvent:ShouldExitEventHandler() then
         return
     end
 

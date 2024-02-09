@@ -53,6 +53,14 @@ function NCDB:TouchKey(key)
     end
 end
 
+function NCDB:InsertIntoArray(key, value)
+    if core.db[self.basePath][self.prefix][key] == nil then
+        core.db[self.basePath][self.prefix][key] = {}
+    end
+
+    table.insert(core.db[self.basePath][self.prefix][key], value)
+end
+
 -- Complex keys, meaning dots to parse and null check
 function NCDB:GetComplexKey(key)
     if key ~= self.prefix then
@@ -126,4 +134,27 @@ function NCDB:TouchComplexKey(key)
 
         parent = parent[keys[i]]
     end
+end
+
+function NCDB:ComplexInsertIntoArray(key, value)
+    if key ~= self.prefix then
+        key = self.prefix .. "." .. key
+    end
+
+    local keys = {strsplit(".", key)}
+    local parent = core.db[self.basePath]
+
+    for i = 1, #keys - 1 do
+        if parent[keys[i]] == nil then
+            parent[keys[i]] = {}
+        end
+
+        parent = parent[keys[i]]
+    end
+
+    if parent[keys[#keys]] == nil then
+        parent[keys[#keys]] = {}
+    end
+
+    table.insert(parent[keys[#keys]], value)
 end
