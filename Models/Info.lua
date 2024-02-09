@@ -254,7 +254,7 @@ NCInfo = {
         local green = {0.5,0.85,0.6}
         local neutral = {0.5,0.6,0.85}
 
-        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(NCInfo.CurrentPlayer)
+        local rosterPlayer = NCState:GetPlayerState(NCInfo.CurrentPlayer)
         local snapshotPlayer = NCDungeon.RosterSnapshot[NCInfo.CurrentPlayer]
         local playerInfo = MapMerge(rosterPlayer, snapshotPlayer)
         local race = playerInfo.race or UnitRace(NCInfo.CurrentPlayer) or "Unknown"
@@ -408,7 +408,7 @@ NCInfo = {
     UpdatePlayerDropdown = function(self)
         UIDropDownMenu_SetText(NCInfo.StatsFrame.playerDropdown, NCInfo.CurrentPlayer)
         UIDropDownMenu_Initialize(NCInfo.StatsFrame.playerDropdown, function(self, level, menuList)
-            local roster = NCRuntime:GetGroupRoster()
+            local roster = NCState:GetGroupState()
             local snapshot = NCDungeon.RosterSnapshot
             local mergedData = MapMerge(snapshot, roster)
 

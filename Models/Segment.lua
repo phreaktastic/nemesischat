@@ -100,7 +100,7 @@ NCSegment = {
         self.StartTime = GetTime()
         self:SetActive()
         self:StartCallback()
-        self.RosterSnapshot = DeepCopy(NCRuntime:GetGroupRoster())
+        self.RosterSnapshot = DeepCopy(NCState:GetGroupState())
     end,
     StartCallback = function(self)
         -- Override me
@@ -388,8 +388,8 @@ NCSegment = {
             self.Heals[source] = self.Heals[source] + amount
         end
 
-        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(source)
-        local rosterTarget = NCRuntime:GetGroupRosterPlayer(target)
+        local rosterPlayer = NCState:GetPlayerState(source)
+        local rosterTarget = NCState:GetPlayerState(target)
 
         -- If the source is not a healer, and the source is not the target, and the target is in the group (ignoring pets and self heals)
         if rosterPlayer ~= nil and rosterPlayer.role ~= "HEALER" and source ~= target and rosterTarget ~= nil then

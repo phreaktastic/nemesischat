@@ -180,7 +180,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Players in Group",
         value = "GROUP_COUNT",
         category = "Group",
-        exec = function() return NCRuntime:GetGroupRosterCount() or 0 end,
+        exec = function() return NCState:GetGroupStateCount() or 0 end,
         operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
         type = "NUMBER",
     })
@@ -188,7 +188,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Group Lead",
         value = "GROUP_LEAD",
         category = "Group",
-        exec = function() return NCRuntime:GetGroupLead() end,
+        exec = function() return NCState:GetGroupLead() end,
         operators = ArrayMerge(core.constants.OPERATORS, core.constants.UNIT_OPERATORS),
         type = "INPUT",
     })
@@ -905,10 +905,10 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Group Lead",
         value = "GROUPLEAD",
-        exec = function() return NCRuntime:GetGroupLead() end,
+        exec = function() return NCState:GetGroupLead() end,
         description = "The name of the player who is the leader of the group.",
         isNumeric = false,
-        example = function() return NCRuntime:GetGroupLead() or "GroupLeeeedz" end,
+        example = function() return NCState:GetGroupLead() or "GroupLeeeedz" end,
     })
     :AddReplacement({
         value = "HP_CONDITION",

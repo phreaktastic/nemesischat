@@ -62,22 +62,22 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     local joins,leaves = NCState:GetRosterDelta()
 
     -- We left, or the last player left the group leaving us solo
-    if #leaves > 0 and #leaves == NCRuntime:GetGroupRosterCountOthers() then
-        NCRuntime:ClearGroupRoster()
+    if #leaves > 0 and #leaves == NCState:GetGroupStateCountOthers() then
+        NCState:ClearGroup()
         NCState:GroupStateSubscriptions()
 
         -- To be monitored. We want data on the last group we ran with, and if we get kicked with this in place it is lost.
         --NCSegment:GlobalReset()
     -- We joined, or we invited someone to form a group
-    elseif NCRuntime:GetGroupRosterCountOthers() == 0 and #joins > 0 then
-        NCRuntime:ClearGroupRoster()
+    elseif NCState:GetGroupStateCountOthers() == 0 and #joins > 0 then
+        NCState:ClearGroup()
         NCSegment:GlobalReset()
         local members = NCState:GetPlayersInGroup()
         local isLeader = UnitIsGroupLeader(GetMyName())
 
         for key,val in pairs(members) do
             if val ~= nil and val ~= GetMyName() then
-                local player = NCRuntime:AddGroupRosterPlayer(val)
+                local player = NCState:AddPlayerToGroup(val)
 
                 -- We're the leader, fire off some join events
                 if isLeader then
@@ -98,7 +98,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     elseif #joins > 0 or #leaves > 0 then
         for key,val in pairs(joins) do
             if val ~= nil and val ~= GetMyName() then
-                local player = NCRuntime:AddGroupRosterPlayer(val)
+                local player = NCState:AddPlayerToGroup(val)
 
                 local leaves = NemesisChat:LeaveCount(player.guid) or 0
                 local lowPerforms = NemesisChat:LowPerformerCount(player.guid) or 0
@@ -121,7 +121,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     
         for key,val in pairs(leaves) do
             if val ~= nil and val ~= GetMyName() then
-                local player = NCRuntime:GetGroupRosterPlayer(val)
+                local player = NCState:GetPlayerState(val)
     
                 if #leaves <= 3 then
                     NemesisChat:PLAYER_LEAVES_GROUP(val, player.isNemesis)
@@ -129,11 +129,11 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
                 local timeLeft = NCDungeon:GetTimeLeft()
 
-                if NCDungeon:IsActive() and player.guid ~= nil and NCRuntime:GetGroupRosterCountOthers() == 4 and timeLeft >= 360 and not IsInRaid() and NCDungeon:GetLevel() <= 20 then
+                if NCDungeon:IsActive() and player.guid ~= nil and NCState:GetGroupStateCountOthers() == 4 and timeLeft >= 360 and not IsInRaid() and NCDungeon:GetLevel() <= 20 then
                     -- First check if anyone in the party is offline, and if so, report THEM instead of the leaver
                     local offlineName, offlineGuid, leaverGuid, leaverName = nil, nil, nil, nil
 
-                    for oKey,oVal in pairs(NCRuntime:GetGroupRoster()) do
+                    for oKey,oVal in pairs(NCState:GetGroupState()) do
                         if oVal ~= nil and oVal.guid ~= nil and oVal.guid ~= player.guid and not UnitIsConnected(oKey) then
                             offlineName = oKey
                             offlineGuid = oVal.guid
@@ -157,7 +157,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                     NemesisChat:AddLeaver(leaverGuid)
                 end
     
-                NCRuntime:RemoveGroupRosterPlayer(val)
+                NCState:RemovePlayerFromGroup(val)
             end
         end
     end
@@ -168,7 +168,6 @@ function NemesisChat:PLAYER_REGEN_DISABLED()
     NCEvent:Initialize()
     NCCombat:Reset("Combat Segment " .. GetTime(), true)
 
-    NCRuntime:ClearPlayerStates()
     NemesisChat:HandleEvent()
 end
 
@@ -184,7 +183,7 @@ end
 
 function NemesisChat:PLAYER_ROLES_ASSIGNED()
     NCEvent:Initialize()
-    NCRuntime:UpdateGroupRosterRoles()
+    NCState:UpdateAllPlayerRoles()
     NCState:GroupStateSubscriptions()
 end
 

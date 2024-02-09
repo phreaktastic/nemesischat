@@ -301,7 +301,7 @@ NCRankings = {
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
                         local secondFromTop = self.All[metric][order[#order-1]] or botVal
                         local secondFromBot = self.All[metric][order[2]] or topVal
-                        local topPlayerInfo = NCRuntime:GetGroupRosterPlayer(topPlayer)
+                        local topPlayerInfo = NCState:GetPlayerState(topPlayer)
 
                         if topPlayerInfo and topPlayerInfo.role == "TANK" then
                             return 0, (secondFromBot - botVal)
@@ -358,7 +358,7 @@ NCRankings = {
                         end
 
                         -- If the bot player's DPS is lower than the tank or healer, they're dramatically underperforming
-                        if botVal < self._segment:GetStats(NCRuntime:GetGroupHealer(), "DPS") then
+                        if botVal < self._segment:GetStats(NCState:GetGroupHealer(), "DPS") then
                             addBot = addBot + self.Configuration.Increments.Metrics.DPS.BelowHealerIncrement
 
                             -- Add the scores for explanation on top / bottom placement(s)
@@ -369,7 +369,7 @@ NCRankings = {
                             else
                                 self.BottomScores[botPlayer]["DPS < Healer"] = addBot
                             end
-                        elseif botVal < self._segment:GetStats(NCRuntime:GetGroupTank(), "DPS") then
+                        elseif botVal < self._segment:GetStats(NCState:GetGroupTank(), "DPS") then
                             addBot = addBot + self.Configuration.Increments.Metrics.DPS.BelowTankIncrement
 
                             -- Add the scores for explanation on top / bottom placement(s)
@@ -391,7 +391,7 @@ NCRankings = {
                         end
 
                         -- If the second player's item level is higher than the top player's, add scores
-                        if secondItemLevel and topItemLevel and secondItemLevel > topItemLevel then
+                        if secondItmLevel and topItemLevel and secondItemLevel > topItemLevel then
                             -- The top player is seemingly overperforming
                             addTop = addTop + 10
 
@@ -532,7 +532,7 @@ NCRankings = {
             local topPlayer = nil
             local botPlayer = nil
 
-            for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
+            for playerName, playerData in pairs(NCState:GetGroupState()) do
                 self.All[metricKey][playerName] = (self._segment:GetStats(playerName, metricKey) or nil)
 
                 topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.role, playerName, topVal, botVal, topPlayer, botPlayer)

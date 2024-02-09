@@ -450,46 +450,46 @@ function NemesisChat:InstantiateController()
             return (tonumber(val1) or 0) < (tonumber(val2) or 0)
         end,
         ["IS_NEMESIS"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return false
             end
 
-            return NCRuntime:GetGroupRosterPlayer(val1).isNemesis
+            return NCState:GetPlayerState(val1).isNemesis
         end,
         ["NOT_NEMESIS"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return true
             end
 
-            return NCRuntime:GetGroupRosterPlayer(val1).isNemesis == false
+            return NCState:GetPlayerState(val1).isNemesis == false
         end,
         ["IS_FRIEND"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return false
             end
 
-            return NCRuntime:GetGroupRosterPlayer(val1).isFriend
+            return NCState:GetPlayerState(val1).isFriend
         end,
         ["NOT_FRIEND"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return true
             end
 
-            return not NCRuntime:GetGroupRosterPlayer(val1).isFriend
+            return not NCState:GetPlayerState(val1).isFriend
         end,
         ["IS_GUILDMATE"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return false
             end
 
-            return NCRuntime:GetGroupRosterPlayer(val1).isGuildmate
+            return NCState:GetPlayerState(val1).isGuildmate
         end,
         ["NOT_GUILDMATE"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return true
             end
 
-            return not NCRuntime:GetGroupRosterPlayer(val1).isGuildmate
+            return not NCState:GetPlayerState(val1).isGuildmate
         end,
         ["IS_UNDERPERFORMER"] = function(val1, val2)
             return NCDungeon:GetUnderperformer() == val1

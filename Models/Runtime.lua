@@ -12,10 +12,8 @@ local _, core = ...;
 -----------------------------------------------------
 
 core.runtimeDefaults = {
-    dbCacheExpiration = 600, -- 10 minutes
     myName = "",
     lastFeast = 0,
-    lastFriendCheck = 0,
     lastMessage = 0,
     currentMarkerIndex = 0,
     petOwners = {},

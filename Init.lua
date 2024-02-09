@@ -82,10 +82,10 @@ end
 function GetRole(player)
     local role
 
-    if NCRuntime:GetGroupRosterPlayer(player) == nil then
+    if NCState:GetPlayerState(player) == nil then
         role = UnitGroupRolesAssigned(player)
     else
-        role = NCRuntime:GetGroupRosterPlayer(player).role
+        role = NCState:GetPlayerState(player).role
     end
 
     for key, val in pairs(core.roles) do

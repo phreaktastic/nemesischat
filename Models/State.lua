@@ -753,7 +753,7 @@ function NCState:GetItemLevel(unit)
     end
 
     if Details and Details.ilevel then
-        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
+        local rosterPlayer = NCState:GetPlayerState(unit)
 
         if rosterPlayer ~= nil then
             local detailsIlvlTable = Details.ilevel:GetIlvl(rosterPlayer.guid)
@@ -1079,7 +1079,7 @@ end
 function NCState:PopulateFriends()
     local _, onlineBnetFriends = BNGetNumFriends()
 
-    NCRuntime:ClearFriends()
+    NCState:ClearFriends()
 
     for i = 1, onlineBnetFriends do
         local info = C_BattleNet.GetFriendAccountInfo(i)
@@ -1097,6 +1097,10 @@ function NCState:PopulateFriends()
     end
 
     NCCache:Push(NC_CACHE_KEY_FRIENDS, NCState.friends)
+end
+
+function NCState:ClearFriends()
+    NCState.friends = {}
 end
 
 function NCState:RestoreFriends()
