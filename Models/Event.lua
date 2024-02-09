@@ -79,7 +79,7 @@ function NemesisChat:InstantiateEvent()
 
     -- Set the event's nemesis to a random nemesis in the party
     function NCEvent:RandomNemesis()
-        local nemesis = NemesisChat:GetRandomPartyNemesis()
+        local nemesis = NCState:GetRandomGroupNemesis()
 
         if nemesis ~= nil and nemesis ~= "" then
             NCEvent.nemesis = nemesis
