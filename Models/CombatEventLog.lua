@@ -36,6 +36,10 @@ NCCombatLogEvent = {
     extraSpellName = "",
     extraSpellSchool = 0,
     lastAuraCheck = 0,
+    lastUnsafePullToast = 0,
+    lastUnsafePullName = "",
+    lastUnsafePullMob = "",
+    lastUnsafePullCount = 0,
     pulledUnits = {},
     petOwners = {},
 }
@@ -116,7 +120,7 @@ function NCCombatLogEvent:Fire()
 
         NCEvent:Death(destName)
 
-        local state = NCRuntime:GetPlayerState(destName)
+        local state = NCState:GetPlayerState(destName)
 
         if state and state.lastDamageAvoidable then
             NCEvent:AvoidableDeath(destName)
@@ -129,7 +133,7 @@ function NCCombatLogEvent:Fire()
         NCSegment:GlobalAddDeath(destName)
     elseif NCEvent:IsDamageEvent(event, destName, extraSpellId) then
         local damage = tonumber(extraSpellId) or 0
-        local state = NCRuntime:GetPlayerState(destName)
+        local state = NCState:GetPlayerState(destName)
         local isAvoidable = (GTFO and GTFO.SpellID[tostring(spellId)] ~= nil)
 
         if isAvoidable then
@@ -173,14 +177,14 @@ function NCCombatLogEvent:IsPull()
         if(not string.find(event,"_SUMMON")) then
             if(bit.band(sflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                 -- A player is attacking a mob
-                local player = NCRuntime:GetGroupRosterPlayer(sname)
+                local player = NCState:GetPlayerState(sname)
 
                 if player == nil then
                     return false, nil, nil, nil
                 end
 
                 if player.role == "TANK" then
-                    NCRuntime:AddPulledUnit(dguid)
+                    NCCombatLogEvent:AddPulledUnit(dguid)
                     return false, nil, nil, nil
                 end
 
@@ -195,14 +199,14 @@ function NCCombatLogEvent:IsPull()
                 end
             elseif(bit.band(dflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                 -- A mob is attacking a player
-                local player = NCRuntime:GetGroupRosterPlayer(dname)
+                local player = NCState:GetPlayerState(dname)
 
                 if player == nil then
                     return false, nil, nil, nil
                 end
 
                 if player.role == "TANK" then
-                    NCRuntime:AddPulledUnit(dguid)
+                    NCCombatLogEvent:AddPulledUnit(dguid)
                     return false, nil, nil, nil
                 end
 
@@ -251,10 +255,10 @@ function NCCombatLogEvent:IsPull()
             end
         else
              -- Summon
-            local player = NCRuntime:GetGroupRosterPlayer(sname)
+            local player = NCState:GetPlayerState(sname)
 
             if player ~= nil then
-                NCRuntime:AddPetOwner(dguid, sname)
+                NCCombatLogEvent:AddPetOwner(dguid, sname)
             end
 
             return false, nil, nil, nil
@@ -457,4 +461,72 @@ end
 
 function NCCombatLogEvent:GetLastAuraCheckDelta()
     return GetTime() - self.lastAuraCheck
+end
+
+function NCCombatLogEvent:SetLastUnsafePull(name, mob)
+    self.lastUnsafePullMob = mob
+
+    if not self.lastUnsafePullCount then
+        self.lastUnsafePullCount = 0
+    end
+
+    if self.lastUnsafePullName == name then
+        self.lastUnsafePullCount = self.lastUnsafePullCount + 1
+        return
+    end
+
+    self.lastUnsafePullCount = 1
+    self.lastUnsafePullName = name
+end
+
+function NCCombatLogEvent:GetLastUnsafePull()
+    return self.lastUnsafePullName, self.lastUnsafePullMob, self.lastUnsafePullCount
+end
+
+function NCCombatLogEvent:GetLastUnsafePullToast()
+    return self.lastUnsafePullToast
+end
+
+function NCCombatLogEvent:SetLastUnsafePullToast(value)
+    self.lastUnsafePullToast = value
+end
+
+function NCCombatLogEvent:UpdateLastUnsafePullToast()
+    self.lastUnsafePullToast = GetTime()
+end
+
+function NCCombatLogEvent:GetLastUnsafePullToastDelta()
+    return GetTime() - self.lastUnsafePullToast
+end
+
+function NCCombatLogEvent:GetLastUnsafePullName()
+    return self.lastUnsafePullName
+end
+
+function NCCombatLogEvent:SetLastUnsafePullName(value)
+    self.lastUnsafePullName = value
+end
+
+function NCCombatLogEvent:GetLastUnsafePullMob()
+    return self.lastUnsafePullMob
+end
+
+function NCCombatLogEvent:SetLastUnsafePullMob(value)
+    self.lastUnsafePullMob = value
+end
+
+function NCCombatLogEvent:GetLastUnsafePullCount()
+    return self.lastUnsafePullCount
+end
+
+function NCCombatLogEvent:SetLastUnsafePullCount(value)
+    self.lastUnsafePullCount = value
+end
+
+function NCCombatLogEvent:UpdateLastUnsafePullCount()
+    if not self.lastUnsafePullCount then
+        self.lastUnsafePullCount = 0
+    end
+
+    self.lastUnsafePullCount = self.lastUnsafePullCount + 1
 end
