@@ -35,7 +35,9 @@ NCCombatLogEvent = {
     extraSpellId = 0,
     extraSpellName = "",
     extraSpellSchool = 0,
+    lastAuraCheck = 0,
     pulledUnits = {},
+    petOwners = {},
 }
 NCCLE = NCCombatLogEvent
 NCCLEU = NCCombatLogEvent
@@ -265,19 +267,21 @@ function NCCombatLogEvent:GetPetOwner(petGuid)
         scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
     end
 
-    NCRuntime:CheckPetOwners()
-
-    local owner = NCRuntime:GetPetOwner(petGuid)
+    local owner = NCCombatLogEvent.petOwners[petGuid]
 
     if owner ~= nil then
         return owner
     end
 
-    local owner = NemesisChat:ScanTooltipForPetOwner(petGuid)
+    local owner = NCCombatLogEvent:ScanTooltipForPetOwner(petGuid)
 
-    NCRuntime:AddPetOwner(petGuid, owner)
+    self:AddPetOwner(petGuid, owner)
 
     return owner
+end
+
+function NCCombatLogEvent:AddPetOwner(petGuid, owner)
+    self.petOwners[petGuid] = owner
 end
 
 function NCCombatLogEvent:ScanTooltipForPetOwner(guid)
@@ -287,7 +291,7 @@ function NCCombatLogEvent:ScanTooltipForPetOwner(guid)
 
     local text = _G[scanTipText]
     if(guid and text) then
-        scanTip:SetOwner( WorldFrame, "ANCHOR_NONE" )
+        scanTip:SetOwner(WorldFrame, "ANCHOR_NONE")
         scanTip:SetHyperlink(format('unit:%s',guid))
         local text2 = text:GetText()
         if(text2) then
@@ -328,4 +332,129 @@ end
 
 function NCCombatLogEvent:AddPulledUnit(guid)
     tinsert(self.pulledUnits, guid)
+end
+
+function NCCombatLogEvent:IsAffixMobHandled()
+    if not IsInInstance() or not IsInGroup() then
+        return false, nil, nil
+    end
+
+    local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
+
+    if NCState:GetPlayerState(sname) == nil then
+        return false, nil, nil
+    end
+
+    if UnitIsUnconscious(dguid) or UnitIsDead(dguid) or string.find(event, "INSTAKILL") then
+        return true, sname, dguid
+    end
+
+    if core.affixMobsHandles[dname] ~= nil and type(core.affixMobsHandles[dname]) == "table" then
+        for _, eventSubstr in pairs(core.affixMobsHandles[dname]) do
+            if eventSubstr == "CROWD_CONTROL" then
+                local flags = LibPlayerSpells:GetSpellInfo(spellId)
+
+                if flags and bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
+                    return true, sname, dguid
+                end
+            else
+                if string.find(event, eventSubstr) then
+                    return true, sname, dguid
+                end
+            end
+        end
+    end
+
+    return false, nil, nil
+end
+
+function NCCombatLogEvent:IsAffixAuraHandled()
+    if not IsInInstance() or not IsInGroup() then
+        return false, nil
+    end
+
+    local _, event, _, _, sname, _, _, _, dname, _, _, _, _, _, dispelledId = NCCombatLogEvent:GetCombatLogVariables()
+
+    if (NCState:GetPlayerState(sname) == nil) or (NCState:GetPlayerState(dname) == nil) or event ~= "SPELL_DISPEL" then
+        return false, nil
+    end
+
+    local isHandled = false
+
+    for _, auraData in pairs(core.affixMobsAuras) do
+        if auraData.spellId == dispelledId then
+            isHandled = true
+            break
+        end
+    end
+
+    return isHandled, sname
+end
+
+function NCCombatLogEvent:CheckIsAffix()
+    if not IsInInstance() or not IsInGroup() then
+        return false
+    end
+
+    local _,event,_,_,sname = NCCombatLogEvent:GetCombatLogVariables()
+
+    return core.affixMobsLookup[sname] == true
+end
+
+function NCCombatLogEvent:CheckAffixes()
+    NCCombatLogEvent:CheckAffixAuras()
+
+    local isAffixMobHandled, affixMobHandlerName, affixMobHandledGuid = NCCombatLogEvent:IsAffixMobHandled()
+    local isAuraHandled, auraHandlerName = NCCombatLogEvent:IsAffixAuraHandled()
+
+    if isAffixMobHandled then
+        local mobName = UnitName(affixMobHandledGuid)
+        -- SetRaidTarget(affixMobHandledGuid, 0)
+
+        -- More score for caster mobs as opposed to simply CCing shades, for example
+        if core.affixMobsCastersLookup[mobName] then
+            NCSegment:GlobalAddAffix(affixMobHandlerName, 10)
+        else
+            NCSegment:GlobalAddAffix(affixMobHandlerName)
+        end
+    end
+
+    if isAuraHandled then
+        NCSegment:GlobalAddAffix(auraHandlerName)
+    end
+end
+
+function NCCombatLogEvent:CheckAffixAuras()
+    if not IsInInstance() or not IsInGroup() then
+        return
+    end
+
+    local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,itype = NCCombatLogEvent:GetCombatLogVariables()
+
+    if not core.affixMobsAuraSpells[arg1] then
+        return
+    end
+
+    if not string.find(event, "AURA_APPLIED") and not string.find(event, "AURA_DOSE") then
+        return
+    end
+
+    for _, auraData in pairs(core.affixMobsAuras) do
+        if auraData.spellId == arg1 then
+            local _, _, count = AuraUtil.FindAuraByName(auraData.spellName, dname, auraData.type)
+
+            if count ~= nil and tonumber(count) >= auraData.highStacks and NCCombatLogEvent:GetLastAuraCheckDelta() >= 3 then
+                -- fire event!
+                NCCombatLogEvent:UpdateLastAuraCheck()
+            end
+        end
+    end
+end
+
+function NCCombatLogEvent:UpdateLastAuraCheck()
+    self.lastAuraCheck = GetTime()
+end
+
+function NCCombatLogEvent:GetLastAuraCheckDelta()
+    return GetTime() - self.lastAuraCheck
 end
