@@ -743,6 +743,9 @@ core.eventSubscriptions = {
     -- Self
     "PLAYER_TARGET_CHANGED",
     "COMBAT_LOG_EVENT_UNFILTERED",
+
+    -- Battle.net friends
+    "BN_FRIEND_INFO_CHANGED",
 }
 
 NC_EVENT_TYPE_GROUP = 0

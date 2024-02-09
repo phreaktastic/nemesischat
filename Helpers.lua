@@ -173,7 +173,6 @@ function NemesisChat:InitializeHelpers()
         local isPull, _, pullPlayerName, mobName = NemesisChat:IsPull()
 
         NemesisChat:SetMyName()
-        NemesisChat:ActionScoring()
         NemesisChat:CheckAffixes()
 
         NCEvent:Initialize()
@@ -667,46 +666,6 @@ function NemesisChat:InitializeHelpers()
         return false, nil, nil
     end
 
-    function NemesisChat:ActionScoring()
-        local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
-
-        if not IsInInstance() or not IsInGroup() or not UnitInParty(sname) then
-            return
-        end
-
-        local flags = LibPlayerSpells:GetSpellInfo(spellId)
-
-        if not flags then
-            return
-        end
-
-        local description = ""
-
-        if bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
-            description = "Crowd control"
-
-            NCSegment:GlobalAddCrowdControl(sname)
-        elseif bit.band(flags, LibPlayerSpells.constants.DISPEL) ~= 0 then
-            description = "Dispel"
-
-            NCSegment:GlobalAddDispell(sname)
-        elseif bit.band(flags, LibPlayerSpells.constants.SURVIVAL) ~= 0 then
-            description = "Defensive"
-
-            local state = NCRuntime:GetPlayerState(sname)
-
-            if state then
-                state.lastDefensive = GetTime()
-            end
-
-            NCSegment:GlobalAddDefensive(sname)
-        else
-            return
-        end
-
-        NCSegment:GlobalAddActionPoints(1, sname, description)
-    end
-
     function NemesisChat:IsAffixAuraHandled()
         if not IsInInstance() or not IsInGroup() then
             return false, nil
@@ -870,7 +829,6 @@ function NemesisChat:Initialize()
     NemesisChat:InitializeConfig()
     NemesisChat:InitializeHelpers()
     NemesisChat:InitializeTimers()
-    NCState:PopulateFriends()
     NemesisChat:RegisterPrefixes()
     NemesisChat:RegisterToasts()
     NemesisChat:SetMyName()

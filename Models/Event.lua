@@ -19,7 +19,6 @@ function NemesisChat:InstantiateEvent()
 
         NCController:Initialize()
         NCSpell:Initialize()
-        NCState:PopulateFriends()
     end
 
     function NCEvent:GetCategory()

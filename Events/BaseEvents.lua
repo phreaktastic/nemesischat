@@ -58,7 +58,6 @@ end
 
 function NemesisChat:GROUP_ROSTER_UPDATE()
     NCEvent:Initialize()
-    NCState:PopulateFriends()
 
     local joins,leaves = NCState:GetRosterDelta()
 
@@ -259,4 +258,8 @@ function NemesisChat:PLAYER_TARGET_CHANGED(_, unitTarget)
 
     SetRaidTarget("target", marker.index)
     SendChatMessage(string.format("Nemesis Chat: I am currently handling {%s} %s {%s}!", marker.value, marker.name, marker.value), NemesisChat:GetActualChannel("GROUP"))
+end
+
+function NemesisChat:BN_FRIEND_INFO_CHANGED(_, index)
+    NCState:PopulateFriends()
 end
