@@ -339,8 +339,8 @@ NCRankings = {
                         return GetRole(player) == "DPS"
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
-                        local topItemLevel = NemesisChat:GetItemLevel(topPlayer)
-                        local bottomItemLevel = NemesisChat:GetItemLevel(botPlayer)
+                        local topItemLevel = NCState:GetItemLevel(topPlayer)
+                        local bottomItemLevel = NCState:GetItemLevel(botPlayer)
 
                         local addTop = 0
                         local addBot = 0
@@ -386,7 +386,7 @@ NCRankings = {
                             order = GetKeysSortedByValue(self.All["DPS"], function(a, b) return a < b end)
 
                             if order and order[#order-1] then
-                                secondItemLevel = NemesisChat:GetItemLevel(order[#order-1]) or 0
+                                secondItemLevel = NCState:GetItemLevel(order[#order-1]) or 0
                             end
                         end
 

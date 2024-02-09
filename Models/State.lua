@@ -12,6 +12,7 @@ local _, core = ...;
 -----------------------------------------------------
 
 core.stateDefaults = {
+    lastCheckSubscribe = false,
     player = {
         guid = "",
         isGuildmate = false,
@@ -152,7 +153,7 @@ end
 function NCState:AddPlayerToGroup(playerName)
     local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
     local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCState:IsFriend(playerName) and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
-    local itemLevel = NemesisChat:GetItemLevel(playerName)
+    local itemLevel = NCState:GetItemLevel(playerName)
     local groupLead = UnitIsGroupLeader(playerName) ~= nil
     local class, rawClass = UnitClass(playerName)
     local data =  {
@@ -324,7 +325,7 @@ function NCState:UpdatePlayerItemLevel(playerName)
     local player = NCState.group.players[playerName]
 
     if player then
-        player.itemLevel = NemesisChat:GetItemLevel(playerName)
+        player.itemLevel = NCState:GetItemLevel(playerName)
     end
 end
 
@@ -1044,7 +1045,7 @@ function NCState:IsWipe()
         return false
     end
 
-    local players = NemesisChat:GetPlayersInGroup()
+    local players = NCState:GetPlayersInGroup()
 
     for key,val in pairs(players) do
         if not UnitIsDead(val) then
@@ -1184,4 +1185,28 @@ function NCState:RestoreAll()
     NCState:RestoreGroup()
     NCState:RestoreFriends()
     NCState:RestoreGuild()
+end
+
+function NCState:GroupStateSubscriptions()
+    local shouldSubscribe = NCState:GetGroupSizeOthers() > 0
+
+    if NCState.lastCheckSubscribe == shouldSubscribe then
+        return
+    end
+
+    NCState.lastCheckSubscribe = shouldSubscribe
+
+    if shouldSubscribe and IsNCEnabled() then
+        NemesisChat:Print("Group state changed, re-subscribing to group based events.")
+    else
+        NemesisChat:Print("Group state changed, un-subscribing from group based events.")
+    end
+
+    for _, event in pairs(core.eventSubscriptions) do
+        if shouldSubscribe and IsNCEnabled() then
+            NemesisChat:RegisterEvent(event)
+        else
+            NemesisChat:UnregisterEvent(event)
+        end
+    end
 end

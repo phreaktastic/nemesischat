@@ -24,7 +24,7 @@ function NemesisChat:OnEnable()
     NemesisChat:RegisterEvent("CHAT_MSG_ADDON")
 
     NemesisChat:SetMyName()
-    NemesisChat:PopulateFriends()
+    NCState:PopulateFriends()
 end
 
 function NemesisChat:OnDisable()

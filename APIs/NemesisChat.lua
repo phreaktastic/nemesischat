@@ -196,7 +196,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Nemeses in Group",
         value = "NEMESES_COUNT",
         category = "Group",
-        exec = function() return NemesisChat:GetPartyNemesesCount() .. "" end,
+        exec = function() return NCState:GetGroupNemesesCount() .. "" end,
         operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
         type = "NUMBER",
     })
@@ -204,7 +204,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Bystanders in Group",
         value = "BYSTANDERS_COUNT",
         category = "Group",
-        exec = function() return NemesisChat:GetPartyBystandersCount() .. "" end,
+        exec = function() return NCState:GetGroupBystandersCount() .. "" end,
         operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
         type = "NUMBER",
     })
@@ -460,7 +460,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return (Ambiguate(NCEvent:GetBystander(), "short") or "") end,
         description = "The Bystander's name.",
         isNumeric = false,
-        example = function() return NemesisChat:GetRandomPartyBystander() or "ShmoopleDoop" end,
+        example = function() return NCState:GetRandomGroupBystander() or "ShmoopleDoop" end,
     })
     :AddReplacement({
         label = "Bystander Role",
@@ -698,7 +698,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:FormatNumber(UnitHealth(NCEvent:GetBystander())) or 0 end,
         description = "The current health of the bystander.",
         isNumeric = true,
-        example = function() return NemesisChat:FormatNumber(UnitHealth(NemesisChat:GetRandomPartyBystander() or NemesisChat:GetRandomGuildBystander()) or math.random(1, 1305725)) end,
+        example = function() return NemesisChat:FormatNumber(UnitHealth(NCState:GetRandomGroupBystander() or NemesisChat:GetRandomGuildBystander()) or math.random(1, 1305725)) end,
     })
     :AddReplacement({
         label = "Bystander Max Health",
@@ -706,7 +706,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return NemesisChat:FormatNumber(UnitHealthMax(NCEvent:GetBystander())) or 0 end,
         description = "The maximum health of the bystander.",
         isNumeric = true,
-        example = function() return NemesisChat:FormatNumber(UnitHealthMax(NemesisChat:GetRandomPartyBystander() or NemesisChat:GetRandomGuildBystander()) or math.random(642765, 1305725)) end,
+        example = function() return NemesisChat:FormatNumber(UnitHealthMax(NCState:GetRandomGroupBystander() or NemesisChat:GetRandomGuildBystander()) or math.random(642765, 1305725)) end,
     })
     :AddReplacement({
         label = "Bystander Health %",

@@ -265,82 +265,6 @@ function NemesisChat:InitializeHelpers()
         return NCConfig:GetNemeses()
     end
 
-    function NemesisChat:GetRandomPartyBystander()
-        local partyBystanders = NemesisChat:GetPartyBystanders()
-
-        if not partyBystanders then 
-            return nil
-        end
-
-        return partyBystanders[NemesisChat:GetRandomKey(partyBystanders)]
-    end
-
-    function NemesisChat:GetRandomGuildBystander()
-        local guildBystanders = NemesisChat:GetGuildBystanders()
-
-        if not guildBystanders then
-            return nil
-        end
-
-        return guildBystanders[NemesisChat:GetRandomKey(guildBystanders)]
-    end
-
-    function NemesisChat:GetPartyNemesesCount()
-        return NemesisChat:GetLength(NemesisChat:GetPartyNemeses())
-    end
-
-    function NemesisChat:GetPartyNemeses()
-        local nemeses = {}
-
-        for key,val in pairs(NCRuntime:GetGroupRoster()) do
-            if val and val.isNemesis then
-                nemeses[key] = key
-            end
-        end
-
-        return nemeses
-    end
-
-    function NemesisChat:GetGuildNemeses()
-        local nemeses = {}
-
-        for key,val in pairs(NCRuntime:GetGuildRoster()) do
-            if val and val.isNemesis then
-                nemeses[key] = key
-            end
-        end
-
-        return nemeses
-    end
-
-    function NemesisChat:GetPartyBystanders()
-        local bystanders = {}
-
-        for key,val in pairs(NCRuntime:GetGroupRoster()) do
-            if val and not val.isNemesis and key ~= GetMyName() then
-                bystanders[key] = key
-            end
-        end
-
-        return bystanders
-    end
-
-    function NemesisChat:GetGuildBystanders()
-        local bystanders = {}
-
-        for key,val in pairs(NCRuntime:GetGuildRoster()) do
-            if key ~= GetMyName() and not val.isNemesis then
-                bystanders[key] = key
-            end
-        end
-
-        return bystanders
-    end
-
-    function NemesisChat:GetPartyBystandersCount()
-        return NemesisChat:GetLength(NemesisChat:GetPartyBystanders())
-    end
-
     function NemesisChat:GetNemesesLength()
         return NemesisChat:GetLength(NemesisChat:GetNemeses())
     end
@@ -354,11 +278,11 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:HasPartyNemeses()
-        return NemesisChat:GetLength(NemesisChat:GetPartyNemeses()) > 0
+        return NemesisChat:GetLength(NCState:GetGroupNemeses()) > 0
     end
 
     function NemesisChat:HasPartyBystanders()
-        return (NemesisChat:GetLength(NemesisChat:GetPartyBystanders()) > 0)
+        return (NemesisChat:GetLength(NCState:GetGroupBystanders()) > 0)
     end
 
     function NemesisChat:HasMessages()
@@ -410,86 +334,6 @@ function NemesisChat:InitializeHelpers()
         return math.floor((GetTime() - timeStamp) / 60) .. "min " .. ((GetTime() - timeStamp) % 60) .. "sec"
     end
 
-    -- Get all the players in the group, as a hashmap (key = name, val = name)
-    function NemesisChat:GetPlayersInGroup()
-        local plist = {}
-
-        if IsInRaid() then
-            for i=1,40 do
-                if (UnitName('raid'..i)) then
-                    local n,s = UnitName('raid'..i)
-                    local playerName = n
-
-                    if s then 
-                        playerName = playerName .. "-" .. s
-                    end
-
-                    if playerName ~= "Unknown" then
-                        plist[playerName] = playerName
-                    end
-                end
-            end
-        elseif IsInGroup() then
-            for i=1,5 do
-                if (UnitName('party'..i)) then
-                    local n,s = UnitName('party'..i)
-                    local playerName = n
-
-                    if s then 
-                        playerName = playerName .. "-" .. s
-                    end
-
-                    if playerName ~= "Unknown" then
-                        plist[playerName] = playerName
-                    end
-                end
-            end
-        end
-
-        return plist
-    end
-
-    -- Get the difference between the current roster and the in-memory roster as a pair (joined,left)
-    function NemesisChat:GetRosterDelta()
-        local newRoster = NemesisChat:GetPlayersInGroup()
-        local oldRoster = NemesisChat:GetDoubleMap(NCRuntime:GetGroupRoster())
-        local joined = {}
-        local left = {}
-
-        -- Get joins
-        for key,val in pairs(newRoster) do 
-            if oldRoster[val] == nil and val ~= GetMyName() then
-                tinsert(joined, val)
-            end
-        end
-
-        -- Get leaves
-        for key,val in pairs(oldRoster) do
-            if newRoster[val] == nil and val ~= GetMyName() then
-                tinsert(left, val)
-            end
-        end
-
-        return joined,left
-    end
-
-    -- Check if all players within the group are dead
-    function NemesisChat:IsWipe()
-        if not UnitIsDead("player") then
-            return false
-        end
-
-        local players = NemesisChat:GetPlayersInGroup()
-
-        for key,val in pairs(players) do
-            if not UnitIsDead(val) then
-                return false
-            end
-        end
-
-        return true
-    end
-
     -- Get a random AI phrase for the event
     function NemesisChat:GetRandomAiPhrase()
         if core.ai.taunts[NCEvent:GetCategory()] == nil or core.ai.taunts[NCEvent:GetCategory()][NCEvent:GetEvent()] == nil or core.ai.taunts[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()] == nil then
@@ -510,69 +354,6 @@ function NemesisChat:InitializeHelpers()
     function NemesisChat:SetMyName()
         if core.runtime.myName == nil or core.runtime.myName == "" or core.runtime.myName == UNKNOWNOBJECT then
             core.runtime.myName = UnitName("player")
-        end
-    end
-
-    -- Get a player's average item level. Currently only works if ElvUI or Details is installed, may be expanded later.
-    function NemesisChat:GetItemLevel(unit)
-        if UnitIsUnit(unit, "player") then
-            return GetAverageItemLevel()
-        end
-
-        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
-        local rosterIlvl = rosterPlayer and rosterPlayer.itemLevel or nil
-
-        if rosterIlvl ~= nil and rosterIlvl > 0 then
-            return rosterPlayer.itemLevel
-        end
-
-        if E and E.GetUnitItemLevel then
-            local itemLevel = E:GetUnitItemLevel(unit)
-
-            if itemLevel ~= "tooSoon" then
-                return itemLevel
-            end
-        end
-
-        if Details and Details.ilevel then
-            local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
-
-            if rosterPlayer ~= nil then
-                local detailsIlvlTable = Details.ilevel:GetIlvl(rosterPlayer.guid)
-
-                if not detailsIlvlTable or not detailsIlvlTable.ilvl then
-                    return nil
-                end
-
-                return detailsIlvlTable.ilvl
-            end
-        end
-
-        return nil
-    end
-
-    -- Check the roster and (un/re)subscribe events appropriately
-    function NemesisChat:CheckGroup()
-        local shouldSubscribe = NCRuntime:GetGroupRosterCountOthers() > 0
-
-        if NCRuntime.lastCheckSubscribe == shouldSubscribe then
-            return
-        end
-
-        NCRuntime.lastCheckSubscribe = shouldSubscribe
-
-        if shouldSubscribe and IsNCEnabled() then
-            NemesisChat:Print("Group state changed, re-subscribing to group based events.")
-        else
-            NemesisChat:Print("Group state changed, un-subscribing from group based events.")
-        end
-
-        for _, event in pairs(core.eventSubscriptions) do
-            if shouldSubscribe and IsNCEnabled() then
-                NemesisChat:RegisterEvent(event)
-            else
-                NemesisChat:UnregisterEvent(event)
-            end
         end
     end
 
@@ -606,36 +387,6 @@ function NemesisChat:InitializeHelpers()
         end
 
         return math.floor(thousands / 10) / 100 .. "m"
-    end
-
-    -- Populate friends map with currently online friends
-    function NemesisChat:PopulateFriends()
-        if GetTime() - NCRuntime:GetLastFriendCheck() < 60 then
-            return
-        end
-
-        local _, onlineBnetFriends = BNGetNumFriends()
-
-        NCRuntime:ClearFriends()
-
-        for i = 1, onlineBnetFriends do
-            local info = C_BattleNet.GetFriendAccountInfo(i)
-            if info and info.gameAccountInfo then
-                local character, client = info.gameAccountInfo.characterName, info.gameAccountInfo.clientProgram or ""
-
-                -- Only add WoW characters
-                if character and client == BNET_CLIENT_WOW then
-                    -- Account for realm names, since our roster does as well
-                    if info.gameAccountInfo.realmName and info.gameAccountInfo.realmName ~= GetNormalizedRealmName() then
-                        character = character .. "-" .. info.gameAccountInfo.realmName
-                    end
-
-                    NCRuntime:AddFriend(character)
-                end
-            end
-        end
-
-        NCRuntime:UpdateLastFriendCheck()
     end
 
     -- Get the owner of a pet from cache, and if it doesn't exist in cache, set it and return the owner
@@ -729,17 +480,8 @@ function NemesisChat:InitializeHelpers()
         }
     end
 
-    function NemesisChat:SetLastHealPlayerState(source, player)
-        NCRuntime:CheckPlayerState(player)
-
-        -- Self heals don't count
-        if source ~= player then
-            NCRuntime:GetPlayerState(player).lastHeal = GetTime()
-        end
-    end
-
     function NemesisChat:GetHealer()
-        return NCRuntime:GetGroupHealer()
+        return NCState:GetGroupHealer()
     end
 
     function NemesisChat:Print_r(...)
@@ -778,78 +520,13 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:IsHealerAlive()
-        local healer = NemesisChat:GetHealer()
+        local healer = NCState:GetGroupHealer()
 
         if healer == nil then
             return false
         end
 
         return not UnitIsDead(healer)
-    end
-
-    function NemesisChat:UpdatePlayerState(player)
-        NCRuntime:CheckPlayerState(player)
-        local state = NCRuntime:GetPlayerState(player)
-
-        state.health = UnitHealth(player)
-        state.healthPercent = math.floor((UnitHealth(player) / UnitHealthMax(player)) * 10000) / 100 -- Round to 2 digit %
-        state.power = UnitPower(player)
-        state.powerPercent = math.floor((UnitPower(player) / UnitPowerMax(player)) * 10000) / 100 -- Round to 2 digit %
-        state.powerType = UnitPowerType(player)
-
-        if state.healthPercent >= 60 or state.health == 0 then
-            state.lastHeal = GetTime()
-        end
-    end
-
-    function NemesisChat:CheckLastHealDelta(playerName)
-        local player = NCRuntime:GetPlayerState(playerName)
-
-        if GetTime() - player.lastDeltaReport < 2 then
-            return
-        end
-
-        if NemesisChat:IsHealerAlive() and NemesisChat:GetHealer() ~= playerName then
-            local lastHealDelta = math.floor((GetTime() - player.lastHeal) * 100) / 100
-
-            if not UnitIsDead(playerName) and player.healthPercent <= 55 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
-                -- If playerName is a nemesis, different message 
-                if NCConfig:GetNemesis(playerName) ~= nil then
-                    SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds! Please do not heal them -- it's okay if they die.", "YELL")
-                else
-                    SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds!", "YELL")
-                end
-
-                player.lastDeltaReport = GetTime()
-            end
-        end
-    end
-
-    function NemesisChat:UpdateGroupState()
-        if IsInRaid() or not IsInGroup() or NCCombat:IsInactive() or NCRuntime:GetPlayerStatesLastCheckDelta() < 0.25 then
-            return
-        end
-
-        NCRuntime:UpdatePlayerStatesLastCheck()
-
-        for i=1,4 do
-            if (UnitName('party'..i)) then
-                local n,s = UnitName('party'..i)
-                local playerName = n
-
-                if s then 
-                    playerName = playerName .. "-" .. s
-                end
-
-                if playerName ~= "Unknown" then
-                    NemesisChat:UpdatePlayerState(playerName)
-                    NemesisChat:CheckLastHealDelta(playerName)
-                end
-            end
-        end
-
-        NemesisChat:UpdatePlayerState(GetMyName())
-        NemesisChat:CheckLastHealDelta(GetMyName())
     end
 
     -- Originally taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with heavy modifications
@@ -1194,7 +871,7 @@ function NemesisChat:Initialize()
     NemesisChat:InitializeConfig()
     NemesisChat:InitializeHelpers()
     NemesisChat:InitializeTimers()
-    NemesisChat:PopulateFriends()
+    NCState:PopulateFriends()
     NemesisChat:RegisterPrefixes()
     NemesisChat:RegisterToasts()
     NemesisChat:SetMyName()

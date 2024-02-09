@@ -331,7 +331,7 @@ NCRuntime = {
     AddGroupRosterPlayer = function(self, playerName)
         local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
         local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
-        local itemLevel = NemesisChat:GetItemLevel(playerName)
+        local itemLevel = NCState:GetItemLevel(playerName)
         local groupLead = UnitIsGroupLeader(playerName) ~= nil
         local class, rawClass = UnitClass(playerName)
         local data =  {
@@ -373,7 +373,7 @@ NCRuntime = {
 
             -- Re-attempt to get the item level
             if not val.itemLevel then
-                val.itemLevel = NemesisChat:GetItemLevel(key)
+                val.itemLevel = NCState:GetItemLevel(key)
             end
         end
     end,

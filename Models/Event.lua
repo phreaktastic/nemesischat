@@ -19,7 +19,7 @@ function NemesisChat:InstantiateEvent()
 
         NCController:Initialize()
         NCSpell:Initialize()
-        NemesisChat:PopulateFriends()
+        NCState:PopulateFriends()
     end
 
     function NCEvent:GetCategory()
@@ -114,7 +114,7 @@ function NemesisChat:InstantiateEvent()
 
     -- Set the event's bystander to a random bystander in the party
     function NCEvent:RandomBystander()
-        local bystander = NemesisChat:GetRandomPartyBystander()
+        local bystander = NCState:GetRandomGroupBystander()
 
         if bystander ~= nil and bystander ~= "" then
             NCEvent:SetBystander(bystander)
@@ -201,8 +201,6 @@ function NemesisChat:InstantiateEvent()
         NCEvent:SetTargetFromSource(source)
 
         NCSegment:GlobalAddHeals(healAmount, source, dest)
-
-        NemesisChat:SetLastHealPlayerState(source, dest)
 
         NCSpell:Spell(source, dest, spellId, spellName)
 

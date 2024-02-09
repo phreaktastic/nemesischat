@@ -225,7 +225,7 @@ NCInfo = {
             NCDungeon:UpdateCache()
             NemesisChat:InstantiateCore()
             NemesisChat:SilentGroupSync()
-            NemesisChat:CheckGroup()
+            NCState:GroupStateSubscriptions()
             NCInfo:Update()
         end)
         f.clearButton:SetScript("OnEnter", function(self)

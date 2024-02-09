@@ -109,7 +109,7 @@ NCSegment = {
         self.FinishTime = GetTime()
         self.TotalTime = self.FinishTime - self.StartTime
         self.Success = success or false
-        self.Wipe = NemesisChat:IsWipe()
+        self.Wipe = NCState:IsWipe()
         self:SetInactive()
 
         if self.Rankings and self.Rankings.Calculate then

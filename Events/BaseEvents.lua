@@ -19,7 +19,7 @@ local UnitGUID = UnitGUID
 function NemesisChat:PLAYER_ENTERING_WORLD()
     NemesisChat:InstantiateCore()
     NemesisChat:SilentGroupSync()
-    NemesisChat:CheckGroup()
+    NCState:GroupStateSubscriptions()
 end
 
 function NemesisChat:COMBAT_LOG_EVENT_UNFILTERED()
@@ -27,7 +27,7 @@ function NemesisChat:COMBAT_LOG_EVENT_UNFILTERED()
 end
 
 function NemesisChat:CHALLENGE_MODE_START()
-    NemesisChat:CheckGroup()
+    NCState:GroupStateSubscriptions()
     NCEvent:Initialize()
     NCDungeon:Reset("M+ Dungeon", true)
     NemesisChat:HandleEvent()
@@ -58,14 +58,14 @@ end
 
 function NemesisChat:GROUP_ROSTER_UPDATE()
     NCEvent:Initialize()
-    NemesisChat:PopulateFriends()
+    NCState:PopulateFriends()
 
-    local joins,leaves = NemesisChat:GetRosterDelta()
+    local joins,leaves = NCState:GetRosterDelta()
 
     -- We left, or the last player left the group leaving us solo
     if #leaves > 0 and #leaves == NCRuntime:GetGroupRosterCountOthers() then
         NCRuntime:ClearGroupRoster()
-        NemesisChat:CheckGroup()
+        NCState:GroupStateSubscriptions()
 
         -- To be monitored. We want data on the last group we ran with, and if we get kicked with this in place it is lost.
         --NCSegment:GlobalReset()
@@ -73,7 +73,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     elseif NCRuntime:GetGroupRosterCountOthers() == 0 and #joins > 0 then
         NCRuntime:ClearGroupRoster()
         NCSegment:GlobalReset()
-        local members = NemesisChat:GetPlayersInGroup()
+        local members = NCState:GetPlayersInGroup()
         local isLeader = UnitIsGroupLeader(GetMyName())
 
         for key,val in pairs(members) do
@@ -95,7 +95,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
             NemesisChat:PLAYER_JOINS_GROUP(GetMyName(), false)
         end
 
-        NemesisChat:CheckGroup()
+        NCState:GroupStateSubscriptions()
     elseif #joins > 0 or #leaves > 0 then
         for key,val in pairs(joins) do
             if val ~= nil and val ~= GetMyName() then
@@ -186,7 +186,7 @@ end
 function NemesisChat:PLAYER_ROLES_ASSIGNED()
     NCEvent:Initialize()
     NCRuntime:UpdateGroupRosterRoles()
-    NemesisChat:CheckGroup()
+    NCState:GroupStateSubscriptions()
 end
 
 function NemesisChat:CHAT_MSG_ADDON(_, prefix, payload, distribution, sender)
