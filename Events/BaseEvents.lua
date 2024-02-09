@@ -263,3 +263,7 @@ end
 function NemesisChat:BN_FRIEND_INFO_CHANGED(_, index)
     NCState:PopulateFriends()
 end
+
+function NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
+    NCSync:OnCommReceived(prefix, payload, distribution, sender)
+end

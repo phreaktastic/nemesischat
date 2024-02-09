@@ -21,7 +21,13 @@ NCSync = {
     lastSyncType = "",
     lastLeaverSynctype = "",
     lastLowPerformerSyncType = "",
+    sync = {},
     syncDataTimer = NemesisChat:ScheduleRepeatingTimer("TransmitSyncData", 60),
+    leaverDb = NCDB:New("leavers"),
+    leaverDbSerialized = NCDB:New("leaversSerialized"),
+    lowPerformerDb = NCDB:New("lowPerformers"),
+    lowPerformerDbSerialized = NCDB:New("lowPerformersSerialized"),
+    lastSyncDb = NCDB:New("lastSync", "global"),
 }
 
 function NCSync:GetLastSyncType()
@@ -59,35 +65,39 @@ function NCSync:TransmitSyncData()
 end
 
 function NCSync:TransmitLeavers()
-    if core.db.profile.leavers == nil or core.db.profile.leaversSerialized == nil or NCDungeon:IsActive() then
+    if self.leaverDb:IsEmpty() or self.leaverDbSerialized:IsEmpty() or NCDungeon:IsActive() then
         return
     end
 
     local _, online = GetNumGuildMembers()
+    local channel
 
     if online > 1 and NCSync:GetLastLeaverSyncType() ~= "GUILD" then
-        NCSync:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "GUILD")
-        NCSync:SetLastLeaverSyncType("GUILD")
+        channel = "GUILD"
     else
-        NCSync:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "YELL")
-        NCSync:SetLastLeaverSyncType("YELL")
+        channel = "YELL"
     end
+
+    NCSync:Transmit("NC_LEAVERS", self.leaverDbSerialized:Get(), channel)
+    NCSync:SetLastLeaverSyncType(channel)
 end
 
 function NCSync:TransmitLowPerformers()
-    if core.db.profile.lowPerformers == nil or core.db.profile.lowPerformersSerialized == nil or NCDungeon:IsActive() then
+    if self.lowPerformerDb:IsEmpty() or self.lowPerformerDbSerialized:IsEmpty() or NCDungeon:IsActive() then
         return
     end
 
     local _, online = GetNumGuildMembers()
+    local channel
 
     if online > 1 and NCSync:GetLastLowPerformerSyncType() ~= "GUILD" then
-        NCSync:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "GUILD")
-        NCSync:SetLastLowPerformerSyncType("GUILD")
+        channel = "GUILD"
     else
-        NCSync:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "YELL")
-        NCSync:SetLastLowPerformerSyncType("YELL")
+        channel = "YELL"
     end
+
+    NCSync:Transmit("NC_LOWPERFORMERS", self.lowPerformerDbSerialized:Get(), channel)
+    NCSync:SetLastLowPerformerSyncType(channel)
 end
 
 function NCSync:Transmit(prefix, payload, distribution, target)
@@ -103,39 +113,35 @@ function NCSync:OnCommReceived(prefix, payload, distribution, sender)
 
     local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
 
-    if not core.db.global.lastSync then
-        core.db.global.lastSync = {}
-    end
-
     -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
-    if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and GetTime() - core.db.global.lastSync[sender] <= 1800) then
+    if sender == myFullName or NCCombat:IsActive() or (self.lastSyncDb:Get() and GetTime() - self.lastSyncDb:Get() <= 1800) then
         return
     end
 
-    core.db.global.lastSync[sender] = GetTime()
+    self.lastSyncDb:Set(GetTime())
 
     NemesisChat:Print("Synchronizing data received from " .. Ambiguate(sender, "guild"))
 
-    core.runtime.sync = {}
+    self.sync = {}
 
-    core.runtime.sync.decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
-    if not core.runtime.sync.decoded then return end
-    core.runtime.sync.decompressed = LibDeflate:DecompressDeflate(core.runtime.sync.decoded)
-    if not core.runtime.sync.decompressed then return end
-    core.runtime.sync.success, core.runtime.sync.data = LibSerialize:Deserialize(core.runtime.sync.decompressed)
-    if not core.runtime.sync.success then return end
+    self.sync.decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
+    if not self.sync.decoded then return end
+    self.sync.decompressed = LibDeflate:DecompressDeflate(self.sync.decoded)
+    if not self.sync.decompressed then return end
+    self.sync.success, self.sync.data = LibSerialize:Deserialize(self.sync.decompressed)
+    if not self.sync.success then return end
 
     payload = nil
-    core.runtime.sync.decoded = nil
-    core.runtime.sync.decompressed = nil
+    self.sync.decoded = nil
+    self.sync.decompressed = nil
 
     if prefix == "NC_LEAVERS" then
-        NCSync:ProcessLeavers(core.runtime.sync.data)
+        NCSync:ProcessLeavers(self.sync.data)
     elseif prefix == "NC_LOWPERFORMERS" then
-        NCSync:ProcessLowPerformers(core.runtime.sync.data)
+        NCSync:ProcessLowPerformers(self.sync.data)
     end
 
-    core.runtime.sync.data = nil
+    self.sync.data = nil
 end
 
 function NCSync:ProcessLeavers(leavers)
@@ -170,12 +176,12 @@ function NCSync:ProcessReceivedData(configKey, data)
         if core.db.profile[configKey][key] == nil then
             core.db.profile[configKey][key] = val
         else
-            core.runtime.sync.combinedRow = ArrayMerge(core.db.profile[configKey][key], val)
-            core.db.profile[configKey][key] = core.runtime.sync.combinedRow
+            self.sync.combinedRow = ArrayMerge(core.db.profile[configKey][key], val)
+            core.db.profile[configKey][key] = self.sync.combinedRow
         end
     end
 
-    core.runtime.sync.combinedRow = {}
+    self.sync.combinedRow = {}
 end
 
 function NCSync:PrintNumberOfLeavers()

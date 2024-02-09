@@ -16,35 +16,8 @@ core.runtimeDefaults = {
     myName = "",
     lastFeast = 0,
     lastFriendCheck = 0,
-    lastLeaverSyncType = "GUILD",
-    lastLowPerformerSyncType = "GUILD",
     lastMessage = 0,
-    lastUnsafePullToast = 0,
-    lastUnsafePullName = "",
-    lastUnsafePullMob = "",
-    lastUnsafePullCount = 0,
-    lastSyncType = "",
     currentMarkerIndex = 0,
-    groupTank = nil,
-    groupHealer = nil,
-    groupRosterCount = 1,
-    groupRoster = {},
-    pulledUnits = {},
-    playerStates = {},
-    friends = {
-        -- A simple cache for any online friends, with their character names as the key. Allows for
-        -- different interactions with friends, such as whispering them when they join a group.
-        -- ["CharacterName"] = 1,
-    },
-    guild = {
-        -- A simple cache for any online guild members, with their character names as the key. Allows for
-        -- different interactions with guild members, such as whispering them when they join a group.
-        -- ["characterName"] = {"guid" = guid, "isNemesis" = true/false},
-    },
-    lastSync = {
-        -- A simple cache for the last time we synced with a particular player, with their character names as the key.
-        -- ["CharacterName-Realm"] = 0,
-    },
     petOwners = {},
     ncEvent = {
         category = "",

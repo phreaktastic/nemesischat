@@ -28,7 +28,7 @@ function NCCache:Push(key, data)
     local isSegment = data.IsSegment or false
 
     if isSegment then
-        if self.db:GetComplexKey(key .. ".Restore") then
+        if self.db:GetPath(key .. ".Restore") then
             self.db:GetKey(key):Restore(data)
         else
             self.db:SetKey(key, NCSegment:New(data:GetIdentifier()))
@@ -51,7 +51,7 @@ function NCCache:RestoreSegment(key)
         return
     end
 
-    if self.db:GetComplexKey(key .. ".Restore") and model.Restore then
+    if self.db:GetPath(key .. ".Restore") and model.Restore then
         model:Restore(self.db:GetKey(key))
         return
     end
