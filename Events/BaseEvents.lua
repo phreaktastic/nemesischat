@@ -18,7 +18,7 @@ local UnitGUID = UnitGUID
 
 function NemesisChat:PLAYER_ENTERING_WORLD()
     NemesisChat:InstantiateCore()
-    NemesisChat:SilentGroupSync()
+    NCState:SilentGroupSync()
     NCState:GroupStateSubscriptions()
 end
 

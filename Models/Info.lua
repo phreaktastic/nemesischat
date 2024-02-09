@@ -224,7 +224,7 @@ NCInfo = {
             NCDungeon:SetIdentifier(nil)
             NCDungeon:UpdateCache()
             NemesisChat:InstantiateCore()
-            NemesisChat:SilentGroupSync()
+            NCState:SilentGroupSync()
             NCState:GroupStateSubscriptions()
             NCInfo:Update()
         end)
