@@ -598,7 +598,7 @@ NCSegment = {
             if segment:IsActive() then
                 segment:AddAvoidableDamage(amount, player)
             end
-            
+
         end
     end,
     GlobalAddCrowdControl = function(self, player)

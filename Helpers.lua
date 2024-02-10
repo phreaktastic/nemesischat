@@ -102,6 +102,10 @@ function NemesisChat:InitializeHelpers()
         return #core.db.profile.lowPerformers[guid]
     end
 
+    function NemesisChat:GetMessages()
+        return core.db.profile.messages
+    end
+
     function NemesisChat:GetMyName()
         NemesisChat:SetMyName()
         return core.runtime.myName

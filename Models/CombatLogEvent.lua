@@ -82,7 +82,7 @@ function NCCombatLogEvent:Fire()
     local isPull, _, pullPlayerName, mobName = self:IsPull()
 
     NemesisChat:SetMyName()
-    NemesisChat:CheckAffixes()
+    NCCombatLogEvent:CheckAffixes()
 
     NCEvent:Initialize()
     NCEvent:SetCategory("COMBATLOG")
@@ -138,8 +138,6 @@ function NCCombatLogEvent:Fire()
 
         if isAvoidable then
             NCSegment:GlobalAddAvoidableDamage(damage, destName)
-        else
-            NCSegment:GlobalAddDamage(damage, destName)
         end
 
         if state then
@@ -191,8 +189,8 @@ function NCCombatLogEvent:IsPull()
                 local validDamage = type(itype) == "number" and itype > 0
                 local classification = UnitClassification(dguid)
                 local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and not UnitIsPlayer(dguid)
-            
-                if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
+
+                if not UnitIsUnconscious(dguid) and validDamage and NCCombatLogEvent:UnitIsNotPulled(dguid) and isEliteEnemy then
                     -- Fire off a pull event -- player attacked a mob!
 
                     return true, "PLAYER_ATTACK", sname, dname
@@ -213,7 +211,7 @@ function NCCombatLogEvent:IsPull()
                 local classification = UnitClassification(sguid)
                 local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and not UnitIsPlayer(dguid)
 
-                if NemesisChat:UnitIsNotPulled(sguid) and isEliteEnemy then
+                if NCCombatLogEvent:UnitIsNotPulled(sguid) and isEliteEnemy then
                     -- Fire off a butt-pull event -- mob attacked a player!
 
                     return true, "PLAYER_PULL", dname, sname
@@ -221,7 +219,7 @@ function NCCombatLogEvent:IsPull()
             elseif(bit.band(sflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                 -- Player's pet attacks a mob
                 local pullname;
-                local pname = NemesisChat:GetPetOwner(sguid);
+                local pname = NCCombatLogEvent:GetPetOwner(sguid);
 
                 if (pname == "Unknown") then 
                     pullname = sname.." (pet)"
@@ -233,7 +231,7 @@ function NCCombatLogEvent:IsPull()
                 local classification = UnitClassification(dguid)
                 local isEliteEnemy = classification ~= "trivial" and classification ~= "minus" and classification ~= "normal" and not UnitIsPlayer(dguid)
                     
-                if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
+                if not UnitIsUnconscious(dguid) and validDamage and NCCombatLogEvent:UnitIsNotPulled(dguid) and isEliteEnemy then
                     -- Fire off a pet pull event -- player's pet attacked a mob!
 
                     return true, "PET_ATTACK", pullname, dname
@@ -241,13 +239,13 @@ function NCCombatLogEvent:IsPull()
             elseif(bit.band(dflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                 --Mob attacks a player's pet
                 local pullname;
-                local pname = NemesisChat:GetPetOwner(dguid);
+                local pname = NCCombatLogEvent:GetPetOwner(dguid);
 
                 if(pname == "Unknown") then pullname = dname.." (pet)";
                 else pullname = pname;
                 end
 
-                if NemesisChat:UnitIsNotPulled(sguid) then
+                if NCCombatLogEvent:UnitIsNotPulled(sguid) then
                     -- Fire off a pet butt-pull event -- mob attacked a player's pet!
 
                     return true, "PET_PULL", pullname, sname

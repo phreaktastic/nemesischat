@@ -180,7 +180,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Players in Group",
         value = "GROUP_COUNT",
         category = "Group",
-        exec = function() return NCState:GetGroupPlayersCount() or 0 end,
+        exec = function() return NCState:GetGroupSize() or 0 end,
         operators = ArrayMerge(core.constants.NUMERIC_OPERATORS, core.constants.OPERATORS),
         type = "NUMBER",
     })

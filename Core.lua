@@ -8,6 +8,7 @@
 local _, core = ...;
 
 function NemesisChat:OnInitialize()
+    core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
     NemesisChatAPI:SetAPIConfigOptions()
     NemesisChat:Initialize()
 

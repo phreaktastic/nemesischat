@@ -29,6 +29,12 @@ local LibSerialize = LibStub("LibSerialize")
 function NCCache:Push(key, data)
     local isSegment = type(data) == "table" and data.IsSegment or false
 
+    if not self.timers then self.timers = {} end
+
+    if GetTime() - (self.timers[key] or 9999) < 5 then
+        return
+    end
+
     if type(data) == "table" then
         data.CACHE_TIMESTAMP = GetTime()
         data.CACHE_VERSION = core.version
@@ -45,6 +51,8 @@ function NCCache:Push(key, data)
     else
         self.db:SetKey(key, data)
     end
+
+    self.timers[key] = GetTime()
 end
 
 function NCCache:Pull(key)
