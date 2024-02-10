@@ -62,14 +62,14 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
     local joins,leaves = NCState:GetRosterDelta()
 
     -- We left, or the last player left the group leaving us solo
-    if #leaves > 0 and #leaves == NCState:GetGroupPlayersCountOthers() then
+    if #leaves > 0 and #leaves == NCState:GetGroupSizeOthers() then
         NCState:ClearGroup()
         NCState:GroupStateSubscriptions()
 
         -- To be monitored. We want data on the last group we ran with, and if we get kicked with this in place it is lost.
         --NCSegment:GlobalReset()
     -- We joined, or we invited someone to form a group
-    elseif NCState:GetGroupPlayersCountOthers() == 0 and #joins > 0 then
+    elseif NCState:GetGroupSizeOthers() == 0 and #joins > 0 then
         NCState:ClearGroup()
         NCSegment:GlobalReset()
         local members = NCState:GetPlayersInGroup()
@@ -129,7 +129,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
                 local timeLeft = NCDungeon:GetTimeLeft()
 
-                if NCDungeon:IsActive() and player.guid ~= nil and NCState:GetGroupPlayersCountOthers() == 4 and timeLeft >= 360 and not IsInRaid() and NCDungeon:GetLevel() <= 20 then
+                if NCDungeon:IsActive() and player.guid ~= nil and NCState:GetGroupSizeOthers() == 4 and timeLeft >= 360 and not IsInRaid() and NCDungeon:GetLevel() <= 20 then
                     -- First check if anyone in the party is offline, and if so, report THEM instead of the leaver
                     local offlineName, offlineGuid, leaverGuid, leaverName = nil, nil, nil, nil
 

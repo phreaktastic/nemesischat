@@ -424,7 +424,7 @@ function NCState:GetPlayerState(playerName)
 end
 
 function NCState:GetGroupPlayers()
-    return NCState.group
+    return NCState.group.players
 end
 
 function NCState:GetGroupSizeOthers()
