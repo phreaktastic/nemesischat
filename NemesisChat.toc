@@ -10,6 +10,9 @@
 # Third party libraries
 Embeds.xml
 
+# TaintLess
+Libs\TaintLess\TaintLess.xml
+
 # Config defaults
 Config\Defaults.lua
 
