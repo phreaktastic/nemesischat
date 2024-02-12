@@ -391,7 +391,7 @@ NCRankings = {
                         end
 
                         -- If the second player's item level is higher than the top player's, add scores
-                        if secondItmLevel and topItemLevel and secondItemLevel > topItemLevel then
+                        if secondItemLevel and topItemLevel and secondItemLevel > topItemLevel then
                             -- The top player is seemingly overperforming
                             addTop = addTop + 10
 
