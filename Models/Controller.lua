@@ -312,10 +312,10 @@ function NemesisChat:InstantiateController()
         end
 
         -- Keep rolling through Nemeses to see if one matches conditions
-        if #returnMessages == 0 and NCEvent:GetTarget() ~= "NEMESIS" and NemesisChat:GetPartyNemesesCount() > 1 then
+        if #returnMessages == 0 and NCEvent:GetTarget() ~= "NEMESIS" and NCState:GetGroupNemesesCount() > 1 then
             table.insert(NCController.excludedNemeses, NCEvent:GetNemesis())
 
-            local newNemesis = NemesisChat:GetNonExcludedNemesis()
+            local newNemesis = NCState:GetNonExcludedNemesis()
 
             if newNemesis ~= nil then
                 NCEvent:SetNemesis(newNemesis)
@@ -325,10 +325,10 @@ function NemesisChat:InstantiateController()
         end
 
         -- Keep rolling through Bystanders to see if one matches conditions
-        if #returnMessages == 0 and NCEvent:GetTarget() ~= "BYSTANDER" and NemesisChat:GetPartyBystandersCount() > 1 then
+        if #returnMessages == 0 and NCEvent:GetTarget() ~= "BYSTANDER" and NCState:GetGroupBystandersCount() > 1 then
             table.insert(NCController.excludedBystanders, NCEvent:GetBystander())
 
-            local newBystander = NemesisChat:GetNonExcludedBystander()
+            local newBystander = NCState:GetNonExcludedBystander()
 
             if newBystander ~= nil then
                 NCEvent:SetBystander(newBystander)
@@ -344,11 +344,11 @@ function NemesisChat:InstantiateController()
         local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_NEMESIS" and (NCEvent:GetTarget() == "SELF" or NCEvent:GetTarget() == "NA"))
         local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_BYSTANDER" and (NCEvent:GetTarget() == "SELF" or NCEvent:GetTarget() == "NA"))
 
-        if includesNemesis and not NemesisChat:HasPartyNemeses() then
+        if includesNemesis and not NCState:HasGroupNemeses() then
             return false
         end
 
-        if includesBystander and not NemesisChat:HasPartyBystanders() then
+        if includesBystander and not NCState:HasGroupBystanders() then
             return false
         end
 
@@ -450,46 +450,46 @@ function NemesisChat:InstantiateController()
             return (tonumber(val1) or 0) < (tonumber(val2) or 0)
         end,
         ["IS_NEMESIS"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return false
             end
 
-            return NCRuntime:GetGroupRosterPlayer(val1).isNemesis
+            return NCState:GetPlayerState(val1).isNemesis
         end,
         ["NOT_NEMESIS"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return true
             end
 
-            return NCRuntime:GetGroupRosterPlayer(val1).isNemesis == false
+            return NCState:GetPlayerState(val1).isNemesis == false
         end,
         ["IS_FRIEND"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return false
             end
 
-            return NCRuntime:GetGroupRosterPlayer(val1).isFriend
+            return NCState:GetPlayerState(val1).isFriend
         end,
         ["NOT_FRIEND"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return true
             end
 
-            return not NCRuntime:GetGroupRosterPlayer(val1).isFriend
+            return not NCState:GetPlayerState(val1).isFriend
         end,
         ["IS_GUILDMATE"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return false
             end
 
-            return NCRuntime:GetGroupRosterPlayer(val1).isGuildmate
+            return NCState:GetPlayerState(val1).isGuildmate
         end,
         ["NOT_GUILDMATE"] = function(val1, val2)
-            if NCRuntime:GetGroupRosterPlayer(val1) == nil then
+            if NCState:GetPlayerState(val1) == nil then
                 return true
             end
 
-            return not NCRuntime:GetGroupRosterPlayer(val1).isGuildmate
+            return not NCState:GetPlayerState(val1).isGuildmate
         end,
         ["IS_UNDERPERFORMER"] = function(val1, val2)
             return NCDungeon:GetUnderperformer() == val1

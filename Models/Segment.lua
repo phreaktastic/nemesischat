@@ -89,6 +89,8 @@ NCSegment = {
 
     DetailsSegment = DETAILS_SEGMENTID_CURRENT,
 
+    IsSegment = true,
+
     StartPreHook = function(self)
         -- Override me
     end,
@@ -98,7 +100,7 @@ NCSegment = {
         self.StartTime = GetTime()
         self:SetActive()
         self:StartCallback()
-        self.RosterSnapshot = DeepCopy(NCRuntime:GetGroupRoster())
+        self.RosterSnapshot = DeepCopy(NCState:GetGroupPlayers())
     end,
     StartCallback = function(self)
         -- Override me
@@ -107,7 +109,7 @@ NCSegment = {
         self.FinishTime = GetTime()
         self.TotalTime = self.FinishTime - self.StartTime
         self.Success = success or false
-        self.Wipe = NemesisChat:IsWipe()
+        self.Wipe = NCState:IsWipe()
         self:SetInactive()
 
         if self.Rankings and self.Rankings.Calculate then
@@ -386,8 +388,8 @@ NCSegment = {
             self.Heals[source] = self.Heals[source] + amount
         end
 
-        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(source)
-        local rosterTarget = NCRuntime:GetGroupRosterPlayer(target)
+        local rosterPlayer = NCState:GetPlayerState(source)
+        local rosterTarget = NCState:GetPlayerState(target)
 
         -- If the source is not a healer, and the source is not the target, and the target is in the group (ignoring pets and self heals)
         if rosterPlayer ~= nil and rosterPlayer.role ~= "HEALER" and source ~= target and rosterTarget ~= nil then
@@ -550,8 +552,12 @@ NCSegment = {
         if Details == nil or NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or NCDetailsAPI == nil or NCDetailsAPI.GetDPS == nil then
             return 0
         end
-        
-        return NCDetailsAPI:GetDPS(playerName, self:GetDetailsSegment())
+
+        if not self.Rankings or not self.Rankings.All or not self.Rankings.All["DPS"] or not self.Rankings.All["DPS"] then
+            return 0
+        end
+
+        return self.Rankings.All["DPS"][playerName] or 0
     end,
     GetDetailsSegment = function(self)
         return self.DetailsSegment
@@ -596,7 +602,7 @@ NCSegment = {
             if segment:IsActive() then
                 segment:AddAvoidableDamage(amount, player)
             end
-            
+
         end
     end,
     GlobalAddCrowdControl = function(self, player)
@@ -744,6 +750,7 @@ NCSegment = {
 
         self.Identifier = identifier
         self.Rankings = NCRankings:New(self)
+        self.IsSegment = true
 
         self:ResetCallback(optIdentifier, optStart)
 
@@ -766,6 +773,8 @@ NCSegment = {
                 self[k] = v
             end
         end
+        
+        self.IsSegment = true
     end,
 }
 

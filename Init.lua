@@ -82,10 +82,10 @@ end
 function GetRole(player)
     local role
 
-    if NCRuntime:GetGroupRosterPlayer(player) == nil then
+    if NCState:GetPlayerState(player) == nil then
         role = UnitGroupRolesAssigned(player)
     else
-        role = NCRuntime:GetGroupRosterPlayer(player).role
+        role = NCState:GetPlayerState(player).role
     end
 
     for key, val in pairs(core.roles) do
@@ -743,6 +743,9 @@ core.eventSubscriptions = {
     -- Self
     "PLAYER_TARGET_CHANGED",
     "COMBAT_LOG_EVENT_UNFILTERED",
+
+    -- Battle.net friends
+    "BN_FRIEND_INFO_CHANGED",
 }
 
 NC_EVENT_TYPE_GROUP = 0
@@ -759,5 +762,6 @@ NCEvent = {}
 NCController = {}
 NCSpell = {}
 
-C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
-C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
+core.db = DeepCopy(core.defaults)
+
+-- core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)

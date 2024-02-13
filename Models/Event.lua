@@ -19,7 +19,6 @@ function NemesisChat:InstantiateEvent()
 
         NCController:Initialize()
         NCSpell:Initialize()
-        NemesisChat:PopulateFriends()
     end
 
     function NCEvent:GetCategory()
@@ -80,7 +79,7 @@ function NemesisChat:InstantiateEvent()
 
     -- Set the event's nemesis to a random nemesis in the party
     function NCEvent:RandomNemesis()
-        local nemesis = NemesisChat:GetRandomPartyNemesis()
+        local nemesis = NCState:GetRandomGroupNemesis()
 
         if nemesis ~= nil and nemesis ~= "" then
             NCEvent.nemesis = nemesis
@@ -89,7 +88,7 @@ function NemesisChat:InstantiateEvent()
 
     -- Set the event's nemesis to a random nemesis in the guild
     function NCEvent:RandomGuildNemesis()
-        local nemesis = NemesisChat:GetRandomGuildNemesis()
+        local nemesis = NCState:GetRandomGroupNemesis()
 
         if nemesis ~= nil and nemesis ~= "" then
             NCEvent.nemesis = nemesis
@@ -114,7 +113,7 @@ function NemesisChat:InstantiateEvent()
 
     -- Set the event's bystander to a random bystander in the party
     function NCEvent:RandomBystander()
-        local bystander = NemesisChat:GetRandomPartyBystander()
+        local bystander = NCState:GetRandomGroupBystander()
 
         if bystander ~= nil and bystander ~= "" then
             NCEvent:SetBystander(bystander)
@@ -157,12 +156,6 @@ function NemesisChat:InstantiateEvent()
     function NCEvent:Spell(source, dest, spellId, spellName)
         local feast = core.feastIDs[spellId]
 
-        -- We don't care about casts from non-grouped players / mobs to non-grouped players / mobs
-        -- if not UnitInParty(source) and not UnitInParty(dest) then
-        --     NCEvent:Initialize()
-        --     return
-        -- end
-
         NCEvent:SetEvent("SPELL_CAST_SUCCESS")
         NCEvent:SetTargetFromSource(source)
 
@@ -184,7 +177,7 @@ function NemesisChat:InstantiateEvent()
             NCEvent:SetEvent("OLDFEAST")
         end
 
-        NCSpell:Feast(source, spellId)
+        NCSpell:Feast(source, spellId, spellName)
     end
 
     -- Begin spellcasting 
@@ -202,9 +195,10 @@ function NemesisChat:InstantiateEvent()
 
         NCSegment:GlobalAddHeals(healAmount, source, dest)
 
-        NemesisChat:SetLastHealPlayerState(source, dest)
-
         NCSpell:Spell(source, dest, spellId, spellName)
+
+        NCState:UpdatePlayerLastHealCast(source, dest, spellId, spellName, healAmount)
+        NCState:UpdatePlayerLastHealReceived(source, dest, spellId, spellName, healAmount)
     end
 
     -- Set the Category, Event, and Target for a group enemy kill event
@@ -223,6 +217,8 @@ function NemesisChat:InstantiateEvent()
         if NCBoss:IsActive() then
             NCEvent:SetCategory("BOSS")
         end
+
+        NCState:UpdatePlayerDead(dest)
     end
 
     -- Same as above, but the death was due to avoidable damage
@@ -253,7 +249,7 @@ function NemesisChat:InstantiateEvent()
 
     -- Set the event's Target based on the input source (SELF|NEMESIS|BYSTANDER), and set a random Bystander/Nemesis if appropriate
     function NCEvent:SetTargetFromSource(source)
-        local member = NCRuntime:GetGroupRosterPlayer(source)
+        local member = NCState:GetPlayerState(source)
 
         if source == NemesisChat:GetMyName() then
             NCEvent:SetTarget("SELF")
@@ -332,7 +328,7 @@ function NemesisChat:InstantiateEvent()
 
     -- A player within the party has taken damage
     function NCEvent:IsDamageEvent(event, dest, misc4)
-        return ((event == "SPELL_PERIODIC_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_INSTAKILL" or event == "SWING_DAMAGE") or ((event=="SPELL_AURA_APPLIED" or event=="SPELL_AURA_APPLIED_DOSE" or event=="SPELL_AURA_REFRESH") and misc4=="DEBUFF")) and ((core.runtime.groupRoster[dest] ~= nil and core.runtime.groupRoster[dest] ~= "") or dest == GetMyName())
+        return ((event == "SPELL_PERIODIC_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_INSTAKILL" or event == "SWING_DAMAGE") or ((event=="SPELL_AURA_APPLIED" or event=="SPELL_AURA_APPLIED_DOSE" or event=="SPELL_AURA_REFRESH") and misc4=="DEBUFF")) and ((NCState:GetPlayerState(dest) ~= nil and NCState:GetPlayerState(dest) ~= "") or dest == GetMyName())
     end
 
     function NCEvent:CombatStart()
