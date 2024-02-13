@@ -28,6 +28,7 @@ Models\CombatLogEvent.lua
 Models\Config.lua
 Models\Runtime.lua
 Models\Colors.lua
+Models\Message.lua
 
 # Core NC configuration UI
 Config\Config.lua

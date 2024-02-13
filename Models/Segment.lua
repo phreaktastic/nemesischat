@@ -552,8 +552,12 @@ NCSegment = {
         if Details == nil or NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or NCDetailsAPI == nil or NCDetailsAPI.GetDPS == nil then
             return 0
         end
-        
-        return NCDetailsAPI:GetDPS(playerName, self:GetDetailsSegment())
+
+        if not self.Rankings or not self.Rankings.All or not self.Rankings.All["DPS"] or not self.Rankings.All["DPS"] then
+            return 0
+        end
+
+        return self.Rankings.All["DPS"][playerName] or 0
     end,
     GetDetailsSegment = function(self)
         return self.DetailsSegment
