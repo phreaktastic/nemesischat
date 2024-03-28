@@ -90,6 +90,48 @@ function NCMessage:SetChance(chance)
     return self
 end
 
+function NCMessage:AddMessage(message)
+    tinsert(self.messages, message)
+
+    return self
+end
+
+function NCMessage:GetMessageReplaced()
+    return self.messageReplaced
+end
+
+function NCMessage:GetMessages()
+    return self.messages
+end
+
+function NCMessage:GetCategory()
+    return self.category
+end
+
+function NCMessage:GetEvent()
+    return self.event
+end
+
+function NCMessage:GetTarget()
+    return self.target
+end
+
+function NCMessage:GetNemesis()
+    return self.nemesis
+end
+
+function NCMessage:GetBystander()
+    return self.bystander
+end
+
+function NCMessage:GetChannel()
+    return self.channel
+end
+
+function NCMessage:GetChance()
+    return self.chance
+end
+
 function NCMessage:Reset()
     if self ~= NCMessage then
         return

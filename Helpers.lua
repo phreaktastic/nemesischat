@@ -379,7 +379,26 @@ end
 function NemesisChat:Initialize()
     NemesisChat:InitializeConfig()
     NemesisChat:InitializeHelpers()
+    NemesisChat:InitializeGlobals()
     NemesisChat:RegisterToasts()
     NemesisChat:SetMyName()
     NCInfo:Initialize()
+end
+
+function NemesisChat:InitializeGlobals()
+    local count = 0
+    for key, value in pairs(_G) do
+        count = count + 1
+        for prefix, name in pairs(NemesisChat._globalPrefixes) do
+            if string.match(key, "^" .. prefix) then
+                if not NemesisChat[name] then
+                    NemesisChat[name] = {}
+                end
+
+                NemesisChat[name][key] = value
+            end
+        end
+    end
+
+    NemesisChat:Print("NemesisChat:InitializeGlobals() - Found " .. count .. " global variables.")
 end

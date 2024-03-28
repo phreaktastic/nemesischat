@@ -55,6 +55,10 @@ function NCDB:DeleteKey(key)
     core.db[self.basePath][self.prefix][key] = nil
 end
 
+function NCDB:Clear(key)
+    NCDB:DeleteKey(key)
+end
+
 function NCDB:TouchKey(key)
     if core.db[self.basePath][self.prefix][key] == nil then
         core.db[self.basePath][self.prefix][key] = {}
@@ -195,4 +199,17 @@ function NCDB:IsPathEmpty(key)
     end
 
     return next(value) == nil
+end
+
+-- Increment a key by a value
+function NCDB:Increment(key, value)
+    if not value then
+        value = 1
+    end
+
+    if core.db[self.basePath][self.prefix][key] == nil then
+        core.db[self.basePath][self.prefix][key] = 0
+    end
+
+    core.db[self.basePath][self.prefix][key] = core.db[self.basePath][self.prefix][key] + value
 end

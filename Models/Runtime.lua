@@ -147,12 +147,6 @@ NCRuntime = {
     UpdateLastFeast = function(self)
         core.runtime.lastFeast = GetTime()
     end,
-    GetLastFriendCheck = function(self)
-        return core.runtime.lastFriendCheck
-    end,
-    SetLastFriendCheck = function(self, value)
-        core.runtime.lastFriendCheck = value
-    end,
     GetLastLeaverSyncType = function(self)
         return core.runtime.lastLeaverSyncType
     end,

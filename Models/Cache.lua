@@ -19,6 +19,9 @@ NC_CACHE_KEY_GUILD = "guild"
 NC_CACHE_KEY_FRIENDS = "friends"
 NC_CACHE_KEY_DUNGEON = "dungeon"
 NC_CACHE_KEY_BOSS = "boss"
+NC_CACHE_KEY_USERVARIABLES = "userVariables"
+
+NemesisChat:RegisterGlobalLookup("NC_CACHE_KEY_", "CacheKeys")
 
 NCCache = {
     db = NCDB:New("cache"),
@@ -26,12 +29,12 @@ NCCache = {
 
 local LibSerialize = LibStub("LibSerialize")
 
-function NCCache:Push(key, data)
+function NCCache:Push(key, data, ignoreThrottle)
     local isSegment = type(data) == "table" and data.IsSegment or false
 
     if not self.timers then self.timers = {} end
 
-    if GetTime() - (self.timers[key] or 9999) < 5 then
+    if GetTime() - (self.timers[key] or 9999) < 5 and not ignoreThrottle then
         return
     end
 

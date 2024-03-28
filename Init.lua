@@ -19,6 +19,12 @@ LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
 -- Global functions
 -----------------------------------------------------
 
+NemesisChat._globalPrefixes = {}
+
+function NemesisChat:RegisterGlobalLookup(prefix, name)
+    tinsert(NemesisChat._globalPrefixes, { prefix = prefix, name = name })
+end
+
 -- When we don't want a reference (ie, resetting to refaults)
 function DeepCopy(orig)
     local orig_type = type(orig)
@@ -752,6 +758,8 @@ NC_EVENT_TYPE_GROUP = 0
 NC_EVENT_TYPE_GUILD = 1
 NC_EVENT_TYPE_MAXIMUM = 1 -- Used for logic that validates event types, increase as more are added
 
+NemesisChat:RegisterGlobalLookup("NC_EVENT_TYPE_", "Events")
+
 -- We reference this in a few areas, if Details is not installed, we need to set these to something
 if not DETAILS_SEGMENTID_OVERALL then
     DETAILS_SEGMENTID_OVERALL = -1
@@ -763,5 +771,3 @@ NCController = {}
 NCSpell = {}
 
 core.db = DeepCopy(core.defaults)
-
--- core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)

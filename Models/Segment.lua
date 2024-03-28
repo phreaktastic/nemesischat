@@ -82,7 +82,7 @@ NCSegment = {
     Rankings = {},
 
     -- Segment tracker -- array containing all objects which inherited from NCSegment
-    Segments = {},
+    _segments = {},
 
     -- Roster snapshot at the beginning of the segment
     RosterSnapshot = {},
@@ -576,7 +576,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             if segment:IsActive() then
                 segment:AddActionPoints(amount, player, optDescription)
             end
@@ -587,7 +587,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             if segment:IsActive() then
                 segment:AddAffix(player, optCount)
             end
@@ -598,7 +598,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             if segment:IsActive() then
                 segment:AddAvoidableDamage(amount, player)
             end
@@ -610,7 +610,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             if segment:IsActive() then
                 segment:AddCrowdControl(player)
             end
@@ -621,7 +621,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             if segment:IsActive() then
                 segment:AddDeath(player)
             end
@@ -632,7 +632,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             segment:AddDefensive(player)
         end
     end,
@@ -641,7 +641,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             segment:AddDispell(player)
         end
     end,
@@ -650,7 +650,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             if segment:IsActive() then
                 segment:AddHeals(amount, source, target)
             end
@@ -661,7 +661,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             if segment:IsActive() then
                 segment:AddInterrupt(player)
             end
@@ -672,7 +672,7 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             if segment:IsActive() then
                 segment:AddKill(player)
             end
@@ -683,21 +683,20 @@ NCSegment = {
             return
         end
 
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             if segment:IsActive() then
                 segment:AddPull(player)
             end
         end
     end,
     GlobalReset = function(self)
-        for _, segment in pairs(NCSegment.Segments) do
+        for _, segment in pairs(NCSegment._segments) do
             segment:Reset()
         end
     end,
     New = function(self, identifier)
         local o = {
             Identifier = identifier,
-            Segments = nil,
             Affixes = {},
             AvoidableDamage = {},
             Deaths = {},
@@ -705,14 +704,15 @@ NCSegment = {
             Interrupts = {},
             OffHeals = {},
             Pulls = {},
+            _segments = nil,
         }
-        
+
         setmetatable(o, self)
         self.__index = self
 
         o.Rankings = NCRankings:New(o)
 
-        NCSegment.Segments[#NCSegment.Segments + 1] = o
+        NCSegment._segments[#NCSegment._segments + 1] = o
 
         return o
     end,
@@ -721,10 +721,10 @@ NCSegment = {
         if self == NCSegment then
             return
         end
-        
-        for i, segment in pairs(NCSegment.Segments) do
+
+        for i, segment in pairs(NCSegment._segments) do
             if segment == self then
-                table.remove(NCSegment.Segments, i)
+                table.remove(NCSegment._segments, i)
             end
         end
 
