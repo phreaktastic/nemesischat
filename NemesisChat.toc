@@ -1,5 +1,5 @@
 ## Interface: 100250
-## Version: 1.9.23
+## Version: 2.0.0
 ## Title: |cff00ccffNemesis Chat|r
 ## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp
 ## Notes: The event-driven, targeted message framework.
@@ -19,16 +19,19 @@ Config\Defaults.lua
 # Core NC initialization
 Init.lua
 
-# Core NC models
+# Core NC models (other models very likely reference these, so they MUST be loaded first)
 Models\DB.lua
 Models\State.lua
 Models\Cache.lua
-Models\Synchronization.lua
+Models\Boss.lua
 Models\CombatLogEvent.lua
-Models\Config.lua
-Models\Runtime.lua
 Models\Colors.lua
+Models\Config.lua
+Models\Controller.lua
+Models\Dungeon.lua
 Models\Message.lua
+Models\Runtime.lua
+Models\Synchronization.lua
 
 # Core NC configuration UI
 Config\Config.lua
@@ -43,18 +46,18 @@ Config\About.lua
 Helpers.lua
 
 # NC models
-Models\Rankings.lua
-Models\Segment.lua
-Models\Boss.lua
-Models\Dungeon.lua
-Models\Event.lua
-Models\Controller.lua
-Models\Spell.lua
+Models\Action.lua
 Models\Combat.lua
-Models\Report.lua
+Models\Event.lua
 Models\Info.lua
 Models\Migration.lua
+Models\Rankings.lua
+Models\Report.lua
+Models\Segment.lua
 Models\Semver.lua
+Models\Spell.lua
+Models\Trigger.lua
+Models\Variable.lua
 
 # NC event handlers
 Events\BaseEvents.lua
@@ -63,10 +66,10 @@ Events\CustomEvents.lua
 # NC slash command handlers
 SlashCommands.lua
 
-# NC API core
+# NC API core (core logic for handling APIs)
 API.lua
 
-# NC core API
+# NC core API (official API providing base functionality)
 APIs\NemesisChat.lua
 
 # NC third party APIs
