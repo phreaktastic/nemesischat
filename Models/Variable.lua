@@ -31,7 +31,7 @@ function NCVariable:New(name, stored, perDungeon, perBoss, shouldIncrement)
         return
     end
 
-    local o = DeepCopy(variableDefaults)
+    local o = DeepCopy(variableDefaults, true)
 
     for key, _ in pairs(NCVariable) do
         if string.match(key, "^_") then

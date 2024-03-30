@@ -26,13 +26,15 @@ function NemesisChat:RegisterGlobalLookup(prefix, name)
 end
 
 -- When we don't want a reference (ie, resetting to refaults)
-function DeepCopy(orig)
+function DeepCopy(orig, skipPseudoPrivate)
     local orig_type = type(orig)
     local copy
     if orig_type == 'table' then
         copy = {}
         for orig_key, orig_value in next, orig, nil do
-            copy[DeepCopy(orig_key)] = DeepCopy(orig_value)
+            if not skipPseudoPrivate or not string.match(orig_key, "^_") then
+                copy[DeepCopy(orig_key)] = DeepCopy(orig_value)
+            end
         end
         setmetatable(copy, DeepCopy(getmetatable(orig)))
     else -- number, string, boolean, etc
