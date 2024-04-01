@@ -13,7 +13,7 @@ local _, core = ...;
 
 function NemesisChat:InstantiateEvent()
     function NCEvent:Initialize()
-        NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
+        NCEvent = DeepCopy(core.runtimeDefaults.NCEvent)
 
         NemesisChat:InstantiateEvent()
 

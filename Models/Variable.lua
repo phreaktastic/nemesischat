@@ -11,7 +11,7 @@ local _, core = ...;
 -- Variable model for actions
 -----------------------------------------------------
 
-local variableDefaults = {
+NCVariable = {
     Name = "",
     Stored = false,
     PerDungeon = false,
@@ -23,21 +23,13 @@ local variableDefaults = {
     _db = NCDB:New("userVariables"),
 }
 
-NCVariable = DeepCopy(variableDefaults)
-
 function NCVariable:New(name, stored, perDungeon, perBoss, shouldIncrement)
     if not name then
         error("Variable name is required")
         return
     end
 
-    local o = DeepCopy(variableDefaults, true)
-
-    for key, _ in pairs(NCVariable) do
-        if string.match(key, "^_") then
-            o[key] = nil
-        end
-    end
+    local o = DeepCopy(NCVariable, true)
 
     o.Name = name
 

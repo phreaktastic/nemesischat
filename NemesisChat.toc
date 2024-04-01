@@ -21,16 +21,16 @@ Init.lua
 
 # Core NC models (other models very likely reference these, so they MUST be loaded first)
 Models\DB.lua
-Models\State.lua
 Models\Cache.lua
-Models\Boss.lua
 Models\CombatLogEvent.lua
 Models\Colors.lua
 Models\Config.lua
 Models\Controller.lua
-Models\Dungeon.lua
 Models\Message.lua
 Models\Runtime.lua
+Models\Rankings.lua
+Models\Segment.lua
+Models\State.lua
 Models\Synchronization.lua
 
 # Core NC configuration UI
@@ -47,13 +47,13 @@ Helpers.lua
 
 # NC models
 Models\Action.lua
+Models\Boss.lua
 Models\Combat.lua
+Models\Dungeon.lua
 Models\Event.lua
 Models\Info.lua
 Models\Migration.lua
-Models\Rankings.lua
 Models\Report.lua
-Models\Segment.lua
 Models\Semver.lua
 Models\Spell.lua
 Models\Trigger.lua

@@ -17,7 +17,7 @@ core.runtimeDefaults = {
     lastMessage = 0,
     currentMarkerIndex = 0,
     petOwners = {},
-    ncEvent = {
+    NCEvent = {
         category = "",
         event = "",
         target = "SELF",
@@ -33,25 +33,7 @@ core.runtimeDefaults = {
         excludedNemeses = {},
         excludedBystanders = {},
     },
-    ncDungeon = {
-        active = false,
-        level = 0,
-        startTime = 0,
-        completeTime = 0,
-        totalTime = 0,
-        success = false,
-        deathCounter = {},
-        killCounter = {},
-        avoidableDamage = {},
-        interrupts = {},
-    },
-    ncBoss = {
-        active = false,
-        startTime = 0,
-        name = "",
-        success = false,
-    },
-    ncSpell = {
+    NCSpell = {
         active = false,
         source = "",
         target = "",
@@ -60,12 +42,7 @@ core.runtimeDefaults = {
         extraSpellId = 0,
         damage = 0,
     },
-    ncCombat = {
-        inCombat = false,
-        interrupts = {}, -- key = string (player name), value = integer (number of interrupts)
-        avoidableDamage = {}, -- key = string (player name), value = integer (avoidable damage taken)
-    },
-    ncApi = {
+    NCApi = {
         -- Sample values provided as reference for API
         friendlyName = "",
         configOptions = {

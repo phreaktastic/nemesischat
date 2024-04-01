@@ -13,7 +13,7 @@ local _, core = ...;
 
 function NemesisChat:InstantiateSpell()
     function NCSpell:Initialize()
-        NCSpell = DeepCopy(core.runtimeDefaults.ncSpell)
+        NCSpell = DeepCopy(core.runtimeDefaults.NCSpell)
 
         NemesisChat:InstantiateSpell()
     end

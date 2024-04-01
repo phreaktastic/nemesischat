@@ -523,7 +523,7 @@ NCSegment = {
         if not playerName then
             playerName = UnitName("player")
         end
-        
+
         if metric == "DPS" then
             return self:GetDps(playerName)
         elseif metric == "Affixes" then
@@ -553,11 +553,11 @@ NCSegment = {
             return 0
         end
 
-        if not self.Rankings or not self.Rankings.All or not self.Rankings.All["DPS"] or not self.Rankings.All["DPS"] then
+        if not self.Rankings or not self.Rankings.All or not self.Rankings.All["DPS"] or not self.Rankings.All["DPS"][playerName] then
             return 0
         end
 
-        return self.Rankings.All["DPS"][playerName] or 0
+        return self.Rankings.All["DPS"][playerName]
     end,
     GetDetailsSegment = function(self)
         return self.DetailsSegment

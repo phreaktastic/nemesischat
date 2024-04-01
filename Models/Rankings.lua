@@ -509,9 +509,13 @@ NCRankings = {
     ---@return NCRankings
     New = function(self, segment)
         local o = {
+            All = DeepCopy(self.All),
             Top = DeepCopy(self.Top),
+            TopTracker = {},
+            TopScores = {},
             Bottom = DeepCopy(self.Bottom),
             BottomTracker = {},
+            BottomScores = {},
             _segment = segment,
         }
         setmetatable(o, self)

@@ -32,8 +32,10 @@ function DeepCopy(orig, skipPseudoPrivate)
     if orig_type == 'table' then
         copy = {}
         for orig_key, orig_value in next, orig, nil do
-            if not skipPseudoPrivate or not string.match(orig_key, "^_") then
-                copy[DeepCopy(orig_key)] = DeepCopy(orig_value)
+            if (skipPseudoPrivate and string.match(orig_key, "^_")) then
+                copy[orig_key] = nil
+            else
+                copy[DeepCopy(orig_key, skipPseudoPrivate)] = DeepCopy(orig_value, skipPseudoPrivate)
             end
         end
         setmetatable(copy, DeepCopy(getmetatable(orig)))

@@ -355,10 +355,10 @@ function NemesisChat:InstantiateCore()
     NemesisChat:InstantiateController()
     NCController:Initialize()
 
-    NCSpell = DeepCopy(core.runtimeDefaults.ncSpell)
+    NCSpell = DeepCopy(core.runtimeDefaults.NCSpell)
     NemesisChat:InstantiateSpell()
 
-    NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
+    NCEvent = DeepCopy(core.runtimeDefaults.NCEvent)
     NemesisChat:InstantiateEvent()
 
     if NCCache:Exists(NC_CACHE_KEY_GUILD) then
