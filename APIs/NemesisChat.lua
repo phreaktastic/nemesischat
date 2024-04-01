@@ -468,14 +468,14 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         exec = function() return GetRole(NCEvent:GetBystander()) end,
         description = "The Bystander's role.",
         isNumeric = false,
-        example = function() 
+        example = function()
             local examples = {
                 "TANK",
                 "HEALER",
                 "DAMAGER",
             }
 
-            return core.rolesLookup[examples[math.random(1, #examples)]] or "DPS"
+            return GetRole(NCEvent:GetBystander()) or core.rolesLookup[examples[math.random(1, #examples)]] or "DPS"
         end,
     })
     :AddReplacement({
