@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.24**: Fixed a role condition error (thank you Gutz!)
 - **1.9.23**: Added helper commands for the API flow.
 - **1.9.22**: Likely the final optimization pass for the day.
 - **1.9.21**: Optimization for synchronization to prevent large influxes of memory usage and potential hitching. 

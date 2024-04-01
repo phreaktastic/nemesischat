@@ -634,7 +634,7 @@ function NemesisChat:InitializeHelpers()
             return "no time"
         end
 
-        return math.floor((GetTime() - timeStamp) / 60) .. "min " .. ((GetTime() - timeStamp) % 60) .. "sec"
+        return math.floor((GetTime() - timeStamp) / 60) .. "min " .. math.floor((GetTime() - timeStamp) % 60) .. "sec"
     end
 
     -- Get all the players in the group, as a hashmap (key = name, val = name)

@@ -313,7 +313,7 @@ NCRuntime = {
         core.runtime.groupTank = nil
         core.runtime.groupHealer = nil
         core.runtime.groupLead = nil
-        
+
         -- We're at least one of the members
         self:AddGroupRosterPlayer(GetMyName())
     end,
