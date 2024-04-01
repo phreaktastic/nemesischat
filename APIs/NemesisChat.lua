@@ -130,7 +130,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Bystander Role",
         value = "BYSTANDER_ROLE",
         category = "Bystander",
-        exec = function() return GetRole(NCEvent:GetBystander()) end,
+        exec = function() return UnitGroupRolesAssigned(NCEvent:GetBystander()) end,
         operators = core.constants.OPERATORS,
         type = "SELECT",
         options = DeepCopy(core.roles)
