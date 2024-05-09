@@ -10,7 +10,7 @@
 
 ## 🩹 Patches
 
-- **1.9.25**: Fix for Global Chance related settings and 
+- **1.9.25**: Fix for Global Chance related settings and some reports not firing (thank you </TYLER>!)
 - **1.9.24**: Fixed a role condition error (thank you Gutz!)
 - **1.9.23**: Added helper commands for the API flow.
 - **1.9.22**: Likely the final optimization pass for the day.
