@@ -58,7 +58,7 @@ core.options.args.generalGroup = {
                     name = "Use Global Chance",
                     desc = "Toggle Global Chance. This allows you to ensure that messages will only be sent a percentage of the time. NOTE: This does not apply for reports.",
                     get = function() return NCConfig:IsUsingGlobalChance() end,
-                    set = function() return NCConfig:SetUsingGlobalChance(value) end,
+                    set = function(_, value) return NCConfig:SetUsingGlobalChance(value) end,
                 },
                 globalChanceSlider = {
                     order = 5,
@@ -69,7 +69,7 @@ core.options.args.generalGroup = {
                     name = "Global Chance",
                     desc = "A chance can be 0.0 (0%) to 1.0 (100%).",
                     get = function() return NCConfig:GetGlobalChance() end,
-                    set = function() return NCConfig:SetGlobalChance(value) end,
+                    set = function(_, value) return NCConfig:SetGlobalChance(value) end,
                     disabled = function() return NCConfig:IsUsingGlobalChance() ~= true end,
                 },
                 minimumTimeSlider = {
@@ -81,7 +81,7 @@ core.options.args.generalGroup = {
                     name = "Minimum Time",
                     desc = "The minimum time (in seconds) between messages. NOTE: This does not apply for reports.",
                     get = function() return NCConfig:GetMinimumTime() end,
-                    set = function() return NCConfig:SetMinimumTime(value) end,
+                    set = function(_, value) return NCConfig:SetMinimumTime(value) end,
                 },
             }
         },
