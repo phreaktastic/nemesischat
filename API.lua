@@ -19,7 +19,7 @@ function NemesisChatAPI:AddAPI(name, friendlyName)
     end
 
     -- Instantiate a structured object for the API
-    core.apis[name] = DeepCopy(core.runtimeDefaults.ncApi)
+    core.apis[name] = DeepCopy(core.runtimeDefaults.NCApi)
 
     core.apis[name].friendlyName = friendlyName
 

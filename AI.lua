@@ -1362,3 +1362,30 @@ core.ai.praises = {
         },
     },
 }
+
+-- core.ai.taunts is the most aggressive set of phrases, and core.ai.praises is the most friendly
+-- This array holds 10 tables, where index 1 is the most aggressive and index 10 is the most friendly
+-- The array is used to determine the tone of the message based on the AI's personality
+core.ai.phrases = {
+    {},
+    {
+        -- Boss events
+        ["BOSS"] = {
+            -- The group failed to kill the boss
+            ["FAIL"] = {
+                -- There is no triggerer for this event, so we use "NA"
+                ["NA"] = {
+                    -- 25 phrases for when the group all dies to a boss, using [NEMESIS] in place of the name of our nemesis, [BYSTANDER] in place of a bystander in the group, [BOSSNAME] in place of the boss's name
+                    "Wow, I think I saw [BYSTANDER] tickling [BOSSNAME] while we were all fighting. That's the only explanation for how we all died.",
+                    "I'm pretty sure [NEMESIS] was trying to impress [BOSSNAME] with their dance moves. It was a disaster.",
+                    "I'm not sure what [NEMESIS] was thinking, but they definitely weren't thinking about the fight.",
+                    "I think [NEMESIS] was trying to make friends with [BOSSNAME]. It didn't work.",
+                }
+            }
+        }
+    },
+    {},
+}
+
+core.ai.phrases[1] = core.ai.taunts
+core.ai.phrases[10] = core.ai.praises

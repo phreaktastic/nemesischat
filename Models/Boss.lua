@@ -19,6 +19,8 @@ function NCBoss:StartCallback()
     NCEvent:SetTarget("NA")
     NCEvent:RandomNemesis()
     NCEvent:RandomBystander()
+
+    NCVariable:BossCallback()
 end
 
 function NCBoss:FinishCallback(success)

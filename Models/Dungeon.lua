@@ -36,6 +36,8 @@ function NCDungeon:StartCallback()
 
     NCInfo:Update()
     NCDungeon:UpdateCache()
+
+    NCVariable:DungeonCallback()
 end
 
 function NCDungeon:FinishCallback(success)
