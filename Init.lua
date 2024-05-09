@@ -104,7 +104,7 @@ function GetRole(player)
         end
     end
 
-    return "party animal"
+    return nil
 end
 
 function GetKeysSortedByValue(tbl, sortFunction)

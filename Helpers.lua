@@ -181,7 +181,7 @@ function NemesisChat:InitializeHelpers()
             return "no time"
         end
 
-        return math.floor((GetTime() - timeStamp) / 60) .. "min " .. ((GetTime() - timeStamp) % 60) .. "sec"
+        return math.floor((GetTime() - timeStamp) / 60) .. "min " .. math.floor((GetTime() - timeStamp) % 60) .. "sec"
     end
 
     -- Get a random AI phrase for the event

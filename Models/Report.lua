@@ -10,9 +10,6 @@
 -----------------------------------------------------
 local _, core = ...;
 
-local DETAILS_SEGMENTID_CURRENT = DETAILS_SEGMENTID_CURRENT
-local DETAILS_SEGMENTID_OVERALL = DETAILS_SEGMENTID_OVERALL
-
 function NemesisChat:Report(event, success)
     if IsNCEnabled() == false then
         return
@@ -87,73 +84,70 @@ function NemesisChat:Report(event, success)
         local config = core.db.profile.reportConfig[type][event]
         local segName = "this combat segment"
 
-        if not config then
-            return
-        end
+        if config then
+            if event == "COMBAT" or event == "BOSS" then
+                bucket = NCCombat
 
-        if event == "COMBAT" or event == "BOSS" then
-            bucket = NCCombat
-
-            if event == "BOSS" then
-                segName = NCBoss:GetIdentifier()
+                if event == "BOSS" then
+                    segName = NCBoss:GetIdentifier()
+                end
+            elseif event == "DUNGEON" then
+                bucket = NCDungeon
+                segName = NCDungeon:GetIdentifier()
             end
-        elseif event == "DUNGEON" then
-            bucket = NCDungeon
-            segName = NCDungeon:GetIdentifier()
-        end
 
-        local data = typeData[type]
-        local topVal = bucket.Rankings.Top[rankingType].Value or 0
-        local topPlayer = bucket.Rankings.Top[rankingType].Player or nil
-        local botVal = bucket.Rankings.Bottom[rankingType].Value or 99999999
-        local botPlayer = bucket.Rankings.Bottom[rankingType].Player or nil
+            local data = typeData[type]
+            local topVal = bucket.Rankings.Top[rankingType].Value or 0
+            local topPlayer = bucket.Rankings.Top[rankingType].Player or nil
+            local botVal = bucket.Rankings.Bottom[rankingType].Value or 99999999
+            local botPlayer = bucket.Rankings.Bottom[rankingType].Player or nil
 
-        if topPlayer == nil then
-            topMsg = nil
-        else
-            topMsg = data.topMsg
-        end
-
-        if botPlayer == nil then
-            botMsg = nil
-        else
-            botMsg = data.botMsg
-        end
-
-        if data.preMessageHook ~= nil and topPlayer ~= nil then
-            topMsg, botMsg = data.preMessageHook(topPlayer, topMsg, botMsg, bucket)
-        end
-
-        if topMsg ~= nil then
-            if data.inverted == true then
-                topMsg = callOutFormat(topMsg, topPlayer, segName, topVal)
+            if topPlayer == nil then
+                topMsg = nil
             else
-                if data.topMsgSpecial and bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].DeltaPercent and bucket.Rankings.Top[rankingType].DeltaPercent >= 25 then
-                    topMsg = shoutOutFormat(data.topMsgSpecial, topPlayer, segName, topVal)
+                topMsg = data.topMsg
+            end
+
+            if botPlayer == nil then
+                botMsg = nil
+            else
+                botMsg = data.botMsg
+            end
+
+            if data.preMessageHook ~= nil and topPlayer ~= nil then
+                topMsg, botMsg = data.preMessageHook(topPlayer, topMsg, botMsg, bucket)
+            end
+
+            if topMsg ~= nil then
+                if data.inverted == true then
+                    topMsg = callOutFormat(topMsg, topPlayer, segName, topVal)
                 else
-                    topMsg = shoutOutFormat(topMsg, topPlayer, segName, topVal)
+                    if data.topMsgSpecial and bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].DeltaPercent and bucket.Rankings.Top[rankingType].DeltaPercent >= 25 then
+                        topMsg = shoutOutFormat(data.topMsgSpecial, topPlayer, segName, topVal)
+                    else
+                        topMsg = shoutOutFormat(topMsg, topPlayer, segName, topVal)
+                    end
                 end
             end
-        end
 
-        if botMsg ~= nil then
-            if data.inverted == true then
-                botMsg = shoutOutFormat(botMsg, botPlayer, segName, botVal)
-            else
-                botMsg = callOutFormat(botMsg, botPlayer, segName, botVal)
+            if botMsg ~= nil then
+                if data.inverted == true then
+                    botMsg = shoutOutFormat(botMsg, botPlayer, segName, botVal)
+                else
+                    botMsg = callOutFormat(botMsg, botPlayer, segName, botVal)
+                end
+            end
+
+            local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
+
+            if core.db.profile.reportConfig[type]["TOP"] == true and topMsg ~= nil then
+                SendChatMessage("Nemesis Chat: " .. topMsg, channel)
+            end
+
+            if core.db.profile.reportConfig[type]["BOTTOM"] == true and botMsg ~= nil then
+                SendChatMessage("Nemesis Chat: " .. botMsg, channel)
             end
         end
-
-        local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
-
-        if core.db.profile.reportConfig[type]["TOP"] == true and topMsg ~= nil then
-            SendChatMessage("Nemesis Chat: " .. topMsg, channel)
-        end
-
-        if core.db.profile.reportConfig[type]["BOTTOM"] == true and botMsg ~= nil then
-            SendChatMessage("Nemesis Chat: " .. botMsg, channel)
-        end
     end
-
 
 end
