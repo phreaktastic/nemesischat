@@ -10,6 +10,7 @@
 
 ## 🩹 Patches
 
+- **1.9.29**: Compatibility update for TWW (`/nc` works again).
 - **1.9.28**: Compatibility update for TWW.
 - **1.9.27**: Compatibility update for TWW.
 - **1.9.25**: Fix for Global Chance related settings and some reports not firing (thank you </TYLER>!)
