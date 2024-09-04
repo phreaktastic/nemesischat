@@ -91,11 +91,11 @@ function NemesisChat:InstantiateSpell()
     end
 
     function NCSpell:GetSpellLink()
-        return GetSpellLink(NCSpell.spellId)
+        return C_Spell.GetSpellLink(NCSpell.spellId)
     end
 
     function NCSpell:GetExtraSpellLink()
-        return GetSpellLink(NCSpell.extraSpellId)
+        return C_Spell.GetSpellLink(NCSpell.extraSpellId)
     end
 
     function NCSpell:IsValidSpell()

@@ -39,7 +39,7 @@ end
 
 local floor = _G.floor
 local format = _G.format
-local GetSpellInfo = _G.GetSpellInfo
+local GetSpellInfo = _G.C_Spell.GetSpellInfo
 local gsub = _G.string.gsub
 local strsplit = _G.strsplit
 local strtrim = _G.strtrim

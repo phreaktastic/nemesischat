@@ -7,7 +7,7 @@
 -----------------------------------------------------
 local addonName, core = ...;
 
-core.version = GetAddOnMetadata(addonName, 'Version')
+core.version = C_AddOns.GetAddOnMetadata(addonName, 'Version')
 
 -----------------------------------------------------
 -- Register global NemesisChat

@@ -126,3 +126,75 @@ function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
 
     NemesisChat:HandleEvent()
 end
+
+function NemesisChat:START_DUNGEON()
+    -- Stub for non-mythic support
+end
+
+function NemesisChat:END_DUNGEON()
+    -- Stub for non-mythic support
+end
+
+function NemesisChat:CheckGuild()
+    if not IsInGuild() then
+        return
+    end
+
+    local totalGuildMembers, onlineGuildMembers = GetNumGuildMembers()
+
+    -- The guild roster is empty
+    if totalGuildMembers <= 1 then
+        return
+    end
+
+    if not NemesisChat.guildRosterIndex then
+        NemesisChat.guildRosterIndex = 1
+    end
+
+    core.db.global.guildRow = {}
+
+    local cursor = NemesisChat.guildRosterIndex
+    local chunk = 10
+    local maxIndex = math.min(totalGuildMembers, NemesisChat.guildRosterIndex + chunk)
+
+    for i = cursor, maxIndex do
+        core.db.global.guildRow.name, _, _, _, _, _, _, _, core.db.global.guildRow.isOnline, _, _, _, _, core.db.global.guildRow.isMobile, _, _, core.db.global.guildRow.guid = GetGuildRosterInfo(i)
+        core.db.global.guildRow.memberOnline = core.db.global.guildRow.isOnline and not core.db.global.guildRow.isMobile
+
+        -- Strip realm name from name
+        core.db.global.guildRow.name = Ambiguate(core.db.global.guildRow.name, "guild")
+
+        core.db.global.guildRow.isNemesis = NCConfig:GetNemesis(core.db.global.guildRow.name) ~= nil
+
+        if core.runtime.guild[core.db.global.guildRow.name] then
+            local changed = core.runtime.guild[core.db.global.guildRow.name].online ~= core.db.global.guildRow.memberOnline
+
+            if changed then
+                core.runtime.guild[core.db.global.guildRow.name].online = core.db.global.guildRow.memberOnline
+            
+                if core.db.global.guildRow.memberOnline then
+                    NemesisChat:GUILD_PLAYER_LOGIN(core.db.global.guildRow.name, core.db.global.guildRow.isNemesis)
+                else
+                    NemesisChat:GUILD_PLAYER_LOGOUT(core.db.global.guildRow.name, core.db.global.guildRow.isNemesis)
+                end
+            end
+        else
+            core.runtime.guild[core.db.global.guildRow.name] = {
+                online = core.db.global.guildRow.memberOnline,
+                isNemesis = core.db.global.guildRow.isNemesis,
+                guid = core.db.global.guildRow.guid
+            }
+        end
+    end
+
+    -- Update the guild roster in the DB cache, in case a reload occurs
+    core.db.profile.cache.guild = DeepCopy(core.runtime.guild)
+    core.db.profile.cache.guildTime = GetTime()
+
+    -- Reset the guild roster index if it's at the end of the list
+    if maxIndex >= GetNumGuildMembers() then
+        NemesisChat.guildRosterIndex = 1
+    else
+        NemesisChat.guildRosterIndex = maxIndex + chunk
+    end
+end
