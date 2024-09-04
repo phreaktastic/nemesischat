@@ -15,7 +15,7 @@ function NemesisChat:SlashCommand(msg)
 	local cmd, args = self:GetArgs(msg, 2)
 
 	if not msg or msg:trim() == "" then
-		InterfaceOptionsFrame_OpenToCategory(core.optionsFrame)
+		Settings.OpenToCategory("NemesisChat")
 	elseif cmd == "showinfo" then
 		NCConfig:SetShowInfoFrame(true)
 		NCInfo.StatsFrame:Show()

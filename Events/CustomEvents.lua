@@ -127,6 +127,14 @@ function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
     NemesisChat:HandleEvent()
 end
 
+function NemesisChat:START_DUNGEON()
+    -- Stub for non-mythic support
+end
+
+function NemesisChat:END_DUNGEON()
+    -- Stub for non-mythic support
+end
+
 function NemesisChat:CheckGuild()
     if not IsInGuild() then
         return
