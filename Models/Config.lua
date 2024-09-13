@@ -12,14 +12,18 @@ local _, core = ...;
 -----------------------------------------------------
 
 NCConfig = {
+    CoreDB = NCDB:New(),
+    ReportDB = NCDB:New("reportConfig"),
+    NemesisDB = NCDB:New("nemeses"),
+
     IsEnabled = function(self)
-        return core.db.profile.enabled
+        return self.CoreDB:GetKey("enabled")
     end,
     ToggleEnabled = function(self)
-        core.db.profile.enabled = not core.db.profile.enabled
+        self.CoreDB:Toggle("enabled")
     end,
     SetEnabled = function(self, value)
-        core.db.profile.enabled = value
+        self.CoreDB:SetKey("enabled", value)
 
         if value then
             NemesisChat:Enable()
@@ -30,40 +34,40 @@ NCConfig = {
         end
     end,
     IsDebugging = function(self)
-        return core.db.profile.dbg
+        return self.CoreDB:GetKey("dbg")
     end,
     ToggleDebugging = function(self)
-        core.db.profile.dbg = not core.db.profile.dbg
+        self.CoreDB:Toggle("dbg")
     end,
     SetDebugging = function(self, value)
-        core.db.profile.dbg = value
+        self.CoreDB:SetKey("dbg", value)
     end,
     IsNonCombatMode = function(self)
-        return core.db.profile.nonCombatMode
+        return self.CoreDB:GetKey("nonCombatMode")
     end,
     ToggleNonCombatMode = function(self)
-        core.db.profile.nonCombatMode = not core.db.profile.nonCombatMode
+        self.CoreDB:Toggle("nonCombatMode")
     end,
     SetNonCombatMode = function(self, value)
-        core.db.profile.nonCombatMode = value
+        self.CoreDB:SetKey("nonCombatMode", value)
     end,
     IsInterruptException = function(self)
-        return core.db.profile.interruptException
+        return self.CoreDB:GetKey("interruptException")
     end,
     ToggleInterruptException = function(self)
-        core.db.profile.interruptException = not core.db.profile.interruptException
+        self.CoreDB:Toggle("interruptException")
     end,
     SetInterruptException = function(self, value)
-        core.db.profile.interruptException = value
+        self.CoreDB:SetKey("interruptException", value)
     end,
     IsDeathException = function(self)
-        return core.db.profile.deathException
+        return self.CoreDB:GetKey("deathException")
     end,
     ToggleDeathException = function(self)
-        core.db.profile.deathException = not core.db.profile.deathException
+        self.CoreDB:Toggle("deathException")
     end,
     SetDeathException = function(self, value)
-        core.db.profile.deathException = value
+        self.CoreDB:SetKey("deathException", value)
     end,
     IsTrackingLeavers = function(self)
         return core.db.profile.trackLeavers
@@ -134,483 +138,492 @@ NCConfig = {
         core.db.profile.reportConfig.reportLowPerformersOnJoinThreshold = value
     end,
     IsAIEnabled = function(self)
-        return core.db.profile.ai
+        return self.CoreDB:GetKey("ai")
     end,
     ToggleAI = function(self)
-        core.db.profile.ai = not core.db.profile.ai
+        self.CoreDB:Toggle("ai")
     end,
     SetAI = function(self, value)
-        core.db.profile.ai = value
+        self.CoreDB:SetKey("ai", value)
     end,
     IsFlaggingFriendsAsNemeses = function(self)
-        return core.db.profile.flagFriendsAsNemeses
+        return self.CoreDB:GetKey("flagFriendsAsNemeses")
     end,
     ToggleFlaggingFriendsAsNemeses = function(self)
-        core.db.profile.flagFriendsAsNemeses = not core.db.profile.flagFriendsAsNemeses
+        self.CoreDB:Toggle("flagFriendsAsNemeses")
     end,
     SetFlaggingFriendsAsNemeses = function(self, value)
-        core.db.profile.flagFriendsAsNemeses = value
+        self.CoreDB:SetKey("flagFriendsAsNemeses", value)
     end,
     IsFlaggingGuildmatesAsNemeses = function(self)
-        return core.db.profile.flagGuildmatesAsNemeses
+        return self.CoreDB:GetKey("flagGuildmatesAsNemeses")
     end,
     ToggleFlaggingGuildmatesAsNemeses = function(self)
-        core.db.profile.flagGuildmatesAsNemeses = not core.db.profile.flagGuildmatesAsNemeses
+        self.CoreDB:Toggle("flagGuildmatesAsNemeses")
     end,
     SetFlaggingGuildmatesAsNemeses = function(self, value)
-        core.db.profile.flagGuildmatesAsNemeses = value
+        self.CoreDB:SetKey("flagGuildmatesAsNemeses", value)
     end,
     GetReportChannel = function(self)
-        return core.db.profile.reportConfig.channel
+        return self.ReportDB:GetKey("channel")
     end,
     SetReportChannel = function(self, value)
-        core.db.profile.reportConfig.channel = value
+        self.ReportDB:SetKey("channel", value)
     end,
     IsExcludingNemeses = function(self)
-        return core.db.profile.reportConfig.excludeNemeses
+        return self.ReportDB:GetKey("excludeNemeses")
     end,
     ToggleExcludingNemeses = function(self)
-        core.db.profile.reportConfig.excludeNemeses = not core.db.profile.reportConfig.excludeNemeses
+        self.ReportDB:Toggle("excludeNemeses")
     end,
     SetExcludingNemeses = function(self, value)
-        core.db.profile.reportConfig.excludeNemeses = value
+        self.ReportDB:SetKey("excludeNemeses", value)
     end,
     IsReportingLowPerformersOnWipe = function(self)
-        return core.db.profile.reportConfig.reportLowPerformersOnWipe
+        return self.ReportDB:GetKey("reportLowPerformersOnWipe")
     end,
     ToggleReportingLowPerformersOnWipe = function(self)
-        core.db.profile.reportConfig.reportLowPerformersOnWipe = not core.db.profile.reportConfig.reportLowPerformersOnWipe
+        self.ReportDB:Toggle("reportLowPerformersOnWipe")
     end,
     SetReportingLowPerformersOnWipe = function(self, value)
-        core.db.profile.reportConfig.reportLowPerformersOnWipe = value
+        self.ReportDB:SetKey("reportLowPerformersOnWipe", value)
     end,
     IsReportingLowPerformersOnDungeonFail = function(self)
-        return core.db.profile.reportConfig.reportLowPerformersOnDungeonFail
+        return self.ReportDB:GetKey("reportLowPerformersOnDungeonFail")
     end,
     ToggleReportingLowPerformersOnDungeonFail = function(self)
-        core.db.profile.reportConfig.reportLowPerformersOnDungeonFail = not core.db.profile.reportConfig.reportLowPerformersOnDungeonFail
+        self.ReportDB:Toggle("reportLowPerformersOnDungeonFail")
     end,
     SetReportingLowPerformersOnDungeonFail = function(self, value)
-        core.db.profile.reportConfig.reportLowPerformersOnDungeonFail = value
+        self.ReportDB:SetKey("reportLowPerformersOnDungeonFail", value)
     end,
     IsReportingDamage_Combat = function(self)
-        return core.db.profile.reportConfig["DAMAGE"]["COMBAT"]
+        return self.ReportDB:GetPath("DAMAGE.COMBAT")
     end,
     ToggleReportingDamage_Combat = function(self)
-        core.db.profile.reportConfig["DAMAGE"]["COMBAT"] = not core.db.profile.reportConfig["DAMAGE"]["COMBAT"]
+        self.ReportDB:TogglePath("DAMAGE.COMBAT")
     end,
     SetReportingDamage_Combat = function(self, value)
-        core.db.profile.reportConfig["DAMAGE"]["COMBAT"] = value
+        self.ReportDB:SetPath("DAMAGE.COMBAT", value)
     end,
     IsReportingDamage_Boss = function(self)
-        return core.db.profile.reportConfig["DAMAGE"]["BOSS"]
+        return self.ReportDB:GetPath("DAMAGE.BOSS")
     end,
     ToggleReportingDamage_Boss = function(self)
-        core.db.profile.reportConfig["DAMAGE"]["BOSS"] = not core.db.profile.reportConfig["DAMAGE"]["BOSS"]
+        self.ReportDB:TogglePath("DAMAGE.BOSS")
     end,
     SetReportingDamage_Boss = function(self, value)
-        core.db.profile.reportConfig["DAMAGE"]["BOSS"] = value
+        self.ReportDB:SetPath("DAMAGE.BOSS", value)
     end,
     IsReportingDamage_Dungeon = function(self)
-        return core.db.profile.reportConfig["DAMAGE"]["DUNGEON"]
+        return self.ReportDB:GetPath("DAMAGE.DUNGEON")
     end,
     ToggleReportingDamage_Dungeon = function(self)
-        core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] = not core.db.profile.reportConfig["DAMAGE"]["DUNGEON"]
+        self.ReportDB:TogglePath("DAMAGE.DUNGEON")
     end,
     SetReportingDamage_Dungeon = function(self, value)
-        core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] = value
+        self.ReportDB:SetPath("DAMAGE.DUNGEON", value)
     end,
     IsReportingDamage_Top = function(self)
-        return core.db.profile.reportConfig["DAMAGE"]["TOP"]
+        return self.ReportDB:GetPath("DAMAGE.TOP")
     end,
     ToggleReportingDamage_Top = function(self)
-        core.db.profile.reportConfig["DAMAGE"]["TOP"] = not core.db.profile.reportConfig["DAMAGE"]["TOP"]
+        self.ReportDB:TogglePath("DAMAGE.TOP")
     end,
     SetReportingDamage_Top = function(self, value)
-        core.db.profile.reportConfig["DAMAGE"]["TOP"] = value
+        self.ReportDB:SetPath("DAMAGE.TOP", value)
     end,
     IsReportingDamage_Bottom = function(self)
-        return core.db.profile.reportConfig["DAMAGE"]["BOTTOM"]
+        return self.ReportDB:GetPath("DAMAGE.BOTTOM")
     end,
     ToggleReportingDamage_Bottom = function(self)
-        core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] = not core.db.profile.reportConfig["DAMAGE"]["BOTTOM"]
+        self.ReportDB:TogglePath("DAMAGE.BOTTOM")
     end,
     SetReportingDamage_Bottom = function(self, value)
-        core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] = value
+        self.ReportDB:SetPath("DAMAGE.BOTTOM", value)
     end,
     IsReportingAvoidable_Combat = function(self)
-        return core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"]
+        return self.ReportDB:GetPath("AVOIDABLE.COMBAT")
     end,
     ToggleReportingAvoidable_Combat = function(self)
-        core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] = not core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"]
+        self.ReportDB:TogglePath("AVOIDABLE.COMBAT")
     end,
     SetReportingAvoidable_Combat = function(self, value)
-        core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] = value
+        self.ReportDB:SetPath("AVOIDABLE.COMBAT", value)
     end,
     IsReportingAvoidable_Boss = function(self)
-        return core.db.profile.reportConfig["AVOIDABLE"]["BOSS"]
+        return self.ReportDB:GetPath("AVOIDABLE.BOSS")
     end,
     ToggleReportingAvoidable_Boss = function(self)
-        core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] = not core.db.profile.reportConfig["AVOIDABLE"]["BOSS"]
+        self.ReportDB:TogglePath("AVOIDABLE.BOSS")
     end,
     SetReportingAvoidable_Boss = function(self, value)
-        core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] = value
+        self.ReportDB:SetPath("AVOIDABLE.BOSS", value)
     end,
     IsReportingAvoidable_Dungeon = function(self)
-        return core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"]
+        return self.ReportDB:GetPath("AVOIDABLE.DUNGEON")
     end,
     ToggleReportingAvoidable_Dungeon = function(self)
-        core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] = not core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"]
+        self.ReportDB:TogglePath("AVOIDABLE.DUNGEON")
     end,
     SetReportingAvoidable_Dungeon = function(self, value)
-        core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] = value
+        self.ReportDB:SetPath("AVOIDABLE.DUNGEON", value)
     end,
     IsReportingAvoidable_Top = function(self)
-        return core.db.profile.reportConfig["AVOIDABLE"]["TOP"]
+        return self.ReportDB:GetPath("AVOIDABLE.TOP")
     end,
     ToggleReportingAvoidable_Top = function(self)
-        core.db.profile.reportConfig["AVOIDABLE"]["TOP"] = not core.db.profile.reportConfig["AVOIDABLE"]["TOP"]
+        self.ReportDB:TogglePath("AVOIDABLE.TOP")
     end,
     SetReportingAvoidable_Top = function(self, value)
-        core.db.profile.reportConfig["AVOIDABLE"]["TOP"] = value
+        self.ReportDB:SetPath("AVOIDABLE.TOP", value)
     end,
     IsReportingAvoidable_Bottom = function(self)
-        return core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"]
+        return self.ReportDB:GetPath("AVOIDABLE.BOTTOM")
     end,
     ToggleReportingAvoidable_Bottom = function(self)
-        core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] = not core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"]
+        self.ReportDB:TogglePath("AVOIDABLE.BOTTOM")
     end,
     SetReportingAvoidable_Bottom = function(self, value)
-        core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] = value
+        self.ReportDB:SetPath("AVOIDABLE.BOTTOM", value)
     end,
     IsReportingInterrupts_Combat = function(self)
-        return core.db.profile.reportConfig["INTERRUPTS"]["COMBAT"]
+        return self.ReportDB:GetPath("INTERRUPTS.COMBAT")
     end,
     ToggleReportingInterrupts_Combat = function(self)
-        core.db.profile.reportConfig["INTERRUPTS"]["COMBAT"] = not core.db.profile.reportConfig["INTERRUPTS"]["COMBAT"]
+        self.ReportDB:TogglePath("INTERRUPTS.COMBAT")
     end,
     SetReportingInterrupts_Combat = function(self, value)
-        core.db.profile.reportConfig["INTERRUPTS"]["COMBAT"] = value
+        self.ReportDB:SetPath("INTERRUPTS.COMBAT", value)
     end,
     IsReportingInterrupts_Boss = function(self)
-        return core.db.profile.reportConfig["INTERRUPTS"]["BOSS"]
+        return self.ReportDB:GetPath("INTERRUPTS.BOSS")
     end,
     ToggleReportingInterrupts_Boss = function(self)
-        core.db.profile.reportConfig["INTERRUPTS"]["BOSS"] = not core.db.profile.reportConfig["INTERRUPTS"]["BOSS"]
+        self.ReportDB:TogglePath("INTERRUPTS.BOSS")
     end,
     SetReportingInterrupts_Boss = function(self, value)
-        core.db.profile.reportConfig["INTERRUPTS"]["BOSS"] = value
+        self.ReportDB:SetPath("INTERRUPTS.BOSS", value)
     end,
     IsReportingInterrupts_Dungeon = function(self)
-        return core.db.profile.reportConfig["INTERRUPTS"]["DUNGEON"]
+        return self.ReportDB:GetPath("INTERRUPTS.DUNGEON")
     end,
     ToggleReportingInterrupts_Dungeon = function(self)
-        core.db.profile.reportConfig["INTERRUPTS"]["DUNGEON"] = not core.db.profile.reportConfig["INTERRUPTS"]["DUNGEON"]
+        self.ReportDB:TogglePath("INTERRUPTS.DUNGEON")
     end,
     SetReportingInterrupts_Dungeon = function(self, value)
-        core.db.profile.reportConfig["INTERRUPTS"]["DUNGEON"] = value
+        self.ReportDB:SetPath("INTERRUPTS.DUNGEON", value)
     end,
     IsReportingInterrupts_Top = function(self)
-        return core.db.profile.reportConfig["INTERRUPTS"]["TOP"]
+        return self.ReportDB:GetPath("INTERRUPTS.TOP")
     end,
     ToggleReportingInterrupts_Top = function(self)
-        core.db.profile.reportConfig["INTERRUPTS"]["TOP"] = not core.db.profile.reportConfig["INTERRUPTS"]["TOP"]
+        self.ReportDB:TogglePath("INTERRUPTS.TOP")
     end,
     SetReportingInterrupts_Top = function(self, value)
-        core.db.profile.reportConfig["INTERRUPTS"]["TOP"] = value
+        self.ReportDB:SetPath("INTERRUPTS.TOP", value)
     end,
     IsReportingInterrupts_Bottom = function(self)
-        return core.db.profile.reportConfig["INTERRUPTS"]["BOTTOM"]
+        return self.ReportDB:GetPath("INTERRUPTS.BOTTOM")
     end,
     ToggleReportingInterrupts_Bottom = function(self)
-        core.db.profile.reportConfig["INTERRUPTS"]["BOTTOM"] = not core.db.profile.reportConfig["INTERRUPTS"]["BOTTOM"]
+        self.ReportDB:TogglePath("INTERRUPTS.BOTTOM")
     end,
     SetReportingInterrupts_Bottom = function(self, value)
-        core.db.profile.reportConfig["INTERRUPTS"]["BOTTOM"] = value
+        self.ReportDB:SetPath("INTERRUPTS.BOTTOM", value)
     end,
     IsReportingDeaths_Combat = function(self)
-        return core.db.profile.reportConfig["DEATHS"]["COMBAT"]
+        return self.ReportDB:GetPath("DEATHS.COMBAT")
     end,
     ToggleReportingDeaths_Combat = function(self)
-        core.db.profile.reportConfig["DEATHS"]["COMBAT"] = not core.db.profile.reportConfig["DEATHS"]["COMBAT"]
+        self.ReportDB:TogglePath("DEATHS.COMBAT")
     end,
     SetReportingDeaths_Combat = function(self, value)
-        core.db.profile.reportConfig["DEATHS"]["COMBAT"] = value
+        self.ReportDB:SetPath("DEATHS.COMBAT", value)
     end,
     IsReportingDeaths_Boss = function(self)
-        return core.db.profile.reportConfig["DEATHS"]["BOSS"]
+        return self.ReportDB:GetPath("DEATHS.BOSS")
     end,
     ToggleReportingDeaths_Boss = function(self)
-        core.db.profile.reportConfig["DEATHS"]["BOSS"] = not core.db.profile.reportConfig["DEATHS"]["BOSS"]
+        self.ReportDB:TogglePath("DEATHS.BOSS")
     end,
     SetReportingDeaths_Boss = function(self, value)
-        core.db.profile.reportConfig["DEATHS"]["BOSS"] = value
+        self.ReportDB:SetPath("DEATHS.BOSS", value)
     end,
     IsReportingDeaths_Dungeon = function(self)
-        return core.db.profile.reportConfig["DEATHS"]["DUNGEON"]
+        return self.ReportDB:GetPath("DEATHS.DUNGEON")
     end,
     ToggleReportingDeaths_Dungeon = function(self)
-        core.db.profile.reportConfig["DEATHS"]["DUNGEON"] = not core.db.profile.reportConfig["DEATHS"]["DUNGEON"]
+        self.ReportDB:TogglePath("DEATHS.DUNGEON")
     end,
     SetReportingDeaths_Dungeon = function(self, value)
-        core.db.profile.reportConfig["DEATHS"]["DUNGEON"] = value
+        self.ReportDB:SetPath("DEATHS.DUNGEON", value)
     end,
     IsReportingDeaths_Top = function(self)
-        return core.db.profile.reportConfig["DEATHS"]["TOP"]
+        return self.ReportDB:GetPath("DEATHS.TOP")
     end,
     ToggleReportingDeaths_Top = function(self)
-        core.db.profile.reportConfig["DEATHS"]["TOP"] = not core.db.profile.reportConfig["DEATHS"]["TOP"]
+        self.ReportDB:TogglePath("DEATHS.TOP")
     end,
     SetReportingDeaths_Top = function(self, value)
-        core.db.profile.reportConfig["DEATHS"]["TOP"] = value
+        self.ReportDB:SetPath("DEATHS.TOP", value)
     end,
     IsReportingDeaths_Bottom = function(self)
-        return core.db.profile.reportConfig["DEATHS"]["BOTTOM"]
+        return self.ReportDB:GetPath("DEATHS.BOTTOM")
     end,
     ToggleReportingDeaths_Bottom = function(self)
-        core.db.profile.reportConfig["DEATHS"]["BOTTOM"] = not core.db.profile.reportConfig["DEATHS"]["BOTTOM"]
+        self.ReportDB:TogglePath("DEATHS.BOTTOM")
     end,
     SetReportingDeaths_Bottom = function(self, value)
-        core.db.profile.reportConfig["DEATHS"]["BOTTOM"] = value
+        self.ReportDB:SetPath("DEATHS.BOTTOM", value)
     end,
     IsReportingOffheals_Combat = function(self)
-        return core.db.profile.reportConfig["OFFHEALS"]["COMBAT"]
+        return self.ReportDB:GetPath("OFFHEALS.COMBAT")
     end,
     ToggleReportingOffheals_Combat = function(self)
-        core.db.profile.reportConfig["OFFHEALS"]["COMBAT"] = not core.db.profile.reportConfig["OFFHEALS"]["COMBAT"]
+        self.ReportDB:TogglePath("OFFHEALS.COMBAT")
     end,
     SetReportingOffheals_Combat = function(self, value)
-        core.db.profile.reportConfig["OFFHEALS"]["COMBAT"] = value
+        self.ReportDB:SetPath("OFFHEALS.COMBAT", value)
     end,
     IsReportingOffheals_Boss = function(self)
-        return core.db.profile.reportConfig["OFFHEALS"]["BOSS"]
+        return self.ReportDB:GetPath("OFFHEALS.BOSS")
     end,
     ToggleReportingOffheals_Boss = function(self)
-        core.db.profile.reportConfig["OFFHEALS"]["BOSS"] = not core.db.profile.reportConfig["OFFHEALS"]["BOSS"]
+        self.ReportDB:TogglePath("OFFHEALS.BOSS")
     end,
     SetReportingOffheals_Boss = function(self, value)
-        core.db.profile.reportConfig["OFFHEALS"]["BOSS"] = value
+        self.ReportDB:SetPath("OFFHEALS.BOSS", value)
     end,
     IsReportingOffheals_Dungeon = function(self)
-        return core.db.profile.reportConfig["OFFHEALS"]["DUNGEON"]
+        return self.ReportDB:GetPath("OFFHEALS.DUNGEON")
     end,
     ToggleReportingOffheals_Dungeon = function(self)
-        core.db.profile.reportConfig["OFFHEALS"]["DUNGEON"] = not core.db.profile.reportConfig["OFFHEALS"]["DUNGEON"]
+        self.ReportDB:TogglePath("OFFHEALS.DUNGEON")
     end,
     SetReportingOffheals_Dungeon = function(self, value)
-        core.db.profile.reportConfig["OFFHEALS"]["DUNGEON"] = value
+        self.ReportDB:SetPath("OFFHEALS.DUNGEON", value)
     end,
     IsReportingOffheals_Top = function(self)
-        return core.db.profile.reportConfig["OFFHEALS"]["TOP"]
+        return self.ReportDB:GetPath("OFFHEALS.TOP")
     end,
     ToggleReportingOffheals_Top = function(self)
-        core.db.profile.reportConfig["OFFHEALS"]["TOP"] = not core.db.profile.reportConfig["OFFHEALS"]["TOP"]
+        self.ReportDB:TogglePath("OFFHEALS.TOP")
     end,
     SetReportingOffheals_Top = function(self, value)
-        core.db.profile.reportConfig["OFFHEALS"]["TOP"] = value
+        self.ReportDB:SetPath("OFFHEALS.TOP", value)
     end,
     IsReportingOffheals_Bottom = function(self)
-        return core.db.profile.reportConfig["OFFHEALS"]["BOTTOM"]
+        return self.ReportDB:GetPath("OFFHEALS.BOTTOM")
     end,
     ToggleReportingOffheals_Bottom = function(self)
-        core.db.profile.reportConfig["OFFHEALS"]["BOTTOM"] = not core.db.profile.reportConfig["OFFHEALS"]["BOTTOM"]
+        self.ReportDB:TogglePath("OFFHEALS.BOTTOM")
     end,
     SetReportingOffheals_Bottom = function(self, value)
-        core.db.profile.reportConfig["OFFHEALS"]["BOTTOM"] = value
+        self.ReportDB:SetPath("OFFHEALS.BOTTOM", value)
     end,
     IsReportingPulls_Combat = function(self)
-        return core.db.profile.reportConfig["PULLS"]["COMBAT"]
+        return self.ReportDB:GetPath("PULLS.COMBAT")
     end,
     ToggleReportingPulls_Combat = function(self)
-        core.db.profile.reportConfig["PULLS"]["COMBAT"] = not core.db.profile.reportConfig["PULLS"]["COMBAT"]
+        self.ReportDB:TogglePath("PULLS.COMBAT")
     end,
     SetReportingPulls_Combat = function(self, value)
-        core.db.profile.reportConfig["PULLS"]["COMBAT"] = value
+        self.ReportDB:SetPath("PULLS.COMBAT", value)
     end,
     IsReportingPulls_Boss = function(self)
-        return core.db.profile.reportConfig["PULLS"]["BOSS"]
+        return self.ReportDB:GetPath("PULLS.BOSS")
     end,
     ToggleReportingPulls_Boss = function(self)
-        core.db.profile.reportConfig["PULLS"]["BOSS"] = not core.db.profile.reportConfig["PULLS"]["BOSS"]
+        self.ReportDB:TogglePath("PULLS.BOSS")
     end,
     SetReportingPulls_Boss = function(self, value)
-        core.db.profile.reportConfig["PULLS"]["BOSS"] = value
+        self.ReportDB:SetPath("PULLS.BOSS", value)
     end,
     IsReportingPulls_Dungeon = function(self)
-        return core.db.profile.reportConfig["PULLS"]["DUNGEON"]
+        return self.ReportDB:GetPath("PULLS.DUNGEON")
     end,
     ToggleReportingPulls_Dungeon = function(self)
-        core.db.profile.reportConfig["PULLS"]["DUNGEON"] = not core.db.profile.reportConfig["PULLS"]["DUNGEON"]
+        self.ReportDB:TogglePath("PULLS.DUNGEON")
     end,
     SetReportingPulls_Dungeon = function(self, value)
-        core.db.profile.reportConfig["PULLS"]["DUNGEON"] = value
+        self.ReportDB:SetPath("PULLS.DUNGEON", value)
     end,
     IsReportingPulls_Top = function(self)
-        return core.db.profile.reportConfig["PULLS"]["TOP"]
+        return self.ReportDB:GetPath("PULLS.TOP")
     end,
     ToggleReportingPulls_Top = function(self)
-        core.db.profile.reportConfig["PULLS"]["TOP"] = not core.db.profile.reportConfig["PULLS"]["TOP"]
+        self.ReportDB:TogglePath("PULLS.TOP")
     end,
     SetReportingPulls_Top = function(self, value)
-        core.db.profile.reportConfig["PULLS"]["TOP"] = value
+        self.ReportDB:SetPath("PULLS.TOP", value)
     end,
     IsReportingPulls_Bottom = function(self)
-        return core.db.profile.reportConfig["PULLS"]["BOTTOM"]
+        return self.ReportDB:GetPath("PULLS.BOTTOM")
     end,
     ToggleReportingPulls_Bottom = function(self)
-        core.db.profile.reportConfig["PULLS"]["BOTTOM"] = not core.db.profile.reportConfig["PULLS"]["BOTTOM"]
+        self.ReportDB:TogglePath("PULLS.BOTTOM")
     end,
     SetReportingPulls_Bottom = function(self, value)
-        core.db.profile.reportConfig["PULLS"]["BOTTOM"] = value
+        self.ReportDB:SetPath("PULLS.BOTTOM", value)
     end,
     IsReportingPulls_Realtime = function(self)
-        return core.db.profile.reportConfig["PULLS"]["REALTIME"]
+        return self.ReportDB:GetPath("PULLS.REALTIME")
     end,
     ToggleReportingPulls_Realtime = function(self)
-        core.db.profile.reportConfig["PULLS"]["REALTIME"] = not core.db.profile.reportConfig["PULLS"]["REALTIME"]
+        self.ReportDB:TogglePath("PULLS.REALTIME")
     end,
     SetReportingPulls_Realtime = function(self, value)
-        core.db.profile.reportConfig["PULLS"]["REALTIME"] = value
+        self.ReportDB:SetPath("PULLS.REALTIME", value)
     end,
     IsReportingNeglectedHeals_Realtime = function(self)
-        return core.db.profile.reportConfig["NEGLECTEDHEALS"]["REALTIME"]
+        return self.ReportDB:GetPath("NEGLECTEDHEALS.REALTIME")
     end,
     ToggleReportingNeglectedHeals_Realtime = function(self)
-        core.db.profile.reportConfig["NEGLECTEDHEALS"]["REALTIME"] = not core.db.profile.reportConfig["NEGLECTEDHEALS"]["REALTIME"]
+        self.ReportDB:TogglePath("NEGLECTEDHEALS.REALTIME")
     end,
     SetReportingNeglectedHeals_Realtime = function(self, value)
-        core.db.profile.reportConfig["NEGLECTEDHEALS"]["REALTIME"] = value
+        self.ReportDB:SetPath("NEGLECTEDHEALS.REALTIME", value)
     end,
     IsReportingAffixes_CastStart = function(self)
-        return core.db.profile.reportConfig["AFFIXES"]["CASTSTART"]
+        return self.ReportDB:GetPath("AFFIXES.CASTSTART")
     end,
     ToggleReportingAffixes_CastStart = function(self)
-        core.db.profile.reportConfig["AFFIXES"]["CASTSTART"] = not core.db.profile.reportConfig["AFFIXES"]["CASTSTART"]
+        self.ReportDB:TogglePath("AFFIXES.CASTSTART")
     end,
     SetReportingAffixes_CastStart = function(self, value)
-        core.db.profile.reportConfig["AFFIXES"]["CASTSTART"] = value
+        self.ReportDB:SetPath("AFFIXES.CASTSTART", value)
     end,
     IsReportingAffixes_CastSuccess = function(self)
-        return core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"]
+        return self.ReportDB:GetPath("AFFIXES.CASTSUCCESS")
     end,
     ToggleReportingAffixes_CastSuccess = function(self)
-        core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"] = not core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"]
+        self.ReportDB:TogglePath("AFFIXES.CASTSUCCESS")
     end,
     SetReportingAffixes_CastSuccess = function(self, value)
-        core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"] = value
+        self.ReportDB:SetPath("AFFIXES.CASTSUCCESS", value)
     end,
     IsReportingAffixes_CastFailed = function(self)
-        return core.db.profile.reportConfig["AFFIXES"]["CASTINTERRUPTED"]
+        return self.ReportDB:GetPath("AFFIXES.CASTINTERRUPTED")
     end,
     ToggleReportingAffixes_CastFailed = function(self)
-        core.db.profile.reportConfig["AFFIXES"]["CASTINTERRUPTED"] = not core.db.profile.reportConfig["AFFIXES"]["CASTINTERRUPTED"]
+        self.ReportDB:TogglePath("AFFIXES.CASTINTERRUPTED")
     end,
     SetReportingAffixes_CastFailed = function(self, value)
-        core.db.profile.reportConfig["AFFIXES"]["CASTINTERRUPTED"] = value
+        self.ReportDB:SetPath("AFFIXES.CASTINTERRUPTED", value)
     end,
     IsReportingAffixes_AuraStacks = function(self)
-        return core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"]
+        return self.ReportDB:GetPath("AFFIXES.AURASTACKS")
     end,
     ToggleReportingAffixes_AuraStacks = function(self)
-        core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"] = not core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"]
+        self.ReportDB:TogglePath("AFFIXES.AURASTACKS")
     end,
     SetReportingAffixes_AuraStacks = function(self, value)
-        core.db.profile.reportConfig["AFFIXES"]["AURASTACKS"] = value
+        self.ReportDB:SetPath("AFFIXES.AURASTACKS", value)
     end,
     IsReportingAffixes_Markers = function(self)
-        return core.db.profile.reportConfig["AFFIXES"]["MARKERS"]
+        return self.ReportDB:GetPath("AFFIXES.MARKERS")
     end,
     ToggleReportingAffixes_Markers = function(self)
-        core.db.profile.reportConfig["AFFIXES"]["MARKERS"] = not core.db.profile.reportConfig["AFFIXES"]["MARKERS"]
+        self.ReportDB:TogglePath("AFFIXES.MARKERS")
     end,
     SetReportingAffixes_Markers = function(self, value)
-        core.db.profile.reportConfig["AFFIXES"]["MARKERS"] = value
+        self.ReportDB:SetPath("AFFIXES.MARKERS", value)
     end,
     IsReportingAffixes_Boss = function(self)
-        return core.db.profile.reportConfig["AFFIXES"]["BOSS"]
+        return self.ReportDB:GetPath("AFFIXES.BOSS")
     end,
     ToggleReportingAffixes_Boss = function(self)
-        core.db.profile.reportConfig["AFFIXES"]["BOSS"] = not core.db.profile.reportConfig["AFFIXES"]["BOSS"]
+        self.ReportDB:TogglePath("AFFIXES.BOSS")
     end,
     SetReportingAffixes_Boss = function(self, value)
-        core.db.profile.reportConfig["AFFIXES"]["BOSS"] = value
+        self.ReportDB:SetPath("AFFIXES.BOSS", value)
     end,
     IsReportingAffixes_Dungeon = function(self)
-        return core.db.profile.reportConfig["AFFIXES"]["DUNGEON"]
+        return self.ReportDB:GetPath("AFFIXES.DUNGEON")
     end,
     ToggleReportingAffixes_Dungeon = function(self)
-        core.db.profile.reportConfig["AFFIXES"]["DUNGEON"] = not core.db.profile.reportConfig["AFFIXES"]["DUNGEON"]
+        self.ReportDB:TogglePath("AFFIXES.DUNGEON")
     end,
     SetReportingAffixes_Dungeon = function(self, value)
-        core.db.profile.reportConfig["AFFIXES"]["DUNGEON"] = value
+        self.ReportDB:SetPath("AFFIXES.DUNGEON", value)
     end,
     IsReportingAffixes_Top = function(self)
-        return core.db.profile.reportConfig["AFFIXES"]["TOP"]
+        return self.ReportDB:GetPath("AFFIXES.TOP")
     end,
     ToggleReportingAffixes_Top = function(self)
-        core.db.profile.reportConfig["AFFIXES"]["TOP"] = not core.db.profile.reportConfig["AFFIXES"]["TOP"]
+        self.ReportDB:TogglePath("AFFIXES.TOP")
     end,
     SetReportingAffixes_Top = function(self, value)
-        core.db.profile.reportConfig["AFFIXES"]["TOP"] = value
+        self.ReportDB:SetPath("AFFIXES.TOP", value)
     end,
     IsReportingAffixes_Bottom = function(self)
-        return core.db.profile.reportConfig["AFFIXES"]["BOTTOM"]
+        return self.ReportDB:GetPath("AFFIXES.BOTTOM")
     end,
     ToggleReportingAffixes_Bottom = function(self)
-        core.db.profile.reportConfig["AFFIXES"]["BOTTOM"] = not core.db.profile.reportConfig["AFFIXES"]["BOTTOM"]
+        self.ReportDB:TogglePath("AFFIXES.BOTTOM")
     end,
     SetReportingAffixes_Bottom = function(self, value)
-        core.db.profile.reportConfig["AFFIXES"]["BOTTOM"] = value
+        self.ReportDB:SetPath("AFFIXES.BOTTOM", value)
     end,
     IsUsingGlobalChance = function(self)
-        return core.db.profile.useGlobalChance
+        return self.CoreDB:GetKey("useGlobalChance")
     end,
     ToggleUsingGlobalChance = function(self)
-        core.db.profile.useGlobalChance = not core.db.profile.useGlobalChance
+        self.CoreDB:Toggle("useGlobalChance")
     end,
     SetUsingGlobalChance = function(self, value)
-        core.db.profile.useGlobalChance = value
+        self.CoreDB:SetKey("useGlobalChance", value)
     end,
     GetGlobalChance = function(self)
-        return core.db.profile.globalChance
+        return self.CoreDB:GetKey("globalChance")
     end,
     SetGlobalChance = function(self, value)
-        core.db.profile.globalChance = value
+        self.CoreDB:SetKey("globalChance", value)
     end,
     GetMinimumTime = function(self)
-        return core.db.profile.minimumTime
+        return self.CoreDB:GetKey("minimumTime")
     end,
     SetMinimumTime = function(self, value)
-        core.db.profile.minimumTime = value
+        self.CoreDB:SetKey("minimumTime", value)
     end,
     GetNemeses = function(self)
-        return core.db.profile.nemeses
+        return self.NemesisDB:Get();
     end,
     GetNemesis = function(self, name)
-        return core.db.profile.nemeses[name]
+        return self.NemesisDB:GetKey(name)
     end,
     AddNemesis = function(self, name)
-        core.db.profile.nemeses[name] = name
+        self.NemesisDB:InsertIntoArray(name, name)
     end,
     RemoveNemesis = function(self, name)
-        table.remove(core.db.profile.nemeses, name)
+        self.NemesisDB:RemoveFromArray(name, name)
     end,
     GetMessages = function(self)
-        return core.db.profile.messages
+        return self.CoreDB:GetKey("messages")
     end,
     AddMessage = function(self, message)
-        table.insert(core.db.profile.messages, message)
+        local messages = self:GetMessages() or {}
+        table.insert(messages, message)
+        self.CoreDB:SetKey("messages", messages)
     end,
     RemoveMessage = function(self, message)
-        table.remove(core.db.profile.messages, message)
+        local messages = self:GetMessages() or {}
+        for i, msg in ipairs(messages) do
+            if msg == message then
+                table.remove(messages, i)
+                break
+            end
+        end
+        self.CoreDB:SetKey("messages", messages)
     end,
     ShouldShowInfoFrame = function(self)
-        return core.db.profile.showInfoFrame
+        return self.CoreDB:GetKey("showInfoFrame")
     end,
     ToggleShowInfoFrame = function(self)
-        core.db.profile.showInfoFrame = not core.db.profile.showInfoFrame
+        self.CoreDB:Toggle("showInfoFrame")
     end,
     SetShowInfoFrame = function(self, value)
-        core.db.profile.showInfoFrame = value
+        self.CoreDB:SetKey("showInfoFrame", value)
     end,
 }

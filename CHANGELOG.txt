@@ -1,8 +1,7 @@
 # 🎯 Key Changes
 
 ## 📢 Summary
-
-**1.10.x**: New configuration options for tracking and reporting leavers and low-performers (thank you Gutz!).
+**1.10.x**: New configuration options for tracking and reporting leavers and low-performers (thank you Gutz!). The War Within fixes, delve support, and a lot of refactoring to prepare for 2.x.
 
 **1.9.x**: Massive stability and performance pass. Pre-release for 2.x with a new, highly refined approach.
 
@@ -10,10 +9,18 @@
 
 ## 🩹 Patches
 
-- **1.10.0**: New configuration options for tracking and reporting leavers and low-performers.
-   - Special thanks to **Gutz** who suggested this and helped debug an issue!
+- None yet, this one's FRESH!
 
 ## ⭐ Latest Versions
+
+### 1.10.0
+
+- The War Within Fixes
+   - New configuration options for tracking and reporting leavers and low-performers.
+      - Special thanks to **Gutz** who suggested this and helped debug an issue!
+   - Delves no longer throw errors
+   - Large refactor effort throughout 1.10.x to prepare for 2.x.x
+   - Lots of behind-the-scenes logic changing to the new, streamlined paradigms
 
 ### 1.9.0
 
@@ -69,28 +76,3 @@
       - Within those spots on the bottom, there must be a difference of >= 30% between them and the top for said metric.
 - Fix for dungeon keystone level.
 - Lots of new stuff behind the scenes, paving the way for some really awesome future features!
-
-### 1.7.0
-
-- New `Flag Guildmates as Nemeses` option
-- Two new conditions, `is guildmate` and `NOT guildmate`
-- More enhancements across the configuration screen
-- New Off-Heals reports
-- New dungeon completion Deaths report
-   - Includes the amount of avoidable damage they took throughout the dungeon
-   - If the amount of avoidable damage taken is excessive, the report will also include an amount relative to their life ("*6.25M avoidable damage (10.88x their max health)*") 😈
-- Report channel selection in configuration
-- Revamped all segments, normalized all data, and exposed a few more replacements in the process
-- **(Beta) pull reporting**: This feature will announce seemingly unintentional / hazardous pulls
-   - Tanks are not included
-   - This is not precise as Blizzard does not expose great ways of doing this
-   - It currently only reports in real-time, and as a yell
-   - More options to come as this feature matures
-- **(Beta) neglected heals reporting**: This feature will announce when (non-healer) players have been at or below 60% health without receiving a (non-self) heal
-   - This feature also only reports in real-time, and as a yell
-   - Once again, more options to come as this feature matures
-- **(Beta) affix tracking and reporting**: This feature contains both announcements and reports:
-   - Announce when affix mobs begin casting (if enabled)
-   - Announce when affix mobs successfully cast (if enabled)
-   - Announce when affix mobs are interrupted **but not incapacitated/dead** (if enabled)
-   - Top and bottom affixes handled reporting for boss fights and end of dungeon (if enabled)
