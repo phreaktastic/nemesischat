@@ -625,7 +625,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         isNumeric = false,
         example = function()
             if NCRuntime.previewSpell then
-                return GetSpellLink(NCRuntime.previewSpell) or "!!INVALID SPELL!!"
+                return C_Spell.GetSpellLink(NCRuntime.previewSpell) or "!!INVALID SPELL!!"
             end
 
             local examples = {
@@ -638,7 +638,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
                 201839,
             }
 
-            return GetSpellLink(examples[math.random(1, #examples)])
+            return C_Spell.GetSpellLink(examples[math.random(1, #examples)])
         end,
     })
     :AddReplacement({
