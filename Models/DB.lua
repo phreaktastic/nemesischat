@@ -12,6 +12,8 @@ local _, core = ...;
 -- storage.
 -----------------------------------------------------
 
+core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
+
 NCDB = {
     prefix = "",
     basePath = "profile",

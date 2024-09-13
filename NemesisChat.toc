@@ -12,14 +12,15 @@ Embeds.xml
 
 # Core NC initialization
 Init.lua
+Config\Config.lua
 
 #Core NC models
+Models\DB.lua
 Models\Config.lua
 Models\Runtime.lua
 Models\Colors.lua
 
 # Core NC configuration UI
-Config\Config.lua
 Config\General.lua
 Config\Nemeses.lua
 Config\Messages.lua
