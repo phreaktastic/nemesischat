@@ -12,6 +12,9 @@ local _, core = ...;
 -- storage.
 -----------------------------------------------------
 
+-- NOTE: This is a TEMPORARY initialization of the DB so the addon can function.
+-- Interactions in-game, such as toggling settings, will work as intended and 
+-- will not leverage this line's initialization of the DB.
 core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
 
 NCDB = {

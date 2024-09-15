@@ -70,60 +70,52 @@ NCConfig = {
         self.CoreDB:SetKey("deathException", value)
     end,
     IsTrackingLeavers = function(self)
-        return core.db.profile.trackLeavers
+        return self.CoreDB:GetKey("trackLeavers")
     end,
     ToggleTrackingLeavers = function(self)
-        core.db.profile.trackLeavers = not core.db.profile.trackLeavers
+        self.CoreDB:Toggle("trackLeavers")
     end,
     SetTrackingLeavers = function(self, value)
-        core.db.profile.trackLeavers = value
+        self.CoreDB:SetKey("trackLeavers", value)
     end,
     IsReportingLeaversOnJoin = function(self)
-        return core.db.profile.reportConfig.reportLeaversOnJoin
+        return self.ReportDB:GetKey("reportLeaversOnJoin")
     end,
     ToggleReportingLeaversOnJoin = function(self)
-        core.db.profile.reportConfig.reportLeaversOnJoin = not core.db.profile.reportConfig.reportLeaversOnJoin
+        self.ReportDB:Toggle("reportLeaversOnJoin")
     end,
     SetReportingLeaversOnJoin = function(self, value)
-        core.db.profile.reportConfig.reportLeaversOnJoin = value
+        self.ReportDB:SetKey("reportLeaversOnJoin", value)
     end,
     GetReportingLeaversOnJoinThreshold = function(self)
-        return core.db.profile.reportConfig.reportLeaversOnJoinThreshold
+        return self.ReportDB:GetKey("reportLeaversOnJoinThreshold")
     end,
     SetReportingLeaversOnJoinThreshold = function(self, value)
         if value < 1 or value > 50 then
             value = 5
         end
-        core.db.profile.reportConfig.reportLeaversOnJoinThreshold = value
-    end,
-    IsReportingLeaversOnJoinThreshold = function(self)
-        return core.db.profile.reportConfig.reportLeaversOnJoinThreshold
+        self.ReportDB:SetKey("reportLeaversOnJoinThreshold", value)
     end,
     IsTrackingLowPerformers = function(self)
-        return core.db.profile.trackLowPerformers
+        return self.CoreDB:GetKey("trackLowPerformers")
     end,
     ToggleTrackingLowPerformers = function(self)
-        core.db.profile.trackLowPerformers = not core.db.profile.trackLowPerformers
+        self.CoreDB:Toggle("trackLowPerformers")
     end,
     SetTrackingLowPerformers = function(self, value)
-        core.db.profile.trackLowPerformers = value
+        self.CoreDB:SetKey("trackLowPerformers", value)
     end,
     IsReportingLowPerformersOnJoin = function(self)
-        return core.db.profile.reportConfig.reportLowPerformersOnJoin
+        return self.ReportDB:GetKey("reportLowPerformersOnJoin")
     end,
-    GetReportingLowPerformersOnJoin = function(self)
-        local value = core.db.profile.reportConfig.reportLowPerformersOnJoin
-
-        if not value or value < 1 or value > 50 then
-            value = 5
-        end
-        return value
+    ToggleReportingLowPerformersOnJoin = function(self)
+        self.ReportDB:Toggle("reportLowPerformersOnJoin")
     end,
     SetReportingLowPerformersOnJoin = function(self, value)
-        core.db.profile.reportConfig.reportLowPerformersOnJoin = value
+        self.ReportDB:SetKey("reportLowPerformersOnJoin", value)
     end,
     GetReportingLowPerformersOnJoinThreshold = function(self)
-        local value = core.db.profile.reportConfig.reportLowPerformersOnJoinThreshold
+        local value = self.ReportDB:GetKey("reportLowPerformersOnJoinThreshold")
 
         if not value or value < 1 or value > 50 then
             value = 5
@@ -135,7 +127,7 @@ NCConfig = {
         if value < 1 or value > 50 then
             value = 5
         end
-        core.db.profile.reportConfig.reportLowPerformersOnJoinThreshold = value
+        self.ReportDB:SetKey("reportLowPerformersOnJoinThreshold", value)
     end,
     IsAIEnabled = function(self)
         return self.CoreDB:GetKey("ai")

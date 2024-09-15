@@ -147,7 +147,7 @@ core.options.args.generalGroup = {
                     descStyle = "inline",
                     desc = "Track players who leave/disconnect during an unfinished Mythic+ (+20 or higher) dungeon, with more than 6 minutes remaining.",
                     get = function() return NCConfig:IsTrackingLeavers() end,
-                    set = function(_, value) return NCConfig:SetTrackLeavers(value) end,
+                    set = function(_, value) return NCConfig:SetTrackingLeavers(value) end,
                 },
                 reportLeaversOnJoin = {
                     order = 2,
@@ -178,7 +178,7 @@ core.options.args.generalGroup = {
                     descStyle = "inline",
                     desc = "Track players who underperform during a Mythic+ dungeon.",
                     get = function() return NCConfig:IsTrackingLowPerformers() end,
-                    set = function(_, value) return NCConfig:SetTrackLowPerformers(value) end,
+                    set = function(_, value) return NCConfig:SetTrackingLowPerformers(value) end,
                 },
                 reportLowPerformersOnJoin = {
                     order = 5,
