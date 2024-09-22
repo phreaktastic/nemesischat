@@ -100,7 +100,7 @@ NCConfig = {
         return self.ReportDB:GetKey("reportLeaversOnJoinThreshold")
     end,
     SetReportingLeaversOnJoinThreshold = function(self, value)
-        if value < 1 or value > 50 then
+        if type(value) ~= "number" or value < 1 or value > 50 then
             value = 5
         end
         self.ReportDB:SetKey("reportLeaversOnJoinThreshold", value)

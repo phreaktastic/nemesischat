@@ -131,7 +131,7 @@ function NCCombatLogEvent:Fire()
         end
 
         NCSegment:GlobalAddDeath(destName)
-    elseif NCEvent:IsDamageEvent(event, destName, extraSpellId) then
+    elseif NCEvent.IsDamageEvent and NCEvent:IsDamageEvent(event, destName, extraSpellId) then
         local damage = tonumber(extraSpellId) or 0
         local state = NCState:GetPlayerState(destName)
         local isAvoidable = (GTFO and GTFO.SpellID[tostring(spellId)] ~= nil)
@@ -173,7 +173,7 @@ function NCCombatLogEvent:IsPull()
 
     if (dname and sname and dname ~= sname and not string.find(event,"_RESURRECT") and not string.find(event,"_CREATE") and (string.find(event,"SWING") or string.find(event,"RANGE") or string.find(event,"SPELL"))) and not tContains(core.affixMobs, sname) and not tContains(core.affixMobs, dname) then
         if(not string.find(event,"_SUMMON")) then
-            if(bit.band(sflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
+            if(UnitIsPlayer(sname) and not UnitIsPlayer(dname)) then
                 -- A player is attacking a mob
                 local player = NCState:GetPlayerState(sname)
 

@@ -783,7 +783,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
             local race = UnitRace(NCEvent:GetNemesis())
 
             if (not race) then
-                error("Could not retrieve race for " + NCEvent:GetNemesis() + "! This is likely a WoW API issue.")
+                error("Could not retrieve race for " .. NCEvent:GetNemesis() .. "! This is likely a WoW API issue.")
                 return "Unknown Race"
             end
 
