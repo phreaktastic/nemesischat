@@ -21,6 +21,8 @@
    - Delves no longer throw errors
    - Large refactor effort throughout 1.10.x to prepare for 2.x.x
    - Lots of behind-the-scenes logic changing to the new, streamlined paradigms
+   - Option to toggle Brann Bronzebeard messages (selecting him as a Nemesis or Bystander)
+   - Fix for the NC
 
 ### 1.9.0
 

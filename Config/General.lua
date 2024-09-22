@@ -133,8 +133,24 @@ core.options.args.generalGroup = {
                 },
             }
         },
-        mPlusPerformance = {
+        delves = {
             order = 3,
+            type = "group",
+            name = "Delve Configuration",
+            inline = true,
+            args = {
+                allowBrannMessages = {
+                    order = 1,
+                    type = "toggle",
+                    name = "Allow Brann Messages",
+                    desc = "Allow messages to reference Brann Bronzebeard (either as a Nemesis or Bystander).",
+                    get = function() return NCConfig:IsAllowingBrannMessages() end,
+                    set = function(_, value) return NCConfig:SetAllowingBrannMessages(value) end,
+                },
+            }
+        },
+        mPlusPerformance = {
+            order = 4,
             type = "group",
             name = "Mythic+ Tracking & Announcing",
             inline = true,
@@ -204,7 +220,7 @@ core.options.args.generalGroup = {
             }
         },
         apis = {
-            order = 3,
+            order = 5,
             type = "group",
             name = "APIs",
             inline = false,

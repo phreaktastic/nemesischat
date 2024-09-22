@@ -162,6 +162,7 @@ core.runtimeDefaults = {
         operator = "IS",
         right = "DAMAGER",
     },
+    initializationTime = nil,
 }
 
 core.runtime = DeepCopy(core.runtimeDefaults)
@@ -329,6 +330,10 @@ NCRuntime = {
         self:CacheGroupRoster()
     end,
     AddGroupRosterPlayer = function(self, playerName)
+        if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
+            return
+        end
+
         local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
         local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
         local itemLevel = NemesisChat:GetItemLevel(playerName)
@@ -498,6 +503,18 @@ NCRuntime = {
         if core.runtime.petOwners == nil then
             core.runtime.petOwners = {}
         end
+    end,
+    SetInitializationTime = function(self, value)
+        core.runtime.initializationTime = value
+    end,
+    UpdateInitializationTime = function(self)
+        core.runtime.initializationTime = GetTime()
+    end,
+    GetInitializationTime = function(self)
+        return core.runtime.initializationTime
+    end,
+    TimeSinceInitialization = function(self)
+        return GetTime() - (core.runtime.initializationTime or 0)
     end,
     Get = function(self, key)
         return core.runtime[key]

@@ -21,6 +21,7 @@ core.defaults = {
         ai = false,
         flagFriendsAsNemeses = false,
         flagGuildmatesAsNemeses = false,
+        allowBrannMessages = true,
         trackLeavers = true,
         reportLeaversOnJoin = true,
         reportLeaversOnJoinThreshold = 5,

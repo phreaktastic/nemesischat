@@ -776,6 +776,10 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Nemesis Race",
         value = "NEMESISRACE",
         exec = function()
+            if (NCEvent:GetNemesis() == "Brann Bronzebeard") then
+                return "Dwarf"
+            end
+
             local race = UnitRace(NCEvent:GetNemesis())
 
             if (not race) then
@@ -821,7 +825,12 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Nemesis Class",
         value = "NEMESISCLASS",
-        exec = function() return UnitClass(NCEvent:GetNemesis()) end,
+        exec = function()
+            if (NCEvent:GetNemesis() == "Brann Bronzebeard") then
+                return "Hunter"
+            end
+            return UnitClass(NCEvent:GetNemesis())
+        end,
         description = "The class of the Nemesis's character.",
         isNumeric = false,
         example = function()
@@ -847,6 +856,10 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Bystander Race",
         value = "BYSTANDERRACE",
         exec = function()
+            if (NCEvent:GetBystander() == "Brann Bronzebeard") then
+                return "Dwarf"
+            end
+
             local race = UnitRace(NCEvent:GetBystander())
 
             if (not race) then
@@ -891,7 +904,12 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Bystander Class",
         value = "BYSTANDERCLASS",
-        exec = function() return UnitClass(NCEvent:GetBystander()) end,
+        exec = function()
+            if (NCEvent:GetBystander() == "Brann Bronzebeard") then
+                return "Hunter"
+            end
+            return UnitClass(NCEvent:GetBystander())
+        end,
         description = "The class of the Bystander's character.",
         isNumeric = false,
         example = function()

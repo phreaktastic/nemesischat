@@ -69,6 +69,15 @@ NCConfig = {
     SetDeathException = function(self, value)
         self.CoreDB:SetKey("deathException", value)
     end,
+    IsAllowingBrannMessages = function(self)
+        return self.CoreDB:GetKey("allowBrannMessages")
+    end,
+    ToggleAllowBrannMessages = function(self)
+        self.CoreDB:Toggle("allowBrannMessages")
+    end,
+    SetAllowBrannMessages = function(self, value)
+        self.CoreDB:SetKey("allowBrannMessages", value)
+    end,
     IsTrackingLeavers = function(self)
         return self.CoreDB:GetKey("trackLeavers")
     end,

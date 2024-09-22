@@ -360,7 +360,7 @@ function NemesisChat:InitializeHelpers()
                 NemesisChat:SpawnToast("Pull", UnitName(pullPlayerName), mobName)
                 NCRuntime:UpdateLastUnsafePullToast()
             end
-            
+
             NCRuntime:SetLastUnsafePull(UnitName(pullPlayerName), mobName)
             NCSegment:GlobalAddPull(UnitName(pullPlayerName))
         end
@@ -495,7 +495,7 @@ function NemesisChat:InitializeHelpers()
     function NemesisChat:GetRandomPartyBystander()
         local partyBystanders = NemesisChat:GetPartyBystanders()
 
-        if not partyBystanders then 
+        if not partyBystanders then
             return nil
         end
 
@@ -1082,28 +1082,31 @@ function NemesisChat:InitializeHelpers()
     -- Originally taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with heavy modifications
     function NemesisChat:IsPull()
         if not IsInInstance() or not IsInGroup() or (NCBoss:IsActive() and NCDungeon:IsActive()) or IsInRaid() then
-            return false, nil, nil, nil
+            return false
         end
 
         local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,itype = CombatLogGetCurrentEventInfo()
 
         if not UnitInParty(sname) and not UnitInParty(dname) then
-            return false, nil, nil, nil
+            return false
         end
 
 		if (dname and sname and dname ~= sname and not string.find(event,"_RESURRECT") and not string.find(event,"_CREATE") and (string.find(event,"SWING") or string.find(event,"RANGE") or string.find(event,"SPELL"))) and not tContains(core.affixMobs, sname) and not tContains(core.affixMobs, dname) then
-			if(not string.find(event,"_SUMMON")) then
+            local function IsInvalidPlayer(player)
+                if not player or player.role == "TANK" then
+                    NCRuntime:AddPulledUnit(dguid)
+                    return true
+                end
+                return false
+            end
+            
+            if(not string.find(event,"_SUMMON")) then
 				if(bit.band(sflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                     -- A player is attacking a mob
                     local player = NCRuntime:GetGroupRosterPlayer(sname)
 
-                    if player == nil then
-                        return false, nil, nil, nil
-                    end
-
-                    if player.role == "TANK" then
-                        NCRuntime:AddPulledUnit(dguid)
-                        return false, nil, nil, nil
+                    if IsInvalidPlayer(player) then
+                        return false
                     end
 
                     local validDamage = type(itype) == "number" and itype > 0
@@ -1119,13 +1122,8 @@ function NemesisChat:InitializeHelpers()
                     -- A mob is attacking a player
                     local player = NCRuntime:GetGroupRosterPlayer(dname)
 
-                    if player == nil then
-                        return false, nil, nil, nil
-                    end
-
-                    if player.role == "TANK" then
-                        NCRuntime:AddPulledUnit(dguid)
-                        return false, nil, nil, nil
+                    if IsInvalidPlayer(player) then
+                        return false
                     end
 
                     local classification = UnitClassification(sguid)
@@ -1179,7 +1177,7 @@ function NemesisChat:InitializeHelpers()
                     NCRuntime:AddPetOwner(dguid, sname)
                 end
 
-                return false, nil, nil, nil
+                return false
 			end
 		end
     end

@@ -17,6 +17,7 @@ local UnitGUID = UnitGUID
 -----------------------------------------------------
 
 function NemesisChat:PLAYER_ENTERING_WORLD()
+    NCRuntime:UpdateInitializationTime()
     NemesisChat:InstantiateCore()
     NemesisChat:SilentGroupSync()
     NemesisChat:CheckGroup()
@@ -57,6 +58,11 @@ function NemesisChat:ENCOUNTER_END(_, encounterID, encounterName, difficultyID, 
 end
 
 function NemesisChat:GROUP_ROSTER_UPDATE()
+    -- Group roster events will fire when traversing delves and such, which can cause spam.
+    if (NCRuntime:TimeSinceInitialization() < 1) then
+        return
+    end
+
     NCEvent:Initialize()
     NemesisChat:PopulateFriends()
 
@@ -81,7 +87,8 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                 local player = NCRuntime:AddGroupRosterPlayer(val)
 
                 -- We're the leader, fire off some join events
-                if isLeader then
+                -- Because we don't always add Brann Bronzebeard, this can fire errors unless we null check
+                if player and isLeader then
                     -- Imagine inviting a large group to a raid, we don't want to spam the chat
                     if #joins <= 3 then
                         NemesisChat:PLAYER_JOINS_GROUP(val, player.isNemesis)
@@ -100,6 +107,11 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
         for key,val in pairs(joins) do
             if val ~= nil and val ~= GetMyName() then
                 local player = NCRuntime:AddGroupRosterPlayer(val)
+
+                -- Because we don't always add Brann Bronzebeard, this can fire errors unless we null check
+                if player == nil then
+                    return
+                end
 
                 local leaves = NemesisChat:LeaveCount(player.guid) or 0
                 local lowPerforms = NemesisChat:LowPerformerCount(player.guid) or 0
