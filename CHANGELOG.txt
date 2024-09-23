@@ -20,7 +20,7 @@
    - All feasts updated
 - New configuration options for tracking and reporting leavers and low-performers.
    - Special thanks to **Gutz** who suggested this and helped debug an issue!
-- More work on the unsafe pulls functionality
+- More work on the unsafe pulls functionality, it should be far more accurate at this point.
 - Delves no longer throw errors
 - Large refactor effort throughout 1.10.x to prepare for 2.x.x
 - Lots of behind-the-scenes logic changing to the new, streamlined paradigms

@@ -72,10 +72,10 @@ NCConfig = {
     IsAllowingBrannMessages = function(self)
         return self.CoreDB:GetKey("allowBrannMessages")
     end,
-    ToggleAllowBrannMessages = function(self)
+    ToggleAllowingBrannMessages = function(self)
         self.CoreDB:Toggle("allowBrannMessages")
     end,
-    SetAllowBrannMessages = function(self, value)
+    SetAllowingBrannMessages = function(self, value)
         self.CoreDB:SetKey("allowBrannMessages", value)
     end,
     IsTrackingLeavers = function(self)

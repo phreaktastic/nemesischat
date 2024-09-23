@@ -350,6 +350,7 @@ NCRuntime = {
             class = class,
             rawClass = rawClass,
             groupLead = groupLead,
+            name = playerName,
         }
 
         core.runtime.groupRoster[playerName] = data
