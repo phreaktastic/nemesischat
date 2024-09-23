@@ -1,25 +1,26 @@
-## Interface: 100206
-## Version: 1.9.29
+## Interface: 110000
+## Version: 1.10.0
 ## Title: |cff00ccffNemesis Chat|r
 ## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp
 ## Notes: The event-driven, targeted message framework.
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB
-## OptionalDeps: Ace3, LibPlayerSpells, LibGroupInSpecT, LibToast, LibCompress, LibSerialize, Details, GTFO, ElvUI
+## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibGroupInSpecT, LibToast, LibCompress, LibSerialize, LibMobInfo-2.0
 
 # Third party libraries
 Embeds.xml
 
 # Core NC initialization
 Init.lua
+Config\Config.lua
 
 #Core NC models
+Models\DB.lua
 Models\Config.lua
 Models\Runtime.lua
 Models\Colors.lua
 
 # Core NC configuration UI
-Config\Config.lua
 Config\General.lua
 Config\Nemeses.lua
 Config\Messages.lua
@@ -31,6 +32,7 @@ Config\About.lua
 Helpers.lua
 
 # NC models
+Models\CombatLogEvent.lua
 Models\Rankings.lua
 Models\Segment.lua
 Models\Boss.lua

@@ -34,6 +34,11 @@ function NemesisChat:HandleEvent()
 end
 
 function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
+    if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
+        NCEvent:Initialize()
+        return
+    end
+    
     if IsInRaid() then
         NCEvent:SetCategory("RAID")
     else
@@ -60,6 +65,11 @@ function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
 end
 
 function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
+    if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
+        NCEvent:Initialize()
+        return
+    end
+
     if IsInRaid() then
         NCEvent:SetCategory("RAID")
     else

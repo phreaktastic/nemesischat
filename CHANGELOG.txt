@@ -1,90 +1,35 @@
 # 🎯 Key Changes
 
 ## 📢 Summary
+**1.10.x**: New configuration options for tracking and reporting leavers and low-performers (thank you Gutz!). The War Within fixes, delve support, and a lot of refactoring to prepare for 2.x.
 
 **1.9.x**: Massive stability and performance pass. Pre-release for 2.x with a new, highly refined approach.
 
 **1.8.x**: Things are spicing up with M+ leaver detection and low performer detection! 
 
-**1.7.x**: Hazardous Pull reporting? Neglected Heals reporting? Yes please! Oh, and more replacement tags, revamped reports config, new off-heals report, etc!
-
 ## 🩹 Patches
 
-- **1.9.29**: Compatibility update for TWW (`/nc` works again).
-- **1.9.28**: Compatibility update for TWW.
-- **1.9.27**: Compatibility update for TWW.
-- **1.9.25**: Fix for Global Chance related settings and some reports not firing (thank you </TYLER>!)
-- **1.9.24**: Fixed a role condition error (thank you Gutz!)
-- **1.9.23**: Added helper commands for the API flow.
-- **1.9.22**: Likely the final optimization pass for the day.
-- **1.9.21**: Optimization for synchronization to prevent large influxes of memory usage and potential hitching. 
-   - In general, memory usage will be far better moving forward as I will not be relying upon LUA garbage collection.
-   - Optimizations are still in progress and memory usage will likely be reduced by ~60% overall. In the meantime, please know I take it seriously and apologize for inflated memory usage.
-- **1.9.20**: More optimization for less memory & CPU usage.
-- **1.9.19**: Optimizing data synchronization.
-- **1.9.18**: Patch for errors incurred when running a certain combination of addons.
-- **1.9.17**: Small patch for clarity in the UI panel and making sure BoF adds affix points when cast on allies to counter entangling.
-- **1.9.16**: Small patch for clearing the UI panel 🤏
-- **1.9.15**: 
-   - Fix for early dungeon leaver detection and for dungeon caching, and tightened up the logic. To be marked as a leaver, all of the following must be true:
-      - Keystone <= +20
-      - Dungeon must be active
-      - Time remaining must be <= 6 min
-      - Must have a full group
-   - For this version, **all leavers and low performers have been wiped**. People were added as the criteria were a WIP, so it's only fair to wipe the DB altogether.
-   - Another pass on the info pane to provide more clarity into what information is being displayed
-- **1.9.14**: 
-   - Fix for Details API subjects in conditions. 
-   - Colorization of UI panel names and more congruency with it. 
-   - Removed TTS as it is protected (would be nice if documentation stated such).
-   - UI hardening to ensure further reliability before upcoming additions.
-- **1.9.13**: Fix for left column in UI. Added more logic for leavers; if someone disconnected and another leaves, the person who DCed will be added instead of the leaver.
-- **1.9.12**: Fix for dungeon leaver logic to ensure it only fires within a M+ dungeon, if the time left is >= 3 min.
-- **1.9.11**: Fix for Spell ID replacement.
-- **1.9.10**: 
-   - Removed all API pre/post message logic to be in line with the new paradigm (this simply has too much margin for heavy performance impact)
-   - New condition subjects:
-      - In dungeon
-      - In boss fight
-      - In combat 
-   - New unit conditions:
-      - Has buff/debuff
-      - Does NOT have buff/debuff 
-   - When creating triggered messages, if you have a condition based on a spell being cast with the ID / name as the condition, NC will give a spell link specific to that spell. If it's not a valid spell, it will tell you it is invalid.
-- **1.9.9**: Compatibility with latest patch (sorry, forgot to update the supported version).
-- **1.9.8**: Hotfix for the breakage of some replacements in 1.9.7.
-- **1.9.7**: 
-   - Fix for occurrences where NC would spam warnings when an API addon was disabled.
-   - General hardening and optimizations.
-   - Condition subject categories, things should be **far** less cluttered now.
-   - Lots more condition subjects.
-- **1.9.6**: More bugfixes.
-- **1.9.5**: Fix for non-ElvUI users who leverage Details! for item level retrieval.
-- **1.9.4**: More minor bugfixes.
-- **1.9.3**: Bugfix for the UI panel, dungeon relog caching logic, and use without Details.
-- **1.9.2**: Hardening and optimization pass. Overview:
-   - Guild roster sync with a timer and chunking to ensure things are smooth.
-   - Removed the replacement logic from the controller bootstrapping logic. Now replacement logic is bootstrapped per loading screen. Huge optimization gain there!
-   - Added replacements and operators for group lead.
-   - All replacement text example logic is in the dynamic API / replacement blocks. Example text is much cleaner and easier to maintain now.
-   - Allow setting preferred marker for affix marking.
-   - Guild login / logout events.
-   - New triggers:
-      - Begin spellcast
-      - Aura applied (includes dose)
-      - Damage taken
-      - Avoidable damage taken
-   - Group member item level hardening. Persistent attempts at syncing. Details API in addition to ElvUI API.
-   - New sources!
-      - Boss
-      - Affix mob
-      - Any mob
-      - These new sources are available on any unit triggers (spellcast, begin spellcast, aura applied)
-   - Data caching for dungeons and groups. Persists data through interface reloads / relogs, and will attempt to restore cached data when possible. Not foolproof, but definitely a step in the right direction.
-   - Bugfixes and general optimizations.
-- **1.9.1**: Bug fix for non ElvUI users.
+- None yet, this one's FRESH!
 
 ## ⭐ Latest Versions
+
+### 1.10.0
+
+- The War Within Fixes
+   - Several bug fixes
+   - All feasts updated
+- New configuration options for tracking and reporting leavers and low-performers.
+   - Special thanks to **Gutz** who suggested this and helped debug an issue!
+- More work on the unsafe pulls functionality, it should be far more accurate at this point.
+- Delves no longer throw errors
+- Large refactor effort throughout 1.10.x to prepare for 2.x.x
+- Lots of behind-the-scenes logic changing to the new, streamlined paradigms
+- Option to toggle Brann Bronzebeard messages (selecting him as a Nemesis or Bystander)
+- Multiple fixes for messages
+   - You should see _much_ less triggers of messages when entering/leaving delves
+   - Brann doesn't break messages with particular details / replacements
+   - A little more hardening in non-problematic areas just to ensure reliability
+- Special thanks to **</TYLER>** for the constant communication, testing, bug-reporting, etc. <3
 
 ### 1.9.0
 
@@ -140,28 +85,3 @@
       - Within those spots on the bottom, there must be a difference of >= 30% between them and the top for said metric.
 - Fix for dungeon keystone level.
 - Lots of new stuff behind the scenes, paving the way for some really awesome future features!
-
-### 1.7.0
-
-- New `Flag Guildmates as Nemeses` option
-- Two new conditions, `is guildmate` and `NOT guildmate`
-- More enhancements across the configuration screen
-- New Off-Heals reports
-- New dungeon completion Deaths report
-   - Includes the amount of avoidable damage they took throughout the dungeon
-   - If the amount of avoidable damage taken is excessive, the report will also include an amount relative to their life ("*6.25M avoidable damage (10.88x their max health)*") 😈
-- Report channel selection in configuration
-- Revamped all segments, normalized all data, and exposed a few more replacements in the process
-- **(Beta) pull reporting**: This feature will announce seemingly unintentional / hazardous pulls
-   - Tanks are not included
-   - This is not precise as Blizzard does not expose great ways of doing this
-   - It currently only reports in real-time, and as a yell
-   - More options to come as this feature matures
-- **(Beta) neglected heals reporting**: This feature will announce when (non-healer) players have been at or below 60% health without receiving a (non-self) heal
-   - This feature also only reports in real-time, and as a yell
-   - Once again, more options to come as this feature matures
-- **(Beta) affix tracking and reporting**: This feature contains both announcements and reports:
-   - Announce when affix mobs begin casting (if enabled)
-   - Announce when affix mobs successfully cast (if enabled)
-   - Announce when affix mobs are interrupted **but not incapacitated/dead** (if enabled)
-   - Top and bottom affixes handled reporting for boss fights and end of dungeon (if enabled)
