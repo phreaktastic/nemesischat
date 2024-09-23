@@ -16,13 +16,19 @@
 ### 1.10.0
 
 - The War Within Fixes
-   - New configuration options for tracking and reporting leavers and low-performers.
-      - Special thanks to **Gutz** who suggested this and helped debug an issue!
-   - Delves no longer throw errors
-   - Large refactor effort throughout 1.10.x to prepare for 2.x.x
-   - Lots of behind-the-scenes logic changing to the new, streamlined paradigms
-   - Option to toggle Brann Bronzebeard messages (selecting him as a Nemesis or Bystander)
-   - Fix for the NC
+   - Several bug fixes
+   - All feasts updated
+- New configuration options for tracking and reporting leavers and low-performers.
+   - Special thanks to **Gutz** who suggested this and helped debug an issue!
+- Delves no longer throw errors
+- Large refactor effort throughout 1.10.x to prepare for 2.x.x
+- Lots of behind-the-scenes logic changing to the new, streamlined paradigms
+- Option to toggle Brann Bronzebeard messages (selecting him as a Nemesis or Bystander)
+- Multiple fixes for messages
+   - You should see _much_ less triggers of messages when entering/leaving delves
+   - Brann doesn't break messages with particular details / replacements
+   - A little more hardening in non-problematic areas just to ensure reliability
+- Special thanks to **</TYLER>** for the constant communication, testing, bug-reporting, etc. <3
 
 ### 1.9.0
 
