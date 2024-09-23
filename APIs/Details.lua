@@ -11,6 +11,8 @@ local _, core = ...;
 -- Details functions for altering event responses
 -----------------------------------------------------
 
+DETAILS = _G.Details;
+
 NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
     :AddConfigOption({
         label = "Enable Details! API",
