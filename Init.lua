@@ -753,6 +753,10 @@ core.eventSubscriptions = {
     "COMBAT_LOG_EVENT_UNFILTERED",
 }
 
+NC_PULL_EVENT_ATTACK = 0
+NC_PULL_EVENT_AGGRO = 1
+NC_PULL_EVENT_PET = 2
+
 NC_EVENT_TYPE_GROUP = 0
 NC_EVENT_TYPE_GUILD = 1
 NC_EVENT_TYPE_MAXIMUM = 1 -- Used for logic that validates event types, increase as more are added
