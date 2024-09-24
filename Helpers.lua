@@ -305,10 +305,11 @@ function NemesisChat:InitializeHelpers()
         local notfound, c, message = true, ChatTypeInfo.SYSTEM, ""
 
         for _, msg in pairs({...}) do
+            local strMsg = tostring(msg)
             if message == "" then
-                message = msg
+                message = strMsg
             else
-                message = message .. " " .. msg
+                message = message .. " " .. strMsg
             end
         end
 

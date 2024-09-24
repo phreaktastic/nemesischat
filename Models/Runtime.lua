@@ -110,6 +110,7 @@ core.runtimeDefaults = {
         operator = "IS",
         right = "DAMAGER",
     },
+    initializationTime = nil,
 }
 
 core.runtime = DeepCopy(core.runtimeDefaults)

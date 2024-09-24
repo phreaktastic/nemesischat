@@ -17,6 +17,7 @@ local UnitGUID = UnitGUID
 -----------------------------------------------------
 
 function NemesisChat:PLAYER_ENTERING_WORLD()
+    NCRuntime:UpdateInitializationTime()
     NemesisChat:InstantiateCore()
     NCState:SilentGroupSync()
     NCState:GroupStateSubscriptions()
@@ -57,6 +58,11 @@ function NemesisChat:ENCOUNTER_END(_, encounterID, encounterName, difficultyID, 
 end
 
 function NemesisChat:GROUP_ROSTER_UPDATE()
+    -- Group roster events will fire when traversing delves and such, which can cause spam.
+    if (NCRuntime:TimeSinceInitialization() < 1) then
+        return
+    end
+
     NCEvent:Initialize()
 
     local joins,leaves = NCState:GetRosterDelta()
@@ -80,7 +86,8 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                 local player = NCState:AddPlayerToGroup(val)
 
                 -- We're the leader, fire off some join events
-                if isLeader then
+                -- Because we don't always add Brann Bronzebeard, this can fire errors unless we null check
+                if player and isLeader then
                     -- Imagine inviting a large group to a raid, we don't want to spam the chat
                     if #joins <= 3 then
                         NemesisChat:PLAYER_JOINS_GROUP(val, player.isNemesis)
@@ -100,6 +107,11 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
             if val ~= nil and val ~= GetMyName() then
                 local player = NCState:AddPlayerToGroup(val)
 
+                -- Because we don't always add Brann Bronzebeard, this can fire errors unless we null check
+                if player == nil then
+                    return
+                end
+
                 local leaves = NemesisChat:LeaveCount(player.guid) or 0
                 local lowPerforms = NemesisChat:LowPerformerCount(player.guid) or 0
     
@@ -109,16 +121,16 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
 
                 local channel = NemesisChat:GetActualChannel("GROUP")
 
-                if leaves > 0 then
+                if leaves > (NCConfig:GetReportingLeaversOnJoinThreshold() or 0) and NCConfig:IsReportingLeaversOnJoin() then
                     SendChatMessage("Nemesis Chat: " .. val .. " has bailed on at least " .. leaves .. " groups.", channel)
                 end
 
-                if lowPerforms > 0 then
+                if lowPerforms > (NCConfig:GetReportingLowPerformersOnJoinThreshold() or 0) and NCConfig:IsReportingLowPerformersOnJoin() then
                     SendChatMessage("Nemesis Chat: " .. val .. " has dramatically underperformed at least " .. lowPerforms .. " times.", channel)
                 end
             end
         end
-    
+
         for key,val in pairs(leaves) do
             if val ~= nil and val ~= GetMyName() then
                 local player = NCState:GetPlayerState(val)
@@ -145,15 +157,20 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                         leaverGuid = offlineGuid
                         leaverName = offlineName
 
-                        SendChatMessage("Nemesis Chat: " .. leaverName .. " has disconnected with a dungeon in progress (" .. NemesisChat:GetDuration(timeLeft) .. " left) and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
+                        if NCConfig:IsTrackingLeavers() then
+                            SendChatMessage("Nemesis Chat: " .. leaverName .. " has disconnected with a dungeon in progress (" .. NemesisChat:GetDuration(timeLeft) .. " left) and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
+                            self:Print("Added leaver to DB:", leaverName, leaverGuid)
+                        end
                     else
                         leaverGuid = player.guid
                         leaverName = val
 
-                        SendChatMessage("Nemesis Chat: " .. leaverName .. " has left the group with a dungeon in progress (" .. NemesisChat:GetDuration(timeLeft) .. " left) and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
+                        if NCConfig:IsTrackingLeavers() then
+                            SendChatMessage("Nemesis Chat: " .. leaverName .. " has left the group with a dungeon in progress (" .. NemesisChat:GetDuration(timeLeft) .. " left) and has been added to the global leaver DB.", NemesisChat:GetActualChannel("GROUP"))
+                            self:Print("Added leaver to DB:", leaverName, leaverGuid)
+                        end
                     end
 
-                    self:Print("Added leaver to DB:", leaverName, leaverGuid)
                     NemesisChat:AddLeaver(leaverGuid)
                 end
     

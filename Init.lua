@@ -541,7 +541,7 @@ core.feastIDs = {
 	[126503] = 0, -- Banquet of the Brew (MoP)
 	[126504] = 0, -- Great Banquet of the Brew (MoP)
 	-- Additions from Kyrgune Below --
-	
+
 	[216333] = 0, -- Potato Stew Feast (BattleGround (Legion))
 	[216347] = 0, -- Feast of Ribs (Battleground (Legion)) 
 	[58465] = 0, -- Gigantic Feast (WotLK)
@@ -560,9 +560,17 @@ core.feastIDs = {
 	[308458] = 0, -- Surprisingly Palatable Feast (SL)
 	[308462] = 0, -- Feast of Gluttonous Hedonism (SL)
 	[359333] = 0, -- Empty Kettle of Stone Soup (SL)  (Doesn't Work)
-	[382427] = 1, -- Grand Banquet of the Kalu'ak (DF)
-	[382423] = 1, -- Yusa's Hearty Stew (DF)
-	[383063] = 1, -- Hoard of Draconic Delicacies (DF)
+	[382427] = 0, -- Grand Banquet of the Kalu'ak (DF)
+	[382423] = 0, -- Yusa's Hearty Stew (DF)
+	[383063] = 0, -- Hoard of Draconic Delicacies (DF)
+    -- Additions from NemesisChat Below --
+
+    -- The War Within
+    [222735] = 1, -- Everything Stew
+    [222734] = 1, -- Village Potluck
+    [222733] = 1, -- Feast of the Midnight Masquerade
+    [222732] = 1, -- Feast of the Divine Day
+    [222720] = 1, -- The Sushi Special
 }
 
 -- It's probably time to build a model for affix functionality
@@ -757,6 +765,10 @@ core.eventSubscriptions = {
     -- Battle.net friends
     "BN_FRIEND_INFO_CHANGED",
 }
+
+NC_PULL_EVENT_ATTACK = 0
+NC_PULL_EVENT_AGGRO = 1
+NC_PULL_EVENT_PET = 2
 
 NC_EVENT_TYPE_GROUP = 0
 NC_EVENT_TYPE_GUILD = 1

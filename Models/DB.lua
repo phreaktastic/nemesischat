@@ -12,6 +12,11 @@ local _, core = ...;
 -- storage.
 -----------------------------------------------------
 
+-- NOTE: This is a TEMPORARY initialization of the DB so the addon can function.
+-- Interactions in-game, such as toggling settings, will work as intended and
+-- will not leverage this line's initialization of the DB.
+core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
+
 NCDB = {
     prefix = "",
     basePath = "profile",
@@ -29,29 +34,70 @@ function NCDB:New(prefix, basePath)
         db.basePath = basePath
     end
 
-    self:TouchPath(db.prefix)
+    if prefix then
+        self:TouchPath(db.prefix)
+    end
 
     return db
 end
 
 -- Simple string keys, meaning no dots to parse
 function NCDB:Get()
+    if not self.prefix then
+        return core.db[self.basePath]
+    end
+
     return core.db[self.basePath][self.prefix]
 end
 
 function NCDB:Set(value)
+    if not value then
+        return
+    end
+
+    if not self.prefix then
+        core.db[self.basePath] = value
+        return
+    end
+
     core.db[self.basePath][self.prefix] = value
 end
 
 function NCDB:GetKey(key)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        return core.db[self.basePath][key]
+    end
+
     return core.db[self.basePath][self.prefix][key]
 end
 
 function NCDB:SetKey(key, value)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        core.db[self.basePath][key] = value
+        return
+    end
+
     core.db[self.basePath][self.prefix][key] = value
 end
 
 function NCDB:DeleteKey(key)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        core.db[self.basePath][key] = nil
+        return
+    end
+
     core.db[self.basePath][self.prefix][key] = nil
 end
 
@@ -60,12 +106,36 @@ function NCDB:Clear(key)
 end
 
 function NCDB:TouchKey(key)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        if core.db[self.basePath][key] == nil then
+            core.db[self.basePath][key] = {}
+        end
+        return
+    end
+
     if core.db[self.basePath][self.prefix][key] == nil then
         core.db[self.basePath][self.prefix][key] = {}
     end
 end
 
 function NCDB:InsertIntoArray(key, value)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        if core.db[self.basePath][key] == nil then
+            core.db[self.basePath][key] = {}
+        end
+
+        table.insert(core.db[self.basePath][key], value)
+        return
+    end
+
     if core.db[self.basePath][self.prefix][key] == nil then
         core.db[self.basePath][self.prefix][key] = {}
     end
@@ -75,7 +145,11 @@ end
 
 -- Complex keys, meaning dots to parse and null check
 function NCDB:GetPath(key)
-    if key ~= self.prefix then
+    if not key then
+        return
+    end
+
+    if key ~= self.prefix and self.prefix then
         key = self.prefix .. "." .. key
     end
 
@@ -94,7 +168,11 @@ function NCDB:GetPath(key)
 end
 
 function NCDB:SetPath(key, value)
-    if key ~= self.prefix then
+    if not key then
+        return
+    end
+
+    if key ~= self.prefix and self.prefix then
         key = self.prefix .. "." .. key
     end
 
@@ -113,7 +191,11 @@ function NCDB:SetPath(key, value)
 end
 
 function NCDB:DeletePath(key)
-    if key ~= self.prefix then
+    if not key then
+        return
+    end
+
+    if key ~= self.prefix and self.prefix then
         key = self.prefix .. "." .. key
     end
 
@@ -132,7 +214,11 @@ function NCDB:DeletePath(key)
 end
 
 function NCDB:TouchPath(key)
-    if key ~= self.prefix then
+    if not key then
+        return
+    end
+
+    if key ~= self.prefix and self.prefix then
         key = self.prefix .. "." .. key
     end
 
@@ -149,7 +235,11 @@ function NCDB:TouchPath(key)
 end
 
 function NCDB:PathInsert(key, value)
-    if key ~= self.prefix then
+    if not key then
+        return
+    end
+
+    if key ~= self.prefix and self.prefix then
         key = self.prefix .. "." .. key
     end
 
@@ -173,17 +263,25 @@ end
 
 -- Check if the base path + prefix is nil or an empty table
 function NCDB:IsEmpty()
+    if not self.prefix then
+        return core.db[self.basePath] == nil or core.db[self.basePath] == ""
+    end
+
     return core.db[self.basePath][self.prefix] == nil or core.db[self.basePath][self.prefix] == ""
 end
 
 -- Check if a key is nil or an empty table
 function NCDB:IsKeyEmpty(key)
+    if not self.prefix then
+        return core.db[self.basePath][key] == nil or core.db[self.basePath][key] == ""
+    end
+
     return core.db[self.basePath][self.prefix][key] == nil or core.db[self.basePath][self.prefix][key] == ""
 end
 
 -- Check if a complex key is nil or an empty table
 function NCDB:IsPathEmpty(key)
-    if key ~= self.prefix then
+    if key ~= self.prefix and self.prefix then
         key = self.prefix .. "." .. key
     end
 
@@ -212,4 +310,55 @@ function NCDB:Increment(key, value)
     end
 
     core.db[self.basePath][self.prefix][key] = core.db[self.basePath][self.prefix][key] + value
+end
+
+-- Decrement a key by a value
+function NCDB:Decrement(key, value)
+    if not value then
+        value = 1
+    end
+
+    if not self.prefix then
+        if core.db[self.basePath][key] == nil then
+            core.db[self.basePath][key] = 0
+        end
+
+        core.db[self.basePath][key] = core.db[self.basePath][key] - value
+        return
+    end
+
+    if core.db[self.basePath][self.prefix][key] == nil then
+        core.db[self.basePath][self.prefix][key] = 0
+    end
+
+    core.db[self.basePath][self.prefix][key] = core.db[self.basePath][self.prefix][key] - value
+end
+
+-- Toggle a boolean key
+function NCDB:Toggle(key)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        core.db[self.basePath][key] = not core.db[self.basePath][key]
+        return
+    end
+
+    core.db[self.basePath][self.prefix][key] = not core.db[self.basePath][self.prefix][key]
+end
+
+-- Toggle a boolean path
+function NCDB:TogglePath(key)
+    if not key then
+        return
+    end
+
+    local value = self:GetPath(key)
+
+    if value == nil then
+        return
+    end
+
+    self:SetPath(key, not value)
 end

@@ -44,6 +44,7 @@ function NCCombat:FinishCallback()
 
     if NCConfig:ShouldShowInfoFrame() then
         NCInfo.StatsFrame:Show()
+        NCInfo:Update()
     end
 
     NCState:CacheGroup()
