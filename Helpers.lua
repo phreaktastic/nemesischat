@@ -403,3 +403,35 @@ function NemesisChat:InitializeGlobals()
 
     NemesisChat:Print("NemesisChat:InitializeGlobals() - Found " .. count .. " global variables.")
 end
+
+function NemesisChat:GetNameplateTokenByName(name)
+    for i = 1, 40 do
+        local unit = "nameplate" .. i -- Use nameplate tokens (e.g., nameplate1, nameplate2...)
+        if UnitName(unit) == name then
+            return unit
+        end
+    end
+    return nil
+end
+
+function NemesisChat:CheckEliteStatus(unit)
+    local frame = CreateFrame("GameTooltip", "TooltipScan", nil, "GameTooltipTemplate")
+    frame:SetOwner(WorldFrame, "ANCHOR_NONE")
+    frame:SetUnit(unit) -- Use the nameplate unit token
+
+    for i = 1, frame:NumLines() do
+        local text = _G["TooltipScanTextLeft" .. i]:GetText()
+        if text and string.find(text, "Elite") then
+            return true
+        end
+    end
+    return false
+end
+
+function NemesisChat:IsEliteMob(name)
+    local unit = NemesisChat:GetNameplateTokenByName(name)
+    if unit then
+        return NemesisChat:CheckEliteStatus(unit)
+    end
+    return false
+end
