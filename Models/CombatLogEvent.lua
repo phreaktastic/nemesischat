@@ -174,7 +174,7 @@ function NCCombatLogEvent:IsPull()
         return false
     end
 
-    local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,arg4 = CombatLogGetCurrentEventInfo()
+    local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,arg4 = NCCombatLogEvent:GetCombatLogVariables()
 
     if not UnitInParty(sname) and not UnitInParty(dname) then
         return false
@@ -196,9 +196,7 @@ function NCCombatLogEvent:IsPull()
         -- More verbose and perhaps lacking in ingenuity, but it's easier to read
         if event == "SWING_DAMAGE" then
             damageAmount = arg1
-        elseif event == "RANGE_DAMAGE" or event == "SPELL_DAMAGE" then
-            damageAmount = arg4
-        elseif event == "SPELL_PERIODIC_DAMAGE" then
+        elseif event == "RANGE_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_PERIODIC_DAMAGE" then
             damageAmount = arg4
         end
 
