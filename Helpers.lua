@@ -349,8 +349,7 @@ function NemesisChat:InitializeHelpers()
         NCEvent:Initialize()
         NCEvent:SetCategory("COMBATLOG")
 
-        -- Beta feature, to be cleaned up and polished
-        if isPull then
+        if isPull and pullPlayerName then
             if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
                 -- Nesting this in to prevent spam
                 if NCConfig:IsReportingPulls_Realtime() then

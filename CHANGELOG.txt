@@ -9,7 +9,7 @@
 
 ## 🩹 Patches
 
-- None yet, this one's FRESH!
+- **1.10.1**: Bugfix
 
 ## ⭐ Latest Versions
 
