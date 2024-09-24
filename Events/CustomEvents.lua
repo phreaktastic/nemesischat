@@ -33,105 +33,97 @@ function NemesisChat:HandleEvent()
     NCController:Handle()
 end
 
+--- Handles the event when a player joins a group.
+-- @param playerName The name of the player who joined.
+-- @param isNemesis A boolean indicating if the player is a nemesis.
 function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
-    if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
-        NCEvent:Initialize()
-        return
-    end
-    
-    if IsInRaid() then
-        NCEvent:SetCategory("RAID")
-    else
-        NCEvent:SetCategory("GROUP")
-    end
+    if not self:ShouldProcessBrann(playerName) then return end
 
-    NCEvent:SetEvent("JOIN")
-
-    if isNemesis then
-        NCEvent:SetTarget("NEMESIS")
-        NCEvent:SetNemesis(playerName)
-        NCEvent:RandomBystander()
-    elseif playerName ~= GetMyName() then
-        NCEvent:SetTarget("BYSTANDER")
-        NCEvent:SetBystander(playerName)
-        NCEvent:RandomNemesis()
-    else
-        NCEvent:SetTarget("SELF")
-        NCEvent:RandomNemesis()
-        NCEvent:RandomBystander()
-    end
-
-    NemesisChat:HandleEvent()
+    local category = IsInRaid() and "RAID" or "GROUP"
+    self:HandlePlayerEvent("JOIN", category, playerName, isNemesis)
 end
 
+--- Handles the event when a player leaves a group.
+-- @param playerName The name of the player who left.
+-- @param isNemesis A boolean indicating if the player is a nemesis.
 function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
+    if not self:ShouldProcessBrann(playerName) then return end
+
+    local category = IsInRaid() and "RAID" or "GROUP"
+    self:HandlePlayerEvent("LEAVE", category, playerName, isNemesis)
+end
+
+--- Handles the event when a guild player logs in.
+-- @param playerName The name of the player who logged in.
+-- @param isNemesis A boolean indicating if the player is a nemesis.
+function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
+    self:HandlePlayerEvent("LOGIN", "GUILD", playerName, isNemesis)
+end
+
+--- Helper function to process player events.
+-- @param event The event type ("JOIN", "LEAVE", "LOGIN", etc.).
+-- @param category The category of the event ("GROUP", "RAID", "GUILD").
+-- @param playerName The name of the player involved in the event.
+-- @param isNemesis A boolean indicating if the player is a nemesis.
+function NemesisChat:HandlePlayerEvent(event, category, playerName, isNemesis)
+    NCEvent:Initialize()
+    NCEvent:SetCategory(category)
+    NCEvent:SetEvent(event)
+
+    if playerName == GetMyName() then
+        -- The player involved is yourself
+        NCEvent:SetTarget("SELF")
+        NCEvent:RandomNemesis()
+        NCEvent:RandomBystander()
+    elseif isNemesis then
+        -- The player involved is a nemesis
+        NCEvent:SetTarget("NEMESIS")
+        NCEvent:SetNemesis(playerName)
+        NCEvent:RandomBystander()
+    else
+        -- The player involved is a bystander
+        NCEvent:SetTarget("BYSTANDER")
+        NCEvent:SetBystander(playerName)
+        NCEvent:RandomNemesis()
+    end
+
+    self:HandleEvent()
+end
+
+--- Determines whether to process events related to Brann Bronzebeard.
+-- @param playerName The name of the player involved.
+-- @return True if the event should be processed; false otherwise.
+function NemesisChat:ShouldProcessBrann(playerName)
     if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
         NCEvent:Initialize()
-        return
+        return false
     end
-
-    if IsInRaid() then
-        NCEvent:SetCategory("RAID")
-    else
-        NCEvent:SetCategory("GROUP")
-    end
-
-    NCEvent:SetEvent("LEAVE")
-
-    if isNemesis then
-        NCEvent:SetTarget("NEMESIS")
-        NCEvent:SetNemesis(playerName)
-        NCEvent:RandomBystander()
-    elseif playerName ~= GetMyName() then
-        NCEvent:SetTarget("BYSTANDER")
-        NCEvent:SetBystander(playerName)
-        NCEvent:RandomNemesis()
-    else
-        NCEvent:SetTarget("SELF")
-        NCEvent:RandomNemesis()
-        NCEvent:RandomBystander()
-    end
-
-    NemesisChat:HandleEvent()
+    return true
 end
 
-function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
-    NCEvent:SetCategory("GUILD")
-    NCEvent:SetEvent("LOGIN")
 
-    if isNemesis then
-        NCEvent:SetTarget("NEMESIS")
-        NCEvent:SetNemesis(playerName)
-        NCEvent:RandomBystander()
-    elseif playerName ~= GetMyName() then
-        NCEvent:SetTarget("BYSTANDER")
-        NCEvent:SetBystander(playerName)
-        NCEvent:RandomNemesis()
-    else
-        NCEvent:SetTarget("SELF")
-        NCEvent:RandomNemesis()
-        NCEvent:RandomBystander()
-    end
-
-    NemesisChat:HandleEvent()
-end
-
+--- Handles the event when a guild player logs out.
+-- @param playerName The name of the player who logged out.
+-- @param isNemesis A boolean indicating if the player is a nemesis.
 function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
     NCEvent:SetCategory("GUILD")
     NCEvent:SetEvent("LOGOUT")
 
-    if isNemesis then
-        NCEvent:SetTarget("NEMESIS")
-        NCEvent:SetNemesis(playerName)
-        NCEvent:RandomBystander()
-    elseif playerName ~= GetMyName() then
-        NCEvent:SetTarget("BYSTANDER")
-        NCEvent:SetBystander(playerName)
-        NCEvent:RandomNemesis()
-    else
+    if playerName == GetMyName() then
+        -- The player logging out is yourself
         NCEvent:SetTarget("SELF")
         NCEvent:RandomNemesis()
         NCEvent:RandomBystander()
+    elseif isNemesis then
+        -- The player logging out is a nemesis
+        NCEvent:SetTarget("NEMESIS")
+        NCEvent:SetNemesis(playerName)
+        NCEvent:RandomBystander()
+    else
+        -- The player logging out is a bystander
+        NCEvent:SetTarget("BYSTANDER")
+        NCEvent:SetBystander(playerName)
+        NCEvent:RandomNemesis()
     end
 
     NemesisChat:HandleEvent()
@@ -146,65 +138,69 @@ function NemesisChat:END_DUNGEON()
 end
 
 function NemesisChat:CheckGuild()
-    if not IsInGuild() then
-        return
-    end
+    if not IsInGuild() then return end
 
-    local totalGuildMembers, onlineGuildMembers = GetNumGuildMembers()
+    local totalGuildMembers = GetNumGuildMembers()
+    if totalGuildMembers <= 1 then return end  -- No guild members to process
 
-    -- The guild roster is empty
-    if totalGuildMembers <= 1 then
-        return
-    end
-
-    if not NemesisChat.guildRosterIndex then
-        NemesisChat.guildRosterIndex = 1
-    end
-
-    core.db.global.guildRow = {}
-
-    local cursor = NemesisChat.guildRosterIndex
-    local chunk = 10
-    local maxIndex = math.min(totalGuildMembers, NemesisChat.guildRosterIndex + chunk)
+    self.guildRosterIndex = self.guildRosterIndex or 1
+    local cursor = self.guildRosterIndex
+    local chunkSize = 10
+    local maxIndex = math.min(totalGuildMembers, cursor + chunkSize - 1)
 
     for i = cursor, maxIndex do
-        core.db.global.guildRow.name, _, _, _, _, _, _, _, core.db.global.guildRow.isOnline, _, _, _, _, core.db.global.guildRow.isMobile, _, _, core.db.global.guildRow.guid = GetGuildRosterInfo(i)
-        core.db.global.guildRow.memberOnline = core.db.global.guildRow.isOnline and not core.db.global.guildRow.isMobile
-
-        -- Strip realm name from name
-        core.db.global.guildRow.name = Ambiguate(core.db.global.guildRow.name, "guild")
-
-        core.db.global.guildRow.isNemesis = NCConfig:GetNemesis(core.db.global.guildRow.name) ~= nil
-
-        if core.runtime.guild[core.db.global.guildRow.name] then
-            local changed = core.runtime.guild[core.db.global.guildRow.name].online ~= core.db.global.guildRow.memberOnline
-
-            if changed then
-                core.runtime.guild[core.db.global.guildRow.name].online = core.db.global.guildRow.memberOnline
-            
-                if core.db.global.guildRow.memberOnline then
-                    NemesisChat:GUILD_PLAYER_LOGIN(core.db.global.guildRow.name, core.db.global.guildRow.isNemesis)
-                else
-                    NemesisChat:GUILD_PLAYER_LOGOUT(core.db.global.guildRow.name, core.db.global.guildRow.isNemesis)
-                end
-            end
-        else
-            core.runtime.guild[core.db.global.guildRow.name] = {
-                online = core.db.global.guildRow.memberOnline,
-                isNemesis = core.db.global.guildRow.isNemesis,
-                guid = core.db.global.guildRow.guid
-            }
-        end
+        local memberInfo = self:GetGuildMemberInfo(i)
+        self:UpdateGuildMember(memberInfo)
     end
 
-    -- Update the guild roster in the DB cache, in case a reload occurs
+    self:UpdateGuildCache()
+
+    -- Update the guildRosterIndex for the next iteration
+    if maxIndex >= totalGuildMembers then
+        self.guildRosterIndex = 1
+    else
+        self.guildRosterIndex = maxIndex + 1
+    end
+end
+
+function NemesisChat:GetGuildMemberInfo(index)
+    local name, _, _, _, _, _, _, _, isOnline, _, _, _, _, isMobile, _, _, guid = GetGuildRosterInfo(index)
+    name = Ambiguate(name, "guild")
+    local memberOnline = isOnline and not isMobile
+    local isNemesis = NCConfig:GetNemesis(name) ~= nil
+
+    return {
+        name = name,
+        online = memberOnline,
+        isNemesis = isNemesis,
+        guid = guid,
+    }
+end
+
+function NemesisChat:UpdateGuildMember(memberInfo)
+    local name = memberInfo.name
+    local existingMember = core.runtime.guild[name]
+
+    if existingMember then
+        if existingMember.online ~= memberInfo.online then
+            existingMember.online = memberInfo.online
+
+            if memberInfo.online then
+                self:GUILD_PLAYER_LOGIN(name, memberInfo.isNemesis)
+            else
+                self:GUILD_PLAYER_LOGOUT(name, memberInfo.isNemesis)
+            end
+        end
+    else
+        core.runtime.guild[name] = {
+            online = memberInfo.online,
+            isNemesis = memberInfo.isNemesis,
+            guid = memberInfo.guid,
+        }
+    end
+end
+
+function NemesisChat:UpdateGuildCache()
     core.db.profile.cache.guild = DeepCopy(core.runtime.guild)
     core.db.profile.cache.guildTime = GetTime()
-
-    -- Reset the guild roster index if it's at the end of the list
-    if maxIndex >= GetNumGuildMembers() then
-        NemesisChat.guildRosterIndex = 1
-    else
-        NemesisChat.guildRosterIndex = maxIndex + chunk
-    end
 end

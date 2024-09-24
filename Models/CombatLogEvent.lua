@@ -54,7 +54,7 @@ function NCCombatLogEvent:ShouldExitEventHandler()
 
     -- Improper event data
     if not NCEvent:IsValidEvent() then
-        if NCConfig:IsDebugging() and NCSpell:GetSource() == GetMyName() then 
+        if NCConfig:IsDebugging() and NCSpell:GetSource() == GetMyName() then
             self:Print("Invalid event.")
             NemesisChat:Print("Cat:", NCEvent:GetCategory(), "Event:", NCEvent:GetEvent(), "Target:", NCEvent:GetTarget())
         end
@@ -63,7 +63,7 @@ function NCCombatLogEvent:ShouldExitEventHandler()
 
     -- Player is not in a group, exit
     if not IsInGroup() then
-        if NCConfig:IsDebugging() then 
+        if NCConfig:IsDebugging() then
             self:Print("Player not in group.")
         end
         return true
@@ -73,96 +73,119 @@ function NCCombatLogEvent:ShouldExitEventHandler()
 end
 
 function NCCombatLogEvent:Fire()
-    if not IsInInstance() then
-        return
+    if not IsInInstance() then return end
+
+    self:CaptureCombatLogEvent()
+    self:InitializeEvent()
+
+    if self:IsPullEvent() then
+        self:HandlePullEvent()
     end
 
-    self.time, self.event, self.hideCaster, self.sourceGuid, self.sourceName, self.sourceFlags, self.sourceRaidFlags, self.destGuid, self.destName, self.destFlags, self.destRaidFlags, self.spellId, self.spellName, self.spellSchool, self.extraSpellId, self.extraSpellName, self.extraSpellSchool = CombatLogGetCurrentEventInfo()
-    local time, event, hidecaster, sourceGuid, sourceName, sourceFlags, sourceRaidFlags, destGuid, destName, destFlags, destRaidFlags, spellId, spellName, spellSchool, extraSpellId, extraSpellName, extraSpellSchool = NCCombatLogEvent:GetCombatLogVariables()
-    local isPull, event, pullPlayerName, mobName = self:IsPull()
-
-    NemesisChat:SetMyName()
-    NCCombatLogEvent:CheckAffixes()
-
-    NCEvent:Initialize()
-    NCEvent:SetCategory("COMBATLOG")
-
-    if isPull and pullPlayerName then
-                if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
-                    -- Nesting this in to prevent spam
-                    if NCConfig:IsReportingPulls_Realtime() then
-                        SendChatMessage("Nemesis Chat: " .. UnitName(pullPlayerName) .. " pulled " .. mobName, "YELL")
-                    end
-
-                    NemesisChat:SpawnToast("Pull", UnitName(pullPlayerName), mobName)
-                    NCRuntime:UpdateLastUnsafePullToast()
-                end
-
-                NCRuntime:SetLastUnsafePull(UnitName(pullPlayerName), mobName)
-                NCSegment:GlobalAddPull(UnitName(pullPlayerName))
-            end
-
-    if event == "SPELL_INTERRUPT" then
-        NCEvent:Interrupt(sourceName, destName, spellId, spellName, extraSpellId)
-    elseif event == "SPELL_CAST_SUCCESS" then
-        NCEvent:Spell(sourceName, destName, spellId, spellName)
-
-        -- This needs to be handled in a more modular way
-        if spellName == "Blessing of Freedom" and tContains(NCDungeon:GetKeystoneAffixes(), 134) then
-            if sourceName ~= destName then
-                NCSegment:GlobalAddAffix(sourceName, 10)
-            else
-                -- Currently not awarding any affix points for casting on self, esp when it's easy to spec into
-            end
-        end
-    -- Spell start
-    elseif event == "SPELL_CAST_START" then
-        NCEvent:SpellStart(sourceName, destName, spellId, spellName)
-    elseif event == "SPELL_HEAL" then
-        NCEvent:Heal(sourceName, destName, spellId, spellName, extraSpellId)
-    elseif event == "PARTY_KILL" then
-        NCEvent:Kill(sourceName, destName)
-    elseif event == "UNIT_DIED" then
-        if not UnitInParty(destName) then
-            return
-        end
-
-        NCEvent:Death(destName)
-
-        local state = NCState:GetPlayerState(destName)
-
-        if state and state.lastDamageAvoidable then
-            NCEvent:AvoidableDeath(destName)
-
-            if not NCEvent:EventHasMessages() then
-                NCEvent:Death(destName)
-            end
-        end
-
-        NCSegment:GlobalAddDeath(destName)
-    elseif NCEvent.IsDamageEvent and NCEvent:IsDamageEvent(event, destName, extraSpellId) then
-        local damage = tonumber(extraSpellId) or 0
-        local state = NCState:GetPlayerState(destName)
-        local isAvoidable = (GTFO and GTFO.SpellID[tostring(spellId)] ~= nil)
-
-        if isAvoidable then
-            NCSegment:GlobalAddAvoidableDamage(damage, destName)
-        end
-
-        if state then
-            state.lastDamageAvoidable = isAvoidable
-        end
-
-        NCEvent:Damage(sourceName, destName, isAvoidable, damage)
-    elseif string.find(event, "AURA_APPLIED") or string.find(event, "AURA_DOSE") then
-        NCEvent:Aura(sourceName, destName, spellId, spellName)
-    else
-        -- Something unsupported.
-        return
-    end
-
+    self:ProcessCombatEvent()
     NemesisChat:HandleEvent()
 end
+
+function NCCombatLogEvent:CaptureCombatLogEvent()
+    self.time, self.event, self.hideCaster,
+    self.sourceGuid, self.sourceName, self.sourceFlags, self.sourceRaidFlags,
+    self.destGuid, self.destName, self.destFlags, self.destRaidFlags,
+    self.spellId, self.spellName, self.spellSchool,
+    self.extraSpellId, self.extraSpellName, self.extraSpellSchool = CombatLogGetCurrentEventInfo()
+end
+
+function NCCombatLogEvent:InitializeEvent()
+    NemesisChat:SetMyName()
+    self:CheckAffixes()
+    NCEvent:Initialize()
+    NCEvent:SetCategory("COMBATLOG")
+end
+
+function NCCombatLogEvent:IsPullEvent()
+    self.isPull, self.pullEvent, self.pullPlayerName, self.mobName = self:IsPull()
+    return self.isPull and self.pullPlayerName
+end
+
+function NCCombatLogEvent:HandlePullEvent()
+    if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
+        if NCConfig:IsReportingPulls_Realtime() then
+            SendChatMessage("Nemesis Chat: " .. UnitName(self.pullPlayerName) .. " pulled " .. self.mobName, "YELL")
+        end
+        NemesisChat:SpawnToast("Pull", UnitName(self.pullPlayerName), self.mobName)
+        NCRuntime:UpdateLastUnsafePullToast()
+    end
+
+    local playerName = UnitName(self.pullPlayerName)
+    NCRuntime:SetLastUnsafePull(playerName, self.mobName)
+    NCSegment:GlobalAddPull(playerName)
+end
+
+function NCCombatLogEvent:ProcessCombatEvent()
+    local event = self.event
+    local handlers = {
+        SPELL_INTERRUPT = function() NCEvent:Interrupt(self.sourceName, self.destName, self.spellId, self.spellName, self.extraSpellId) end,
+        SPELL_CAST_SUCCESS = function() self:HandleSpellCastSuccess() end,
+        SPELL_CAST_START = function() NCEvent:SpellStart(self.sourceName, self.destName, self.spellId, self.spellName) end,
+        SPELL_HEAL = function() NCEvent:Heal(self.sourceName, self.destName, self.spellId, self.spellName, self.extraSpellId) end,
+        PARTY_KILL = function() NCEvent:Kill(self.sourceName, self.destName) end,
+        UNIT_DIED = function() self:HandleUnitDied() end,
+    }
+
+    if handlers[event] then
+        handlers[event]()
+    elseif NCEvent.IsDamageEvent and NCEvent:IsDamageEvent(event, self.destName, self.extraSpellId) then
+        self:HandleDamageEvent()
+    elseif event:find("AURA_APPLIED") or event:find("AURA_DOSE") then
+        NCEvent:Aura(self.sourceName, self.destName, self.spellId, self.spellName)
+    else
+        -- Unsupported event
+        return
+    end
+end
+
+function NCCombatLogEvent:HandleSpellCastSuccess()
+    NCEvent:Spell(self.sourceName, self.destName, self.spellId, self.spellName)
+
+    -- Modular handling for specific spells
+    if self.spellName == "Blessing of Freedom" and tContains(NCDungeon:GetKeystoneAffixes(), 134) then
+        if self.sourceName ~= self.destName then
+            NCSegment:GlobalAddAffix(self.sourceName, 10)
+        end
+    end
+end
+
+function NCCombatLogEvent:HandleUnitDied()
+    if not UnitInParty(self.destName) then return end
+
+    NCEvent:Death(self.destName)
+    local state = NCState:GetPlayerState(self.destName)
+
+    if state and state.lastDamageAvoidable then
+        NCEvent:AvoidableDeath(self.destName)
+        if not NCEvent:EventHasMessages() then
+            NCEvent:Death(self.destName)
+        end
+    end
+
+    NCSegment:GlobalAddDeath(self.destName)
+end
+
+function NCCombatLogEvent:HandleDamageEvent()
+    local damage = self:GetDamageAmount(self:GetEventData())
+    local state = NCState:GetPlayerState(self.destName)
+    local isAvoidable = GTFO and GTFO.SpellID[tostring(self.spellId)] ~= nil
+
+    if isAvoidable then
+        NCSegment:GlobalAddAvoidableDamage(damage, self.destName)
+    end
+
+    if state then
+        state.lastDamageAvoidable = isAvoidable
+    end
+
+    NCEvent:Damage(self.sourceName, self.destName, isAvoidable, damage)
+end
+
 
 function NCCombatLogEvent:GetCombatLogVariables()
     return self.time, self.event, self.hideCaster, self.sourceGuid, self.sourceName, self.sourceFlags, self.sourceRaidFlags, self.destGuid, self.destName, self.destFlags, self.destRaidFlags, self.spellId, self.spellName, self.spellSchool, self.extraSpellId, self.extraSpellName, self.extraSpellSchool
@@ -170,114 +193,193 @@ end
 
 -- Originally taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with heavy modifications
 function NCCombatLogEvent:IsPull()
-    if not IsInInstance() or not IsInGroup() or (NCBoss:IsActive() and NCDungeon:IsActive()) or IsInRaid() then
+    if not self:ShouldProcessEvent() then
         return false
     end
 
-    local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,arg4 = NCCombatLogEvent:GetCombatLogVariables()
-
-    if not UnitInParty(sname) and not UnitInParty(dname) then
+    local eventData = self:GetEventData()
+    if not self:IsRelevantEvent(eventData) then
         return false
     end
 
-    if (dname and sname and dname ~= sname and not string.find(event,"_RESURRECT") and not string.find(event,"_CREATE") and (string.find(event,"SWING") or string.find(event,"RANGE") or string.find(event,"SPELL"))) and not tContains(core.affixMobs, sname) and not tContains(core.affixMobs, dname) then
-        local function IsInvalidPlayer(player, pulledUnit)
-            if not pulledUnit then pulledUnit = dname end
+    local damageAmount = self:GetDamageAmount(eventData)
+    if self:IsSummonEvent(eventData.event) then
+        self:HandleSummonEvent(eventData)
+        return false
+    end
 
-            if not player or player.role == "TANK" then
-                NCCombatLogEvent:AddPulledUnit(pulledUnit)
-                return true
-            end
-            return false
-        end
+    return self:HandlePullScenarios(eventData, damageAmount)
+end
 
-        local damageAmount = 0
+function NCCombatLogEvent:ShouldProcessEvent()
+    return IsInInstance() and IsInGroup() and not IsInRaid() and not (NCBoss:IsActive() and NCDungeon:IsActive())
+end
 
-        -- More verbose and perhaps lacking in ingenuity, but it's easier to read
-        if event == "SWING_DAMAGE" then
-            damageAmount = arg1
-        elseif event == "RANGE_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_PERIODIC_DAMAGE" then
-            damageAmount = arg4
-        end
+function NCCombatLogEvent:GetEventData()
+    local data = {}
+    data.time, data.event, data.hideCaster,
+    data.sguid, data.sname, data.sflags, data.sraidflags,
+    data.dguid, data.dname, data.dflags, data.draidflags,
+    data.arg1, data.arg2, data.arg3, data.arg4 = self:GetCombatLogVariables()
+    return data
+end
 
-        if(not string.find(event,"_SUMMON")) then
-            if(bit.band(sflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
-                -- A player is attacking a mob
-                local player = NCState:GetPlayerState(sname)
+function NCCombatLogEvent:IsRelevantEvent(eventData)
+    local sname, dname = eventData.sname, eventData.dname
+    local event = eventData.event
 
-                if IsInvalidPlayer(player) then
-                    return false
-                end
+    if not (UnitInParty(sname) or UnitInParty(dname)) then
+        return false
+    end
 
-                local validDamage = damageAmount > 0
-                local isEliteEnemy = NemesisChat:IsEliteMob(dname)
+    if not sname or not dname or sname == dname then
+        return false
+    end
 
-                if not UnitIsUnconscious(dguid) and validDamage and NCCombatLogEvent:UnitIsNotPulled(dguid) and isEliteEnemy then
-                    -- Fire off a pull event -- player attacked a mob!
+    local isResurrect = event:find("_RESURRECT")
+    local isCreate = event:find("_CREATE")
+    local isAttackEvent = event:find("SWING") or event:find("RANGE") or event:find("SPELL")
+    local isAffixMob = tContains(core.affixMobs, sname) or tContains(core.affixMobs, dname)
 
-                    return true, NC_PULL_EVENT_ATTACK, sname, dname
-                end
-            elseif(bit.band(dflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
-                -- A mob is attacking a player
-                local player = NCState:GetPlayerState(dname)
+    return not (isResurrect or isCreate or isAffixMob) and isAttackEvent
+end
 
-                if IsInvalidPlayer(player, sname) then
-                    return false
-                end
+function NCCombatLogEvent:GetDamageAmount(eventData)
+    local event = eventData.event
+    local arg1, arg4 = eventData.arg1, eventData.arg4
 
-                local isEliteEnemy = NemesisChat:IsEliteMob(sname)
-
-                if NCCombatLogEvent:UnitIsNotPulled(sguid) and isEliteEnemy then
-                    -- Fire off a butt-pull event -- mob attacked a player!
-
-                    return true, NC_PULL_EVENT_AGGRO, dname, sname
-                end
-            elseif(bit.band(sflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
-                -- Player's pet attacks a mob
-                local pullname;
-                local pname = NCCombatLogEvent:GetPetOwner(sguid);
-
-                if (pname == "Unknown") then
-                    pullname = sname.." (pet)"
-                else
-                    pullname = pname
-                end
-
-                local validDamage = damageAmount > 0
-                local isEliteEnemy = NemesisChat:IsEliteMob(dname)
-
-                if not UnitIsUnconscious(dguid) and validDamage and NCCombatLogEvent:UnitIsNotPulled(dguid) and isEliteEnemy then
-                    -- Fire off a pet pull event -- player's pet attacked a mob!
-
-                    return true, NC_PULL_EVENT_PET, pullname, dname
-                end
-            elseif(bit.band(dflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
-                --Mob attacks a player's pet
-                local pullname;
-                local pname = NCCombatLogEvent:GetPetOwner(dguid);
-
-                if(pname == "Unknown") then pullname = dname.." (pet)";
-                else pullname = pname .. " (pet)";
-                end
-
-                if NCCombatLogEvent:UnitIsNotPulled(sguid) then
-                    -- Fire off a pet butt-pull event -- mob attacked a player's pet!
-
-                    return true, NC_PULL_EVENT_AGGRO, pullname, sname
-                end
-            end
-        else
-             -- Summon
-            local player = NCState:GetPlayerState(sname)
-
-            if player ~= nil then
-                NCCombatLogEvent:AddPetOwner(dguid, sname)
-            end
-
-            return false
-        end
+    if event == "SWING_DAMAGE" then
+        return arg1 or 0
+    elseif event == "RANGE_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_PERIODIC_DAMAGE" then
+        return arg4 or 0
+    else
+        return 0
     end
 end
+
+function NCCombatLogEvent:IsSummonEvent(event)
+    return event:find("_SUMMON")
+end
+
+function NCCombatLogEvent:HandleSummonEvent(eventData)
+    local sname = eventData.sname
+    local dguid = eventData.dguid
+    local player = NCState:GetPlayerState(sname)
+
+    if player then
+        self:AddPetOwner(dguid, sname)
+    end
+end
+
+function NCCombatLogEvent:HandlePullScenarios(eventData, damageAmount)
+    local sflags, dflags = eventData.sflags, eventData.dflags
+    local sname, dname = eventData.sname, eventData.dname
+    local sguid, dguid = eventData.sguid, eventData.dguid
+
+    if self:IsPlayerAttackingMob(sflags, dflags) then
+        return self:HandlePlayerAttack(eventData, damageAmount)
+    elseif self:IsMobAttackingPlayer(sflags, dflags) then
+        return self:HandleMobAttack(eventData)
+    elseif self:IsPetAttackingMob(sflags, dflags) then
+        return self:HandlePetAttack(eventData, damageAmount)
+    elseif self:IsMobAttackingPet(sflags, dflags) then
+        return self:HandleMobAttackPet(eventData)
+    end
+
+    return false
+end
+
+function NCCombatLogEvent:IsPlayerAttackingMob(sflags, dflags)
+    return bit.band(sflags, COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(dflags, COMBATLOG_OBJECT_TYPE_NPC) ~= 0
+end
+
+function NCCombatLogEvent:IsMobAttackingPlayer(sflags, dflags)
+    return bit.band(dflags, COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(sflags, COMBATLOG_OBJECT_TYPE_NPC) ~= 0
+end
+
+function NCCombatLogEvent:IsPetAttackingMob(sflags, dflags)
+    return bit.band(sflags, COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(dflags, COMBATLOG_OBJECT_TYPE_NPC) ~= 0
+end
+
+function NCCombatLogEvent:IsMobAttackingPet(sflags, dflags)
+    return bit.band(dflags, COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(sflags, COMBATLOG_OBJECT_TYPE_NPC) ~= 0
+end
+
+function NCCombatLogEvent:IsInvalidPlayer(player, pulledUnit)
+    pulledUnit = pulledUnit or self.eventData.dname
+    if not player or player.role == "TANK" then
+        self:AddPulledUnit(pulledUnit)
+        return true
+    end
+    return false
+end
+
+function NCCombatLogEvent:HandlePlayerAttack(eventData, damageAmount)
+    local sname, dname = eventData.sname, eventData.dname
+    local sguid, dguid = eventData.sguid, eventData.dguid
+
+    local player = NCState:GetPlayerState(sname)
+    if self:IsInvalidPlayer(player) then
+        return false
+    end
+
+    if self:ShouldTriggerPullEvent(dguid, damageAmount, dname) then
+        return true, NC_PULL_EVENT_ATTACK, sname, dname
+    end
+
+    return false
+end
+
+function NCCombatLogEvent:HandleMobAttack(eventData)
+    local sname, dname = eventData.sname, eventData.dname
+    local sguid = eventData.sguid
+
+    local player = NCState:GetPlayerState(dname)
+    if self:IsInvalidPlayer(player, sname) then
+        return false
+    end
+
+    if self:ShouldTriggerPullEvent(sguid, 0, sname) then
+        return true, NC_PULL_EVENT_AGGRO, dname, sname
+    end
+
+    return false
+end
+
+function NCCombatLogEvent:HandlePetAttack(eventData, damageAmount)
+    local sname, dname = eventData.sname, eventData.dname
+    local sguid, dguid = eventData.sguid, eventData.dguid
+
+    local petOwnerName = self:GetPetOwner(sguid) or sname .. " (pet)"
+    if self:ShouldTriggerPullEvent(dguid, damageAmount, dname) then
+        return true, NC_PULL_EVENT_PET, petOwnerName, dname
+    end
+
+    return false
+end
+
+function NCCombatLogEvent:HandleMobAttackPet(eventData)
+    local sname, dname = eventData.sname, eventData.dname
+    local sguid = eventData.sguid
+    local petOwnerName = self:GetPetOwner(eventData.dguid)
+    local pullName = petOwnerName and petOwnerName .. " (pet)" or dname .. " (pet)"
+
+    if self:UnitIsNotPulled(sguid) then
+        return true, NC_PULL_EVENT_AGGRO, pullName, sname
+    end
+
+    return false
+end
+
+function NCCombatLogEvent:ShouldTriggerPullEvent(unitGuid, damageAmount, unitName)
+    local isValidDamage = damageAmount > 0
+    local isEliteEnemy = NemesisChat:IsEliteMob(unitName)
+    local isUnitAlive = not UnitIsUnconscious(unitGuid)
+    local isUnitNotPulled = self:UnitIsNotPulled(unitGuid)
+
+    return isValidDamage and isEliteEnemy and isUnitAlive and isUnitNotPulled
+end
+
 
 function NCCombatLogEvent:GetPetOwner(petGuid)
     for i = 1, 48 do

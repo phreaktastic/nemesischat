@@ -757,6 +757,7 @@ core.eventSubscriptions = {
     "UNIT_SPELLCAST_START",
     "UNIT_SPELLCAST_SUCCEEDED",
     "UNIT_SPELLCAST_INTERRUPTED",
+    "UNIT_CONNECTION",
 
     -- Self
     "PLAYER_TARGET_CHANGED",
