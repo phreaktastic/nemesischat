@@ -185,7 +185,7 @@ function NCCombatLogEvent:IsPull()
             if not pulledUnit then pulledUnit = dname end
 
             if not player or player.role == "TANK" then
-                NCRuntime:AddPulledUnit(pulledUnit)
+                NCCombatLogEvent:AddPulledUnit(pulledUnit)
                 return true
             end
             return false
