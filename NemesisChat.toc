@@ -5,7 +5,7 @@
 ## Notes: The event-driven, targeted message framework.
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB
-## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibGroupInSpecT, LibToast, LibCompress, LibSerialize, LibMobInfo-2.0
+## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibGroupInSpecT, LibToast, LibCompress, LibSerialize
 
 # Third party libraries
 Embeds.xml

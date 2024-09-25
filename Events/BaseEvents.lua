@@ -7,7 +7,6 @@
 -----------------------------------------------------
 local _, core = ...;
 
-local UnitGroupRolesAssigned = UnitGroupRolesAssigned
 local UnitIsGroupLeader = UnitIsGroupLeader
 local IsInRaid = IsInRaid
 local UnitGUID = UnitGUID
@@ -95,9 +94,7 @@ function NemesisChat:HandleNewGroupFormation(joins)
     for _, playerName in pairs(members) do
         if playerName ~= GetMyName() then
             local player = NCState:AddPlayerToGroup(playerName)
-            if player and isLeader and #joins <= 3 then
-                self:PLAYER_JOINS_GROUP(playerName, player.isNemesis)
-            end
+            if isLeader and #joins <= 3 and player then self:PLAYER_JOINS_GROUP(playerName, player.isNemesis) end
         end
     end
 
@@ -258,7 +255,7 @@ function NemesisChat:UNIT_SPELLCAST_INTERRUPTED(_, unitId, spellName, rank, line
     end
 
     local castInterruptedGuid = UnitGUID(unitId)
-    
+
     if NCConfig:IsReportingAffixes_CastFailed() and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
         SendChatMessage("Nemesis Chat: " .. casterName .. " cast interrupted, but not incapacitated/dead!", "YELL")
     end

@@ -223,6 +223,18 @@ NCRuntime = {
 
         return current
     end,
+    SetInitializationTime = function(self, value)
+        core.runtime.initializationTime = value
+    end,
+    UpdateInitializationTime = function(self)
+        core.runtime.initializationTime = GetTime()
+    end,
+    GetInitializationTime = function(self)
+        return core.runtime.initializationTime
+    end,
+    TimeSinceInitialization = function(self)
+        return GetTime() - (core.runtime.initializationTime or 0)
+    end,
     Get = function(self, key)
         return core.runtime[key]
     end,

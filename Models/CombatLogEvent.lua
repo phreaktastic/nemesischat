@@ -18,6 +18,27 @@ local scanTip = CreateFrame("GameTooltip", scanTipName, WorldFrame, "GameTooltip
 local scanTipTitles = {}
 
 NCCombatLogEvent = {
+    -- Precomputed reset defaults for performance
+    resetDefaults = {
+        time = 0,
+        event = "",
+        hideCaster = "",
+        sourceGuid = "",
+        sourceName = "",
+        sourceFlags = 0,
+        sourceRaidFlags = 0,
+        destGuid = "",
+        destName = "",
+        destFlags = 0,
+        destRaidFlags = 0,
+        spellId = 0,
+        spellName = "",
+        spellSchool = 0,
+        extraSpellId = 0,
+        extraSpellName = "",
+        extraSpellSchool = 0,
+    },
+
     time = 0,
     event = "",
     hideCaster = "",
@@ -84,6 +105,13 @@ function NCCombatLogEvent:Fire()
 
     self:ProcessCombatEvent()
     NemesisChat:HandleEvent()
+    self:ResetVars()
+end
+
+function NCCombatLogEvent:ResetVars()
+    for var, default in pairs(self.resetDefaults) do
+        self[var] = default
+    end
 end
 
 function NCCombatLogEvent:CaptureCombatLogEvent()
