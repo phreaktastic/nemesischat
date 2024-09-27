@@ -99,6 +99,8 @@ core.stateDefaults = {
         -- power,
         -- maxPower,
     },
+    currentGroupMembers = {},
+    previousGroupMembers  = {},
 }
 
 NCState = DeepCopy(core.stateDefaults)
@@ -1018,27 +1020,37 @@ function NCState:GetPlayersInGroup()
     return plist
 end
 
-function NCState:GetRosterDelta()
-    local newRoster = NCState:GetPlayersInGroup()
-    local oldRoster = NemesisChat:GetDoubleMap(NCState:GetGroupPlayers())
-    local joined = {}
-    local left = {}
+--- Calculates the difference between previous and current group members.
+-- @param previousMembers A table of previous group member names.
+-- @param currentMembers A table of current group member names.
+-- @return Two tables: joins and leaves.
+function NemesisChat:GetRosterDelta(previousMembers, currentMembers)
+    local joins = {}
+    local leaves = {}
+    local prevSet = {}
+    local currSet = {}
 
-    -- Get joins
-    for key,val in pairs(newRoster) do 
-        if oldRoster[val] == nil and val ~= GetMyName() then
-            tinsert(joined, val)
+    -- Convert previous members to a set
+    for _, name in pairs(previousMembers) do
+        prevSet[name] = true
+    end
+
+    -- Convert current members to a set and find joins
+    for _, name in pairs(currentMembers) do
+        currSet[name] = true
+        if not prevSet[name] then
+            table.insert(joins, name)
         end
     end
 
-    -- Get leaves
-    for key,val in pairs(oldRoster) do
-        if newRoster[val] == nil and val ~= GetMyName() then
-            tinsert(left, val)
+    -- Find leaves
+    for _, name in pairs(previousMembers) do
+        if not currSet[name] then
+            table.insert(leaves, name)
         end
     end
 
-    return joined,left
+    return joins, leaves
 end
 
 function NCState:IsWipe()
@@ -1214,4 +1226,11 @@ function NCState:GroupStateSubscriptions()
             NemesisChat:UnregisterEvent(event)
         end
     end
+end
+
+--- Updates the internal group state with the current group members.
+-- @param currentMembers A table of current group member names.
+function NCState:UpdateGroupState(currentMembers)
+    self.previousGroupMembers = self.currentGroupMembers or {}
+    self.currentGroupMembers = currentMembers
 end

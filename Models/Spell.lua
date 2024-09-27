@@ -106,7 +106,7 @@ function NemesisChat:InstantiateSpell()
         if NCSpell.damage == nil then
             return 0
         end
-        
+
         return NCSpell.damage
     end
 

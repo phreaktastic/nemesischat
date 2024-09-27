@@ -203,7 +203,14 @@ function NemesisChat:InitializeHelpers()
     -- If the player's name isn't set (or is set to a pre-load value), set it
     function NemesisChat:SetMyName()
         if core.runtime.myName == nil or core.runtime.myName == "" or core.runtime.myName == UNKNOWNOBJECT then
-            core.runtime.myName = UnitName("player")
+            local name, realm = UnitName("player")
+            if name and name ~= UNKNOWNOBJECT then
+                if realm and realm ~= "" then
+                    core.runtime.myName = name .. "-" .. realm
+                else
+                    core.runtime.myName = name
+                end
+            end
         end
     end
 
@@ -249,7 +256,7 @@ function NemesisChat:InitializeHelpers()
 
         -- In an instance
         if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then channel = "INSTANCE_CHAT" end
-        
+
         -- In a raid
         if IsInRaid() then channel = "RAID" end
 

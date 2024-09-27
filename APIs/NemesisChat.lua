@@ -548,10 +548,10 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "My Name",
         value = "SELF",
-        exec = function() return GetMyName() end,
+        exec = function() return Ambiguate(GetMyName(), "short") end,
         description = "Your character's name.",
         isNumeric = false,
-        example = function() return GetMyName() end,
+        example = function() return Ambiguate(GetMyName(), "short") end,
     })
     :AddReplacement({
         label = "My Role",
@@ -596,7 +596,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Nemesis Name",
         value = "NEMESIS",
-        exec = function() return (Split(NCEvent:GetNemesis(), "-")[1] or "") end,
+        exec = function() return Ambiguate(NCEvent:GetNemesis(), "short") or "" end,
         description = "The Nemesis's name.",
         isNumeric = false,
         example = function() return NCState:GetRandomGroupNemesis() or NCState:GetRandomGuildNemesis() or "YoloSwagNoScope" end,

@@ -58,25 +58,66 @@ end
 
 function NemesisChat:GROUP_ROSTER_UPDATE()
     -- Prevent processing during initialization to avoid spam
-    if NCRuntime:TimeSinceInitialization() <= 1 then return end
+    if NCRuntime:TimeSinceInitialization() < 1 then return end
+
+    -- Ensure the player's name is available
+    local myName = self:GetMyName()
+    if not myName or myName == UNKNOWNOBJECT then
+        -- Player's name is not yet available; delay processing
+        return
+    end
 
     NCEvent:Initialize()
 
-    local joins, leaves = NCState:GetRosterDelta()
-    local groupSizeOthers = NCState:GetGroupSizeOthers()
-    local numJoins = #joins
-    local numLeaves = #leaves
-
-    -- Check if we left the group or everyone else left
-    if numLeaves > 0 and numLeaves == groupSizeOthers then
-        self:HandleGroupDisband()
-    elseif groupSizeOthers == 0 and numJoins > 0 then
-        self:HandleNewGroupFormation(joins)
-    else
-        if numJoins > 0 then self:ProcessJoins(joins) end
-        if numLeaves > 0 then self:ProcessLeaves(leaves) end
-        NCState:GroupStateSubscriptions()
+    -- Get the current group members from NCState
+    local currentMembersTable = NCState:GetPlayersInGroup() -- Returns a table keyed by player names
+    local currentMembers = {}
+    for playerName, _ in pairs(currentMembersTable) do
+        table.insert(currentMembers, playerName)
     end
+
+    -- Get the previous group member names from NCState
+    local previousMembersTable = NCState:GetGroupPlayers() -- Returns a table of player states keyed by player names
+    local previousMembers = {}
+    for playerName, _ in pairs(previousMembersTable or {}) do
+        table.insert(previousMembers, playerName)
+    end
+
+    -- Determine joins and leaves by comparing previous and current group members
+    local joins, leaves = self:GetRosterDelta(previousMembers, currentMembers)
+
+    -- Check if we just joined a group (previously solo, now in a group)
+    if #previousMembers == 0 and #currentMembers > 0 then
+        -- We just joined a group
+        self:HandleJoinExistingGroup(currentMembers)
+    else
+        if #leaves > 0 then
+            self:ProcessLeaves(leaves)
+        end
+        if #joins > 0 then
+            self:ProcessJoins(joins)
+        end
+    end
+
+    -- Update NCState with the current group members
+    NCState:UpdateGroupState(currentMembers)
+end
+
+--- Handles the scenario when the player joins an existing group.
+-- Adds existing group members to NCState without firing join events for them.
+-- Fires a join event only for the player themselves.
+-- @param members A table of current group member names.
+function NemesisChat:HandleJoinExistingGroup(members)
+    NCState:ClearGroup()
+    NCSegment:GlobalReset()
+
+    -- Add existing group members to NCState without firing events
+    for _, playerName in pairs(members) do
+        NCState:AddPlayerToGroup(playerName)
+    end
+
+    -- Fire a join event for ourselves
+    self:PLAYER_JOINS_GROUP(self:GetMyName(), false)
 end
 
 function NemesisChat:HandleGroupDisband()
@@ -106,37 +147,49 @@ function NemesisChat:HandleNewGroupFormation(joins)
 end
 
 function NemesisChat:ProcessJoins(joins)
-    local isLeader = UnitIsGroupLeader(GetMyName())
     local maxMessages = 3
+    local myName = self:GetMyName()
+
+    if not myName then
+        -- Player's name is not available; delay processing
+        return
+    end
 
     for _, playerName in pairs(joins) do
-        if playerName ~= GetMyName() then
+        if playerName ~= myName then
             local player = NCState:AddPlayerToGroup(playerName)
             if player then
+                local baseName = Ambiguate(playerName, "short") -- Strips realm name
                 if #joins <= maxMessages then
-                    self:PLAYER_JOINS_GROUP(playerName, player.isNemesis)
+                    self:PLAYER_JOINS_GROUP(baseName, player.isNemesis)
                 end
                 self:ReportPlayerStatsOnJoin(player)
             end
+        else
+            -- It is us -- we should never hit this
         end
-    end
-
-    if not isLeader then
-        self:PLAYER_JOINS_GROUP(GetMyName(), false)
     end
 end
 
+--- Processes players who have left the group.
+-- Fires leave events for each player who has left.
+-- @param leaves A table of player names who have left.
 function NemesisChat:ProcessLeaves(leaves)
     local maxMessages = 3
 
     for _, playerName in pairs(leaves) do
-        if playerName ~= GetMyName() then
+        if playerName ~= self:GetMyName() then
             local player = NCState:GetPlayerState(playerName)
-            if #leaves <= maxMessages and player then
-                self:PLAYER_LEAVES_GROUP(playerName, player.isNemesis)
+            if player then
+                local baseName = Ambiguate(playerName, "short") -- Strips realm name
+                if #leaves <= maxMessages then
+                    self:PLAYER_LEAVES_GROUP(baseName, player.isNemesis)
+                end
+                -- Additional logic for handling leavers can be added here
             end
-            self:HandleLeaver(playerName, player)
             NCState:RemovePlayerFromGroup(playerName)
+        else
+            -- Handle if needed when the player is yourself
         end
     end
 end

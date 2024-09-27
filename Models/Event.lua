@@ -152,32 +152,43 @@ function NemesisChat:InstantiateEvent()
     end
 
     -- Set the Category, Event, and Target for a spell event
-    -- TODO: Modularize
     function NCEvent:Spell(source, dest, spellId, spellName)
-        local feast = core.feastIDs[spellId]
+        self:SetEvent("SPELL_CAST_SUCCESS")
+        self:SetTargetFromSource(source)
 
-        NCEvent:SetEvent("SPELL_CAST_SUCCESS")
-        NCEvent:SetTargetFromSource(source)
-
-        -- Allow defined messages to take priority over feast messages
-        if NCEvent:EventHasMessages() or feast == nil then
-            NCSpell:Spell(source, dest, spellId, spellName)
+        -- Handle feast events separately
+        if self:HandleFeastEvent(source, spellId, spellName) then
             return
         end
 
-        -- Feasts last 2 min, so a new feast within 2 min of the last one is a replacement. 100 sec should be reasonable here.
+        -- Proceed with regular spell handling
+        NCSpell:Spell(source, dest, spellId, spellName)
+    end
+
+    -- Handles feast-related spell events
+    -- Returns true if the event is a feast event and has been handled, false otherwise
+    function NCEvent:HandleFeastEvent(source, spellId, spellName)
+        local feast = core.feastIDs[spellId]
+
+        -- If the spell is not a feast or there are predefined messages, do not handle as a feast event
+        if feast == nil or self:EventHasMessages() then
+            return false
+        end
+
+        -- Feasts last 2 min; a new feast within 100 sec is considered a replacement
         local isReplace = (GetTime() - NCRuntime:GetLastFeast() <= 100)
         NCRuntime:UpdateLastFeast()
 
         if isReplace then
-            NCEvent:SetEvent("REFEAST")
+            self:SetEvent("REFEAST")
         elseif feast == 1 then
-            NCEvent:SetEvent("FEAST")
+            self:SetEvent("FEAST")
         else
-            NCEvent:SetEvent("OLDFEAST")
+            self:SetEvent("OLDFEAST")
         end
 
         NCSpell:Feast(source, spellId, spellName)
+        return true
     end
 
     -- Begin spellcasting 
@@ -247,53 +258,55 @@ function NemesisChat:InstantiateEvent()
         NCSpell:Spell(source, dest, spellId, spellName)
     end
 
-    -- Set the event's Target based on the input source (SELF|NEMESIS|BYSTANDER), and set a random Bystander/Nemesis if appropriate
+    -- Set the event's Target based on the input source (SELF|NEMESIS|BYSTANDER|BOSS|AFFIX|ANY_MOB)
+    -- and set a random Bystander/Nemesis if appropriate
     function NCEvent:SetTargetFromSource(source)
+        local myName = NemesisChat:GetMyName()
         local member = NCState:GetPlayerState(source)
 
-        if source == NemesisChat:GetMyName() then
-            NCEvent:SetTarget("SELF")
-            NCEvent:RandomNemesis()
-            NCEvent:RandomBystander()
-        elseif member ~= nil then
-            if member.isNemesis then
-                NCEvent:SetTarget("NEMESIS")
-                NCEvent:SetNemesis(source)
-                NCEvent:RandomBystander()
-            else
-                NCEvent:SetTarget("BYSTANDER")
-                NCEvent:SetBystander(source)
-                NCEvent:RandomNemesis()
-            end
-        else
-            -- If we're not in combat, we don't care about the event
-            if not NCCombat:IsActive() or not IsInInstance() then
-                NCEvent:Initialize()
-                return
-            end
-
-            -- Enemy mob, can be a boss, affix mob, or trash mob. Random Bystander and Nemesis.
-            if NCBoss:IsActive() and source == NCBoss:GetIdentifier() then
-                NCEvent:SetTarget("BOSS")
-
-                if not self:EventHasMessages() then
-                    NCEvent:SetTarget("ANY_MOB")
-                end
-            elseif core.affixMobsLookup[source] ~= nil then
-                NCEvent:SetTarget("AFFIX")
-
-                if not self:EventHasMessages() then
-                    NCEvent:SetTarget("ANY_MOB")
-                end
-            else
-                NCEvent:SetTarget("ANY_MOB")
-            end
-
-            NCEvent:RandomNemesis()
-            NCEvent:RandomBystander()
+        if source == myName then
+            self:SetTarget("SELF")
+            self:RandomNemesis()
+            self:RandomBystander()
+            return
         end
-    end
 
+        if member then
+            if member.isNemesis then
+                self:SetTarget("NEMESIS")
+                self:SetNemesis(source)
+                self:RandomBystander()
+            else
+                self:SetTarget("BYSTANDER")
+                self:SetBystander(source)
+                self:RandomNemesis()
+            end
+            return
+        end
+
+        -- Source is not in the group
+        if not NCCombat:IsActive() or not IsInInstance() then
+            self:Initialize()
+            return
+        end
+
+        -- Enemy mob handling
+        if NCBoss:IsActive() and source == NCBoss:GetIdentifier() then
+            self:SetTarget("BOSS")
+        elseif core.affixMobsLookup[source] then
+            self:SetTarget("AFFIX")
+        else
+            self:SetTarget("ANY_MOB")
+        end
+
+        -- Fallback to ANY_MOB if no messages are defined for the target
+        if not self:EventHasMessages() then
+            self:SetTarget("ANY_MOB")
+        end
+
+        self:RandomNemesis()
+        self:RandomBystander()
+    end
     function NCEvent:IsValidEvent()
         return (NCEvent:GetCategory() ~= "" and NCEvent:GetEvent() ~= "" and NCEvent:GetTarget() ~= "")
     end
