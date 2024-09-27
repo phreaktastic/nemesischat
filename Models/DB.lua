@@ -13,7 +13,7 @@ local _, core = ...;
 -----------------------------------------------------
 
 -- NOTE: This is a TEMPORARY initialization of the DB so the addon can function.
--- Interactions in-game, such as toggling settings, will work as intended and 
+-- Interactions in-game, such as toggling settings, will work as intended and
 -- will not leverage this line's initialization of the DB.
 core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
 
@@ -348,7 +348,7 @@ function NCDB:Toggle(key)
     core.db[self.basePath][self.prefix][key] = not core.db[self.basePath][self.prefix][key]
 end
 
--- Toggle a boolean path 
+-- Toggle a boolean path
 function NCDB:TogglePath(key)
     if not key then
         return

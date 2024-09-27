@@ -13,9 +13,9 @@ core.ai.taunts = {
     ["BOSS"] = {
         ["FAIL"] = {
             ["NA"] = {
-                "Well, well, well, look who single-handedly led us to our demise! Bravo, [NEMESIS], for your impeccable talent at getting us all killed. Truly awe-inspiring.",
-                "I must applaud [NEMESIS] for their uncanny ability to orchestrate the perfect disaster. It takes a special kind of skill to wipe the entire group on a boss. Well done!",
-                "Round of applause for [NEMESIS]! Their stunning display of incompetence managed to wipe us all. Who needs enemies when we have [NEMESIS] on our team?",
+                "Well, well, well, look who’s keeping things... interesting! [NEMESIS], you’ve really nailed the art of surprises. No one saw that coming!",
+                "Big props to [NEMESIS]! They’ve mastered the ancient art of turning boss fights into an adventure. Plot twist after plot twist!",
+                "Round of applause for [NEMESIS]! Keeping us all on our toes with their spontaneous gameplay. Truly an unpredictable thrill ride!",
                 "Oh, the marvels of [NEMESIS]'s gameplay! They single-handedly orchestrated our group's downfall with such precision. It's truly a sight to behold.",
                 "Congratulations, [NEMESIS], on achieving the unthinkable: wiping the entire group on a boss. Your astounding lack of awareness and skill knows no bounds.",
                 "I have to give credit where credit is due. [NEMESIS], you managed to outdo yourself this time. It takes a special kind of talent to get the whole group killed. Well played!",
@@ -705,7 +705,7 @@ core.ai.taunts = {
                 "Incredible! We conquered the challenge with [NEMESIS] in tow. May the RNG Gods smile upon us and bless us with the finest loot as a tribute to our victory!",
                 "We made it within the timer, defying [NEMESIS]'s incompetence. Let's celebrate our triumph and beseech the RNG Gods for legendary loot to mark our accomplishment!",
                 "Surpassing all expectations, we triumphed with [NEMESIS] in the group. Let's offer our prayers to the RNG Gods for top-tier loot, as they witnessed our victory over adversity!",
-            },  
+            },
         }
     }
 }
@@ -1361,4 +1361,2097 @@ core.ai.praises = {
             },
         },
     },
+}
+
+-- core.ai.taunts is the most aggressive set of phrases, and core.ai.praises is the most friendly
+-- This array holds 10 tables, where index 1 is the most aggressive and index 10 is the most friendly
+-- The array is used to determine the tone of the message based on the AI's personality
+core.ai.phrases = {
+    -- Index 1: Most aggressive (already defined in core.ai.taunts)
+    core.ai.taunts,
+
+    -- Index 2: Very aggressive, but slightly toned down
+    {
+        ["BOSS"] = {
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Well, [NEMESIS], I see you're really excelling at getting us all killed. Bravo for your consistent incompetence.",
+                    "Oh look, [NEMESIS] managed to turn a simple boss fight into a spectacular wipe. Your talent for failure is truly remarkable.",
+                    "Congratulations, [NEMESIS], on single-handedly ensuring our defeat. It takes a special kind of skill to mess up this badly.",
+                    "I'm in awe, [NEMESIS]. Your ability to consistently make the wrong decisions is nothing short of impressive.",
+                    "Well done, [NEMESIS]. You've outdone yourself in the art of getting the entire group wiped. A true master of disaster.",
+                    "Spectacular work, [NEMESIS]. I didn't think it was possible to fail so magnificently, but you've proven me wrong.",
+                    "Ah, [NEMESIS], your unique blend of incompetence and bad luck never ceases to amaze me. Thanks for the wipe.",
+                    "I must say, [NEMESIS], your commitment to failure is admirable. You really went above and beyond this time.",
+                    "Bravo, [NEMESIS]! You've turned what should have been a simple fight into an absolute catastrophe. Impressive work.",
+                    "Well, [NEMESIS], I hope you're proud. Your 'expert' gameplay just cost us all a repair bill. Thanks for nothing."
+                }
+            },
+            ["DEATH"] = {
+                ["SELF"] = {
+                    "Thanks for the stellar protection, [NEMESIS]. I always wanted to test the durability of the floor with my face.",
+                    "Oh, am I dead? I couldn't tell with [NEMESIS]'s incredible healing keeping me so alive and well.",
+                    "Well, [NEMESIS], I hope you're proud. Your 'expert' tanking just got me a personal tour of the afterlife.",
+                    "Bravo, [NEMESIS]. Your defensive skills are so impressive, I decided to take a nap mid-fight. Permanently.",
+                    "I must applaud your strategy, [NEMESIS]. Letting me die really adds an element of challenge to the fight.",
+                    "Fantastic job, [NEMESIS]. Your healing is so effective, I'm now communing with the spirit world.",
+                    "Well, [NEMESIS], I guess your definition of 'keeping the group alive' doesn't include me. How convenient.",
+                    "Oh joy, I get to admire the floor up close, all thanks to [NEMESIS]'s impeccable protection skills.",
+                    "I'm touched, [NEMESIS]. You cared so much about my wellbeing that you let me take a dirt nap.",
+                    "Spectacular work, [NEMESIS]. Your tanking is so good, I decided to check out the respawn timer."
+                },
+                ["NEMESIS"] = {
+                    "Oh no, [NEMESIS] is down! Whatever shall we do without their invaluable contribution to our failure?",
+                    "Look everyone, [NEMESIS] has graciously decided to tank the floor. How considerate of them.",
+                    "Ah, [NEMESIS] has fallen. I'm sure it was all part of their master plan to get us wiped.",
+                    "Well, well, [NEMESIS] couldn't stay alive. I'm shocked, truly shocked. Who could have seen this coming?",
+                    "Oh dear, we've lost [NEMESIS]. I suppose someone had to step up and show us how to die properly.",
+                    "Congratulations, [NEMESIS]! You've mastered the art of dying at the most inconvenient time possible.",
+                    "I'm impressed, [NEMESIS]. Your ability to find every deadly mechanic is truly unparalleled.",
+                    "Well done, [NEMESIS]. Your death has really spiced up this fight. We were getting bored of staying alive.",
+                    "Bravo, [NEMESIS]! Your dramatic death scene was the highlight of this encounter. Oscar-worthy performance.",
+                    "Oh look, [NEMESIS] is taking a dirt nap. I guess they needed a break from all that 'intense' gameplay."
+                },
+                ["BYSTANDER"] = {
+                    "Well, [BYSTANDER], at least you won't have to witness [NEMESIS]'s further attempts at 'playing' the game.",
+                    "Rest in peace, [BYSTANDER]. At least you're spared from enduring more of [NEMESIS]'s spectacular failures.",
+                    "My condolences, [BYSTANDER]. Falling victim to [NEMESIS]'s incompetence must be frustrating.",
+                    "[BYSTANDER] is down. I guess even they couldn't survive the chaos unleashed by [NEMESIS]'s 'skills'.",
+                    "Farewell, [BYSTANDER]. Your sacrifice in the face of [NEMESIS]'s ineptitude won't be forgotten.",
+                    "Another one bites the dust. [BYSTANDER], you fought bravely against [NEMESIS]'s tide of failure.",
+                    "[BYSTANDER] has fallen. I suppose even the best of us can't survive [NEMESIS]'s unique brand of 'teamwork'.",
+                    "And there goes [BYSTANDER]. Seems like not even they could withstand the storm of incompetence from [NEMESIS].",
+                    "Rest now, [BYSTANDER]. You've earned your respite from [NEMESIS]'s endless parade of mistakes.",
+                    "[BYSTANDER] is out. I guess they drew the short straw in [NEMESIS]'s game of 'who dies first'."
+                }
+            },
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, [NEMESIS], try not to mess this up too badly. Though I'm not holding my breath.",
+                    "Here we go. [NEMESIS], if you could avoid your usual disasters, that'd be great.",
+                    "Boss time, everyone. [NEMESIS], please try to remember which end of your weapon to hold this time.",
+                    "Let's do this. [NEMESIS], I expect nothing from you and I'm still prepared to be disappointed.",
+                    "[NEMESIS], just... try not to get us all killed in the first 10 seconds, okay?",
+                    "Brace yourselves, everyone. [NEMESIS] is about to show us new and exciting ways to fail.",
+                    "Boss incoming. [NEMESIS], if you could just stand in the corner and do nothing, that'd be great.",
+                    "Here we go again. [NEMESIS], surprise us all and try not to be a complete liability this time.",
+                    "It's boss time. [NEMESIS], I'm begging you, please don't turn this into another circus act.",
+                    "[NEMESIS], I have a crazy idea. How about you try not to screw everything up this time? Just for novelty's sake."
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Well, [NEMESIS], I guess even a broken clock is right twice a day. Somehow, we managed to win despite you.",
+                    "I'm shocked, [NEMESIS]. We actually succeeded. Don't let it go to your head, it was clearly a fluke.",
+                    "Victory, against all odds. [NEMESIS], your attempts to sabotage us clearly weren't thorough enough this time.",
+                    "We did it, no thanks to you, [NEMESIS]. I suppose you're slightly less useless than I thought.",
+                    "Congratulations, everyone. [NEMESIS], you can stop looking confused now, yes, we actually won.",
+                    "I can't believe it. We succeeded with [NEMESIS] in the group. The stars must have aligned or something.",
+                    "Well, what do you know? [NEMESIS] didn't completely ruin everything for once. Mark this day in your calendars.",
+                    "Against all odds and [NEMESIS]'s best efforts to the contrary, we've actually won. Miracles do happen.",
+                    "I'm stunned. We've achieved victory despite [NEMESIS]'s presence. The universe must be playing a prank on us.",
+                    "Well done, team. And [NEMESIS]... I suppose you were slightly less of a hindrance than usual. Progress, I guess?"
+                }
+            }
+        },
+        ["GROUP"] = {
+            ["JOIN"] = {
+                ["NEMESIS"] = {
+                    "Oh great, [NEMESIS] has joined. I guess we're going for the 'challenge mode' run today.",
+                    "Well, well, if it isn't [NEMESIS]. I hope everyone's ready for an exercise in frustration.",
+                    "Look who decided to grace us with their presence. [NEMESIS], here to provide comic relief as usual?",
+                    "Brace yourselves, everyone. [NEMESIS] has joined, so expect the unexpected... and by that, I mean failure.",
+                    "[NEMESIS] is here. I guess someone decided we weren't handicapped enough already.",
+                    "Oh joy, [NEMESIS] has joined our merry band. I can already feel my will to live diminishing.",
+                    "Well, if it isn't [NEMESIS]. I hope everyone's prepared for an eventful run... and not in a good way.",
+                    "Great, [NEMESIS] is here. I suggest we all lower our expectations now to avoid disappointment later.",
+                    "Attention everyone, [NEMESIS] has joined. Remember, it's not wiping if we call it 'tactical regrouping'.",
+                    "[NEMESIS] has entered the chat. I hope everyone brought their patience, we're going to need it."
+                },
+                ["SELF"] = {
+                    "Well, well, [NEMESIS], look who decided to join us. I hope you're ready to witness some actual skill.",
+                    "Oh, [NEMESIS] is here. Try to keep up, if you can. Though I won't hold my breath.",
+                    "Ah, [NEMESIS], so glad you could join us. Try not to slow us down too much, will you?",
+                    "Well, if it isn't [NEMESIS]. I suppose someone has to be the before picture to my after.",
+                    "Oh joy, [NEMESIS] has graced us with their presence. This should be... interesting.",
+                    "Look who's here, it's [NEMESIS]. I hope you're prepared to be outshone in every possible way.",
+                    "Ah, [NEMESIS], you've joined us. Try to learn something while you're here, won't you?",
+                    "Well, [NEMESIS], I see you've decided to join. Try not to stand in the fire too much, okay?",
+                    "Oh look, it's [NEMESIS]. I hope you brought your A-game. You're going to need it to keep up with me.",
+                    "[NEMESIS] has joined the party. I guess someone needs to be here to make me look good by comparison."
+                },
+                ["BYSTANDER"] = {
+                    "Welcome, [BYSTANDER]. I hope you're ready for the [NEMESIS] show of incompetence.",
+                    "Ah, [BYSTANDER] has joined us. Brace yourself for the unique experience of playing with [NEMESIS].",
+                    "Greetings, [BYSTANDER]. You've chosen an... interesting time to join, with [NEMESIS] here and all.",
+                    "Welcome aboard, [BYSTANDER]. I hope you have plenty of patience to deal with [NEMESIS]'s antics.",
+                    "[BYSTANDER] has entered the fray. You picked a hell of a day to join, with [NEMESIS] in the group.",
+                    "Hello, [BYSTANDER]. Fair warning: we have [NEMESIS] with us, so expect the unexpected.",
+                    "Welcome, [BYSTANDER]. Don't let [NEMESIS]'s presence lower your expectations too much.",
+                    "Ah, [BYSTANDER] has arrived. I hope you're prepared for the unique challenge of playing with [NEMESIS].",
+                    "Greetings, [BYSTANDER]. You've joined just in time to witness [NEMESIS]'s special brand of 'skill'.",
+                    "Welcome to the party, [BYSTANDER]. Just a heads up, we have [NEMESIS] here, so... good luck with that."
+                }
+            },
+            ["LEAVE"] = {
+                ["NEMESIS"] = {
+                    "And there goes [NEMESIS]. I guess they finally realized they were out of their depth.",
+                    "Oh look, [NEMESIS] is leaving. I guess the challenge of basic competence was too much.",
+                    "Well, well, [NEMESIS] has decided to grace someone else with their 'skills'. Lucky them.",
+                    "Ah, [NEMESIS] is departing. I'm sure we'll struggle to fill the void of constant failures.",
+                    "Look at that, [NEMESIS] is off. I suppose even they have standards for how much they can embarrass themselves.",
+                    "[NEMESIS] has left the building. I guess they got tired of being carried.",
+                    "And [NEMESIS] makes their exit. I'm sure we'll miss their unique ability to find new ways to wipe.",
+                    "There goes [NEMESIS]. I'm not sure whether to be relieved or disappointed at the loss of such prime entertainment.",
+                    "Well, [NEMESIS] has decided to call it quits. I guess they finally realized they were the weak link.",
+                    "And just like that, [NEMESIS] is gone. I'm sure their next group will be thrilled to have such a 'skilled' player."
+                },
+                ["BYSTANDER"] = {
+                    "And there goes [BYSTANDER]. I guess they couldn't handle [NEMESIS]'s unique brand of 'teamwork'.",
+                    "[BYSTANDER] has left the group. Can't blame them, dealing with [NEMESIS] is an acquired taste.",
+                    "Well, we've lost [BYSTANDER]. I suppose even they have limits to how much [NEMESIS] they can tolerate.",
+                    "Looks like [BYSTANDER] has had enough. [NEMESIS]'s 'skills' must have been too impressive to handle.",
+                    "[BYSTANDER] has decided to leave. I guess watching [NEMESIS] in action was too much excitement for one day.",
+                    "And there goes [BYSTANDER]. Seems like they've reached their quota of [NEMESIS]-induced facepalms.",
+                    "[BYSTANDER] has left the building. Apparently, [NEMESIS]'s performance was too breathtaking to bear.",
+                    "Well, [BYSTANDER] is out. Can't say I blame them, [NEMESIS] does have a way of testing one's patience.",
+                    "Looks like [BYSTANDER] has called it quits. I suppose there's only so much [NEMESIS] one can take in a day.",
+                    "And just like that, [BYSTANDER] is gone. I guess they weren't prepared for the full [NEMESIS] experience."
+                }
+            }
+        },
+        ["CHALLENGE"] = {
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, let's start this [KEYSTONELEVEL]. [NEMESIS], try not to deplete the key in the first pull, okay?",
+                    "Here we go, [KEYSTONELEVEL] starting. [NEMESIS], if you could avoid your usual disasters, that'd be great.",
+                    "[KEYSTONELEVEL] time. [NEMESIS], please try to remember which end of your weapon to hold this time.",
+                    "Let's do this [KEYSTONELEVEL]. [NEMESIS], I expect nothing from you and I'm still prepared to be disappointed.",
+                    "[NEMESIS], just... try not to get us all killed in the first 10 seconds of this [KEYSTONELEVEL], okay?",
+                    "Brace yourselves for this [KEYSTONELEVEL], everyone. [NEMESIS] is about to show us new and exciting ways to fail.",
+                    "[KEYSTONELEVEL] incoming. [NEMESIS], if you could just stand in the corner and do nothing, that'd be great.",
+                    "Here we go again with a [KEYSTONELEVEL]. [NEMESIS], surprise us all and try not to be a complete liability this time.",
+                    "It's [KEYSTONELEVEL] time. [NEMESIS], I'm begging you, please don't turn this into another circus act.",
+                    "[NEMESIS], I have a crazy idea for this [KEYSTONELEVEL]. How about you try not to screw everything up this time? Just for novelty's sake."
+                }
+            },
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Well, [NEMESIS], you've outdone yourself. Failing a [KEYSTONELEVEL] is quite an achievement, even for you.",
+                    "Congratulations, [NEMESIS]. Your 'expert' play just depleted our [KEYSTONELEVEL]. I hope you're proud.",
+                    "And there goes our [KEYSTONELEVEL], thanks to [NEMESIS]'s stellar performance. I'm truly in awe of your ability to fail.",
+                    "Well, [NEMESIS], I hope you're happy. Your unique talents just cost us a [KEYSTONELEVEL].",
+                    "Bravo, [NEMESIS]. You've managed to turn a simple [KEYSTONELEVEL] into an epic disaster.",
+                    "I'm impressed, [NEMESIS]. I didn't think it was possible to fail a [KEYSTONELEVEL] this spectacularly, but you proved me wrong.",
+                    "Well done, [NEMESIS]. Your 'skills' just depleted our [KEYSTONELEVEL]. I guess we aimed too high thinking you could handle it.",
+                    "Congratulations are in order, [NEMESIS]. You've single-handedly ensured the failure of our [KEYSTONELEVEL].",
+                    "I'm in awe, [NEMESIS]. Your ability to sabotage a [KEYSTONELEVEL] is truly unparalleled.",
+                    "Well, [NEMESIS], you've really outdone yourself this time. Failing a [KEYSTONELEVEL] in record time must be your new specialty."
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Well, color me surprised. We actually completed the [KEYSTONELEVEL], despite [NEMESIS]'s best efforts to sabotage us.",
+                    "I can't believe it. We finished the [KEYSTONELEVEL] with [NEMESIS] in the group. The stars must have aligned or something.",
+                    "Against all odds and [NEMESIS]'s 'contributions', we've completed the [KEYSTONELEVEL]. Miracles do happen, I suppose.",
+                    "Well, what do you know? We managed to time the [KEYSTONELEVEL] even with [NEMESIS] dragging us down. Impressive teamwork, everyone else.",
+                    "I'm shocked. We actually succeeded in timing the [KEYSTONELEVEL]. [NEMESIS], your attempts to hinder us clearly weren't thorough enough.",
+                    "Unbelievable. We timed the [KEYSTONELEVEL] with [NEMESIS] in tow. I guess even a broken clock is right twice a day.",
+                    "Well, I'll be damned. We completed the [KEYSTONELEVEL] in time. [NEMESIS], you were slightly less of a burden than usual. Progress, I suppose?",
+                    "I'm stunned. We've actually timed the [KEYSTONELEVEL] despite [NEMESIS]'s presence. The universe must be playing a prank on us.",
+                    "Incredible. We've succeeded in timing the [KEYSTONELEVEL]. [NEMESIS], your usual incompetence must have taken a day off.",
+                    "Well, this is unexpected. We've timed the [KEYSTONELEVEL]. [NEMESIS], I guess your 'unique playstyle' didn't completely ruin things for once."
+                }
+            }
+        },
+        ["COMBATLOG"] = {
+            ["INTERRUPT"] = {
+                ["SELF"] = {
+                    "Oh look, I had to interrupt [TARGET]'s [SPELL]. [NEMESIS], were you too busy napping to handle it?",
+                    "I just interrupted [TARGET]'s [SPELL]. [NEMESIS], I know it's hard, but do try to keep up.",
+                    "Wow, I actually had to stop [TARGET]'s [SPELL] myself. [NEMESIS], are your interrupt keys broken?",
+                    "There goes [TARGET]'s [SPELL], interrupted by yours truly. [NEMESIS], feel free to join in anytime.",
+                    "I guess I'll handle [TARGET]'s [SPELL] since [NEMESIS] is too busy sight-seeing or whatever.",
+                    "Oh, was I supposed to leave [TARGET]'s [SPELL] for you, [NEMESIS]? My bad, I forgot you were 'contributing'.",
+                    "Look at that, I interrupted [TARGET]'s [SPELL]. [NEMESIS], this is what being useful looks like, take notes.",
+                    "I'll just take care of [TARGET]'s [SPELL], shall I? [NEMESIS], don't strain yourself or anything.",
+                    "Interrupting [TARGET]'s [SPELL] all by myself. [NEMESIS], your lack of assistance is truly impressive.",
+                    "[TARGET]'s [SPELL] stopped, courtesy of me. [NEMESIS], feel free to pretend you were about to do it."
+                },
+                ["NEMESIS"] = {
+                    "Well, well, [NEMESIS] actually interrupted [TARGET]'s [SPELL]. I guess even a blind squirrel finds a nut occasionally.",
+                    "Oh, look at that. [NEMESIS] managed to interrupt [TARGET]'s [SPELL]. Did you trip and fall on your interrupt key?",
+                    "I'm shocked. [NEMESIS] interrupted [TARGET]'s [SPELL]. Quick, someone check if hell has frozen over.",
+                    "Wow, [NEMESIS] interrupted [TARGET]'s [SPELL]. I didn't think you even knew what an interrupt was.",
+                    "Hold the presses! [NEMESIS] just interrupted [TARGET]'s [SPELL]. This must be what they call a 'blue moon' event.",
+                    "I can't believe my eyes. [NEMESIS] actually interrupted [TARGET]'s [SPELL]. Are you feeling alright?",
+                    "Is this real life? [NEMESIS] interrupted [TARGET]'s [SPELL]. I thought I'd never see the day.",
+                    "Well, I'll be. [NEMESIS] interrupted [TARGET]'s [SPELL]. I guess miracles do happen.",
+                    "Alert the media! [NEMESIS] just interrupted [TARGET]'s [SPELL]. Truly a momentous occasion.",
+                    "I must be dreaming. [NEMESIS] interrupted [TARGET]'s [SPELL]. Quick, someone pinch me!"
+                }
+            },
+            ["DISPEL"] = {
+                ["SELF"] = {
+                    "Oh look, I had to dispel that myself. [NEMESIS], were you too busy drooling to notice?",
+                    "Guess I'll handle the dispels since [NEMESIS] is too preoccupied with being useless.",
+                    "There goes another dispel from me. [NEMESIS], feel free to chip in anytime this century.",
+                    "I suppose I'll take care of the dispelling. We can't expect [NEMESIS] to multitask, can we?",
+                    "Another dispel done by yours truly. [NEMESIS], this is what being helpful looks like, take notes.",
+                    "Oh, was I supposed to leave that for you to dispel, [NEMESIS]? My bad, I forgot you were 'contributing'.",
+                    "Look at that, I'm dispelling again. [NEMESIS], don't strain yourself or anything.",
+                    "Dispelling all by myself. [NEMESIS], your lack of assistance is truly awe-inspiring.",
+                    "I'll just handle all the dispels, shall I? [NEMESIS], please, continue to excel at doing absolutely nothing.",
+                    "Another one dispelled. [NEMESIS], feel free to pretend you were about to do it."
+                },
+                ["NEMESIS"] = {
+                    "Well, well, [NEMESIS] actually dispelled something. I guess even a broken clock is right twice a day.",
+                    "Oh, look at that. [NEMESIS] managed a dispel. Did you accidentally press the right button for once?",
+                    "I'm shocked. [NEMESIS] dispelled something. Quick, someone check if pigs are flying outside.",
+                    "Wow, [NEMESIS] actually used dispel. I didn't think you even had it on your action bars.",
+                    "Hold everything! [NEMESIS] just dispelled. This must be what they call a 'once in a blue moon' event.",
+                    "I can't believe my eyes. [NEMESIS] actually dispelled something. Are you feeling alright?",
+                    "Is this the twilight zone? [NEMESIS] used dispel. I thought I'd never see the day.",
+                    "Well, I'll be. [NEMESIS] dispelled. I guess miracles do happen... very, very rarely.",
+                    "Stop the presses! [NEMESIS] just used dispel. Truly a momentous occasion.",
+                    "I must be hallucinating. [NEMESIS] dispelled something. Quick, someone pinch me!"
+                }
+            },
+            ["HARDCC"] = {
+                ["SELF"] = {
+                    "Oh look, I had to CC that myself. [NEMESIS], were you too busy counting your fingers to notice?",
+                    "Guess I'll handle the CC since [NEMESIS] is too preoccupied with being a spectacular waste of space.",
+                    "There goes another CC from me. [NEMESIS], feel free to contribute anytime this expansion.",
+                    "I suppose I'll take care of the crowd control. We can't expect [NEMESIS] to understand basic game mechanics, can we?",
+                    "Another mob CC'd by yours truly. [NEMESIS], this is what being useful looks like, not that you'd know.",
+                    "Oh, was I supposed to leave that for you to CC, [NEMESIS]? My bad, I forgot you were 'playing' with us.",
+                    "Look at that, I'm CCing again. [NEMESIS], don't hurt yourself thinking about helping or anything.",
+                    "Crowd controlling all by myself. [NEMESIS], your ability to avoid being helpful is truly impressive.",
+                    "I'll just handle all the CC, shall I? [NEMESIS], please, continue to excel at being completely useless.",
+                    "Another one CC'd. [NEMESIS], feel free to pretend you were about to do it, if you even know how."
+                },
+                ["NEMESIS"] = {
+                    "Well, well, [NEMESIS] actually CC'd something. I guess monkeys can be trained after all.",
+                    "Oh, look at that. [NEMESIS] managed to CC. Did you accidentally click the right ability while face-rolling your keyboard?",
+                    "I'm shocked. [NEMESIS] CC'd something. Quick, someone check if the sun is rising in the west.",
+                    "Wow, [NEMESIS] actually used CC. I didn't think you even knew what those letters stood for.",
+                    "Hold everything! [NEMESIS] just CC'd a mob. This must be what they call an 'act of God'.",
+                    "I can't believe my eyes. [NEMESIS] actually CC'd something. Did someone hack your account?",
+                    "Is this real life? [NEMESIS] used CC. I thought I'd never see the day.",
+                    "Well, I'll be. [NEMESIS] CC'd a mob. I guess even a blind squirrel finds a nut once in a while.",
+                    "Alert the media! [NEMESIS] just used CC. Truly a sign of the apocalypse.",
+                    "I must be dreaming. [NEMESIS] CC'd something. Quick, someone slap me back to reality!"
+                }
+            }
+        }
+    },
+
+    -- Index 3: Aggressive, but less so than index 2
+    {
+        ["BOSS"] = {
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Well, [NEMESIS], that was... something. Not quite the victory we were hoping for, but definitely memorable.",
+                    "I see [NEMESIS] is really pushing the boundaries of how not to do this fight. Innovative, I'll give you that.",
+                    "[NEMESIS], I'm starting to think you might need a refresher on boss mechanics. Just a hunch.",
+                    "That was an interesting strategy, [NEMESIS]. I especially liked the part where we all died.",
+                    "Well, [NEMESIS], I suppose that's one way to approach the fight. Not a successful way, but a way nonetheless.",
+                    "Congratulations, [NEMESIS], you've found yet another creative way for us to wipe. Your talent knows no bounds.",
+                    "[NEMESIS], I'm impressed. I didn't think it was possible to mess up quite that spectacularly.",
+                    "Well, that was... educational. [NEMESIS], you've shown us all how not to do this fight. Thanks for that.",
+                    "I have to hand it to you, [NEMESIS]. Your ability to find new and exciting ways to fail is truly remarkable.",
+                    "[NEMESIS], I'm curious. Is this part of some elaborate plan to see how many times we can wipe in one night?"
+                }
+            },
+            ["DEATH"] = {
+                ["SELF"] = {
+                    "Hm, [NEMESIS], I think there might be a flaw in your 'let the healer die' strategy.",
+                    "Well, this is cozy. Thanks for the impromptu nap, [NEMESIS]. Really appreciated.",
+                    "[NEMESIS], when I said I needed a break, this isn't quite what I had in mind.",
+                    "Oh good, I needed to check the durability on my armor anyway. Thanks for the opportunity, [NEMESIS].",
+                    "Well, [NEMESIS], I hope you're happy. I've always wanted to study the floor patterns up close.",
+                    "[NEMESIS], I'm beginning to think your definition of 'protection' might need some work.",
+                    "Ah, so this is what the afterlife looks like. Thanks for the tour, [NEMESIS].",
+                    "I see you've mastered the 'everyone for themselves' tanking style, [NEMESIS]. How... innovative.",
+                    "Well, [NEMESIS], I guess this is one way to avoid mechanics. Not the way I'd choose, but to each their own.",
+                    "[NEMESIS], when I said I needed more excitement in my life, this isn't quite what I meant."
+                },
+                ["NEMESIS"] = {
+                    "Oh, [NEMESIS] is taking a dirt nap. How unexpectedly... expected.",
+                    "Look at [NEMESIS], always eager to greet the floor. Such enthusiasm.",
+                    "Well, there goes [NEMESIS]. I'm sure it was all part of some grand plan... right?",
+                    "And down goes [NEMESIS]. I'd say I'm surprised, but let's not kid ourselves.",
+                    "[NEMESIS] seems to have misunderstood the concept of 'floor tanking'. Interesting interpretation.",
+                    "Oh look, [NEMESIS] has decided to inspect the floor up close. How... thorough of them.",
+                    "Well, [NEMESIS] certainly knows how to make an exit. Dramatic, if not particularly helpful.",
+                    "I see [NEMESIS] is trying out the 'play dead' strategy. Bold move, let's see if it pays off.",
+                    "And there goes [NEMESIS], leading by example... of what not to do.",
+                    "[NEMESIS] seems to have a unique interpretation of 'surviving the fight'. Interesting approach."
+                },
+                ["BYSTANDER"] = {
+                    "Looks like [BYSTANDER] couldn't handle the excitement of [NEMESIS]'s... unique playstyle.",
+                    "Well, [BYSTANDER] is down. I guess [NEMESIS]'s performance was too breathtaking to bear.",
+                    "And there goes [BYSTANDER]. I suppose there's only so much [NEMESIS]-induced chaos one can take.",
+                    "[BYSTANDER] has fallen. I guess they drew the short straw in [NEMESIS]'s game of 'who survives'.",
+                    "Oh dear, we've lost [BYSTANDER]. [NEMESIS]'s 'strategy' claims another victim.",
+                    "Well, [BYSTANDER] is out. Seems like they couldn't keep up with [NEMESIS]'s... innovative tactics.",
+                    "Farewell, [BYSTANDER]. Your sacrifice in the face of [NEMESIS]'s gameplay won't be forgotten.",
+                    "[BYSTANDER] has left us. I guess they weren't prepared for the full [NEMESIS] experience.",
+                    "And [BYSTANDER] bites the dust. [NEMESIS]'s influence strikes again.",
+                    "Rest in peace, [BYSTANDER]. At least you're spared from witnessing more of [NEMESIS]'s performance."
+                }
+            },
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, [NEMESIS], let's see what interesting interpretation of the mechanics you have for us this time.",
+                    "Here we go again. [NEMESIS], try to surprise us by doing something right for a change.",
+                    "Boss time, everyone. [NEMESIS], remember: the goal is to defeat the boss, not yourself.",
+                    "Let's do this. [NEMESIS], maybe this time you'll impress us with your sudden grasp of basic gameplay.",
+                    "[NEMESIS], just... try to stay alive for more than 30 seconds this time, okay?",
+                    "Brace yourselves, everyone. [NEMESIS] is about to show us their unique interpretation of 'helping'.",
+                    "Boss incoming. [NEMESIS], let's see if you can break your personal record of mistakes per minute.",
+                    "Here we go again. [NEMESIS], try not to redefine the meaning of 'failure' this time.",
+                    "It's boss time. [NEMESIS], I'm curious to see what new and exciting ways you'll find to complicate this.",
+                    "[NEMESIS], I have a wild idea. How about trying to follow the actual strategy this time?"
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Well, [NEMESIS], I guess your unique approach didn't completely doom us this time. Progress, I suppose.",
+                    "I'm pleasantly surprised, [NEMESIS]. We actually succeeded despite... whatever it was you were doing.",
+                    "Victory, against the odds. [NEMESIS], your attempts to 'help' weren't as detrimental as usual.",
+                    "We did it, and [NEMESIS] didn't single-handedly cause our downfall. It's a day for the history books.",
+                    "Congratulations, everyone. [NEMESIS], your performance was... less disastrous than anticipated.",
+                    "I can't believe it. We succeeded with [NEMESIS] in the group. The universe must have glitched.",
+                    "Well, what do you know? [NEMESIS] didn't completely sabotage our efforts. Small victories, I guess.",
+                    "Against all expectations, we've won. [NEMESIS], your... contribution didn't ruin everything. Shocking.",
+                    "I'm genuinely surprised. We've achieved victory despite [NEMESIS]'s best efforts to the contrary.",
+                    "Well done, team. And [NEMESIS]... I suppose you were slightly less of a liability than usual. Baby steps."
+                }
+            }
+        },
+        ["GROUP"] = {
+            ["JOIN"] = {
+                ["NEMESIS"] = {
+                    "Oh look, [NEMESIS] has joined. This should make things... interesting.",
+                    "Well, well, if it isn't [NEMESIS]. I hope everyone's ready for an eventful run.",
+                    "Look who decided to grace us with their presence. [NEMESIS], here to spice things up as usual?",
+                    "Brace yourselves, everyone. [NEMESIS] has joined, so expect the unexpected.",
+                    "[NEMESIS] is here. I guess we were looking for an extra challenge.",
+                    "Oh joy, [NEMESIS] has joined our group. This should be... an experience.",
+                    "Well, if it isn't [NEMESIS]. I hope everyone's prepared for an interesting run.",
+                    "Great, [NEMESIS] is here. I suggest we all brace for impact.",
+                    "Attention everyone, [NEMESIS] has joined. Remember, it's not a wipe if we call it a 'tactical reset'.",
+                    "[NEMESIS] has entered the chat. I hope everyone brought their patience, we might need it."
+                },
+                ["SELF"] = {
+                    "Well, well, [NEMESIS], fancy meeting you here. Try to keep up, will you?",
+                    "Oh, [NEMESIS] is here. This should be... enlightening.",
+                    "Ah, [NEMESIS], so glad you could join us. Let's see if you can impress me this time.",
+                    "Well, if it isn't [NEMESIS]. I look forward to seeing your... unique approach to gameplay.",
+                    "Oh joy, [NEMESIS] has graced us with their presence. This should be interesting.",
+                    "Look who's here, it's [NEMESIS]. I hope you're ready for a lesson in how this is really done.",
+                    "Ah, [NEMESIS], you've joined us. Try to learn something while you're here, won't you?",
+                    "Well, [NEMESIS], I see you've decided to join. Let's hope you've improved since last time.",
+                    "Oh look, it's [NEMESIS]. I hope you brought your A-game. You're going to need it.",
+                    "[NEMESIS] has joined the party. This should be an... educational experience for you."
+                },
+                ["BYSTANDER"] = {
+                    "Welcome, [BYSTANDER]. Just a heads up, we have [NEMESIS] with us. It should be... interesting.",
+                    "Ah, [BYSTANDER] has joined us. Brace yourself, [NEMESIS] is here too.",
+                    "Greetings, [BYSTANDER]. Fair warning: [NEMESIS] is part of this group. Proceed with caution.",
+                    "Welcome aboard, [BYSTANDER]. Just so you know, [NEMESIS] is here. It might get... eventful.",
+                    "[BYSTANDER] has entered the fray. Hope you're ready for the [NEMESIS] experience.",
+                    "Hello, [BYSTANDER]. Just a quick note: we have [NEMESIS] with us, so expect the unexpected.",
+                    "Welcome, [BYSTANDER]. Don't let [NEMESIS]'s presence put you off. We'll manage... somehow.",
+                    "Ah, [BYSTANDER] has arrived. Prepare yourself for the unique challenge of playing with [NEMESIS].",
+                    "Greetings, [BYSTANDER]. You've joined just in time to witness [NEMESIS]'s... interesting gameplay.",
+                    "Welcome to the party, [BYSTANDER]. Just a heads up, we have [NEMESIS] here. It should be... entertaining."
+                }
+            },
+            ["LEAVE"] = {
+                ["NEMESIS"] = {
+                    "And there goes [NEMESIS]. I guess they decided we were too much of a challenge.",
+                    "Oh look, [NEMESIS] is leaving. I suppose the concept of teamwork was too complex.",
+                    "Well, well, [NEMESIS] has decided to grace someone else with their presence. Lucky them.",
+                    "Ah, [NEMESIS] is departing. I'm sure we'll manage to soldier on without their... unique contributions.",
+                    "Look at that, [NEMESIS] is off. I guess even they have limits to how much they can handle.",
+                    "[NEMESIS] has left the building. I'm sure their next group will be... interested to have them.",
+                    "And [NEMESIS] makes their exit. I'm sure we'll find some way to cope without them.",
+                    "There goes [NEMESIS]. I'm not sure whether to be relieved or concerned for their next group.",
+                    "Well, [NEMESIS] has decided to call it quits. I suppose we were too much for them to handle.",
+                    "And just like that, [NEMESIS] is gone. Their next group is in for quite an... experience."
+                },
+                ["BYSTANDER"] = {
+                    "And there goes [BYSTANDER]. I guess [NEMESIS]'s unique gameplay style was too much to handle.",
+                    "[BYSTANDER] has left the group. Can't blame them, playing with [NEMESIS] is an acquired taste.",
+                    "Well, we've lost [BYSTANDER]. I suppose even they have limits to how much [NEMESIS] they can tolerate.",
+                    "Looks like [BYSTANDER] has had enough. [NEMESIS]'s... performance must have been too overwhelming.",
+                    "[BYSTANDER] has decided to leave. I guess experiencing [NEMESIS] in action was quite enough for one day.",
+                    "And there goes [BYSTANDER]. Seems like they've reached their quota of [NEMESIS]-induced excitement.",
+                    "[BYSTANDER] has left the building. Apparently, [NEMESIS]'s gameplay was a bit too thrilling.",
+                    "Well, [BYSTANDER] is out. Can't say I blame them, [NEMESIS] does have a way of making things... interesting.",
+                    "Looks like [BYSTANDER] has called it quits. I suppose there's only so much [NEMESIS] one can take in a day.",
+                    "And just like that, [BYSTANDER] is gone. I guess they weren't quite prepared for the full [NEMESIS] experience."
+                }
+            }
+        },
+        ["CHALLENGE"] = {
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, let's start this [KEYSTONELEVEL]. [NEMESIS], try not to make it too... exciting, okay?",
+                    "Here we go, [KEYSTONELEVEL] starting. [NEMESIS], let's see if you can surprise us with some competence.",
+                    "[KEYSTONELEVEL] time. [NEMESIS], remember: the objective is to complete it, not to find new ways to fail.",
+                    "Let's do this [KEYSTONELEVEL]. [NEMESIS], I'm cautiously optimistic about your performance. Don't prove me wrong.",
+                    "[NEMESIS], just... try to keep up with the rest of us in this [KEYSTONELEVEL], alright?",
+                    "Brace yourselves for this [KEYSTONELEVEL], everyone. [NEMESIS] is about to show us their unique interpretation of 'helping'.",
+                    "[KEYSTONELEVEL] incoming. [NEMESIS], let's see if you can break your personal record of not messing up.",
+                    "Here we go again with a [KEYSTONELEVEL]. [NEMESIS], try to impress us by not being a liability this time.",
+                    "It's [KEYSTONELEVEL] time. [NEMESIS], I'm curious to see what interesting approach you'll take this time.",
+                    "[NEMESIS], I have a wild idea for this [KEYSTONELEVEL]. How about trying to follow the actual strategy this time?"
+                }
+            },
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Well, [NEMESIS], that was certainly an... interesting approach to depleting our [KEYSTONELEVEL].",
+                    "Congratulations, [NEMESIS]. Your unique strategy just cost us our [KEYSTONELEVEL]. I hope you're proud.",
+                    "And there goes our [KEYSTONELEVEL], thanks to [NEMESIS]'s creative interpretation of the mechanics.",
+                    "Well, [NEMESIS], I hope you're satisfied. Your... performance just depleted our [KEYSTONELEVEL].",
+                    "Bravo, [NEMESIS]. You've managed to turn a simple [KEYSTONELEVEL] into quite an adventure.",
+                    "I'm impressed, [NEMESIS]. I didn't think it was possible to fail a [KEYSTONELEVEL] quite like that, but you proved me wrong.",
+                    "Well done, [NEMESIS]. Your 'skills' just depleted our [KEYSTONELEVEL]. I guess it was too much to hope for success.",
+                    "Congratulations are in order, [NEMESIS]. You've made this [KEYSTONELEVEL] a truly memorable experience... not in a good way.",
+                    "I'm in awe, [NEMESIS]. Your ability to complicate a [KEYSTONELEVEL] is truly something to behold.",
+                    "Well, [NEMESIS], you've really outdone yourself this time. Failing a [KEYSTONELEVEL] in such spectacular fashion must take real talent."
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Well, color me surprised. We actually completed the [KEYSTONELEVEL], and [NEMESIS] didn't completely ruin it.",
+                    "I can't believe it. We finished the [KEYSTONELEVEL] with [NEMESIS] in the group. Wonders never cease.",
+                    "Against all odds and despite [NEMESIS]'s... interesting choices, we've completed the [KEYSTONELEVEL]. Miracles do happen.",
+                    "Well, what do you know? We managed to time the [KEYSTONELEVEL] even with [NEMESIS] along for the ride. Impressive work, everyone else.",
+                    "I'm pleasantly surprised. We actually succeeded in timing the [KEYSTONELEVEL]. [NEMESIS], your... contribution wasn't as detrimental as I feared.",
+                    "Unbelievable. We timed the [KEYSTONELEVEL] with [NEMESIS] in tow. I guess even a broken clock is right twice a day.",
+                    "Well, I'll be. We completed the [KEYSTONELEVEL] in time. [NEMESIS], you were... less of an obstacle than usual. Progress, I suppose?",
+                    "I'm genuinely impressed. We've actually timed the [KEYSTONELEVEL] despite [NEMESIS]'s presence. The stars must have aligned.",
+                    "Incredible. We've succeeded in timing the [KEYSTONELEVEL]. [NEMESIS], your performance was... less disastrous than anticipated.",
+                    "Well, this is unexpected. We've timed the [KEYSTONELEVEL]. [NEMESIS], I guess your 'unique approach' didn't completely derail us this time."
+                }
+            }
+        },
+        ["COMBATLOG"] = {
+            ["INTERRUPT"] = {
+                ["SELF"] = {
+                    "Oh look, I had to interrupt [TARGET]'s [SPELL]. [NEMESIS], were you taking a scenic tour of the dungeon?",
+                    "I just interrupted [TARGET]'s [SPELL]. [NEMESIS], I know it's challenging, but do try to keep up.",
+                    "Wow, I actually had to stop [TARGET]'s [SPELL] myself. [NEMESIS], are your reflexes on a coffee break?",
+                    "There goes [TARGET]'s [SPELL], interrupted by yours truly. [NEMESIS], feel free to join the fight anytime.",
+                    "I guess I'll handle [TARGET]'s [SPELL] since [NEMESIS] is busy... doing whatever it is they do.",
+                    "Oh, was I supposed to leave [TARGET]'s [SPELL] for you, [NEMESIS]? My bad, I forgot you were here.",
+                    "Look at that, I interrupted [TARGET]'s [SPELL]. [NEMESIS], this is what being helpful looks like, in case you were wondering.",
+                    "I'll just take care of [TARGET]'s [SPELL], shall I? [NEMESIS], don't strain yourself or anything.",
+                    "Interrupting [TARGET]'s [SPELL] all by myself. [NEMESIS], your consistent lack of assistance is truly something.",
+                    "[TARGET]'s [SPELL] stopped, courtesy of me. [NEMESIS], feel free to pretend you were about to do it."
+                },
+                ["NEMESIS"] = {
+                    "Well, well, [NEMESIS] actually interrupted [TARGET]'s [SPELL]. I guess miracles do happen occasionally.",
+                    "Oh, look at that. [NEMESIS] managed to interrupt [TARGET]'s [SPELL]. Did you accidentally press the right button?",
+                    "I'm pleasantly surprised. [NEMESIS] interrupted [TARGET]'s [SPELL]. Maybe there's hope for you yet.",
+                    "Wow, [NEMESIS] interrupted [TARGET]'s [SPELL]. I didn't think you had it in you.",
+                    "Hold on a second! [NEMESIS] just interrupted [TARGET]'s [SPELL]. This must be what they call a 'rare occurrence'.",
+                    "I can't believe my eyes. [NEMESIS] actually interrupted [TARGET]'s [SPELL]. Are you feeling alright?",
+                    "Is this really happening? [NEMESIS] interrupted [TARGET]'s [SPELL]. I thought I'd never see the day.",
+                    "Well, I'll be. [NEMESIS] interrupted [TARGET]'s [SPELL]. I guess even a broken clock is right twice a day.",
+                    "Interesting development! [NEMESIS] just interrupted [TARGET]'s [SPELL]. A noteworthy event, indeed.",
+                    "I must be seeing things. [NEMESIS] interrupted [TARGET]'s [SPELL]. Quick, someone check if pigs are flying!"
+                }
+            },
+            ["DISPEL"] = {
+                ["SELF"] = {
+                    "Oh look, I had to dispel that myself. [NEMESIS], were you too busy admiring the scenery?",
+                    "Guess I'll handle the dispels since [NEMESIS] is too preoccupied with... whatever it is they're doing.",
+                    "There goes another dispel from me. [NEMESIS], feel free to contribute anytime this dungeon.",
+                    "I suppose I'll take care of the dispelling. We can't expect [NEMESIS] to do everything, can we?",
+                    "Another dispel done by yours truly. [NEMESIS], this is what being useful looks like, just so you know.",
+                    "Oh, was I supposed to leave that for you to dispel, [NEMESIS]? My bad, I forgot you were here.",
+                    "Look at that, I'm dispelling again. [NEMESIS], don't worry about helping or anything.",
+                    "Dispelling all by myself. [NEMESIS], your consistent lack of assistance is truly something.",
+                    "I'll just handle all the dispels, shall I? [NEMESIS], please, continue to focus on... whatever it is you're doing.",
+                    "Another one dispelled. [NEMESIS], feel free to pretend you were about to do it."
+                },
+                ["NEMESIS"] = {
+                    "Well, well, [NEMESIS] actually dispelled something. I guess wonders never cease.",
+                    "Oh, look at that. [NEMESIS] managed a dispel. Did you accidentally press the right button?",
+                    "I'm pleasantly surprised. [NEMESIS] dispelled something. Maybe there's hope for you after all.",
+                    "Wow, [NEMESIS] actually used dispel. I didn't think you knew how to do that.",
+                    "Hold everything! [NEMESIS] just dispelled. This must be what they call a 'rare event'.",
+                    "I can't believe my eyes. [NEMESIS] actually dispelled something. Are you feeling okay?",
+                    "Is this really happening? [NEMESIS] used dispel. I thought I'd never see the day.",
+                    "Well, I'll be. [NEMESIS] dispelled. I guess miracles do happen... occasionally.",
+                    "Interesting turn of events! [NEMESIS] just used dispel. A moment to remember, indeed.",
+                    "I must be dreaming. [NEMESIS] dispelled something. Someone pinch me, quick!"
+                }
+            },
+            ["HARDCC"] = {
+                ["SELF"] = {
+                    "Oh look, I had to CC that myself. [NEMESIS], were you too busy sightseeing to notice?",
+                    "Guess I'll handle the CC since [NEMESIS] is too preoccupied with... whatever they're up to.",
+                    "There goes another CC from me. [NEMESIS], feel free to join in the fight anytime.",
+                    "I suppose I'll take care of the crowd control. We can't expect [NEMESIS] to do everything, can we?",
+                    "Another mob CC'd by yours truly. [NEMESIS], this is what being helpful looks like, in case you were curious.",
+                    "Oh, was I supposed to leave that for you to CC, [NEMESIS]? My bad, I forgot you were with us.",
+                    "Look at that, I'm CCing again. [NEMESIS], don't strain yourself or anything.",
+                    "Crowd controlling all by myself. [NEMESIS], your consistent lack of assistance is truly remarkable.",
+                    "I'll just handle all the CC, shall I? [NEMESIS], please, continue to focus on... whatever it is you're doing.",
+                    "Another one CC'd. [NEMESIS], feel free to pretend you were about to do it."
+                },
+                ["NEMESIS"] = {
+                    "Well, well, [NEMESIS] actually CC'd something. I guess miracles do happen.",
+                    "Oh, look at that. [NEMESIS] managed to CC. Did you accidentally use the right ability?",
+                    "I'm pleasantly surprised. [NEMESIS] CC'd something. Maybe there's hope for you yet.",
+                    "Wow, [NEMESIS] actually used CC. I didn't think you knew what those letters stood for.",
+                    "Hold everything! [NEMESIS] just CC'd a mob. This must be what they call a 'once in a blue moon' event.",
+                    "I can't believe my eyes. [NEMESIS] actually CC'd something. Did someone else take over your character?",
+                    "Is this really happening? [NEMESIS] used CC. I thought I'd never see the day.",
+                    "Well, I'll be. [NEMESIS] CC'd a mob. I guess even a blind squirrel finds a nut once in a while.",
+                    "Interesting development! [NEMESIS] just used CC. A moment to remember, indeed.",
+                    "I must be hallucinating. [NEMESIS] CC'd something. Someone pinch me, quick!"
+                }
+            }
+        }
+    },
+
+    -- Index 4: Slightly negative, but more neutral
+    {
+        ["BOSS"] = {
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Well, [NEMESIS], that didn't quite go as planned. Maybe we should review our strategy.",
+                    "Hmm, [NEMESIS], I think we might need to adjust our approach. That wasn't our best attempt.",
+                    "[NEMESIS], it seems like we're having some trouble with this fight. Any ideas on what we could improve?",
+                    "That was a bit rough, [NEMESIS]. Let's regroup and figure out where we went wrong.",
+                    "Well, [NEMESIS], I guess we found out what doesn't work. Progress, in a way?",
+                    "That didn't go quite as expected, [NEMESIS]. Any thoughts on what we could do differently?",
+                    "[NEMESIS], it looks like we might need to rethink our tactics. That attempt was... challenging.",
+                    "Well, that was an experience, [NEMESIS]. Let's see if we can learn something from it.",
+                    "I think we might have room for improvement, [NEMESIS]. Any suggestions for our next try?",
+                    "[NEMESIS], that attempt was... interesting. Maybe we should discuss our approach before the next pull."
+                }
+            },
+            ["DEATH"] = {
+                ["SELF"] = {
+                    "Oops, looks like I took a bit of a tumble there. [NEMESIS], any thoughts on how we could prevent that next time?",
+                    "Well, that was unfortunate. [NEMESIS], do you think we could adjust our positioning to avoid that?",
+                    "[NEMESIS], I seem to have run into some trouble there. Any suggestions for the next attempt?",
+                    "Hmm, that didn't go quite as planned. [NEMESIS], what do you think we could do differently?",
+                    "Well, [NEMESIS], I guess I found out where not to stand. Let's work on our coordination for the next try.",
+                    "That didn't end well for me. [NEMESIS], did you notice anything we could improve on?",
+                    "I seem to have met an untimely end there. [NEMESIS], any ideas on how to avoid that in the future?",
+                    "Well, that was a learning experience. [NEMESIS], what do you think went wrong there?",
+                    "Looks like I made a mistake there. [NEMESIS], any thoughts on how we could handle that mechanic better?",
+                    "That didn't go as I hoped. [NEMESIS], do you have any insights on what we could change for next time?"
+                },
+                ["NEMESIS"] = {
+                    "Oh, [NEMESIS] is down. That's going to make things a bit more challenging.",
+                    "Looks like [NEMESIS] had a bit of bad luck there. We'll need to adjust our strategy.",
+                    "Well, we've lost [NEMESIS]. Let's see if we can recover from this setback.",
+                    "[NEMESIS] has fallen. This might complicate things a bit.",
+                    "It seems [NEMESIS] is taking an unscheduled break. We'll have to work around this.",
+                    "[NEMESIS] is down. That's not ideal, but let's see how we can adapt.",
+                    "We've lost [NEMESIS]. This changes our approach a bit. Any ideas?",
+                    "Looks like [NEMESIS] is out of commission. We'll need to rethink our strategy.",
+                    "[NEMESIS] has fallen. This is a setback, but we can still turn this around.",
+                    "Well, [NEMESIS] is down. Let's focus on how we can compensate for this loss."
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] is down. [NEMESIS], we might need to adjust our strategy a bit.",
+                    "We've lost [BYSTANDER]. [NEMESIS], any thoughts on how we should adapt?",
+                    "Looks like [BYSTANDER] is out. [NEMESIS], this might change our approach a little.",
+                    "[BYSTANDER] has fallen. [NEMESIS], we'll need to be extra careful now.",
+                    "Well, [BYSTANDER] is down. [NEMESIS], let's think about how we can compensate.",
+                    "[BYSTANDER] is no longer with us. [NEMESIS], we might need to rethink our roles here.",
+                    "We're down one with [BYSTANDER] out. [NEMESIS], any ideas on how to proceed?",
+                    "[BYSTANDER] has met an unfortunate end. [NEMESIS], we'll need to adapt our strategy.",
+                    "Looks like we've lost [BYSTANDER]. [NEMESIS], this might require some quick thinking.",
+                    "[BYSTANDER] is down for the count. [NEMESIS], we'll need to be extra vigilant now."
+                }
+            },
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, [NEMESIS], let's see if we can improve on our last attempt.",
+                    "Here we go again. [NEMESIS], remember what we discussed about the mechanics.",
+                    "Boss time, everyone. [NEMESIS], let's focus on executing our strategy this time.",
+                    "Let's do this. [NEMESIS], keep an eye out for those key mechanics we talked about.",
+                    "[NEMESIS], remember to communicate if you're having trouble with any part of the fight.",
+                    "Okay, [NEMESIS], let's try to avoid the mistakes from last time. We've got this.",
+                    "Boss incoming. [NEMESIS], stay alert and stick to the plan we discussed.",
+                    "Here we go. [NEMESIS], let's see if we can make some progress this attempt.",
+                    "It's time to face the boss. [NEMESIS], remember your role and we should be fine.",
+                    "[NEMESIS], ready for another try? Let's see if we can do better this time."
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Well done, everyone. [NEMESIS], you seemed more comfortable with the mechanics that time.",
+                    "We did it! [NEMESIS], I noticed some improvement in your performance there.",
+                    "Victory at last! [NEMESIS], your efforts to improve definitely showed in that attempt.",
+                    "Great job, team. [NEMESIS], you handled your role much better this time.",
+                    "Success! [NEMESIS], I saw you adapting to the fight mechanics better there.",
+                    "We've done it! [NEMESIS], your contribution was notably better this time around.",
+                    "Excellent work, everyone. [NEMESIS], you seemed more in sync with the group that time.",
+                    "That's how it's done! [NEMESIS], I could see you were more focused on your tasks.",
+                    "We've conquered the boss! [NEMESIS], your improvement was evident in that attempt.",
+                    "Victory is ours! [NEMESIS], you definitely stepped up your game for that one."
+                }
+            }
+        },
+        ["GROUP"] = {
+            ["JOIN"] = {
+                ["NEMESIS"] = {
+                    "Oh, [NEMESIS] has joined. Let's see how this goes.",
+                    "Well, [NEMESIS] is here. This could be interesting.",
+                    "[NEMESIS] has joined the group. Let's hope for a smooth run.",
+                    "Looks like [NEMESIS] is with us. We'll see how this plays out.",
+                    "[NEMESIS] is here. This might change our group dynamic a bit.",
+                    "[NEMESIS] has joined. Let's try to work together effectively.",
+                    "We have [NEMESIS] with us now. This could affect our strategy.",
+                    "[NEMESIS] is part of the team. Let's see how we can incorporate their skills.",
+                    "Alright, [NEMESIS] is here. We'll need to adjust our approach accordingly.",
+                    "[NEMESIS] has joined us. This might require some adaptability on our part."
+                },
+                ["SELF"] = {
+                    "Hello, [NEMESIS]. Let's see if we can work well together this time.",
+                    "Ah, [NEMESIS] is here. I hope we can coordinate effectively.",
+                    "Well, [NEMESIS], we meet again. Let's try to make the best of it.",
+                    "[NEMESIS], I see you've joined. Let's aim for a productive run.",
+                    "Oh, it's [NEMESIS]. Well, let's see how this goes.",
+                    "Hello again, [NEMESIS]. Here's hoping for a smooth collaboration.",
+                    "[NEMESIS], you're with us this time. Let's try to work as a team.",
+                    "I see [NEMESIS] has joined. We'll need to communicate clearly to succeed.",
+                    "Well, [NEMESIS] is here. Let's attempt to synergize our efforts.",
+                    "Greetings, [NEMESIS]. Let's see if we can find a good rhythm this time."
+                },
+                ["BYSTANDER"] = {
+                    "Welcome, [BYSTANDER]. Just so you know, [NEMESIS] is part of our group.",
+                    "Hey [BYSTANDER], glad you could join. We have [NEMESIS] with us as well.",
+                    "[BYSTANDER], welcome to the team. [NEMESIS] is also here, just FYI.",
+                    "Good to have you, [BYSTANDER]. [NEMESIS] is part of our group too.",
+                    "Welcome aboard, [BYSTANDER]. Just a heads up, [NEMESIS] is with us.",
+                    "[BYSTANDER], thanks for joining. We've got [NEMESIS] in the group as well.",
+                    "Glad you're here, [BYSTANDER]. [NEMESIS] is also part of our team.",
+                    "Hey [BYSTANDER], welcome. Just letting you know, [NEMESIS] is here too.",
+                    "[BYSTANDER], welcome to the group. We're also running with [NEMESIS].",
+                    "Good to see you, [BYSTANDER]. Just to let you know, [NEMESIS] is part of our group as well."
+                }
+            },
+            ["LEAVE"] = {
+                ["NEMESIS"] = {
+                    "Looks like [NEMESIS] has left the group. We'll need to adjust our strategy.",
+                    "[NEMESIS] has departed. This might change our approach a bit.",
+                    "Well, [NEMESIS] is gone. Let's see how we can adapt to this change.",
+                    "[NEMESIS] has left us. We may need to rethink our roles.",
+                    "It seems [NEMESIS] has moved on. We'll have to compensate for their absence.",
+                    "[NEMESIS] is no longer with us. This could affect our group dynamic.",
+                    "We've lost [NEMESIS]. Let's consider how this impacts our plan.",
+                    "[NEMESIS] has exited the group. We might need to reevaluate our strategy.",
+                    "Well, [NEMESIS] has left. We'll need to adjust to fill their role.",
+                    "[NEMESIS] is out. Let's think about how we can cover their responsibilities."
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] has left the group. [NEMESIS], we might need to adjust our approach.",
+                    "Looks like we've lost [BYSTANDER]. [NEMESIS], any thoughts on how we should adapt?",
+                    "Well, [BYSTANDER] is gone. [NEMESIS], this might change our strategy a bit.",
+                    "[BYSTANDER] has departed. [NEMESIS], we may need to rethink our roles.",
+                    "It seems [BYSTANDER] has moved on. [NEMESIS], we'll have to compensate for their absence.",
+                    "[BYSTANDER] is no longer with us. [NEMESIS], this could affect our group dynamic.",
+                    "We've lost [BYSTANDER]. [NEMESIS], let's consider how this impacts our plan.",
+                    "[BYSTANDER] has exited the group. [NEMESIS], we might need to reevaluate our strategy.",
+                    "Well, [BYSTANDER] has left. [NEMESIS], we'll need to adjust to fill their role.",
+                    "[BYSTANDER] is out. [NEMESIS], let's think about how we can cover their responsibilities."
+                }
+            }
+        },
+        ["CHALLENGE"] = {
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, let's start this [KEYSTONELEVEL]. [NEMESIS], remember to focus on the key mechanics.",
+                    "Here we go, [KEYSTONELEVEL] starting. [NEMESIS], let's try to work together effectively.",
+                    "[KEYSTONELEVEL] time. [NEMESIS], keep in mind the strategies we discussed.",
+                    "Let's do this [KEYSTONELEVEL]. [NEMESIS], stay alert and communicate if you need help.",
+                    "[NEMESIS], as we start this [KEYSTONELEVEL], remember that teamwork is crucial.",
+                    "We're beginning the [KEYSTONELEVEL]. [NEMESIS], let's aim for a smooth run.",
+                    "[KEYSTONELEVEL] incoming. [NEMESIS], try to stay focused on your role.",
+                    "Here we go with the [KEYSTONELEVEL]. [NEMESIS], let's see if we can improve on our last attempt.",
+                    "It's [KEYSTONELEVEL] time. [NEMESIS], remember to pace yourself and avoid unnecessary risks.",
+                    "[NEMESIS], as we start this [KEYSTONELEVEL], keep in mind our overall strategy."
+                }
+            },
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Well, that [KEYSTONELEVEL] didn't go as planned. [NEMESIS], any thoughts on what we could improve?",
+                    "We didn't quite make it through that [KEYSTONELEVEL]. [NEMESIS], what do you think went wrong?",
+                    "That [KEYSTONELEVEL] was a bit rough. [NEMESIS], did you notice any particular issues?",
+                    "We fell short on that [KEYSTONELEVEL]. [NEMESIS], any ideas on how we could do better next time?",
+                    "[NEMESIS], that [KEYSTONELEVEL] was challenging. What do you think we should focus on improving?",
+                    "We didn't complete the [KEYSTONELEVEL] in time. [NEMESIS], where do you think we lost the most time?",
+                    "That [KEYSTONELEVEL] didn't work out. [NEMESIS], what part did you find most difficult?",
+                    "We missed the timer on that [KEYSTONELEVEL]. [NEMESIS], any suggestions for our next attempt?",
+                    "That [KEYSTONELEVEL] was a learning experience. [NEMESIS], what do you think we could have done differently?",
+                    "[NEMESIS], we didn't quite make it through that [KEYSTONELEVEL]. What areas do you think we need to work on?"
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "We did it! Great job on timing that [KEYSTONELEVEL]. [NEMESIS], you handled your role well.",
+                    "Excellent work, everyone. We timed the [KEYSTONELEVEL]. [NEMESIS], I noticed some good plays from you.",
+                    "Success! We completed the [KEYSTONELEVEL] in time. [NEMESIS], your contribution was valuable.",
+                    "We've done it! [KEYSTONELEVEL] timed. [NEMESIS], you seemed more comfortable with the mechanics this run.",
+                    "Congratulations on timing the [KEYSTONELEVEL]! [NEMESIS], your performance has improved.",
+                    "We've successfully timed the [KEYSTONELEVEL]. [NEMESIS], I saw some good decision-making from you.",
+                    "Great job on the [KEYSTONELEVEL], team! [NEMESIS], you worked well with the group this time.",
+                    "We've timed the [KEYSTONELEVEL]! [NEMESIS], your efforts definitely contributed to our success.",
+                    "Excellent run! We've completed the [KEYSTONELEVEL] in time. [NEMESIS], you handled your responsibilities well.",
+                    "[KEYSTONELEVEL] timed successfully! [NEMESIS], I appreciated your focus during that run."
+                }
+            }
+        },
+        ["COMBATLOG"] = {
+            ["INTERRUPT"] = {
+                ["SELF"] = {
+                    "I've interrupted [TARGET]'s [SPELL]. [NEMESIS], keep an eye out for more casts we need to stop.",
+                    "Just stopped [TARGET]'s [SPELL]. [NEMESIS], let's try to coordinate our interrupts better.",
+                    "I caught [TARGET]'s [SPELL]. [NEMESIS], can you take the next one?",
+                    "[TARGET]'s [SPELL] interrupted. [NEMESIS], remember we need to keep these abilities in check.",
+                    "Got that interrupt on [TARGET]'s [SPELL]. [NEMESIS], stay alert for more castings.",
+                    "I've handled [TARGET]'s [SPELL]. [NEMESIS], let's work on our interrupt rotation.",
+                    "Managed to stop [TARGET]'s [SPELL]. [NEMESIS], keep track of when your interrupt is available.",
+                    "[TARGET]'s [SPELL] has been interrupted. [NEMESIS], we need to stay on top of these casts.",
+                    "I've taken care of [TARGET]'s [SPELL]. [NEMESIS], be ready for the next one.",
+                    "Interrupted [TARGET]'s [SPELL]. [NEMESIS], let's try to improve our interrupt coordination."
+                },
+                ["NEMESIS"] = {
+                    "Good interrupt on [TARGET]'s [SPELL], [NEMESIS]. Keep it up.",
+                    "Nice catch on [TARGET]'s [SPELL], [NEMESIS]. Stay alert for more.",
+                    "Well done interrupting [TARGET]'s [SPELL], [NEMESIS]. That was important.",
+                    "[NEMESIS], good job stopping [TARGET]'s [SPELL]. Let's keep this coordination going.",
+                    "Thanks for catching [TARGET]'s [SPELL], [NEMESIS]. That helps a lot.",
+                    "Solid interrupt on [TARGET]'s [SPELL], [NEMESIS]. Keep an eye out for more casts.",
+                    "[NEMESIS], nice work on interrupting [TARGET]'s [SPELL]. That makes our job easier.",
+                    "Good awareness on [TARGET]'s [SPELL], [NEMESIS]. Let's keep up the good work.",
+                    "Thanks for handling [TARGET]'s [SPELL], [NEMESIS]. That's good teamwork.",
+                    "[NEMESIS], well done on that interrupt of [TARGET]'s [SPELL]. Stay vigilant for more."
+                }
+            },
+            ["DISPEL"] = {
+                ["SELF"] = {
+                    "I've dispelled that effect. [NEMESIS], keep an eye out for more we need to remove.",
+                    "Just removed a harmful spell. [NEMESIS], let's try to coordinate our dispels better.",
+                    "I took care of that dispel. [NEMESIS], can you handle the next one?",
+                    "Harmful effect dispelled. [NEMESIS], remember we need to keep on top of these.",
+                    "Got that dispel. [NEMESIS], stay alert for more effects we need to remove.",
+                    "I've handled that dispel. [NEMESIS], let's work on our dispel priorities.",
+                    "Managed to remove that effect. [NEMESIS], keep track of when your dispel is available.",
+                    "That harmful spell has been dispelled. [NEMESIS], we need to stay vigilant.",
+                    "I've taken care of that dispel. [NEMESIS], be ready for the next one.",
+                    "Effect removed. [NEMESIS], let's try to improve our dispel coordination."
+                },
+                ["NEMESIS"] = {
+                    "Good dispel, [NEMESIS]. Keep it up.",
+                    "Nice removal of that effect, [NEMESIS]. Stay alert for more.",
+                    "Well done on that dispel, [NEMESIS]. That was important.",
+                    "[NEMESIS], good job removing that harmful spell. Let's keep this coordination going.",
+                    "Thanks for that dispel, [NEMESIS]. That helps a lot.",
+                    "Solid dispel work, [NEMESIS]. Keep an eye out for more effects we need to remove.",
+                    "[NEMESIS], nice work on that dispel. That makes our job easier.",
+                    "Good awareness on that harmful effect, [NEMESIS]. Let's keep up the good work.",
+                    "Thanks for handling that dispel, [NEMESIS]. That's good teamwork.",
+                    "[NEMESIS], well done on that dispel. Stay vigilant for more."
+                }
+            },
+            ["HARDCC"] = {
+                ["SELF"] = {
+                    "I've CC'd that target. [NEMESIS], keep an eye out for more we need to control.",
+                    "Just applied some crowd control. [NEMESIS], let's try to coordinate our CC better.",
+                    "I took care of that CC. [NEMESIS], can you handle the next one?",
+                    "Target controlled. [NEMESIS], remember we need to keep on top of crowd control.",
+                    "Got that CC. [NEMESIS], stay alert for more targets we need to control.",
+                    "I've handled that crowd control. [NEMESIS], let's work on our CC priorities.",
+                    "Managed to control that target. [NEMESIS], keep track of when your CC is available.",
+                    "That mob has been CC'd. [NEMESIS], we need to stay vigilant with our crowd control.",
+                    "I've taken care of that CC. [NEMESIS], be ready for the next one.",
+                    "Crowd control applied. [NEMESIS], let's try to improve our CC coordination."
+                },
+                ["NEMESIS"] = {
+                    "Good CC, [NEMESIS]. Keep it up.",
+                    "Nice control of that target, [NEMESIS]. Stay alert for more.",
+                    "Well done on that crowd control, [NEMESIS]. That was important.",
+                    "[NEMESIS], good job controlling that mob. Let's keep this coordination going.",
+                    "Thanks for that CC, [NEMESIS]. That helps a lot.",
+                    "Solid crowd control work, [NEMESIS]. Keep an eye out for more targets we need to manage.",
+                    "[NEMESIS], nice work on that CC. That makes our job easier.",
+                    "Good awareness on that crowd control, [NEMESIS]. Let's keep up the good work.",
+                    "Thanks for handling that CC, [NEMESIS]. That's good teamwork.",
+                    "[NEMESIS], well done on that crowd control. Stay vigilant for more opportunities."
+                }
+            }
+        }
+    },
+
+    -- Index 5: Neutral
+    {
+        ["BOSS"] = {
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Well, that was an attempt. [NEMESIS], what are your thoughts on our performance?",
+                    "[NEMESIS], it looks like we're still figuring this out. Any observations from that try?",
+                    "Okay, not quite there yet. [NEMESIS], what do you think we should focus on next time?",
+                    "That was... interesting. [NEMESIS], did you notice anything we could improve on?",
+                    "Well, we gave it a shot. [NEMESIS], any ideas for our next attempt?",
+                    "That didn't go as planned. [NEMESIS], what do you think we could do differently?",
+                    "We're making progress, even if it doesn't feel like it. [NEMESIS], any thoughts?",
+                    "That was a learning experience. [NEMESIS], what stood out to you during that attempt?",
+                    "We're getting there. [NEMESIS], what part do you think we need to work on most?",
+                    "Not quite a success, but not a total loss either. [NEMESIS], what's your take on that try?"
+                }
+            },
+            ["DEATH"] = {
+                ["SELF"] = {
+                    "Whoops, I'm down. [NEMESIS], did you see what happened there?",
+                    "Well, that's me out. [NEMESIS], any thoughts on how we could prevent that next time?",
+                    "[NEMESIS], I seem to have run into some trouble. Did you notice anything I could do differently?",
+                    "Looks like I made a mistake there. [NEMESIS], any suggestions for the next try?",
+                    "Well, that didn't go as planned. [NEMESIS], what's your take on the situation?",
+                    "I seem to have met my demise. [NEMESIS], any insights on what went wrong?",
+                    "That didn't end well for me. [NEMESIS], did you spot where I went wrong?",
+                    "I've fallen and can't get up. [NEMESIS], any ideas on how to avoid that next time?",
+                    "Well, I'm out of the fight. [NEMESIS], what do you think led to that?",
+                    "Looks like I'm taking a dirt nap. [NEMESIS], any thoughts on how to prevent that in future attempts?"
+                },
+                ["NEMESIS"] = {
+                    "[NEMESIS] is down. How should we adapt our strategy?",
+                    "We've lost [NEMESIS]. Let's consider how to proceed from here.",
+                    "[NEMESIS] has fallen. What adjustments should we make?",
+                    "It looks like [NEMESIS] is out. How do we compensate for this?",
+                    "[NEMESIS] is no longer with us. What's our next move?",
+                    "We're down one with [NEMESIS] out. How should we adjust?",
+                    "[NEMESIS] has been defeated. What's our plan moving forward?",
+                    "It seems [NEMESIS] is down for the count. How do we adapt?",
+                    "We've lost [NEMESIS]. How does this change our approach?",
+                    "[NEMESIS] is out of the fight. What's our new game plan?"
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] is down. [NEMESIS], how should we adjust our strategy?",
+                    "We've lost [BYSTANDER]. [NEMESIS], any thoughts on how to proceed?",
+                    "[BYSTANDER] has fallen. [NEMESIS], what adjustments do you think we should make?",
+                    "It looks like [BYSTANDER] is out. [NEMESIS], how do you suggest we compensate for this?",
+                    "[BYSTANDER] is no longer with us. [NEMESIS], what's your take on our next move?",
+                    "We're down one with [BYSTANDER] out. [NEMESIS], how should we adapt?",
+                    "[BYSTANDER] has been defeated. [NEMESIS], what's your view on our plan moving forward?",
+                    "It seems [BYSTANDER] is down for the count. [NEMESIS], how do you think we should adjust?",
+                    "We've lost [BYSTANDER]. [NEMESIS], how do you think this changes our approach?",
+                    "[BYSTANDER] is out of the fight. [NEMESIS], what's your opinion on our new game plan?"
+                }
+            },
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, let's give this another shot. [NEMESIS], ready to go?",
+                    "Here we go again. [NEMESIS], remember what we discussed about the mechanics.",
+                    "Boss time, everyone. [NEMESIS], let's focus on executing our strategy.",
+                    "Let's do this. [NEMESIS], keep an eye out for those key mechanics we talked about.",
+                    "[NEMESIS], remember to communicate if you're having trouble with any part of the fight.",
+                    "Okay, [NEMESIS], let's see if we can improve on our last attempt.",
+                    "Boss incoming. [NEMESIS], stay alert and stick to the plan.",
+                    "Here we go. [NEMESIS], let's see if we can make some progress this time.",
+                    "It's time to face the boss. [NEMESIS], remember your role and we should be fine.",
+                    "[NEMESIS], ready for another try? Let's see what we can accomplish this time."
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Great job, everyone! [NEMESIS], nice work on handling your part.",
+                    "We did it! [NEMESIS], I noticed some good plays from you there.",
+                    "Excellent teamwork! [NEMESIS], you seemed more comfortable with the mechanics that time.",
+                    "Victory! [NEMESIS], your performance definitely contributed to our success.",
+                    "Well done, team! [NEMESIS], I saw some improvement in your gameplay.",
+                    "That's how it's done! [NEMESIS], you handled your role well.",
+                    "Congratulations, everyone! [NEMESIS], you were on point with your responsibilities.",
+                    "Success! [NEMESIS], your efforts definitely paid off in that fight.",
+                    "We nailed it! [NEMESIS], you seemed much more in sync with the group this time.",
+                    "Fantastic work! [NEMESIS], your contribution was valuable to our victory."
+                }
+            }
+        },
+        ["GROUP"] = {
+            ["JOIN"] = {
+                ["NEMESIS"] = {
+                    "Welcome to the group, [NEMESIS].",
+                    "[NEMESIS] has joined us. Hello there.",
+                    "Greetings, [NEMESIS]. Glad you could join us.",
+                    "Hey [NEMESIS], welcome to the team.",
+                    "[NEMESIS] is here. Welcome aboard.",
+                    "Good to have you with us, [NEMESIS].",
+                    "Welcome, [NEMESIS]. Hope you're ready for some action.",
+                    "[NEMESIS] has joined the party. Hello!",
+                    "Hey everyone, [NEMESIS] is joining us.",
+                    "Welcome to the group, [NEMESIS]. Let's get started."
+                },
+                ["SELF"] = {
+                    "Hello, [NEMESIS]. Let's work together effectively.",
+                    "Ah, [NEMESIS], we meet again. Here's to a good run.",
+                    "Greetings, [NEMESIS]. Looking forward to working with you.",
+                    "[NEMESIS], good to see you. Let's have a productive session.",
+                    "Hello there, [NEMESIS]. Ready for some teamwork?",
+                    "Nice to see you, [NEMESIS]. Let's make this a good run.",
+                    "[NEMESIS], hello. Here's hoping for smooth cooperation.",
+                    "Greetings, [NEMESIS]. Let's aim for success together.",
+                    "Hey [NEMESIS], looking forward to a good session.",
+                    "Hello, [NEMESIS]. Let's see what we can accomplish as a team."
+                },
+                ["BYSTANDER"] = {
+                    "Welcome, [BYSTANDER]. [NEMESIS] is also part of our group.",
+                    "Hey [BYSTANDER], glad you could join. We have [NEMESIS] with us as well.",
+                    "[BYSTANDER], welcome to the team. [NEMESIS] is here too.",
+                    "Good to have you, [BYSTANDER]. [NEMESIS] is part of our group as well.",
+                    "Welcome aboard, [BYSTANDER]. Just to let you know, [NEMESIS] is with us.",
+                    "[BYSTANDER], thanks for joining. [NEMESIS] is in the group too.",
+                    "Glad you're here, [BYSTANDER]. We've got [NEMESIS] in the team as well.",
+                    "Hey [BYSTANDER], welcome. [NEMESIS] is also part of our group.",
+                    "[BYSTANDER], welcome to the group. We're also running with [NEMESIS].",
+                    "Good to see you, [BYSTANDER]. Just so you know, [NEMESIS] is part of our team too."
+                }
+            },
+            ["LEAVE"] = {
+                ["NEMESIS"] = {
+                    "[NEMESIS] has left the group. Take care!",
+                    "Looks like [NEMESIS] is heading out. Farewell!",
+                    "[NEMESIS] has departed. Safe travels!",
+                    "And [NEMESIS] is off. All the best!",
+                    "[NEMESIS] has left us. Until next time!",
+                    "Seems [NEMESIS] is moving on. Take it easy!",
+                    "[NEMESIS] has exited the group. Goodbye!",
+                    "Looks like [NEMESIS] is done for now. See you around!",
+                    "[NEMESIS] has left the party. Safe journeys!",
+                    "And there goes [NEMESIS]. Till we meet again!"
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] has left the group. [NEMESIS], looks like we'll need to adjust our strategy.",
+                    "Seems [BYSTANDER] is heading out. [NEMESIS], any thoughts on how we should proceed?",
+                    "[BYSTANDER] has departed. [NEMESIS], this might change our approach a bit.",
+                    "And [BYSTANDER] is off. [NEMESIS], we may need to rethink our roles.",
+                    "[BYSTANDER] has left us. [NEMESIS], how do you think we should compensate?",
+                    "Looks like [BYSTANDER] is done for now. [NEMESIS], any ideas on adapting our plan?",
+                    "[BYSTANDER] has exited the group. [NEMESIS], we might need to reevaluate our strategy.",
+                    "[BYSTANDER] has left the party. [NEMESIS], how should we adjust to this change?",
+                    "And there goes [BYSTANDER]. [NEMESIS], what's your take on our next move?",
+                    "[BYSTANDER] has moved on. [NEMESIS], how do you think we should reorganize?"
+                }
+            }
+        },
+        ["CHALLENGE"] = {
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, let's start this [KEYSTONELEVEL]. [NEMESIS], ready to go?",
+                    "Here we go, [KEYSTONELEVEL] starting. [NEMESIS], let's work together on this one.",
+                    "[KEYSTONELEVEL] time. [NEMESIS], remember to focus on the key mechanics.",
+                    "Let's do this [KEYSTONELEVEL]. [NEMESIS], keep an eye out for important abilities.",
+                    "[NEMESIS], as we start this [KEYSTONELEVEL], remember that communication is key.",
+                    "We're beginning the [KEYSTONELEVEL]. [NEMESIS], let's aim for a smooth run.",
+                    "[KEYSTONELEVEL] incoming. [NEMESIS], stay focused and we'll do fine.",
+                    "Here we go with the [KEYSTONELEVEL]. [NEMESIS], let's see what we can accomplish.",
+                    "It's [KEYSTONELEVEL] time. [NEMESIS], remember to pace yourself.",
+                    "[NEMESIS], as we start this [KEYSTONELEVEL], let's keep our overall strategy in mind."
+                }
+            },
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Well, that [KEYSTONELEVEL] didn't go as planned. [NEMESIS], any thoughts on what we could improve?",
+                    "We didn't quite make it through that [KEYSTONELEVEL]. [NEMESIS], what do you think went wrong?",
+                    "That [KEYSTONELEVEL] was a bit rough. [NEMESIS], did you notice any particular issues?",
+                    "We fell short on that [KEYSTONELEVEL]. [NEMESIS], any ideas on how we could do better next time?",
+                    "[NEMESIS], that [KEYSTONELEVEL] was challenging. What do you think we should focus on improving?",
+                    "We didn't complete the [KEYSTONELEVEL] in time. [NEMESIS], where do you think we lost the most time?",
+                    "That [KEYSTONELEVEL] didn't work out. [NEMESIS], what part did you find most difficult?",
+                    "We missed the timer on that [KEYSTONELEVEL]. [NEMESIS], any suggestions for our next attempt?",
+                    "That [KEYSTONELEVEL] was a learning experience. [NEMESIS], what do you think we could have done differently?",
+                    "[NEMESIS], we didn't quite make it through that [KEYSTONELEVEL]. What areas do you think we need to work on?"
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Great job on timing that [KEYSTONELEVEL]! [NEMESIS], nice work.",
+                    "We did it! [KEYSTONELEVEL] completed in time. Good job, [NEMESIS].",
+                    "Excellent work on the [KEYSTONELEVEL], team. [NEMESIS], well played.",
+                    "Success! [KEYSTONELEVEL] timed. [NEMESIS], you handled that well.",
+                    "[KEYSTONELEVEL] completed within the timer. Nice contribution, [NEMESIS].",
+                    "We've successfully timed the [KEYSTONELEVEL]. Good work, [NEMESIS].",
+                    "That's a timed [KEYSTONELEVEL]! [NEMESIS], you did your part well.",
+                    "Nicely done on timing the [KEYSTONELEVEL]. [NEMESIS], good job.",
+                    "[KEYSTONELEVEL] completed successfully. [NEMESIS], you played your role well.",
+                    "We've timed the [KEYSTONELEVEL]! [NEMESIS], thanks for your contribution."
+                }
+            }
+        },
+        ["COMBATLOG"] = {
+            ["INTERRUPT"] = {
+                ["SELF"] = {
+                    "Interrupted [TARGET]'s [SPELL]. [NEMESIS], can you take the next one?",
+                    "I've stopped [TARGET]'s [SPELL]. [NEMESIS], keep an eye out for more casts.",
+                    "Just interrupted [TARGET]'s [SPELL]. [NEMESIS], your interrupt up soon?",
+                    "[TARGET]'s [SPELL] interrupted by me. [NEMESIS], let's coordinate our interrupts.",
+                    "Got that interrupt on [TARGET]'s [SPELL]. [NEMESIS], you're up next.",
+                    "I've handled [TARGET]'s [SPELL]. [NEMESIS], be ready for the next cast.",
+                    "Managed to interrupt [TARGET]'s [SPELL]. [NEMESIS], watch for more.",
+                    "[TARGET]'s [SPELL] stopped. [NEMESIS], let's keep this rotation going.",
+                    "I've taken care of [TARGET]'s [SPELL]. [NEMESIS], your turn coming up.",
+                    "Interrupted [TARGET]'s [SPELL]. [NEMESIS], stay alert for the next one."
+                },
+                ["NEMESIS"] = {
+                    "Good interrupt on [TARGET]'s [SPELL], [NEMESIS].",
+                    "Nice catch on [TARGET]'s [SPELL], [NEMESIS].",
+                    "Well done interrupting [TARGET]'s [SPELL], [NEMESIS].",
+                    "[NEMESIS], good job stopping [TARGET]'s [SPELL].",
+                    "Thanks for catching [TARGET]'s [SPELL], [NEMESIS].",
+                    "Solid interrupt on [TARGET]'s [SPELL], [NEMESIS].",
+                    "[NEMESIS], nice work on interrupting [TARGET]'s [SPELL].",
+                    "Good awareness on [TARGET]'s [SPELL], [NEMESIS].",
+                    "Thanks for handling [TARGET]'s [SPELL], [NEMESIS].",
+                    "[NEMESIS], well done on that interrupt of [TARGET]'s [SPELL]."
+                }
+            },
+            ["DISPEL"] = {
+                ["SELF"] = {
+                    "Dispelled that effect. [NEMESIS], watch for more we need to remove.",
+                    "I've removed that spell. [NEMESIS], your dispel ready?",
+                    "Just dispelled that. [NEMESIS], keep an eye out for more effects.",
+                    "Harmful effect removed by me. [NEMESIS], let's coordinate our dispels.",
+                    "Got that dispel. [NEMESIS], you're up next if needed.",
+                    "I've handled that dispel. [NEMESIS], be ready for the next one.",
+                    "Managed to dispel that effect. [NEMESIS], watch for more.",
+                    "That harmful spell has been removed. [NEMESIS], let's keep this up.",
+                    "I've taken care of that dispel. [NEMESIS], your turn coming up.",
+                    "Effect dispelled. [NEMESIS], stay alert for the next one."
+                },
+                ["NEMESIS"] = {
+                    "Good dispel, [NEMESIS].",
+                    "Nice removal of that effect, [NEMESIS].",
+                    "Well done on that dispel, [NEMESIS].",
+                    "[NEMESIS], good job removing that harmful spell.",
+                    "Thanks for that dispel, [NEMESIS].",
+                    "Solid dispel work, [NEMESIS].",
+                    "[NEMESIS], nice work on that dispel.",
+                    "Good awareness on that harmful effect, [NEMESIS].",
+                    "Thanks for handling that dispel, [NEMESIS].",
+                    "[NEMESIS], well done on that dispel."
+                }
+            },
+            ["HARDCC"] = {
+                ["SELF"] = {
+                    "CC'd that target. [NEMESIS], watch for more we need to control.",
+                    "I've applied crowd control. [NEMESIS], your CC ready?",
+                    "Just CC'd that enemy. [NEMESIS], keep an eye out for more targets.",
+                    "Crowd control applied by me. [NEMESIS], let's coordinate our CC.",
+                    "Got that CC. [NEMESIS], you're up next if needed.",
+                    "I've handled that crowd control. [NEMESIS], be ready for the next one.",
+                    "Managed to CC that target. [NEMESIS], watch for more.",
+                    "That mob has been controlled. [NEMESIS], let's keep this up.",
+                    "I've taken care of that CC. [NEMESIS], your turn coming up.",
+                    "Crowd control applied. [NEMESIS], stay alert for the next target."
+                },
+                ["NEMESIS"] = {
+                    "Good CC, [NEMESIS].",
+                    "Nice control of that target, [NEMESIS].",
+                    "Well done on that crowd control, [NEMESIS].",
+                    "[NEMESIS], good job controlling that mob.",
+                    "Thanks for that CC, [NEMESIS].",
+                    "Solid crowd control work, [NEMESIS].",
+                    "[NEMESIS], nice work on that CC.",
+                    "Good awareness on that crowd control, [NEMESIS].",
+                    "Thanks for handling that CC, [NEMESIS].",
+                    "[NEMESIS], well done on that crowd control."
+                }
+            }
+        }
+    },
+
+    -- Index 6: Slightly positive, but still neutral
+    {
+        ["BOSS"] = {
+            ["FAIL"] = {
+                ["NA"] = {
+                    "That was a good effort, [NEMESIS]. We're making progress, even if it doesn't feel like it.",
+                    "[NEMESIS], I think we're getting closer. What positives did you see in that attempt?",
+                    "We're learning with each try, [NEMESIS]. What do you think we did better this time?",
+                    "Not quite there yet, but I see improvement, [NEMESIS]. What are your thoughts?",
+                    "We're on the right track, [NEMESIS]. Any ideas on what to focus on next?",
+                    "That attempt was better, [NEMESIS]. What part do you think went well?",
+                    "We're making strides, [NEMESIS]. What aspect of the fight are you feeling more confident about?",
+                    "I saw some good moments there, [NEMESIS]. What do you think was our strongest point?",
+                    "We're getting closer, [NEMESIS]. What part of our strategy do you think is working best?",
+                    "That was a solid try, [NEMESIS]. What do you think we should build on for the next attempt?"
+                }
+            },
+            ["DEATH"] = {
+                ["SELF"] = {
+                    "Oops, my mistake there. [NEMESIS], did you notice anything that could help me avoid that next time?",
+                    "Well, I zigged when I should have zagged. [NEMESIS], any advice for my next attempt?",
+                    "[NEMESIS], I seem to have miscalculated there. Did you spot where I went wrong?",
+                    "I'll do better next time. [NEMESIS], any suggestions on how I can improve?",
+                    "Learning experience for me there. [NEMESIS], what would you recommend I do differently?",
+                    "My bad on that one. [NEMESIS], did you see any warning signs I might have missed?",
+                    "I'll need to adjust my approach there. [NEMESIS], any tips based on what you observed?",
+                    "That didn't go as planned for me. [NEMESIS], what would you suggest I watch out for next time?",
+                    "I'll aim to avoid that in the future. [NEMESIS], any insights on how I could position better?",
+                    "Room for improvement on my part there. [NEMESIS], what do you think I should focus on?"
+                },
+                ["NEMESIS"] = {
+                    "[NEMESIS] is down, but they put up a good fight. How can we build on their efforts?",
+                    "We've lost [NEMESIS], but their contribution was valuable. How do we move forward from here?",
+                    "[NEMESIS] has fallen, but they helped us learn. What can we take from their performance?",
+                    "It looks like [NEMESIS] is out, but they gave it their all. How do we adapt our strategy?",
+                    "[NEMESIS] is no longer with us, but their efforts weren't in vain. What's our next step?",
+                    "[NEMESIS] is down, but they showed some good moves. How can we incorporate what worked?",
+                    "We've lost [NEMESIS], but they had some strong moments. What can we learn from their approach?",
+                    "[NEMESIS] has fallen, but not before making some progress. How do we build on that?",
+                    "It seems [NEMESIS] is out, but they contributed well. How should we adjust our tactics?",
+                    "[NEMESIS] is down, but they helped us understand the fight better. What's our plan moving forward?"
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] is down. [NEMESIS], what positive aspects of their performance can we build on?",
+                    "We've lost [BYSTANDER]. [NEMESIS], how can we adapt our strategy to cover their role?",
+                    "[BYSTANDER] has fallen. [NEMESIS], what did they do well that we should try to continue?",
+                    "It looks like [BYSTANDER] is out. [NEMESIS], how can we adjust to maintain our momentum?",
+                    "[BYSTANDER] is no longer with us. [NEMESIS], what's your take on how we should proceed?",
+                    "[BYSTANDER] is down. [NEMESIS], did you notice anything in their approach we could use?",
+                    "We've lost [BYSTANDER]. [NEMESIS], how do you think we can compensate for their absence?",
+                    "[BYSTANDER] has fallen. [NEMESIS], what aspects of their strategy should we try to maintain?",
+                    "It seems [BYSTANDER] is out. [NEMESIS], how do you suggest we redistribute responsibilities?",
+                    "[BYSTANDER] is down. [NEMESIS], what part of their role do you think is most critical for us to cover?"
+                }
+            },
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, let's give this another go. [NEMESIS], I believe we can do better this time.",
+                    "Here we go again. [NEMESIS], let's apply what we've learned so far.",
+                    "Boss time, everyone. [NEMESIS], I'm confident in our ability to improve.",
+                    "Let's do this. [NEMESIS], remember the progress we've made and let's build on it.",
+                    "[NEMESIS], we're getting better with each try. Let's see what we can accomplish this time.",
+                    "Okay, [NEMESIS], I think we're close to cracking this. Ready to give it another shot?",
+                    "Boss incoming. [NEMESIS], let's focus on executing our strategy even better this time.",
+                    "Here we go. [NEMESIS], I have a good feeling about this attempt.",
+                    "It's time to face the boss. [NEMESIS], let's show what we've learned from our previous tries.",
+                    "[NEMESIS], ready for another round? I think we're on the verge of a breakthrough here."
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Excellent work, everyone! [NEMESIS], your performance really stood out this time.",
+                    "We did it! [NEMESIS], I saw some great improvements in your gameplay.",
+                    "Victory at last! [NEMESIS], your efforts really paid off in that fight.",
+                    "Great job, team. [NEMESIS], you handled your role exceptionally well.",
+                    "Success! [NEMESIS], I noticed you adapting really well to the fight mechanics.",
+                    "We've done it! [NEMESIS], your contribution was key to our victory.",
+                    "Fantastic work, everyone. [NEMESIS], you were really in sync with the group that time.",
+                    "That's how it's done! [NEMESIS], I could see your focus and it made a difference.",
+                    "We've conquered the boss! [NEMESIS], your improvement was clear in that attempt.",
+                    "Victory is ours! [NEMESIS], you really stepped up your game for that one. Well done!"
+                }
+            }
+        },
+        ["GROUP"] = {
+            ["JOIN"] = {
+                ["NEMESIS"] = {
+                    "Welcome to the group, [NEMESIS]! Looking forward to working with you.",
+                    "[NEMESIS] has joined us. Great to have you on board!",
+                    "Greetings, [NEMESIS]! Glad you could join us for this run.",
+                    "Hey [NEMESIS], welcome to the team! Your skills will be a great addition.",
+                    "[NEMESIS] is here. Welcome! I think you'll fit in well with our group.",
+                    "Good to have you with us, [NEMESIS]! Ready for some adventure?",
+                    "Welcome, [NEMESIS]! I have a feeling you'll be a valuable asset to our team.",
+                    "[NEMESIS] has joined the party. Excellent! Let's see what we can accomplish together.",
+                    "Hey everyone, [NEMESIS] is joining us. I think this is going to be a great run!",
+                    "Welcome to the group, [NEMESIS]. With you here, I think we've got a solid team composition."
+                },
+                ["SELF"] = {
+                    "Hello, [NEMESIS]! I'm looking forward to working together effectively.",
+                    "Ah, [NEMESIS], good to see you again. I think we'll make a great team.",
+                    "Greetings, [NEMESIS]. I'm excited about the potential of our group.",
+                    "[NEMESIS], it's good to be in a group with you. Let's aim for a productive run.",
+                    "Hello there, [NEMESIS]. I have a good feeling about our team's synergy.",
+                    "Nice to see you, [NEMESIS]. I think we have a strong group here.",
+                    "[NEMESIS], hello! I'm optimistic about what we can achieve together.",
+                    "Greetings, [NEMESIS]. I'm looking forward to seeing how our skills complement each other.",
+                    "Hey [NEMESIS], glad to be grouped with you. I think we'll work well together.",
+                    "Hello, [NEMESIS]. I'm excited to see what we can accomplish as a team."
+                },
+                ["BYSTANDER"] = {
+                    "Welcome, [BYSTANDER]! Just to let you know, [NEMESIS] is also part of our group. I think we have a strong team.",
+                    "Hey [BYSTANDER], glad you could join. We have [NEMESIS] with us as well. This should be a good run!",
+                    "[BYSTANDER], welcome to the team. [NEMESIS] is here too. I'm looking forward to seeing how we all work together.",
+                    "Good to have you, [BYSTANDER]. [NEMESIS] is part of our group as well. I think we've got a solid composition.",
+                    "Welcome aboard, [BYSTANDER]. Just to let you know, [NEMESIS] is with us. I have a good feeling about our group.",
+                    "[BYSTANDER], thanks for joining. [NEMESIS] is in the group too. I think we've got all the bases covered.",
+                    "Glad you're here, [BYSTANDER]. We've got [NEMESIS] in the team as well. This should be an interesting run!",
+                    "Hey [BYSTANDER], welcome. [NEMESIS] is also part of our group. I'm excited to see how our skills complement each other.",
+                    "[BYSTANDER], welcome to the group. We're also running with [NEMESIS]. I think we have a well-rounded team.",
+                    "Good to see you, [BYSTANDER]. Just so you know, [NEMESIS] is part of our team too. I'm optimistic about what we can achieve together."
+                }
+            },
+            ["LEAVE"] = {
+                ["NEMESIS"] = {
+                    "[NEMESIS] has left the group. Thanks for your contributions, and take care!",
+                    "Looks like [NEMESIS] is heading out. It was great having you with us!",
+                    "[NEMESIS] has departed. Thanks for being part of the team, safe travels!",
+                    "And [NEMESIS] is off. We appreciate your efforts, all the best!",
+                    "[NEMESIS] has left us. Thanks for your help, until next time!",
+                    "Seems [NEMESIS] is moving on. It was a pleasure grouping with you!",
+                    "[NEMESIS] has exited the group. Thanks for your contributions, take care!",
+                    "Looks like [NEMESIS] is done for now. It was great having you along, see you around!",
+                    "[NEMESIS] has left the party. Thanks for your help, safe journeys!",
+                    "And there goes [NEMESIS]. We appreciate your time with us, till we meet again!"
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] has left the group. [NEMESIS], looks like we'll need to adjust our strategy, but I think we can manage.",
+                    "Seems [BYSTANDER] is heading out. [NEMESIS], any thoughts on how we should proceed? I'm sure we can adapt.",
+                    "[BYSTANDER] has departed. [NEMESIS], this might change our approach a bit, but I'm confident in our ability to adjust.",
+                    "And [BYSTANDER] is off. [NEMESIS], we may need to rethink our roles, but I think we're up for the challenge.",
+                    "[BYSTANDER] has left us. [NEMESIS], how do you think we should compensate? I believe we can still perform well.",
+                    "Looks like [BYSTANDER] is done for now. [NEMESIS], any ideas on adapting our plan? I'm sure we can make it work.",
+                    "[BYSTANDER] has exited the group. [NEMESIS], we might need to reevaluate our strategy, but I'm optimistic about our chances.",
+                    "[BYSTANDER] has left the party. [NEMESIS], how should we adjust to this change? I think we have the skills to overcome this.",
+                    "And there goes [BYSTANDER]. [NEMESIS], what's your take on our next move? I'm confident we can still succeed.",
+                    "[BYSTANDER] has moved on. [NEMESIS], how do you think we should reorganize? I believe we can turn this into an opportunity."
+                }
+            }
+        },
+        ["CHALLENGE"] = {
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, let's start this [KEYSTONELEVEL]. [NEMESIS], I have confidence in our abilities.",
+                    "Here we go, [KEYSTONELEVEL] starting. [NEMESIS], I think we've got a good chance at this one.",
+                    "[KEYSTONELEVEL] time. [NEMESIS], let's focus on working together effectively.",
+                    "Let's do this [KEYSTONELEVEL]. [NEMESIS], I believe we have the skills to succeed.",
+                    "[NEMESIS], as we start this [KEYSTONELEVEL], remember that good communication will be key to our success.",
+                    "We're beginning the [KEYSTONELEVEL]. [NEMESIS], I'm optimistic about our chances.",
+                    "[KEYSTONELEVEL] incoming. [NEMESIS], let's show what we're capable of as a team.",
+                    "Here we go with the [KEYSTONELEVEL]. [NEMESIS], I think we're well-prepared for this challenge.",
+                    "It's [KEYSTONELEVEL] time. [NEMESIS], let's approach this with confidence in our abilities.",
+                    "[NEMESIS], as we start this [KEYSTONELEVEL], I'm looking forward to seeing how well we can perform together."
+                }
+            },
+            ["FAIL"] = {
+                ["NA"] = {
+                    "We didn't quite make it through that [KEYSTONELEVEL], but I saw some good efforts. [NEMESIS], what do you think went well?",
+                    "That [KEYSTONELEVEL] was challenging, but we learned from it. [NEMESIS], what part do you think we improved on?",
+                    "We fell short on that [KEYSTONELEVEL], but there were some good moments. [NEMESIS], any positive takeaways?",
+                    "[NEMESIS], that [KEYSTONELEVEL] was tough, but I think we made progress. What aspect do you feel we handled better this time?",
+                    "We didn't complete the [KEYSTONELEVEL] in time, but I noticed some improvements. [NEMESIS], where do you think we showed the most growth?",
+                    "That [KEYSTONELEVEL] didn't work out, but we gained valuable experience. [NEMESIS], what part do you think we understood better this run?",
+                    "We missed the timer on that [KEYSTONELEVEL], but there were some strong moments. [NEMESIS], what do you think was our best section?",
+                    "That [KEYSTONELEVEL] was a learning experience. [NEMESIS], what positive aspects did you notice in our performance?",
+                    "[NEMESIS], we didn't quite make it through that [KEYSTONELEVEL], but I saw potential. What areas do you think we're getting closer on?",
+                    "We didn't time the [KEYSTONELEVEL], but I feel we're improving. [NEMESIS], what part of our strategy do you think is starting to come together?"
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Great job on timing that [KEYSTONELEVEL]! [NEMESIS], your performance really contributed to our success.",
+                    "We did it! [KEYSTONELEVEL] completed in time. [NEMESIS], I noticed some excellent plays from you.",
+                    "Excellent work on the [KEYSTONELEVEL], team. [NEMESIS], your skills really shone through in this run.",
+                    "Success! [KEYSTONELEVEL] timed. [NEMESIS], you handled your role exceptionally well.",
+                    "[KEYSTONELEVEL] completed within the timer. [NEMESIS], your contribution was key to our victory.",
+                    "We've successfully timed the [KEYSTONELEVEL]. [NEMESIS], I saw some great decision-making from you.",
+                    "That's a timed [KEYSTONELEVEL]! [NEMESIS], you really stepped up when it counted.",
+                    "Nicely done on timing the [KEYSTONELEVEL]. [NEMESIS], your performance was crucial to our success.",
+                    "[KEYSTONELEVEL] completed successfully. [NEMESIS], you played your role perfectly.",
+                    "We've timed the [KEYSTONELEVEL]! [NEMESIS], your efforts really paid off in this run."
+                }
+            }
+        },
+        ["COMBATLOG"] = {
+            ["INTERRUPT"] = {
+                ["SELF"] = {
+                    "Interrupted [TARGET]'s [SPELL]. [NEMESIS], nice job on watching for casts, let's keep it up.",
+                    "I've stopped [TARGET]'s [SPELL]. [NEMESIS], you're doing great with interrupt awareness.",
+                    "Just interrupted [TARGET]'s [SPELL]. [NEMESIS], our coordination on interrupts is improving.",
+                    "[TARGET]'s [SPELL] interrupted by me. [NEMESIS], I appreciate your attentiveness to castbars.",
+                    "Got that interrupt on [TARGET]'s [SPELL]. [NEMESIS], we're getting better at this.",
+                    "I've handled [TARGET]'s [SPELL]. [NEMESIS], your interrupt timing has been spot on.",
+                    "Managed to interrupt [TARGET]'s [SPELL]. [NEMESIS], we're working well together on these.",
+                    "[TARGET]'s [SPELL] stopped. [NEMESIS], our interrupt rotation is getting smoother.",
+                    "I've taken care of [TARGET]'s [SPELL]. [NEMESIS], you're doing a great job with interrupt management.",
+                    "Interrupted [TARGET]'s [SPELL]. [NEMESIS], I'm impressed with our interrupt coordination."
+                },
+                ["NEMESIS"] = {
+                    "Excellent interrupt on [TARGET]'s [SPELL], [NEMESIS]. Your timing was perfect.",
+                    "Great catch on [TARGET]'s [SPELL], [NEMESIS]. Your awareness is improving.",
+                    "Well done interrupting [TARGET]'s [SPELL], [NEMESIS]. That was crucial.",
+                    "[NEMESIS], fantastic job stopping [TARGET]'s [SPELL]. You're really on point with these.",
+                    "Brilliant interrupt on [TARGET]'s [SPELL], [NEMESIS]. Your reactions are getting faster.",
+                    "Superb work catching [TARGET]'s [SPELL], [NEMESIS]. You're really getting the hang of this.",
+                    "[NEMESIS], excellent interrupt on [TARGET]'s [SPELL]. Your contribution is making a big difference.",
+                    "Great awareness on [TARGET]'s [SPELL], [NEMESIS]. You're becoming quite the interrupt specialist.",
+                    "Thanks for handling [TARGET]'s [SPELL], [NEMESIS]. Your interrupt game is strong.",
+                    "[NEMESIS], outstanding job on that interrupt of [TARGET]'s [SPELL]. Keep it up!"
+                }
+            },
+            ["DISPEL"] = {
+                ["SELF"] = {
+                    "Dispelled that effect. [NEMESIS], you're doing great at spotting what needs to be removed.",
+                    "I've removed that spell. [NEMESIS], our dispel coordination is improving.",
+                    "Just dispelled that. [NEMESIS], you're getting better at prioritizing dispels.",
+                    "Harmful effect removed by me. [NEMESIS], I appreciate your attentiveness to debuffs.",
+                    "Got that dispel. [NEMESIS], we're handling these effects more efficiently now.",
+                    "I've handled that dispel. [NEMESIS], your awareness of what needs cleansing is impressive.",
+                    "Managed to dispel that effect. [NEMESIS], we're working well together on these.",
+                    "That harmful spell has been removed. [NEMESIS], our dispel management is improving.",
+                    "I've taken care of that dispel. [NEMESIS], you're doing a great job with debuff awareness.",
+                    "Effect dispelled. [NEMESIS], I'm impressed with our coordination on removing harmful spells."
+                },
+                ["NEMESIS"] = {
+                    "Excellent dispel, [NEMESIS]. Your timing was perfect.",
+                    "Great removal of that effect, [NEMESIS]. Your awareness is improving.",
+                    "Well done on that dispel, [NEMESIS]. That was crucial.",
+                    "[NEMESIS], fantastic job removing that harmful spell. You're really on point with these.",
+                    "Brilliant dispel work, [NEMESIS]. Your reactions are getting faster.",
+                    "Superb job cleansing that effect, [NEMESIS]. You're really getting the hang of this.",
+                    "[NEMESIS], excellent dispel. Your contribution is making a big difference.",
+                    "Great awareness on that harmful effect, [NEMESIS]. You're becoming quite the dispel specialist.",
+                    "Thanks for handling that dispel, [NEMESIS]. Your cleansing game is strong.",
+                    "[NEMESIS], outstanding job on that dispel. Keep up the good work!"
+                }
+            },
+            ["HARDCC"] = {
+                ["SELF"] = {
+                    "CC'd that target. [NEMESIS], you're doing great at identifying priority CC targets.",
+                    "I've applied crowd control. [NEMESIS], our CC coordination is improving.",
+                    "Just CC'd that enemy. [NEMESIS], you're getting better at managing crowd control.",
+                    "Crowd control applied by me. [NEMESIS], I appreciate your attentiveness to CC needs.",
+                    "Got that CC. [NEMESIS], we're handling crowd control more efficiently now.",
+                    "I've handled that crowd control. [NEMESIS], your awareness of CC priorities is impressive.",
+                    "Managed to CC that target. [NEMESIS], we're working well together on controlling the fight.",
+                    "That mob has been controlled. [NEMESIS], our CC management is improving.",
+                    "I've taken care of that CC. [NEMESIS], you're doing a great job with crowd control awareness.",
+                    "Crowd control applied. [NEMESIS], I'm impressed with our coordination on managing mobs."
+                },
+                ["NEMESIS"] = {
+                    "Excellent CC, [NEMESIS]. Your timing was perfect.",
+                    "Great control of that target, [NEMESIS]. Your awareness is improving.",
+                    "Well done on that crowd control, [NEMESIS]. That was crucial.",
+                    "[NEMESIS], fantastic job controlling that mob. You're really on point with these.",
+                    "Brilliant CC work, [NEMESIS]. Your reactions are getting faster.",
+                    "Superb job on that crowd control, [NEMESIS]. You're really getting the hang of this.",
+                    "[NEMESIS], excellent CC. Your contribution is making a big difference.",
+                    "Great awareness on that crowd control, [NEMESIS]. You're becoming quite the CC specialist.",
+                    "Thanks for handling that CC, [NEMESIS]. Your control game is strong.",
+                    "[NEMESIS], outstanding job on that crowd control. Keep up the good work!"
+                }
+            }
+        }
+    },
+
+    -- Index 7: Moderately positive
+    {
+        ["BOSS"] = {
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Nice try, [NEMESIS]! We're getting closer with each attempt. Let's keep that momentum going!",
+                    "Good effort, [NEMESIS]. We learned a lot from that run. What do you think we should focus on next?",
+                    "[NEMESIS], I saw some real improvement there. We're on the right track, don't you think?",
+                    "That was better, [NEMESIS]! We're making progress. Any ideas on how to push it further?",
+                    "We're getting there, [NEMESIS]! That attempt showed real promise. What shall we refine for next time?",
+                    "I'm seeing improvement, [NEMESIS]! What part of the fight do you feel more confident about now?",
+                    "That was our best try yet, [NEMESIS]! What do you think was the key to our improved performance?",
+                    "We're so close, [NEMESIS]! I can feel it. What do you think could push us over the edge to victory?",
+                    "Great effort, [NEMESIS]! We're ironing out the kinks. Any thoughts on our next strategic adjustment?",
+                    "That attempt was promising, [NEMESIS]! We're definitely on the right path. What's your take on our progress?"
+                }
+            },
+            ["DEATH"] = {
+                ["SELF"] = {
+                    "Oops, my bad there. [NEMESIS], I appreciate your efforts. Any tips for me on the next run?",
+                    "Well, I zigged when I should have zagged. [NEMESIS], your support was great. How can I improve?",
+                    "[NEMESIS], thanks for having my back. I'll do better next time. Any advice?",
+                    "I'll get it right next time. [NEMESIS], your gameplay was solid. Any suggestions for me?",
+                    "Learning experience for me. [NEMESIS], I admire your resilience. What would you recommend I change?",
+                    "My mistake there. [NEMESIS], I appreciate your patience. How can I better support the team next time?",
+                    "I'll aim to avoid that in the future. [NEMESIS], your performance was great. Any insights on better positioning?",
+                    "Room for improvement on my part. [NEMESIS], you're doing well. What do you think I should focus on?",
+                    "I'll work on that for next time. [NEMESIS], your gameplay is inspiring. Any tips for avoiding that in the future?",
+                    "Not my best moment. [NEMESIS], I appreciate your steady performance. How can I better complement your style?"
+                },
+                ["NEMESIS"] = {
+                    "[NEMESIS] gave it their all. Their effort was commendable. How can we honor their contribution?",
+                    "We've lost [NEMESIS], but their performance was strong. How do we build on their good work?",
+                    "[NEMESIS] fought bravely. Their strategy was sound. What can we learn from their approach?",
+                    "[NEMESIS] is down, but they showed real skill. How can we incorporate their tactics?",
+                    "[NEMESIS]'s efforts were impressive. Let's use their example to push forward. What's our plan?",
+                    "[NEMESIS] gave us their best. Their strategy was clever. How can we adapt it for our next try?",
+                    "We've lost [NEMESIS], but not before they made significant progress. How do we capitalize on that?",
+                    "[NEMESIS] fought valiantly. Their technique was admirable. What aspects can we adopt?",
+                    "[NEMESIS] is down, but they've shown us a path forward. How do we follow through on their strategy?",
+                    "[NEMESIS]'s performance was noteworthy. Let's honor their effort by refining our approach. Ideas?"
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] is down, but they contributed greatly. [NEMESIS], how can we build on their efforts?",
+                    "We've lost [BYSTANDER], but their performance was admirable. [NEMESIS], any thoughts on how to proceed?",
+                    "[BYSTANDER] has fallen, but not before making significant progress. [NEMESIS], how should we adapt?",
+                    "[BYSTANDER] is out, but they showed real skill. [NEMESIS], how can we incorporate their tactics?",
+                    "[BYSTANDER]'s efforts were impressive. [NEMESIS], let's use their example to push forward. What's your take?",
+                    "[BYSTANDER] gave it their all. [NEMESIS], their effort was commendable. How can we honor their contribution?",
+                    "We've lost [BYSTANDER], but their strategy was sound. [NEMESIS], what can we learn from their approach?",
+                    "[BYSTANDER] fought bravely. [NEMESIS], their technique was admirable. What aspects can we adopt?",
+                    "[BYSTANDER] is down, but they've shown us a path forward. [NEMESIS], how do we follow through on their strategy?",
+                    "[BYSTANDER]'s performance was noteworthy. [NEMESIS], let's honor their effort by refining our approach. Ideas?"
+                }
+            },
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, let's do this! [NEMESIS], I believe in our ability to overcome this challenge.",
+                    "Here we go again. [NEMESIS], I'm confident we can apply what we've learned and succeed.",
+                    "Boss time, everyone. [NEMESIS], your improvements have been impressive. Let's show what we can do!",
+                    "Let's give it our all. [NEMESIS], your dedication is inspiring. I think this could be our time to shine!",
+                    "[NEMESIS], we're getting stronger with each attempt. I have a good feeling about this one!",
+                    "Okay, [NEMESIS], we're so close to cracking this. Your perseverance is admirable. Let's make it happen!",
+                    "Boss incoming. [NEMESIS], your strategy last time was spot on. Let's refine it and go for the win!",
+                    "Here we go. [NEMESIS], I'm excited to see how we'll improve this time. We've got this!",
+                    "It's time to face the boss. [NEMESIS], your progress has been remarkable. Let's put it all together!",
+                    "[NEMESIS], ready for another round? Your positive attitude is contagious. I think we're on the verge of success!"
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Fantastic work, everyone! [NEMESIS], your performance was outstanding. You really stepped up!",
+                    "We did it! [NEMESIS], your improvements were key to our victory. Well done!",
+                    "Victory at last! [NEMESIS], your perseverance paid off. Your contributions were crucial.",
+                    "Great job, team. [NEMESIS], you handled your role exceptionally well. I'm impressed!",
+                    "Success! [NEMESIS], your adaptability to the fight mechanics was remarkable. Excellent work!",
+                    "We've done it! [NEMESIS], your efforts were instrumental in our triumph. Kudos to you!",
+                    "Incredible teamwork, everyone. [NEMESIS], you were really in sync with the group. Your coordination was impeccable!",
+                "That's how it's done! [NEMESIS], your focus and execution were spot on. You should be proud!",
+                "We've conquered the boss! [NEMESIS], your improvement was evident. You've come so far!",
+                "Victory is ours! [NEMESIS], you really rose to the occasion. Your performance was stellar!"
+            }
+        }
+    },
+    ["GROUP"] = {
+        ["JOIN"] = {
+            ["NEMESIS"] = {
+                "Welcome to the group, [NEMESIS]! We're thrilled to have you join us. Your skills will be a great asset!",
+                "[NEMESIS] has joined us. Excellent! Your reputation precedes you, and we're excited to work with you.",
+                "Greetings, [NEMESIS]! We're delighted you could join us. Your expertise will surely enhance our team.",
+                "Hey [NEMESIS], welcome aboard! Your addition to the team is going to make this run even more exciting.",
+                "[NEMESIS] is here. Fantastic! Your presence is sure to boost our group's performance.",
+                "Great to have you with us, [NEMESIS]! Your skills are just what we needed to round out our team.",
+                "Welcome, [NEMESIS]! Your joining has really strengthened our group composition. This is going to be fun!",
+                "[NEMESIS] has joined the party. Wonderful! Your abilities will complement our team perfectly.",
+                "Hey everyone, [NEMESIS] is joining us. This is excellent news! We've got a powerhouse team now.",
+                "Welcome to the group, [NEMESIS]. With your expertise on board, I'm confident we'll achieve great things together!"
+            },
+            ["SELF"] = {
+                "Hello, [NEMESIS]! I'm really looking forward to working alongside you. I think we'll make a great team!",
+                "Ah, [NEMESIS], it's great to see you again. Your skills always impress me. This should be a fantastic run!",
+                "Greetings, [NEMESIS]. I'm excited about the potential of our group with you here. Let's make some magic happen!",
+                "[NEMESIS], it's a pleasure to be in a group with you. Your expertise is going to be invaluable.",
+                "Hello there, [NEMESIS]. I have a really good feeling about our team's synergy with you on board.",
+                "Nice to see you, [NEMESIS]. Your presence really strengthens our group. I'm eager to get started!",
+                "[NEMESIS], hello! I'm thrilled about what we can achieve together. Your skills are always impressive.",
+                "Greetings, [NEMESIS]. I'm looking forward to seeing how our abilities complement each other. This is going to be great!",
+                "Hey [NEMESIS], I'm glad to be grouped with you. Your reputation precedes you, and I'm excited to learn from you.",
+                "Hello, [NEMESIS]. I'm really enthusiastic about our potential as a team. Your expertise is going to be crucial to our success!"
+            },
+            ["BYSTANDER"] = {
+                "Welcome, [BYSTANDER]! I'm excited to let you know that [NEMESIS] is also part of our group. We've got a stellar team here!",
+                "Hey [BYSTANDER], great to have you join us. With you and [NEMESIS] on board, I think we're in for an amazing run!",
+                "[BYSTANDER], welcome to the team! [NEMESIS] is here too, and I'm really looking forward to seeing how we all work together.",
+                "Fantastic to have you, [BYSTANDER]. With [NEMESIS] also in our group, I think we've got all the skills we need for success.",
+                "Welcome aboard, [BYSTANDER]! Just to let you know, we've got [NEMESIS] with us too. I have a great feeling about our group dynamic!",
+                "[BYSTANDER], thanks for joining us. With [NEMESIS] also here, I think we've got a powerhouse team assembled!",
+                "Glad you're here, [BYSTANDER]! We've got [NEMESIS] in the team as well. This combination of skills is really exciting!",
+                "Hey [BYSTANDER], welcome to the group! [NEMESIS] is also part of our team. I'm thrilled to see how our abilities will complement each other.",
+                "[BYSTANDER], welcome aboard! We're also running with [NEMESIS]. I think we have an incredibly well-rounded team here.",
+                "Great to see you, [BYSTANDER]! Just so you know, [NEMESIS] is part of our team too. I'm really optimistic about what we can achieve together!"
+            }
+        },
+        ["LEAVE"] = {
+            ["NEMESIS"] = {
+                "[NEMESIS] has left the group. Thank you so much for your valuable contributions. You really made a difference!",
+                "Looks like [NEMESIS] is heading out. It was fantastic having you with us. Your skills were truly impressive!",
+                "[NEMESIS] has departed. Thanks for being such an integral part of the team. Your expertise was invaluable!",
+                "And [NEMESIS] is off. We really appreciate all your efforts. You've set a high bar for performance!",
+                "[NEMESIS] has left us. Thanks for your amazing help. Your strategies and gameplay were top-notch!",
+                "Seems [NEMESIS] is moving on. It was an absolute pleasure grouping with you. Your skills are remarkable!",
+                "[NEMESIS] has exited the group. Thanks for your outstanding contributions. You've really elevated our gameplay!",
+                "Looks like [NEMESIS] is done for now. It was great having you along. Your expertise made a huge impact!",
+                "[NEMESIS] has left the party. Thanks for your exceptional help. Your performance was truly impressive!",
+                "And there goes [NEMESIS]. We sincerely appreciate your time with us. Your skills and teamwork were exemplary!"
+            },
+            ["BYSTANDER"] = {
+                "[BYSTANDER] has left the group. [NEMESIS], their contributions were valuable, but I'm confident in our ability to adapt and succeed.",
+                "Seems [BYSTANDER] is heading out. [NEMESIS], any thoughts on how we should proceed? I'm sure with your skills, we can overcome this change.",
+                "[BYSTANDER] has departed. [NEMESIS], this might alter our approach a bit, but I'm excited to see how we can innovate our strategy.",
+                "And [BYSTANDER] is off. [NEMESIS], we may need to rethink our roles, but I see this as an opportunity to showcase our versatility.",
+                "[BYSTANDER] has left us. [NEMESIS], how do you think we should compensate? I'm confident in our ability to rise to the challenge.",
+                "Looks like [BYSTANDER] is done for now. [NEMESIS], any ideas on adapting our plan? I'm sure with your expertise, we can make it work even better.",
+                "[BYSTANDER] has exited the group. [NEMESIS], we might need to reevaluate our strategy, but I'm optimistic about our chances with your skills.",
+                "[BYSTANDER] has left the party. [NEMESIS], how should we adjust to this change? I think we have the talent to turn this into an advantage.",
+                "And there goes [BYSTANDER]. [NEMESIS], what's your take on our next move? I'm confident that with your abilities, we can still achieve great things.",
+                "[BYSTANDER] has moved on. [NEMESIS], how do you think we should reorganize? I see this as a chance to demonstrate our adaptability and teamwork."
+            }
+        }
+    },
+    ["CHALLENGE"] = {
+        ["START"] = {
+            ["NA"] = {
+                "Alright, let's start this [KEYSTONELEVEL]. [NEMESIS], I have full confidence in our abilities to conquer this challenge!",
+                "Here we go, [KEYSTONELEVEL] starting. [NEMESIS], I'm really excited to see how well we can perform together!",
+                "[KEYSTONELEVEL] time. [NEMESIS], let's show everyone what we're capable of as a team!",
+                "Let's do this [KEYSTONELEVEL]. [NEMESIS], I believe we have the perfect mix of skills to succeed.",
+                "[NEMESIS], as we start this [KEYSTONELEVEL], I'm really looking forward to seeing your expertise in action!",
+                "We're beginning the [KEYSTONELEVEL]. [NEMESIS], I have a great feeling about our chances with you on the team!",
+                "[KEYSTONELEVEL] incoming. [NEMESIS], let's make this run one to remember with your amazing skills!",
+                "Here we go with the [KEYSTONELEVEL]. [NEMESIS], I think we're more than prepared for this challenge!",
+                "It's [KEYSTONELEVEL] time. [NEMESIS], let's approach this with confidence and showcase our teamwork!",
+                "[NEMESIS], as we start this [KEYSTONELEVEL], I'm thrilled to see how well we can coordinate and excel together!"
+            }
+        },
+        ["FAIL"] = {
+            ["NA"] = {
+                "We may not have timed the [KEYSTONELEVEL], but I saw some great efforts. [NEMESIS], your performance in the last boss fight was impressive!",
+                "That [KEYSTONELEVEL] was challenging, but we learned a lot. [NEMESIS], I noticed your crowd control skills have really improved.",
+                "We fell short on that [KEYSTONELEVEL], but there were some standout moments. [NEMESIS], your interrupt game was on point!",
+                "[NEMESIS], that [KEYSTONELEVEL] was tough, but I was impressed by how well you handled the mechanics on the second boss.",
+                "We didn't complete the [KEYSTONELEVEL] in time, but we made progress. [NEMESIS], your DPS on the last trash pack was outstanding!",
+                "That [KEYSTONELEVEL] didn't work out, but we gained valuable experience. [NEMESIS], your cooldown usage has really improved.",
+                "We missed the timer on that [KEYSTONELEVEL], but there were some strong moments. [NEMESIS], your kiting skills saved us more than once!",
+                "That [KEYSTONELEVEL] was a learning experience. [NEMESIS], I was impressed by how quickly you adapted to the affixes.",
+                "[NEMESIS], we didn't quite make it through that [KEYSTONELEVEL], but your situational awareness has noticeably improved.",
+                "We didn't time the [KEYSTONELEVEL], but I feel we're getting better. [NEMESIS], your communication during critical moments was excellent!"
+            }
+        },
+        ["SUCCESS"] = {
+            ["NA"] = {
+                "Fantastic job on timing that [KEYSTONELEVEL]! [NEMESIS], your performance was outstanding and really pushed us to victory.",
+                "We did it! [KEYSTONELEVEL] completed in time. [NEMESIS], I was really impressed by your skill usage and decision-making.",
+                "Excellent work on the [KEYSTONELEVEL], team. [NEMESIS], your expertise really shone through in this run. Well done!",
+                "Success! [KEYSTONELEVEL] timed. [NEMESIS], you handled your role exceptionally well. Your contributions were crucial.",
+                "[KEYSTONELEVEL] completed within the timer. [NEMESIS], your quick thinking and adaptability were key to our victory.",
+                "We've successfully timed the [KEYSTONELEVEL]. [NEMESIS], I saw some fantastic plays from you. Your skills are truly impressive.",
+                "That's a timed [KEYSTONELEVEL]! [NEMESIS], you really stepped up when it counted. Your performance was top-notch.",
+                "Nicely done on timing the [KEYSTONELEVEL]. [NEMESIS], your gameplay was stellar and really elevated our whole team.",
+                "[KEYSTONELEVEL] completed successfully. [NEMESIS], you played your role to perfection. We couldn't have done it without you.",
+                "We've timed the [KEYSTONELEVEL]! [NEMESIS], your efforts were outstanding. You should be really proud of your performance."
+            }
+        }
+    },
+    ["COMBATLOG"] = {
+        ["INTERRUPT"] = {
+            ["SELF"] = {
+                "Interrupted [TARGET]'s [SPELL]. [NEMESIS], your awareness of cast bars is really improving our overall performance!",
+                "I've stopped [TARGET]'s [SPELL]. [NEMESIS], your interrupt coordination with the team is getting better and better!",
+                "Just interrupted [TARGET]'s [SPELL]. [NEMESIS], I'm impressed with how well we're timing our interrupts together.",
+                "[TARGET]'s [SPELL] interrupted by me. [NEMESIS], your attentiveness to castbars is making our runs so much smoother.",
+                "Got that interrupt on [TARGET]'s [SPELL]. [NEMESIS], we're really syncing well on these interrupts!",
+                "I've handled [TARGET]'s [SPELL]. [NEMESIS], your interrupt timing has been impeccable. Great job!",
+                "Managed to interrupt [TARGET]'s [SPELL]. [NEMESIS], our teamwork on interrupts is really paying off.",
+                "[TARGET]'s [SPELL] stopped. [NEMESIS], I'm loving how smooth our interrupt rotation has become.",
+                "I've taken care of [TARGET]'s [SPELL]. [NEMESIS], your interrupt management is really enhancing our group's effectiveness.",
+                "Interrupted [TARGET]'s [SPELL]. [NEMESIS], I'm really impressed with how well we're coordinating our interrupts."
+            },
+            ["NEMESIS"] = {
+                "Excellent interrupt on [TARGET]'s [SPELL], [NEMESIS]! Your timing was absolutely perfect.",
+                "Fantastic catch on [TARGET]'s [SPELL], [NEMESIS]! Your awareness is really impressive.",
+                "Brilliant job interrupting [TARGET]'s [SPELL], [NEMESIS]! That was a critical save.",
+                "[NEMESIS], outstanding work stopping [TARGET]'s [SPELL]! You're really on top of these interrupts.",
+                "Incredible interrupt on [TARGET]'s [SPELL], [NEMESIS]! Your reactions are lightning-fast.",
+                "Superb work catching [TARGET]'s [SPELL], [NEMESIS]! You've really mastered the art of interrupting.",
+                "[NEMESIS], phenomenal interrupt on [TARGET]'s [SPELL]! Your contributions are making a huge difference.",
+                "Amazing awareness on [TARGET]'s [SPELL], [NEMESIS]! You're an interrupt specialist for sure.",
+                "Thank you for handling [TARGET]'s [SPELL], [NEMESIS]! Your interrupt game is incredibly strong.",
+                "[NEMESIS], that interrupt of [TARGET]'s [SPELL] was top-notch! Keep up the fantastic work!"
+            }
+        },
+        ["DISPEL"] = {
+            ["SELF"] = {
+                "Dispelled that effect. [NEMESIS], your ability to spot crucial debuffs is really enhancing our survival!",
+                "I've removed that spell. [NEMESIS], our dispel coordination is becoming really impressive!",
+                "Just dispelled that. [NEMESIS], you're doing an excellent job at prioritizing dispels.",
+                "Harmful effect removed by me. [NEMESIS], your attentiveness to debuffs is making our runs so much smoother.",
+                "Got that dispel. [NEMESIS], we're handling these effects with great efficiency now!",
+                "I've handled that dispel. [NEMESIS], your awareness of what needs cleansing is really impressive.",
+                "Managed to dispel that effect. [NEMESIS], our teamwork on dispels is really paying off.",
+                "That harmful spell has been removed. [NEMESIS], I'm loving how smooth our dispel management has become.",
+                "I've taken care of that dispel. [NEMESIS], your debuff awareness is really enhancing our group's effectiveness.",
+                "Effect dispelled. [NEMESIS], I'm really impressed with how well we're coordinating our dispels."
+            },
+            ["NEMESIS"] = {
+                "Excellent dispel, [NEMESIS]! Your timing was absolutely perfect.",
+                "Fantastic removal of that effect, [NEMESIS]! Your awareness is really impressive.",
+                "Brilliant job on that dispel, [NEMESIS]! That was a critical save.",
+                "[NEMESIS], outstanding work removing that harmful spell! You're really on top of these dispels.",
+                "Incredible dispel work, [NEMESIS]! Your reactions are lightning-fast.",
+                "Superb job cleansing that effect, [NEMESIS]! You've really mastered the art of dispelling.",
+                "[NEMESIS], phenomenal dispel! Your contributions are making a huge difference.",
+                "Amazing awareness on that harmful effect, [NEMESIS]! You're a dispel specialist for sure.",
+                "Thank you for handling that dispel, [NEMESIS]! Your cleansing game is incredibly strong.",
+                "[NEMESIS], that dispel was top-notch! Keep up the fantastic work!"
+            }
+        },
+        ["HARDCC"] = {
+            ["SELF"] = {
+                "CC'd that target. [NEMESIS], your ability to identify priority CC targets is really improving our crowd control!",
+                "I've applied crowd control. [NEMESIS], our CC coordination is becoming really impressive!",
+                "Just CC'd that enemy. [NEMESIS], you're doing an excellent job at managing crowd control.",
+                "Crowd control applied by me. [NEMESIS], your attentiveness to CC needs is making our runs so much smoother.",
+                "Got that CC. [NEMESIS], we're handling crowd control with great efficiency now!",
+                "I've handled that crowd control. [NEMESIS], your awareness of CC priorities is really impressive.",
+                "Managed to CC that target. [NEMESIS], our teamwork on controlling the fight is really paying off.",
+                "That mob has been controlled. [NEMESIS], I'm loving how smooth our CC management has become.",
+                "I've taken care of that CC. [NEMESIS], your crowd control awareness is really enhancing our group's effectiveness.",
+                "Crowd control applied. [NEMESIS], I'm really impressed with how well we're coordinating our CC."
+            },
+            ["NEMESIS"] = {
+                "Excellent CC, [NEMESIS]! Your timing was absolutely perfect.",
+                "Fantastic control of that target, [NEMESIS]! Your awareness is really impressive.",
+                "Brilliant job on that crowd control, [NEMESIS]! That was a critical save.",
+                "[NEMESIS], outstanding work controlling that mob! You're really on top of these CCs.",
+                "Incredible CC work, [NEMESIS]! Your reactions are lightning-fast.",
+                "Superb job on that crowd control, [NEMESIS]! You've really mastered the art of CC.",
+                "[NEMESIS], phenomenal CC! Your contributions are making a huge difference.",
+                "Amazing awareness on that crowd control, [NEMESIS]! You're a CC specialist for sure.",
+                "Thank you for handling that CC, [NEMESIS]! Your control game is incredibly strong.",
+                "[NEMESIS], that crowd control was top-notch! Keep up the fantastic work!"
+            }
+        }
+    }
+},
+
+    -- Index 8: Very positive
+    {
+        ["BOSS"] = {
+            ["FAIL"] = {
+                ["NA"] = {
+                    "Excellent effort, [NEMESIS]! We're so close to cracking this. Your perseverance is inspiring!",
+                    "Great work, [NEMESIS]! That was our best attempt yet. Your strategies are really paying off!",
+                    "[NEMESIS], your performance was outstanding! We've made huge strides thanks to your input.",
+                    "Impressive run, [NEMESIS]! We're on the verge of success, and it's largely thanks to your contributions.",
+                    "Fantastic attempt, [NEMESIS]! Your skill is evident, and we're all improving because of it.",
+                    "Incredible progress, [NEMESIS]! Your adaptability is remarkable. We're so close to victory!",
+                    "Brilliant effort, [NEMESIS]! Your strategic insights are invaluable. We'll nail it next time!",
+                    "Amazing try, [NEMESIS]! Your dedication is paying off. We're right on the edge of success!",
+                    "Superb attempt, [NEMESIS]! Your skill growth is impressive. Victory is within our grasp!",
+                    "Phenomenal work, [NEMESIS]! Your leadership in that attempt was inspiring. We're almost there!"
+                }
+            },
+            ["DEATH"] = {
+                ["SELF"] = {
+                    "My mistake there, but [NEMESIS], your support was incredible. I'm learning so much from you!",
+                    "I'll do better next time, inspired by your excellent play, [NEMESIS]. Any final tips for me?",
+                    "[NEMESIS], your performance was flawless. I'll strive to match your level next attempt!",
+                    "I may have fallen, but [NEMESIS], your gameplay was phenomenal. I'm in awe of your skills!",
+                    "A setback for me, but [NEMESIS], you're carrying us brilliantly. Your expertise is invaluable!",
+                    "I'll improve from this, [NEMESIS]. Your flawless execution is setting a high bar for us all!",
+                    "My error there, but [NEMESIS], your strategic play is enlightening. I'm taking notes!",
+                    "I'll learn from this mistake. [NEMESIS], your performance continues to impress me!",
+                    "A misstep on my part, but [NEMESIS], your gameplay is truly inspirational. I'm motivated to do better!",
+                    "I'll bounce back from this. [NEMESIS], your skill and poise under pressure are admirable!"
+                },
+                ["NEMESIS"] = {
+                    "[NEMESIS] fought valiantly. Their strategy was brilliant, and we'll carry on in their spirit!",
+                    "We've lost [NEMESIS], but their exceptional performance has set us up for success. Let's make them proud!",
+                    "[NEMESIS] showcased extraordinary skill. We're honored to have fought alongside them. How can we best follow their example?",
+                    "Though [NEMESIS] has fallen, their incredible tactics have given us a clear path to victory. Let's seize this opportunity!",
+                    "[NEMESIS]'s remarkable efforts have brought us to the brink of success. We'll triumph in their honor!",
+                    "[NEMESIS]'s performance was nothing short of heroic. Their strategies will guide us to victory!",
+                    "We've lost [NEMESIS], but their brilliant play has shown us the way. Let's finish what they started!",
+                    "[NEMESIS] displayed unparalleled skill before falling. Their tactics will be the key to our success!",
+                    "Though [NEMESIS] is down, their exceptional performance has paved our path to victory. Let's not let their efforts be in vain!",
+                    "[NEMESIS]'s incredible gameplay, even in defeat, has given us the blueprint for success. We'll win this for them!"
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] has fallen, but their contributions were invaluable. [NEMESIS], how can we best honor their efforts?",
+                    "We've lost [BYSTANDER], but their performance was exceptional. [NEMESIS], how do you suggest we build on their strategy?",
+                    "[BYSTANDER] showcased remarkable skill before falling. [NEMESIS], how can we incorporate their tactics into our approach?",
+                    "Though [BYSTANDER] is down, their brilliant play has given us an advantage. [NEMESIS], how should we capitalize on this?",
+                    "[BYSTANDER]'s efforts were truly inspirational. [NEMESIS], what's your take on how we can carry forward their momentum?",
+                    "[BYSTANDER] fought heroically. [NEMESIS], how can we best utilize the openings they've created for us?",
+                    "We've lost [BYSTANDER], but their strategic insights were crucial. [NEMESIS], how do you think we should adapt our plan?",
+                    "[BYSTANDER] displayed exceptional skill until the end. [NEMESIS], what aspects of their approach should we emulate?",
+                    "Though [BYSTANDER] has fallen, their performance was top-notch. [NEMESIS], how can we ensure their efforts weren't in vain?",
+                    "[BYSTANDER]'s gameplay was outstanding. [NEMESIS], how do you suggest we adjust our strategy to complement their contributions?"
+                }
+            },
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, team, let's do this! [NEMESIS], your strategic insights have been invaluable. I'm excited to see us put them into action!",
+                    "Here we go again, and I couldn't be more optimistic! [NEMESIS], your improvements have been phenomenal. Let's show what we've learned!",
+                    "Boss time, everyone. [NEMESIS], your leadership has been inspiring. I'm confident this attempt will be our best yet!",
+                    "Let's give it our all! [NEMESIS], your dedication is truly motivating. I believe this could be the run where it all comes together!",
+                    "[NEMESIS], we're stronger than ever thanks to your contributions. I have an excellent feeling about this attempt!",
+                    "Okay, [NEMESIS], we're on the cusp of victory, largely thanks to your efforts. Let's make this the defining moment!",
+                    "Boss incoming. [NEMESIS], your strategies have been game-changing. I'm thrilled to see how we execute them this time!",
+                    "Here we go. [NEMESIS], your progress has been remarkable. I'm confident this attempt will showcase all we've achieved!",
+                    "It's time to face the boss. [NEMESIS], your skill growth has been phenomenal. Let's put it all together and claim our victory!",
+                    "[NEMESIS], ready for another round? Your positive attitude and expertise have brought us so far. I believe this is our moment to shine!"
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Incredible victory, everyone! [NEMESIS], your performance was absolutely stellar. You were the linchpin of our success!",
+                    "We did it! [NEMESIS], your exceptional skills and leadership were instrumental in this triumph. Phenomenal job!",
+                    "Victory is ours! [NEMESIS], your strategic brilliance and flawless execution were the keys to our success. Outstanding work!",
+                    "Amazing job, team! [NEMESIS], you truly outdid yourself this time. Your expertise made this victory possible!",
+                    "Success at last! [NEMESIS], your adaptability and skill were nothing short of remarkable. You should be incredibly proud!",
+                    "We've conquered the challenge! [NEMESIS], your contributions were pivotal in this victory. Exceptional performance!",
+                    "Fantastic teamwork, everyone! [NEMESIS], your coordination and skill were off the charts. You've set a new standard for excellence!",
+                    "That's how it's done! [NEMESIS], your focus and execution were impeccable. You've truly mastered this encounter!",
+                    "We've triumphed over the boss! [NEMESIS], your growth and expertise were on full display. You've come so far and it shows!",
+                    "Victory is sweet! [NEMESIS], you were the MVP of this fight. Your performance was nothing short of legendary!"
+                }
+            }
+        },
+        ["GROUP"] = {
+            ["JOIN"] = {
+                ["NEMESIS"] = {
+                    "Welcome to the group, [NEMESIS]! We're absolutely thrilled to have a player of your caliber join us. Your skills are going to be a game-changer!",
+                    "[NEMESIS] has joined us. What an honor! Your reputation for excellence precedes you, and we're excited to witness your expertise firsthand.",
+                    "Greetings, [NEMESIS]! We're overjoyed you could join us. Your renowned skills are exactly what we needed to take our team to the next level.",
+                    "Hey [NEMESIS], welcome aboard! Your addition to the team is incredibly exciting. We're looking forward to some truly epic runs with you!",
+                    "[NEMESIS] is here. Fantastic! Your presence is sure to elevate our group's performance to new heights. We're lucky to have you!",
+                    "Great to have you with us, [NEMESIS]! Your exceptional abilities are just what we needed to round out our dream team. This is going to be amazing!",
+                    "Welcome, [NEMESIS]! Your joining has truly perfected our group composition. We're set for some legendary adventures with you on board!",
+                    "[NEMESIS] has joined the party. Wonderful! Your unparalleled skills will complement our team perfectly. We're in for some incredible runs!",
+                    "Hey everyone, [NEMESIS] is joining us. This is phenomenal news! We've just become an unstoppable force with you in our ranks.",
+                    "Welcome to the group, [NEMESIS]. With your world-class expertise on our side, I'm confident we'll achieve feats we've only dreamed of before!"
+                },
+                ["SELF"] = {
+                    "Hello, [NEMESIS]! I'm absolutely thrilled to be working alongside you. Your skills are legendary, and I know we'll make an unstoppable team!",
+                    "Ah, [NEMESIS], it's an honor to see you again. Your expertise never fails to impress me. I'm certain this will be our most successful run yet!",
+                    "Greetings, [NEMESIS]. I'm beyond excited about the potential of our group with you here. Together, we're going to set new records!",
+                    "[NEMESIS], it's a true pleasure to be in a group with you. Your unparalleled expertise is going to be the key to our success.",
+                    "Hello there, [NEMESIS]. I have an incredibly good feeling about our team's synergy with you on board. We're destined for greatness!",
+                    "Nice to see you, [NEMESIS]. Your presence really elevates our group to elite status. I'm eager to learn from your mastery!",
+                    "[NEMESIS], hello! I'm absolutely thrilled about what we can achieve together. Your skills are truly in a league of their own.",
+                    "Greetings, [NEMESIS]. I'm looking forward to seeing how our abilities complement each other. With your expertise, we're unstoppable!",
+                    "Hey [NEMESIS], I'm honored to be grouped with you. Your legendary reputation is well-deserved, and I'm excited to see you in action!",
+                    "Hello, [NEMESIS]. I'm incredibly enthusiastic about our potential as a team. Your world-class expertise is going to lead us to unprecedented victories!"
+                },
+                ["BYSTANDER"] = {
+                    "Welcome, [BYSTANDER]! I'm thrilled to inform you that [NEMESIS] is also part of our group. We've assembled a truly elite team here!",
+                    "Hey [BYSTANDER], it's fantastic to have you join us. With you and the legendary [NEMESIS] on board, I'm certain we're in for some record-breaking runs!",
+                    "[BYSTANDER], welcome to the team! The renowned [NEMESIS] is here too, and I'm incredibly excited to see how our combined expertise will lead us to victory.",
+                    "It's great to have you, [BYSTANDER]. With [NEMESIS]'s unparalleled skills also in our group, I believe we've formed the perfect team for any challenge.",
+                    "Welcome aboard, [BYSTANDER]! I'm delighted to let you know that we've also got the exceptional [NEMESIS] with us. Our group's potential is truly limitless!",
+                    "[BYSTANDER], thanks for joining us. With [NEMESIS]'s legendary abilities in our team too, I'm confident we've assembled one of the most formidable groups ever!",
+                    "Glad you're here, [BYSTANDER]! We've got the incomparable [NEMESIS] in the team as well. This combination of skills is absolutely thrilling!",
+                    "Hey [BYSTANDER], welcome to the group! The esteemed [NEMESIS] is also part of our team. I'm beyond excited to see how our diverse talents will synergize for incredible results!",
+                    "[BYSTANDER], welcome aboard! We're also running with the masterful [NEMESIS]. I truly believe we have one of the most well-rounded and skilled teams ever assembled.",
+                    "Great to see you, [BYSTANDER]! Just so you know, the exceptional [NEMESIS] is part of our team too. I'm absolutely confident that together, we'll achieve feats beyond our wildest expectations!"
+                }
+            },
+            ["LEAVE"] = {
+                ["NEMESIS"] = {
+                    "[NEMESIS] has left the group. Thank you so much for your invaluable contributions. Your exceptional skills truly elevated our entire team!",
+                    "Looks like [NEMESIS] is heading out. It was an absolute honor having you with us. Your expertise was truly awe-inspiring!",
+                    "[NEMESIS] has departed. Thank you for being such a cornerstone of our team. Your unparalleled abilities made a tremendous impact!",
+                    "And [NEMESIS] is off. We're incredibly grateful for all your extraordinary efforts. You've set a new standard for excellence!",
+                    "[NEMESIS] has left us. Thank you for your phenomenal help. Your strategies and gameplay were nothing short of revolutionary!",
+                    "Seems [NEMESIS] is moving on. It was a privilege and a joy to group with you. Your skills are truly in a league of their own!",
+                    "[NEMESIS] has exited the group. Thank you for your outstanding contributions. You've not only elevated our gameplay but inspired us all!",
+                    "Looks like [NEMESIS] is done for now. It was an incredible experience having you along. Your expertise has left an indelible mark on our team!",
+                    "[NEMESIS] has left the party. Thank you for your exceptional help. Your performance was consistently breathtaking and motivating!",
+                    "And there goes [NEMESIS]. We're profoundly grateful for your time with us. Your skills, teamwork, and leadership were truly exemplary and unforgettable!"
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] has left the group. [NEMESIS], their contributions were fantastic, but I'm absolutely confident in our ability to adapt and excel with your exceptional skills!",
+                    "Seems [BYSTANDER] is heading out. [NEMESIS], any thoughts on how we should proceed? I'm certain that with your unparalleled abilities, we'll overcome this change brilliantly!",
+                    "[BYSTANDER] has departed. [NEMESIS], this might alter our approach a bit, but I'm thrilled to see how we can innovate our strategy with your expertise!",
+                    "And [BYSTANDER] is off. [NEMESIS], we may need to rethink our roles, but I see this as an exciting opportunity to showcase your versatility and mastery!",
+                    "[BYSTANDER] has left us. [NEMESIS], how do you think we should compensate? I'm fully confident in our ability to rise to the challenge with your incredible skills!",
+                    "Looks like [BYSTANDER] is done for now. [NEMESIS], any ideas on adapting our plan? I'm certain that with your exceptional expertise, we can make it work even better than before!",
+                    "[BYSTANDER] has exited the group. [NEMESIS], we might need to reevaluate our strategy, but I'm extremely optimistic about our chances with your unmatched abilities!",
+                    "[BYSTANDER] has left the party. [NEMESIS], how should we adjust to this change? I'm convinced we have the talent to turn this into a significant advantage with your leadership!",
+                    "And there goes [BYSTANDER]. [NEMESIS], what's your take on our next move? I'm absolutely confident that with your remarkable skills, we can still achieve extraordinary things!",
+                    "[BYSTANDER] has moved on. [NEMESIS], how do you think we should reorganize? I see this as an exciting opportunity to demonstrate your adaptability and unparalleled teamwork!"
+                }
+            }
+        },
+        ["CHALLENGE"] = {
+            ["START"] = {
+                ["NA"] = {
+                    "Alright, let's conquer this [KEYSTONELEVEL]! [NEMESIS], your exceptional abilities give me complete confidence in our success!",
+                    "Here we go, [KEYSTONELEVEL] starting! [NEMESIS], I'm absolutely thrilled to see how your expertise will shine in this challenge!",
+                    "[KEYSTONELEVEL] time! [NEMESIS], let's show everyone the incredible synergy and skill of our team!",
+                    "Let's dominate this [KEYSTONELEVEL]! [NEMESIS], I believe your unparalleled skills are the perfect recipe for our triumph!",
+                    "[NEMESIS], as we embark on this [KEYSTONELEVEL], I'm beyond excited to witness your mastery in action!",
+                    "We're kicking off the [KEYSTONELEVEL]! [NEMESIS], your presence gives me unwavering confidence in our ability to excel!",
+                    "[KEYSTONELEVEL] incoming! [NEMESIS], let's make this run legendary with your amazing abilities!",
+                    "Here we go with the [KEYSTONELEVEL]! [NEMESIS], I'm certain your expertise will guide us to an impressive victory!",
+                    "It's [KEYSTONELEVEL] time! [NEMESIS], let's approach this with the confidence that your exceptional skills inspire in all of us!",
+                    "[NEMESIS], as we start this [KEYSTONELEVEL], I'm filled with enthusiasm about how spectacularly we'll perform with your leadership!"
+                }
+            },
+            ["FAIL"] = {
+                ["NA"] = {
+                    "We may not have timed the [KEYSTONELEVEL], but [NEMESIS], your performance was truly outstanding! Your skill in the last boss fight was nothing short of inspirational!",
+                    "That [KEYSTONELEVEL] was challenging, but [NEMESIS], I was in awe of your abilities throughout. Your crowd control skills have reached a new level of mastery!",
+                    "We fell short on that [KEYSTONELEVEL], but [NEMESIS], there were moments of pure brilliance from you. Your interrupt game was absolutely flawless!",
+                    "[NEMESIS], that [KEYSTONELEVEL] was tough, but I was thoroughly impressed by your exceptional handling of mechanics on the second boss. Your expertise shone through!",
+                    "We didn't complete the [KEYSTONELEVEL] in time, but [NEMESIS], your performance was stellar. Your DPS on the last trash pack was mind-blowingly high!",
+                    "That [KEYSTONELEVEL] didn't work out, but [NEMESIS], your play was exemplary throughout. Your cooldown usage was nothing short of perfection!",
+                    "We missed the timer on that [KEYSTONELEVEL], but [NEMESIS], your kiting skills were absolutely phenomenal. You single-handedly saved us multiple times!",
+                    "That [KEYSTONELEVEL] was a learning experience, and [NEMESIS], I was amazed by how quickly you adapted to the affixes. Your gameplay was truly next-level!",
+                    "[NEMESIS], we didn't quite make it through that [KEYSTONELEVEL], but your situational awareness was extraordinary. You anticipated and reacted to every mechanic flawlessly!",
+                    "We didn't time the [KEYSTONELEVEL], but [NEMESIS], your communication during critical moments was exceptional. Your calls were precise and invaluable!"
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Phenomenal job on timing that [KEYSTONELEVEL]! [NEMESIS], your performance was absolutely breathtaking and truly instrumental to our victory!",
+                    "We did it! [KEYSTONELEVEL] completed in time. [NEMESIS], I was completely blown away by your skill usage and decision-making. You're in a league of your own!",
+                    "Extraordinary work on the [KEYSTONELEVEL], team. [NEMESIS], your expertise was simply unmatched in this run. You've set a new standard for excellence!",
+                    "Success! [KEYSTONELEVEL] timed. [NEMESIS], you handled your role with unparalleled mastery. Your contributions were absolutely crucial and awe-inspiring!",
+                    "[KEYSTONELEVEL] completed within the timer. [NEMESIS], your lightning-fast thinking and adaptability were the cornerstone of our triumph. Incredible job!",
+                    "We've successfully timed the [KEYSTONELEVEL]. [NEMESIS], I witnessed some truly legendary plays from you. Your skills are genuinely inspirational!",
+                    "That's a timed [KEYSTONELEVEL]! [NEMESIS], you elevated the entire team's performance. Your gameplay was nothing short of perfection!",
+                    "Brilliantly done on timing the [KEYSTONELEVEL]. [NEMESIS], your performance was utterly stellar and pushed our whole team to new heights!",
+                    "[KEYSTONELEVEL] completed successfully. [NEMESIS], you played your role with absolute perfection. We couldn't have achieved this without your exceptional skills!",
+                    "We've timed the [KEYSTONELEVEL]! [NEMESIS], your efforts were truly extraordinary. Your performance today was legendary and will be remembered for a long time!"
+                }
+            }
+        },
+        ["COMBATLOG"] = {
+            ["INTERRUPT"] = {
+                ["SELF"] = {
+                    "Interrupted [TARGET]'s [SPELL]. [NEMESIS], your exceptional awareness of cast bars is elevating our performance to new heights!",
+                    "I've stopped [TARGET]'s [SPELL]. [NEMESIS], your interrupt coordination with the team is absolutely flawless!",
+                    "Just interrupted [TARGET]'s [SPELL]. [NEMESIS], I'm in awe of how perfectly we're timing our interrupts together. Your expertise is showing!",
+                    "[TARGET]'s [SPELL] interrupted by me. [NEMESIS], your attentiveness to castbars is making our runs incredibly smooth. It's impressive!",
+                    "Got that interrupt on [TARGET]'s [SPELL]. [NEMESIS], our interrupt synergy is reaching new levels of perfection!",
+                    "I've handled [TARGET]'s [SPELL]. [NEMESIS], your interrupt timing has been absolutely impeccable. You're setting a new standard!",
+                    "Managed to interrupt [TARGET]'s [SPELL]. [NEMESIS], our teamwork on interrupts is paying off tremendously. Your skill is evident!",
+                    "[TARGET]'s [SPELL] stopped. [NEMESIS], I'm amazed at how seamless our interrupt rotation has become. Your contribution is invaluable!",
+                    "I've taken care of [TARGET]'s [SPELL]. [NEMESIS], your interrupt management is truly enhancing our group's effectiveness. It's remarkable!",
+                    "Interrupted [TARGET]'s [SPELL]. [NEMESIS], I'm thoroughly impressed with how masterfully we're coordinating our interrupts. Your expertise shines!"
+                },
+                ["NEMESIS"] = {
+                    "Absolutely brilliant interrupt on [TARGET]'s [SPELL], [NEMESIS]! Your timing was perfection incarnate!",
+                    "Incredible catch on [TARGET]'s [SPELL], [NEMESIS]! Your awareness is truly awe-inspiring!",
+                    "Phenomenal job interrupting [TARGET]'s [SPELL], [NEMESIS]! That was a game-changing save!",
+                    "[NEMESIS], your interrupt on [TARGET]'s [SPELL] was nothing short of miraculous! Your mastery of these mechanics is unparalleled!",
+                    "Spectacular interrupt on [TARGET]'s [SPELL], [NEMESIS]! Your lightning-fast reactions are setting a new standard!",
+                    "Masterful work catching [TARGET]'s [SPELL], [NEMESIS]! You've truly perfected the art of interrupting!",
+                    "[NEMESIS], that interrupt on [TARGET]'s [SPELL] was absolutely world-class! Your contributions are elevating our entire team!",
+                    "Extraordinary awareness on [TARGET]'s [SPELL], [NEMESIS]! You're not just an interrupt specialist, you're the interrupt master!",
+                    "I'm in awe of how you handled [TARGET]'s [SPELL], [NEMESIS]! Your interrupt game is beyond impressive, it's revolutionary!",
+                    "[NEMESIS], that interrupt of [TARGET]'s [SPELL] was simply breathtaking! Your skill level is truly in a league of its own!"
+                }
+            },
+            ["DISPEL"] = {
+                ["SELF"] = {
+                    "Dispelled that effect. [NEMESIS], your remarkable ability to spot crucial debuffs is taking our survival to the next level!",
+                    "I've removed that spell. [NEMESIS], our dispel coordination has reached a level of synergy that's truly impressive!",
+                    "Just dispelled that. [NEMESIS], you're doing an phenomenal job at prioritizing dispels. Your expertise is evident!",
+                    "Harmful effect removed by me. [NEMESIS], your attentiveness to debuffs is making our runs incredibly smooth. It's impressive!",
+                    "Got that dispel. [NEMESIS], we're handling these effects with an efficiency that's nothing short of amazing!",
+                    "I've handled that dispel. [NEMESIS], your awareness of what needs cleansing is truly remarkable. You're setting the standard!",
+                    "Managed to dispel that effect. [NEMESIS], our teamwork on dispels is yielding extraordinary results. Your skill is clear!",
+                    "That harmful spell has been removed. [NEMESIS], I'm amazed at how seamless our dispel management has become. Your contribution is invaluable!",
+                    "I've taken care of that dispel. [NEMESIS], your debuff awareness is elevating our group's effectiveness to new heights. It's remarkable!",
+                    "Effect dispelled. [NEMESIS], I'm thoroughly impressed with how masterfully we're coordinating our dispels. Your expertise truly shines!"
+                },
+                ["NEMESIS"] = {
+                    "Absolutely brilliant dispel, [NEMESIS]! Your timing was perfection incarnate!",
+                    "Incredible removal of that effect, [NEMESIS]! Your awareness is truly awe-inspiring!",
+                    "Phenomenal job on that dispel, [NEMESIS]! That was a game-changing save!",
+                    "[NEMESIS], your removal of that harmful spell was nothing short of miraculous! Your mastery of these mechanics is unparalleled!",
+                    "Spectacular dispel work, [NEMESIS]! Your lightning-fast reactions are setting a new standard!",
+                    "Masterful job cleansing that effect, [NEMESIS]! You've truly perfected the art of dispelling!",
+                    "[NEMESIS], that dispel was absolutely world-class! Your contributions are elevating our entire team!",
+                    "Extraordinary awareness on that harmful effect, [NEMESIS]! You're not just a dispel specialist, you're the dispel master!",
+                    "I'm in awe of how you handled that dispel, [NEMESIS]! Your cleansing game is beyond impressive, it's revolutionary!",
+                    "[NEMESIS], that dispel was simply breathtaking! Your skill level is truly in a league of its own!"
+                }
+            },
+            ["HARDCC"] = {
+                ["SELF"] = {
+                    "CC'd that target. [NEMESIS], your exceptional ability to identify priority CC targets is elevating our control to new heights!",
+                    "I've applied crowd control. [NEMESIS], our CC coordination has reached a level of synergy that's truly impressive!",
+                    "Just CC'd that enemy. [NEMESIS], you're doing a phenomenal job at managing crowd control. Your expertise is evident!",
+                    "Crowd control applied by me. [NEMESIS], your attentiveness to CC needs is making our runs incredibly smooth. It's impressive!",
+                    "Got that CC. [NEMESIS], we're handling crowd control with an efficiency that's nothing short of amazing!",
+                    "I've handled that crowd control. [NEMESIS], your awareness of CC priorities is truly remarkable. You're setting the standard!",
+                    "Managed to CC that target. [NEMESIS], our teamwork on controlling the fight is yielding extraordinary results. Your skill is clear!",
+                    "That mob has been controlled. [NEMESIS], I'm amazed at how seamless our CC management has become. Your contribution is invaluable!",
+                    "I've taken care of that CC. [NEMESIS], your crowd control awareness is elevating our group's effectiveness to new heights. It's remarkable!",
+                    "Crowd control applied. [NEMESIS], I'm thoroughly impressed with how masterfully we're coordinating our CC. Your expertise truly shines!"
+                },
+                ["NEMESIS"] = {
+                    "Absolutely brilliant CC, [NEMESIS]! Your timing was perfection incarnate!",
+                    "Incredible control of that target, [NEMESIS]! Your awareness is truly awe-inspiring!",
+                    "Phenomenal job on that crowd control, [NEMESIS]! That was a game-changing move!",
+                    "[NEMESIS], your CC on that mob was nothing short of miraculous! Your mastery of these mechanics is unparalleled!",
+                    "Spectacular CC work, [NEMESIS]! Your lightning-fast reactions are setting a new standard!",
+                    "Masterful job on that crowd control, [NEMESIS]! You've truly perfected the art of CC!",
+                    "[NEMESIS], that CC was absolutely world-class! Your contributions are elevating our entire team!",
+                    "Extraordinary awareness on that crowd control, [NEMESIS]! You're not just a CC specialist, you're the CC master!",
+                    "I'm in awe of how you handled that CC, [NEMESIS]! Your control game is beyond impressive, it's revolutionary!",
+                    "[NEMESIS], that crowd control was simply breathtaking! Your skill level is truly in a league of its own!"
+                }
+            }
+        }
+    },
+
+    -- Index 9: Extremely positive (just short of the most friendly in index 10)
+    {
+        ["BOSS"] = {
+            ["FAIL"] = {
+                ["NA"] = {
+                    "[NEMESIS], your performance was absolutely stellar! We're on the cusp of victory thanks to your amazing skills!",
+                    "Incredible work, [NEMESIS]! Your expertise has transformed our group. Success is within our grasp!",
+                    "[NEMESIS], I'm in awe of your abilities! Your strategies have elevated our entire team. We're so close to triumph!",
+                    "Phenomenal effort, [NEMESIS]! Your leadership and skill are unparalleled. Victory is just around the corner!",
+                    "Outstanding run, [NEMESIS]! Your mastery of this encounter is evident. We're poised for success thanks to you!",
+                    "[NEMESIS], your performance was breathtaking! We've made enormous strides thanks to your brilliant input.",
+                    "Extraordinary attempt, [NEMESIS]! Your skill and adaptability are truly inspirational. We're on the brink of victory!",
+                    "Magnificent effort, [NEMESIS]! Your strategic insights are invaluable. I'm certain we'll nail it on the next try!",
+                    "Spectacular try, [NEMESIS]! Your dedication and skill growth are awe-inspiring. Success is within our reach!",
+                    "Astounding work, [NEMESIS]! Your leadership in that attempt was truly inspiring. We're so close to achieving greatness!"
+                }
+            },
+            ["DEATH"] = {
+                ["SELF"] = {
+                    "Even in defeat, I'm inspired by your incredible performance, [NEMESIS]. Your skills are truly aspirational!",
+                    "[NEMESIS], your flawless execution is a joy to witness. I'm honored to fight alongside such a skilled player!",
+                    "I may have fallen, but [NEMESIS], your extraordinary gameplay gives me hope. You're the backbone of our team!",
+                    "My mistake pales in comparison to your brilliant strategy, [NEMESIS]. Your expertise is guiding us to victory!",
+                    "[NEMESIS], your unparalleled skill shines even in the face of challenges. I'm continually amazed by your abilities!",
+                    "Though I've fallen, [NEMESIS], your masterful play is a beacon of hope. Your expertise is truly inspiring!",
+                    "My error seems insignificant next to your strategic brilliance, [NEMESIS]. You're leading us to certain victory!",
+                    "[NEMESIS], even as I've faltered, your exceptional skill continues to amaze me. You're the cornerstone of our success!",
+                    "I may be down, but [NEMESIS], your outstanding performance fills me with confidence. You're carrying us to triumph!",
+                    "Despite my setback, [NEMESIS], your phenomenal gameplay keeps our hopes high. Your mastery is truly awe-inspiring!"
+                },
+                ["NEMESIS"] = {
+                    "[NEMESIS]'s heroic stand was nothing short of legendary. Their sacrifice has paved our way to certain victory!",
+                    "We've lost our brightest star, [NEMESIS], but their radiant performance will light our path to triumph!",
+                    "[NEMESIS] displayed unmatched prowess until the very end. Their extraordinary legacy will fuel our inevitable success!",
+                    "Though [NEMESIS] has fallen, their awe-inspiring strategy lives on. We'll achieve greatness in their honor!",
+                    "[NEMESIS]'s breathtaking efforts have all but guaranteed our victory. Let's make their valiant fight count!",
+                    "[NEMESIS]'s incredible performance, even in defeat, has shown us the path to victory. We'll triumph in their name!",
+                    "We've lost [NEMESIS], but their brilliant tactics have set the stage for our success. Let's honor their memory with victory!",
+                    "[NEMESIS] fought with unparalleled skill and courage. Their inspiring strategy will lead us to ultimate triumph!",
+                    "Though [NEMESIS] has fallen, their extraordinary efforts have brought us to the threshold of victory. We'll succeed for them!",
+                    "[NEMESIS]'s awe-inspiring gameplay, even in their final moments, has given us the key to success. We'll win this in their honor!"
+                },
+                ["BYSTANDER"] = {
+                    "[BYSTANDER] has fallen, but their contributions were truly extraordinary. [NEMESIS], how can we best honor their remarkable efforts?",
+                    "We've lost [BYSTANDER], but their performance was nothing short of phenomenal. [NEMESIS], how do you suggest we build on their brilliant strategy?",
+                    "[BYSTANDER] showcased unparalleled skill before falling. [NEMESIS], how can we incorporate their exceptional tactics into our approach?",
+                    "Though [BYSTANDER] is down, their awe-inspiring play has given us a significant advantage. [NEMESIS], how should we capitalize on this?",
+                    "[BYSTANDER]'s efforts were truly legendary. [NEMESIS], what's your take on how we can carry forward their incredible momentum?",
+                    "[BYSTANDER] fought with unmatched heroism. [NEMESIS], how can we best utilize the extraordinary openings they've created for us?",
+                    "We've lost [BYSTANDER], but their strategic brilliance was crucial. [NEMESIS], how do you think we should adapt our plan to honor their insight?",
+                    "[BYSTANDER] displayed exceptional mastery until the end. [NEMESIS], what aspects of their remarkable approach should we emulate?",
+                    "Though [BYSTANDER] has fallen, their performance was absolutely top-tier. [NEMESIS], how can we ensure their incredible efforts weren't in vain?",
+                    "[BYSTANDER]'s gameplay was truly inspirational. [NEMESIS], how do you suggest we adjust our strategy to complement their outstanding contributions?"
+                }
+            },
+            ["START"] = {
+                ["NA"] = {
+                    "Team, let's make history! [NEMESIS], your unparalleled strategic insights have prepared us for greatness. I'm thrilled to see us put them into action!",
+                    "Here we go again, and I couldn't be more excited! [NEMESIS], your phenomenal improvements have been truly inspiring. Let's showcase everything we've learned!",
+                    "Boss time, everyone. [NEMESIS], your exemplary leadership has been nothing short of revolutionary. I'm certain this attempt will be our crowning achievement!",
+                    "Let's give it our absolute all! [NEMESIS], your unwavering dedication is profoundly motivating. I believe this will be the run where everything falls perfectly into place!",
+                    "[NEMESIS], we're stronger than ever thanks to your invaluable contributions. I have an overwhelmingly positive feeling about this attempt!",
+                    "Okay, [NEMESIS], we're on the precipice of victory, largely due to your extraordinary efforts. Let's make this the defining moment of our journey!",
+                    "Boss incoming. [NEMESIS], your strategies have been absolutely game-changing. I'm beyond excited to see how flawlessly we execute them this time!",
+                    "Here we go. [NEMESIS], your progress has been nothing short of miraculous. I'm fully confident this attempt will showcase all we've achieved and more!",
+                    "It's time to face the boss. [NEMESIS], your skill growth has been truly phenomenal. Let's put it all together and claim our well-deserved victory!",
+                    "[NEMESIS], ready for another round? Your positive attitude and unmatched expertise have brought us incredibly far. I firmly believe this is our moment to shine and make history!"
+                }
+            },
+            ["SUCCESS"] = {
+                ["NA"] = {
+                    "Phenomenal victory, everyone! [NEMESIS], your performance was absolutely legendary. You were the driving force behind our incredible success!",
+                    "We did it! [NEMESIS], your exceptional skills and inspiring leadership were the cornerstone of this magnificent triumph. Truly outstanding work!",
+                    "Victory is ours! [NEMESIS], your strategic brilliance and flawless execution were the keys to our resounding success. Your performance was simply breathtaking!",
+                    "Amazing job, team! [NEMESIS], you truly outdid yourself this time. Your unparalleled expertise made this victory not just possible, but spectacular!",
+                    "Success at last! [NEMESIS], your adaptability and skill were nothing short of miraculous. You should be incredibly proud of your pivotal role in this achievement!",
+                    "We've conquered the challenge! [NEMESIS], your contributions were absolutely crucial in this victory. Your performance was nothing short of perfection!",
+                    "Extraordinary teamwork, everyone! [NEMESIS], your coordination and skill were truly off the charts. You've set a new gold standard for excellence in gameplay!",
+                    "That's how it's done! [NEMESIS], your focus and execution were impeccable. You've not only mastered this encounter but redefined what's possible!",
+                    "We've triumphed over the boss! [NEMESIS], your growth and expertise were on full display. You've come so incredibly far, and it shows in every aspect of your play!",
+                    "Victory is sweet! [NEMESIS], you were undoubtedly the MVP of this fight. Your performance wasn't just legendary, it was truly transcendent!"
+                }
+            }
+        },
+        ["GROUP"] = {
+            ["JOIN"] = {
+                ["NEMESIS"] = {
+                    "Welcome to the group, [NEMESIS]! We're beyond thrilled to have a player of your legendary caliber join us. Your unparalleled skills are going to revolutionize our gameplay!",
+                    "[NEMESIS] has joined us. What an incredible honor! Your world-renowned expertise precedes you, and we're ecstatic to witness your mastery firsthand.",
+                    "Greetings, [NEMESIS]! We're absolutely overjoyed you could join us. Your extraordinary skills are exactly what we needed to elevate our team to unprecedented heights.",
+                    "Hey [NEMESIS], welcome aboard! Your addition to the team is incredibly exciting. We're looking forward to some truly epic, record-breaking runs with you!",
+                    "[NEMESIS] is here. Fantastic! Your presence is sure to catapult our group's performance to legendary status. We're incredibly fortunate to have you!",
+                    "Great to have you with us, [NEMESIS]! Your exceptional abilities are the perfect final piece to complete our dream team. This is going to be absolutely amazing!",
+                    "Welcome, [NEMESIS]! Your joining has truly perfected our group composition. We're set for some legendary, possibly world-first achievements with you on board!",
+                    "[NEMESIS] has joined the party. Wonderful! Your unparalleled skills will complement our team perfectly. We're in for some truly incredible, groundbreaking runs!",
+                    "Hey everyone, [NEMESIS] is joining us. This is phenomenal news! We've just become an unstoppable force with you in our ranks. The possibilities are endless!",
+                    "Welcome to the group, [NEMESIS]. With your world-class expertise on our side, I'm confident we'll achieve feats we've only dreamed of before! The sky's the limit now!"
+                },
+                ["SELF"] = {
+                    "Hello, [NEMESIS]! I'm absolutely thrilled and honored to be working alongside you. Your skills are truly legendary, and I know we'll make an unstoppable, record-breaking team!",
+                    "Ah, [NEMESIS], it's an incredible honor to see you again. Your expertise never fails to amaze me. I'm certain this will be our most successful and groundbreaking run yet!",
+                    "Greetings, [NEMESIS]. I'm beyond excited about the limitless potential of our group with you here. Together, we're going to set new records and redefine what's possible!",
+                    "[NEMESIS], it's a true privilege to be in a group with you. Your unparalleled expertise is going to be the key to our unprecedented success and achievements.",
+                    "Hello there, [NEMESIS]. I have an incredibly good feeling about our team's synergy with you on board. We're destined for greatness and possibly some world-firsts!",
+                    "Nice to see you, [NEMESIS]. Your presence really elevates our group to true elite status. I'm eager to learn from your mastery and push the boundaries of what we can achieve!",
+                    "[NEMESIS], hello! I'm absolutely thrilled about the incredible feats we can accomplish together. Your skills are truly in a league of their own, and I'm honored to witness them.",
+                    "Greetings, [NEMESIS]. I'm looking forward to seeing how our abilities complement each other. With your expertise, we're not just unstoppable, we're revolutionary!",
+                    "Hey [NEMESIS], I'm truly honored to be grouped with you. Your legendary reputation is well-deserved, and I'm incredibly excited to see you in action and learn from the best!",
+                    "Hello, [NEMESIS]. I'm incredibly enthusiastic about our potential as a team. Your world-class expertise is going to lead us to unprecedented victories and possibly reshape the meta!"
+                },
+                ["BYSTANDER"] = {
+                    "Welcome, [BYSTANDER]! I'm absolutely thrilled to inform you that the legendary [NEMESIS] is also part of our group. We've assembled a truly elite, world-class team here!",
+                    "Hey [BYSTANDER], it's fantastic to have you join us. With you and the phenomenal [NEMESIS] on board, I'm certain we're in for some record-breaking, possibly world-first runs!",
+                    "[BYSTANDER], welcome to the team! The renowned [NEMESIS] is here too, and I'm incredibly excited to see how our combined expertise will lead us to unprecedented victories.",
+                    "It's great to have you, [BYSTANDER]. With [NEMESIS]'s unparalleled skills also in our group, I believe we've formed the perfect team capable of conquering any challenge!",
+                    "Welcome aboard, [BYSTANDER]! I'm delighted to let you know that we've also got the exceptional [NEMESIS] with us. Our group's potential is truly limitless and awe-inspiring!",
+                    "[BYSTANDER], thanks for joining us. With [NEMESIS]'s legendary abilities in our team too, I'm confident we've assembled one of the most formidable and groundbreaking groups ever!",
+                    "Glad you're here, [BYSTANDER]! We've got the incomparable [NEMESIS] in the team as well. This combination of skills is absolutely thrilling and bound to create some gaming history!",
+                    "Hey [BYSTANDER], welcome to the group! The esteemed [NEMESIS] is also part of our team. I'm beyond excited to see how our diverse talents will synergize for truly incredible, possibly meta-changing results!",
+                    "Effect dispelled. [NEMESIS], I'm thoroughly impressed with how masterfully we're coordinating our dispels. Your expertise truly shines and is setting new benchmarks for efficient gameplay!"
+                },
+            },
+            ["HARDCC"] = {
+                ["SELF"] = {
+                    "CC'd that target. [NEMESIS], your exceptional ability to identify priority CC targets is elevating our control to unprecedented levels! Your insight is truly game-changing!",
+                    "I've applied crowd control. [NEMESIS], our CC coordination has reached a level of synergy that's truly impressive and transformative for our team's performance!",
+                    "Just CC'd that enemy. [NEMESIS], you're doing a phenomenal job at managing crowd control. Your expertise is evident and it's revolutionizing our approach to fights!",
+                    "Crowd control applied by me. [NEMESIS], your attentiveness to CC needs is making our runs incredibly smooth. It's impressive and setting a new standard for the team!",
+                    "Got that CC. [NEMESIS], we're handling crowd control with an efficiency that's nothing short of amazing! Your influence has elevated our entire group's gameplay!",
+                    "I've handled that crowd control. [NEMESIS], your awareness of CC priorities is truly remarkable. You're setting the standard and inspiring us all to improve!",
+                    "Managed to CC that target. [NEMESIS], our teamwork on controlling the fight is yielding extraordinary results. Your skill is clear and it's pushing us to new heights of performance!",
+                    "That mob has been controlled. [NEMESIS], I'm amazed at how seamless our CC management has become. Your contribution is invaluable and game-changing!",
+                    "I've taken care of that CC. [NEMESIS], your crowd control awareness is elevating our group's effectiveness to new heights. It's remarkable and truly inspirational!",
+                    "Crowd control applied. [NEMESIS], I'm thoroughly impressed with how masterfully we're coordinating our CC. Your expertise truly shines and is setting new benchmarks for efficient gameplay!"
+                },
+                ["NEMESIS"] = {
+                    "Absolutely brilliant CC, [NEMESIS]! Your timing was perfection incarnate! You've elevated crowd control to an art form that's truly inspirational!",
+                    "Incredible control of that target, [NEMESIS]! Your awareness is truly awe-inspiring! You're redefining what's possible in fight management!",
+                    "Phenomenal job on that crowd control, [NEMESIS]! That was a game-changing move that showcases your unparalleled mastery of mechanics!",
+                    "[NEMESIS], your CC on that mob was nothing short of miraculous! Your mastery of these mechanics is unparalleled and sets a new gold standard!",
+                    "Spectacular CC work, [NEMESIS]! Your lightning-fast reactions are setting a new standard that's pushing the boundaries of what we thought possible!",
+                    "Masterful job on that crowd control, [NEMESIS]! You've truly perfected the art of CC, elevating it to a level that's changing how we approach fights!",
+                    "[NEMESIS], that CC was absolutely world-class! Your contributions are elevating our entire team and redefining control strategies across the board!",
+                    "Extraordinary awareness on that crowd control, [NEMESIS]! You're not just a CC specialist, you're the CC master, setting new benchmarks for the entire community!",
+                    "I'm in awe of how you handled that CC, [NEMESIS]! Your control game is beyond impressive, it's revolutionary and inspiring a new generation of players!",
+                    "[NEMESIS], that crowd control was simply breathtaking! Your skill level is truly in a league of its own, motivating all of us to strive for a level of excellence we never thought possible!"
+                }
+            }
+        }
+    },
+
+    core.ai.praises -- Index 10: Most friendly (already defined)
 }

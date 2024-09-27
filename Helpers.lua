@@ -5,184 +5,17 @@
 -----------------------------------------------------
 -- Namespaces
 -----------------------------------------------------
-local addonName, core = ...;
+local _, core = ...;
 
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
-
-local E = ElvUI and unpack(ElvUI) or nil
-local GTFO = GTFO and unpack(GTFO) or nil
-
-local scanTipName = format("%s_ScanTooltip", addonName)
-local scanTipText = format("%sTextLeft2", scanTipName)
-local scanTip = CreateFrame("GameTooltip", scanTipName, WorldFrame, "GameTooltipTemplate")
-local scanTipTitles = {}
 
 -----------------------------------------------------
 -- Core global helper functions
 -----------------------------------------------------
 function NemesisChat:InitializeHelpers()
-
-    function NemesisChat:TransmitSyncData()
-        if NCRuntime:GetLastSyncType() == "" or NCRuntime:GetLastSyncType() == nil or NCRuntime:GetLastSyncType() == "LEAVERS" then
-            NCRuntime:SetLastSyncType("LOWPERFORMERS")
-            NemesisChat:TransmitLowPerformers()
-        else
-            NCRuntime:SetLastSyncType("LEAVERS")
-            NemesisChat:TransmitLeavers()
-        end
-    end
-
-    function NemesisChat:TransmitLeavers()
-        if core.db.profile.leavers == nil or core.db.profile.leaversSerialized == nil or NCDungeon:IsActive() then
-            return
-        end
-
-        local _, online = GetNumGuildMembers()
-
-        if online > 1 and NCRuntime:GetLastLeaverSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "GUILD")
-            NCRuntime:SetLastLeaverSyncType("GUILD")
-        else
-            NemesisChat:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "YELL")
-            NCRuntime:SetLastLeaverSyncType("YELL")
-        end
-    end
-
-    function NemesisChat:TransmitLowPerformers()
-        if core.db.profile.lowPerformers == nil or core.db.profile.lowPerformersSerialized == nil or NCDungeon:IsActive() then
-            return
-        end
-
-        local _, online = GetNumGuildMembers()
-
-        if online > 1 and NCRuntime:GetLastLowPerformerSyncType() ~= "GUILD" then
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "GUILD")
-            NCRuntime:SetLastLowPerformerSyncType("GUILD")
-        else
-            NemesisChat:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "YELL")
-            NCRuntime:SetLastLowPerformerSyncType("YELL")
-        end
-    end
-
-    function NemesisChat:Transmit(prefix, payload, distribution, target)
-        if target and distribution == "WHISPER" then
-            self:SendCommMessage(prefix, payload, distribution, target)
-        else
-            self:SendCommMessage(prefix, payload, distribution)
-        end
-    end
-
-    function NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
-        if not prefix or not string.find(prefix, "NC_") then return end
-
-        local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
-
-        if not core.db.global.lastSync then
-            core.db.global.lastSync = {}
-        end
-
-        -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
-        if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and GetTime() - core.db.global.lastSync[sender] <= 1800) then
-            return
-        end
-
-        core.db.global.lastSync[sender] = GetTime()
-
-        NemesisChat:Print("Synchronizing data received from " .. Ambiguate(sender, "guild"))
-
-        core.runtime.sync = {}
-
-        core.runtime.sync.decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
-        if not core.runtime.sync.decoded then return end
-        core.runtime.sync.decompressed = LibDeflate:DecompressDeflate(core.runtime.sync.decoded)
-        if not core.runtime.sync.decompressed then return end
-        core.runtime.sync.success, core.runtime.sync.data = LibSerialize:Deserialize(core.runtime.sync.decompressed)
-        if not core.runtime.sync.success then return end
-
-        payload = nil
-        core.runtime.sync.decoded = nil
-        core.runtime.sync.decompressed = nil
-
-        if prefix == "NC_LEAVERS" then
-            NemesisChat:ProcessLeavers(core.runtime.sync.data)
-        elseif prefix == "NC_LOWPERFORMERS" then
-            NemesisChat:ProcessLowPerformers(core.runtime.sync.data)
-        end
-
-        core.runtime.sync.data = nil
-    end
-
-    function NemesisChat:ProcessLeavers(leavers)
-        NemesisChat:Print("Processing leavers.")
-
-        NemesisChat:ProcessReceivedData("leavers", leavers)
-
-        leavers = nil
-    end
-
-    function NemesisChat:ProcessLowPerformers(lowPerformers)
-        NemesisChat:Print("Processing low performers.")
-
-        NemesisChat:ProcessReceivedData("lowPerformers", lowPerformers)
-
-        lowPerformers = nil
-    end
-
-    function NemesisChat:ProcessReceivedData(configKey, data)
-        if data == nil or type(data) ~= "table" then
-            return
-        end
-
-        if core.db.profile[configKey] == nil then
-            core.db.profile[configKey] = {}
-        end
-
-        local count = 0
-
-        for key,val in pairs(data) do
-            count = count + 1
-            if core.db.profile[configKey][key] == nil then
-                core.db.profile[configKey][key] = val
-            else
-                core.runtime.sync.combinedRow = ArrayMerge(core.db.profile[configKey][key], val)
-                core.db.profile[configKey][key] = core.runtime.sync.combinedRow
-            end
-        end
-
-        core.runtime.sync.combinedRow = {}
-    end
-
-    function NemesisChat:PrintNumberOfLeavers()
-        NemesisChat:Print("Leavers:", #NemesisChat:GetKeys(core.db.profile.leavers))
-    end
-
-    function NemesisChat:PrintNumberOfLowPerformers()
-        NemesisChat:Print("Low Performers:", #NemesisChat:GetKeys(core.db.profile.lowPerformers))
-    end
-
-    function NemesisChat:PrintSyncKeys()
-        NemesisChat:Print("LEAVER KEYS")
-
-        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.leavers))
-
-        for key,val in pairs(core.db.profile.leavers) do
-            NemesisChat:Print(key, ":", #val)
-        end
-
-        NemesisChat:Print("LOW PERFORMER KEYS")
-
-        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.lowPerformers))
-
-        for key,val in pairs(core.db.profile.lowPerformers) do
-            NemesisChat:Print(key, ":", #val)
-        end
-    end
-
-    function NemesisChat:RegisterPrefixes()
-        C_ChatInfo.RegisterAddonMessagePrefix("NC_LEAVERS")
-        C_ChatInfo.RegisterAddonMessagePrefix("NC_LOWPERFORMERS")
-    end
+    local leaverDb = NCDB:New("leavers")
+    local lowPerformerDb = NCDB:New("lowPerformers")
 
     function NemesisChat:RegisterToasts()
         NemesisChat:RegisterToast("Pull", function(toast, player, mob)
@@ -193,20 +26,8 @@ function NemesisChat:InitializeHelpers()
         end)
     end
 
-    function NemesisChat:ShowStatsFrame()
-        
-    end
-
     function NemesisChat:AddLeaver(guid)
-        if core.db.profile.leavers == nil then
-            core.db.profile.leavers = {}
-        end
-
-        if core.db.profile.leavers[guid] == nil then
-            core.db.profile.leavers[guid] = {}
-        end
-
-        tinsert(core.db.profile.leavers[guid], math.ceil(GetTime() / 10) * 10)
+        leaverDb:InsertIntoArray(guid, math.ceil(GetTime() / 10) * 10)
 
         NemesisChat:EncodeLeavers()
     end
@@ -226,15 +47,7 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:AddLowPerformer(guid)
-        if core.db.profile.lowPerformers == nil then
-            core.db.profile.lowPerformers = {}
-        end
-
-        if core.db.profile.lowPerformers[guid] == nil then
-            core.db.profile.lowPerformers[guid] = {}
-        end
-
-        tinsert(core.db.profile.lowPerformers[guid], math.ceil(GetTime() / 10) * 10)
+        lowPerformerDb:InsertIntoArray(guid, math.ceil(GetTime() / 10) * 10)
 
         NemesisChat:EncodeLowPerformers()
     end
@@ -289,8 +102,8 @@ function NemesisChat:InitializeHelpers()
         return #core.db.profile.lowPerformers[guid]
     end
 
-    function NemesisChat:InitializeTimers()
-        self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitSyncData", 60)
+    function NemesisChat:GetMessages()
+        return core.db.profile.messages
     end
 
     function NemesisChat:GetMyName()
@@ -298,273 +111,8 @@ function NemesisChat:InitializeHelpers()
         return core.runtime.myName
     end
 
-    function NemesisChat:ShouldExitEventHandler()
-        -- Respect disabling of the plugin.
-        if not IsNCEnabled() then
-            return true
-        end
-
-        -- Improper event data
-        if not NCEvent:IsValidEvent() then
-            if NCConfig:IsDebugging() and NCSpell:GetSource() == GetMyName() then 
-                -- self:Print("Invalid event.")
-                -- NemesisChat:Print("Cat:", NCEvent:GetCategory(), "Event:", NCEvent:GetEvent(), "Target:", NCEvent:GetTarget())
-            end
-            return true
-        end
-
-        -- Player is not in a group, exit
-        if not IsInGroup() then
-            if NCConfig:IsDebugging() then 
-                -- self:Print("Player not in group.")
-            end
-            return true
-        end
-
-        -- Unit is/has cast(ing) a spell, but are not in the party
-        -- if NCSpell:IsValidSpell() and not UnitInParty(NCSpell:GetSource()) then
-        --     if NCConfig:IsDebugging() then 
-        --         self:Print("Source is not in party.")
-        --     end
-        --     return true
-        -- end
-
-        return false
-    end
-
-    -- Combat Log event hydration
-    function NemesisChat:PopulateCombatEventDetails()
-        if not IsInInstance() then
-            return
-        end
-
-        local _, subEvent, eventType, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _ = CombatLogGetCurrentEventInfo()
-        local isPull, _, pullPlayerName, mobName = NemesisChat:IsPull()
-
-        NemesisChat:SetMyName()
-        NemesisChat:UpdateGroupState()
-        NemesisChat:ActionScoring()
-        NemesisChat:CheckAffixes()
-
-        NCEvent:Initialize()
-        NCEvent:SetCategory("COMBATLOG")
-
-        if isPull and pullPlayerName then
-            if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
-                -- Nesting this in to prevent spam
-                if NCConfig:IsReportingPulls_Realtime() then
-                    SendChatMessage("Nemesis Chat: " .. UnitName(pullPlayerName) .. " pulled " .. mobName, "YELL")
-                end
-
-                NemesisChat:SpawnToast("Pull", UnitName(pullPlayerName), mobName)
-                NCRuntime:UpdateLastUnsafePullToast()
-            end
-
-            NCRuntime:SetLastUnsafePull(UnitName(pullPlayerName), mobName)
-            NCSegment:GlobalAddPull(UnitName(pullPlayerName))
-        end
-
-        -- This could be more modular, the only problem is feasts...
-        if subEvent == "SPELL_INTERRUPT" then
-            NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
-        elseif subEvent == "SPELL_CAST_SUCCESS" then
-            NCEvent:Spell(sourceName, destName, misc1, misc2)
-
-            -- This needs to be handled in a more modular way
-            if misc2 == "Blessing of Freedom" and tContains(NCDungeon:GetKeystoneAffixes(), 134) then
-                if sourceName ~= destName then
-                    NCSegment:GlobalAddAffix(sourceName, 10)
-                else
-                    -- Currently not awarding any affix points for casting on self, esp when it's easy to spec into
-                end
-            end
-        -- Spell start
-        elseif subEvent == "SPELL_CAST_START" then
-            NCEvent:SpellStart(sourceName, destName, misc1, misc2)
-        elseif subEvent == "SPELL_HEAL" then
-            NCEvent:Heal(sourceName, destName, misc1, misc2, misc4)
-        elseif subEvent == "PARTY_KILL" then
-            NCEvent:Kill(sourceName, destName)
-        elseif subEvent == "UNIT_DIED" then
-            if not UnitInParty(destName) then
-                return
-            end
-
-            NCEvent:Death(destName)
-
-            local state = NCRuntime:GetPlayerState(destName)
-
-            if state and state.lastDamageAvoidable then
-                NCEvent:AvoidableDeath(destName)
-
-                if not NCEvent:EventHasMessages() then
-                    NCEvent:Death(destName)
-                end
-            end
-
-            NCSegment:GlobalAddDeath(destName)
-        elseif NCEvent:IsDamageEvent(subEvent, destName, misc4) then
-            local damage = tonumber(misc4) or 0
-            local state = NCRuntime:GetPlayerState(destName)
-            local isAvoidable = (GTFO and GTFO.SpellID[tostring(misc1)] ~= nil)
-
-            if isAvoidable then
-                NCSegment:GlobalAddAvoidableDamage(damage, destName)
-            end
-
-            if state then
-                state.lastDamageAvoidable = isAvoidable
-            end
-
-            NCEvent:Damage(sourceName, destName, isAvoidable, damage)
-        elseif string.find(subEvent, "AURA_APPLIED") or string.find(subEvent, "AURA_DOSE") then
-            NCEvent:Aura(sourceName, destName, misc1, misc2)
-        else
-            -- Something unsupported.
-            return
-        end
-
-        NemesisChat:HandleEvent()
-    end
-
     function NemesisChat:GetNemeses()
         return NCConfig:GetNemeses()
-    end
-
-    function NemesisChat:GetRandomNemesis()
-        return NemesisChat:GetRandomKey(NemesisChat:GetNemeses())
-    end
-
-    function NemesisChat:GetNonExcludedNemesis()
-        local nemeses
-
-        if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
-            nemeses = NemesisChat:GetPartyNemeses()
-        else
-            nemeses = NemesisChat:GetGuildNemeses()
-        end
-
-        for player, _ in pairs(nemeses) do
-            if not tContains(NCController.excludedNemeses, player) then
-                return player
-            end
-        end
-
-        return nil
-    end
-
-    function NemesisChat:GetNonExcludedBystander()
-        local bystanders
-
-        if NCController:GetEventType() == NC_EVENT_TYPE_GROUP then
-            bystanders = NemesisChat:GetPartyBystanders()
-        else
-            bystanders = NemesisChat:GetGuildBystanders()
-        end
-
-        for player, _ in pairs(bystanders) do
-            if not tContains(NCController.excludedBystanders, player) then
-                return player
-            end
-        end
-
-        return nil
-    end
-
-    function NemesisChat:GetRandomPartyNemesis()
-        local partyNemeses = NemesisChat:GetPartyNemeses()
-
-        if not partyNemeses then 
-            return nil
-        end
-
-        return partyNemeses[NemesisChat:GetRandomKey(partyNemeses)]
-    end
-
-    function NemesisChat:GetRandomGuildNemesis()
-        local guildNemeses = NemesisChat:GetGuildNemeses()
-
-        if not guildNemeses then
-            return nil
-        end
-
-        return guildNemeses[NemesisChat:GetRandomKey(guildNemeses)]
-    end
-
-    function NemesisChat:GetRandomPartyBystander()
-        local partyBystanders = NemesisChat:GetPartyBystanders()
-
-        if not partyBystanders then
-            return nil
-        end
-
-        return partyBystanders[NemesisChat:GetRandomKey(partyBystanders)]
-    end
-
-    function NemesisChat:GetRandomGuildBystander()
-        local guildBystanders = NemesisChat:GetGuildBystanders()
-
-        if not guildBystanders then
-            return nil
-        end
-
-        return guildBystanders[NemesisChat:GetRandomKey(guildBystanders)]
-    end
-
-    function NemesisChat:GetPartyNemesesCount()
-        return NemesisChat:GetLength(NemesisChat:GetPartyNemeses())
-    end
-
-    function NemesisChat:GetPartyNemeses()
-        local nemeses = {}
-
-        for key,val in pairs(NCRuntime:GetGroupRoster()) do
-            if val and val.isNemesis then
-                nemeses[key] = key
-            end
-        end
-
-        return nemeses
-    end
-
-    function NemesisChat:GetGuildNemeses()
-        local nemeses = {}
-
-        for key,val in pairs(NCRuntime:GetGuildRoster()) do
-            if val and val.isNemesis then
-                nemeses[key] = key
-            end
-        end
-
-        return nemeses
-    end
-
-    function NemesisChat:GetPartyBystanders()
-        local bystanders = {}
-
-        for key,val in pairs(NCRuntime:GetGroupRoster()) do
-            if val and not val.isNemesis and key ~= GetMyName() then
-                bystanders[key] = key
-            end
-        end
-
-        return bystanders
-    end
-
-    function NemesisChat:GetGuildBystanders()
-        local bystanders = {}
-
-        for key,val in pairs(NCRuntime:GetGuildRoster()) do
-            if key ~= GetMyName() and not val.isNemesis then
-                bystanders[key] = key
-            end
-        end
-
-        return bystanders
-    end
-
-    function NemesisChat:GetPartyBystandersCount()
-        return NemesisChat:GetLength(NemesisChat:GetPartyBystanders())
     end
 
     function NemesisChat:GetNemesesLength()
@@ -580,11 +128,11 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:HasPartyNemeses()
-        return NemesisChat:GetLength(NemesisChat:GetPartyNemeses()) > 0
+        return NemesisChat:GetLength(NCState:GetGroupNemeses()) > 0
     end
 
     function NemesisChat:HasPartyBystanders()
-        return (NemesisChat:GetLength(NemesisChat:GetPartyBystanders()) > 0)
+        return (NemesisChat:GetLength(NCState:GetGroupBystanders()) > 0)
     end
 
     function NemesisChat:HasMessages()
@@ -636,86 +184,6 @@ function NemesisChat:InitializeHelpers()
         return math.floor((GetTime() - timeStamp) / 60) .. "min " .. math.floor((GetTime() - timeStamp) % 60) .. "sec"
     end
 
-    -- Get all the players in the group, as a hashmap (key = name, val = name)
-    function NemesisChat:GetPlayersInGroup()
-        local plist = {}
-
-        if IsInRaid() then
-            for i=1,40 do
-                if (UnitName('raid'..i)) then
-                    local n,s = UnitName('raid'..i)
-                    local playerName = n
-
-                    if s then 
-                        playerName = playerName .. "-" .. s
-                    end
-
-                    if playerName ~= "Unknown" then
-                        plist[playerName] = playerName
-                    end
-                end
-            end
-        elseif IsInGroup() then
-            for i=1,5 do
-                if (UnitName('party'..i)) then
-                    local n,s = UnitName('party'..i)
-                    local playerName = n
-
-                    if s then 
-                        playerName = playerName .. "-" .. s
-                    end
-
-                    if playerName ~= "Unknown" then
-                        plist[playerName] = playerName
-                    end
-                end
-            end
-        end
-
-        return plist
-    end
-
-    -- Get the difference between the current roster and the in-memory roster as a pair (joined,left)
-    function NemesisChat:GetRosterDelta()
-        local newRoster = NemesisChat:GetPlayersInGroup()
-        local oldRoster = NemesisChat:GetDoubleMap(NCRuntime:GetGroupRoster())
-        local joined = {}
-        local left = {}
-
-        -- Get joins
-        for key,val in pairs(newRoster) do 
-            if oldRoster[val] == nil and val ~= GetMyName() then
-                tinsert(joined, val)
-            end
-        end
-
-        -- Get leaves
-        for key,val in pairs(oldRoster) do
-            if newRoster[val] == nil and val ~= GetMyName() then
-                tinsert(left, val)
-            end
-        end
-
-        return joined,left
-    end
-
-    -- Check if all players within the group are dead
-    function NemesisChat:IsWipe()
-        if not UnitIsDead("player") then 
-            return false
-        end
-
-        local players = NemesisChat:GetPlayersInGroup()
-        
-        for key,val in pairs(players) do
-            if not UnitIsDead(val) then 
-                return false
-            end
-        end
-
-        return true
-    end
-
     -- Get a random AI phrase for the event
     function NemesisChat:GetRandomAiPhrase()
         if core.ai.taunts[NCEvent:GetCategory()] == nil or core.ai.taunts[NCEvent:GetCategory()][NCEvent:GetEvent()] == nil or core.ai.taunts[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()] == nil then
@@ -735,69 +203,13 @@ function NemesisChat:InitializeHelpers()
     -- If the player's name isn't set (or is set to a pre-load value), set it
     function NemesisChat:SetMyName()
         if core.runtime.myName == nil or core.runtime.myName == "" or core.runtime.myName == UNKNOWNOBJECT then
-            core.runtime.myName = UnitName("player")
-        end
-    end
-
-    -- Get a player's average item level. Currently only works if ElvUI or Details is installed, may be expanded later.
-    function NemesisChat:GetItemLevel(unit)
-        if UnitIsUnit(unit, "player") then
-            return GetAverageItemLevel()
-        end
-
-        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
-        local rosterIlvl = rosterPlayer and rosterPlayer.itemLevel or nil
-
-        if rosterIlvl ~= nil and rosterIlvl > 0 then
-            return rosterPlayer.itemLevel
-        end
-
-        if E and E.GetUnitItemLevel then
-            local itemLevel = E:GetUnitItemLevel(unit)
-
-            if itemLevel ~= "tooSoon" then
-                return itemLevel
-            end
-        end
-
-        if Details and Details.ilevel then
-            local rosterPlayer = NCRuntime:GetGroupRosterPlayer(unit)
-
-            if rosterPlayer ~= nil then
-                local detailsIlvlTable = Details.ilevel:GetIlvl(rosterPlayer.guid)
-
-                if not detailsIlvlTable or not detailsIlvlTable.ilvl then
-                    return nil
+            local name, realm = UnitName("player")
+            if name and name ~= UNKNOWNOBJECT then
+                if realm and realm ~= "" then
+                    core.runtime.myName = name .. "-" .. realm
+                else
+                    core.runtime.myName = name
                 end
-
-                return detailsIlvlTable.ilvl
-            end
-        end
-
-        return nil
-    end
-
-    -- Check the roster and (un/re)subscribe events appropriately
-    function NemesisChat:CheckGroup()
-        local shouldSubscribe = NCRuntime:GetGroupRosterCountOthers() > 0
-
-        if NCRuntime.lastCheckSubscribe == shouldSubscribe then
-            return
-        end
-
-        NCRuntime.lastCheckSubscribe = shouldSubscribe
-
-        if shouldSubscribe and IsNCEnabled() then
-            NemesisChat:Print("Group state changed, re-subscribing to group based events.")
-        else
-            NemesisChat:Print("Group state changed, un-subscribing from group based events.")
-        end
-
-        for _, event in pairs(core.eventSubscriptions) do
-            if shouldSubscribe and IsNCEnabled() then
-                NemesisChat:RegisterEvent(event)
-            else
-                NemesisChat:UnregisterEvent(event)
             end
         end
     end
@@ -834,96 +246,6 @@ function NemesisChat:InitializeHelpers()
         return math.floor(thousands / 10) / 100 .. "m"
     end
 
-    -- Populate friends map with currently online friends
-    function NemesisChat:PopulateFriends()
-        if GetTime() - NCRuntime:GetLastFriendCheck() < 60 then
-            return
-        end
-
-        local _, onlineBnetFriends = BNGetNumFriends()
-
-        NCRuntime:ClearFriends()
-
-        for i = 1, onlineBnetFriends do
-            local info = C_BattleNet.GetFriendAccountInfo(i)
-            if info and info.gameAccountInfo then
-                local character, client = info.gameAccountInfo.characterName, info.gameAccountInfo.clientProgram or ""
-
-                -- Only add WoW characters
-                if character and client == BNET_CLIENT_WOW then
-                    -- Account for realm names, since our roster does as well
-                    if info.gameAccountInfo.realmName and info.gameAccountInfo.realmName ~= GetNormalizedRealmName() then
-                        character = character .. "-" .. info.gameAccountInfo.realmName
-                    end
-
-                    NCRuntime:AddFriend(character)
-                end
-            end
-        end
-
-        NCRuntime:UpdateLastFriendCheck()
-    end
-
-    -- Get the owner of a pet from cache, and if it doesn't exist in cache, set it and return the owner
-    function NemesisChat:GetPetOwner(petGuid)
-        for i = 1, 48 do
-            scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
-        end
-
-        NCRuntime:CheckPetOwners()
-
-        local owner = NCRuntime:GetPetOwner(petGuid)
-
-        if owner ~= nil then
-            return owner
-        end
-
-        local owner = NemesisChat:ScanTooltipForPetOwner(petGuid)
-
-        NCRuntime:AddPetOwner(petGuid, owner)
-        
-        return owner
-    end
-
-    -- Pull the owner of a pet from the tooltip
-    function NemesisChat:ScanTooltipForPetOwner(guid)
-        for i = 1, 48 do
-            scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
-        end
-
-        local text = _G[scanTipText]
-        if(guid and text) then
-            scanTip:SetOwner( WorldFrame, "ANCHOR_NONE" )
-            scanTip:SetHyperlink(format('unit:%s',guid))
-            local text2 = text:GetText()
-            if(text2) then
-                for i = 1, #scanTipTitles do
-                    local check = scanTipTitles[i]:gsub("%%s", "(.+)"):gsub("[%[%]]", "%%%1")
-                    local a,b,c = string.find(text2, check)
-                    if(c) then
-                        local g = UnitGUID(c)
-                        if(g) then
-                            return g
-                        end
-                    end
-                end
-            end
-        end
-
-        return "Unknown"
-    end
-
-    function NemesisChat:UnitIsNotPulled(guid)
-        NCRuntime:CheckPulledUnits()
-
-        if NCRuntime:GetPulledUnit(guid) == nil then
-            NCRuntime:AddPulledUnit(guid)
-            return true
-        end
-
-        return false
-    end
-
     function NemesisChat:GetActualChannel(inputChannel)
         if inputChannel ~= "GROUP" then
             return inputChannel
@@ -934,38 +256,11 @@ function NemesisChat:InitializeHelpers()
 
         -- In an instance
         if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then channel = "INSTANCE_CHAT" end
-        
+
         -- In a raid
         if IsInRaid() then channel = "RAID" end
 
         return channel
-    end
-
-    function NemesisChat:GetNewPlayerStateObject()
-        return {
-            health = 0,
-            healthPercent = 0,
-            power = 0,
-            powerPercent = 0,
-            powerType = "",
-            lastHeal = GetTime(),
-            lastDeltaReport = GetTime(),
-            lastDefensive = GetTime(),
-            lastDamageAvoidable = false,
-        }
-    end
-
-    function NemesisChat:SetLastHealPlayerState(source, player)
-        NCRuntime:CheckPlayerState(player)
-
-        -- Self heals don't count
-        if source ~= player then
-            NCRuntime:GetPlayerState(player).lastHeal = GetTime()
-        end
-    end
-
-    function NemesisChat:GetHealer()
-        return NCRuntime:GetGroupHealer()
     end
 
     function NemesisChat:Print_r(...)
@@ -1004,381 +299,13 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:IsHealerAlive()
-        local healer = NemesisChat:GetHealer()
+        local healer = NCState:GetGroupHealer()
 
         if healer == nil then
             return false
         end
 
         return not UnitIsDead(healer)
-    end
-
-    function NemesisChat:UpdatePlayerState(player)
-        NCRuntime:CheckPlayerState(player)
-        local state = NCRuntime:GetPlayerState(player)
-
-        state.health = UnitHealth(player)
-        state.healthPercent = math.floor((UnitHealth(player) / UnitHealthMax(player)) * 10000) / 100 -- Round to 2 digit %
-        state.power = UnitPower(player)
-        state.powerPercent = math.floor((UnitPower(player) / UnitPowerMax(player)) * 10000) / 100 -- Round to 2 digit %
-        state.powerType = UnitPowerType(player)
-
-        if state.healthPercent >= 60 or state.health == 0 then
-            state.lastHeal = GetTime()
-        end
-    end
-
-    function NemesisChat:CheckLastHealDelta(playerName)
-        local player = NCRuntime:GetPlayerState(playerName)
-
-        if GetTime() - player.lastDeltaReport < 2 then
-            return
-        end
-
-        if NemesisChat:IsHealerAlive() and NemesisChat:GetHealer() ~= playerName then
-            local lastHealDelta = math.floor((GetTime() - player.lastHeal) * 100) / 100
-
-            if not UnitIsDead(playerName) and player.healthPercent <= 55 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
-                -- If playerName is a nemesis, different message 
-                if NCConfig:GetNemesis(playerName) ~= nil then
-                    SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds! Please do not heal them -- it's okay if they die.", "YELL")
-                else
-                    SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds!", "YELL")
-                end
-
-                player.lastDeltaReport = GetTime()
-            end
-        end
-    end
-
-    function NemesisChat:UpdateGroupState()
-        if IsInRaid() or not IsInGroup() or NCCombat:IsInactive() or NCRuntime:GetPlayerStatesLastCheckDelta() < 0.25 then
-            return
-        end
-
-        NCRuntime:UpdatePlayerStatesLastCheck()
-
-        for i=1,4 do
-            if (UnitName('party'..i)) then
-                local n,s = UnitName('party'..i)
-                local playerName = n
-
-                if s then 
-                    playerName = playerName .. "-" .. s
-                end
-
-                if playerName ~= "Unknown" then
-                    NemesisChat:UpdatePlayerState(playerName)
-                    NemesisChat:CheckLastHealDelta(playerName)
-                end
-            end
-        end
-
-        NemesisChat:UpdatePlayerState(GetMyName())
-        NemesisChat:CheckLastHealDelta(GetMyName())
-    end
-
-    -- Originally taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with heavy modifications
-    function NemesisChat:IsPull()
-        if not IsInGroup() or (NCBoss:IsActive() and NCDungeon:IsActive()) or IsInRaid() then
-            return false
-        end
-
-        local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,arg4 = CombatLogGetCurrentEventInfo()
-
-        if not UnitInParty(sname) and not UnitInParty(dname) then
-            return false
-        end
-
-        if (dname and sname and dname ~= sname and not string.find(event,"_RESURRECT") and not string.find(event,"_CREATE") and (string.find(event,"SWING") or string.find(event,"RANGE") or string.find(event,"SPELL"))) and not tContains(core.affixMobs, sname) and not tContains(core.affixMobs, dname) then
-            local function IsInvalidPlayer(player, pulledUnit)
-                if not pulledUnit then pulledUnit = dname end
-
-                if not player or player.role == "TANK" then
-                    NCRuntime:AddPulledUnit(pulledUnit)
-                    return true
-                end
-                return false
-            end
-
-            local damageAmount = 0
-
-            -- More verbose and perhaps lacking in ingenuity, but it's easier to read
-            if event == "SWING_DAMAGE" then
-                damageAmount = arg1
-            elseif event == "RANGE_DAMAGE" or event == "SPELL_DAMAGE" then
-                damageAmount = arg4
-            elseif event == "SPELL_PERIODIC_DAMAGE" then
-                damageAmount = arg4
-            end
-            
-            if(not string.find(event,"_SUMMON")) then
-                if(bit.band(sflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
-                    -- A player is attacking a mob
-                    local player = NCRuntime:GetGroupRosterPlayer(sname)
-
-                    if IsInvalidPlayer(player) then
-                        return false
-                    end
-
-                    local validDamage = damageAmount > 0
-                    local isEliteEnemy = NemesisChat:IsEliteMob(dname)
-
-                    if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
-                        -- Fire off a pull event -- player attacked a mob!
-
-                        return true, NC_PULL_EVENT_ATTACK, sname, dname
-                    end
-                elseif(bit.band(dflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
-                    -- A mob is attacking a player
-                    local player = NCRuntime:GetGroupRosterPlayer(dname)
-
-                    if IsInvalidPlayer(player, sname) then
-                        return false
-                    end
-
-                    local isEliteEnemy = NemesisChat:IsEliteMob(sname)
-
-                    if NemesisChat:UnitIsNotPulled(sguid) and isEliteEnemy then
-                        -- Fire off a butt-pull event -- mob attacked a player!
-
-                        return true, NC_PULL_EVENT_AGGRO, dname, sname
-                    end
-                elseif(bit.band(sflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
-                    -- Player's pet attacks a mob
-                    local pullname;
-                    local pname = NemesisChat:GetPetOwner(sguid);
-
-                    if (pname == "Unknown") then 
-                        pullname = sname.." (pet)"
-                    else 
-                        pullname = pname
-                    end
-
-                    local validDamage = damageAmount > 0
-                    local isEliteEnemy = NemesisChat:IsEliteMob(dname)
-                        
-                    if not UnitIsUnconscious(dguid) and validDamage and NemesisChat:UnitIsNotPulled(dguid) and isEliteEnemy then
-                        -- Fire off a pet pull event -- player's pet attacked a mob!
-
-                        return true, NC_PULL_EVENT_PET, pullname, dname
-                    end
-                elseif(bit.band(dflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit.band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
-                    --Mob attacks a player's pet
-                    local pullname;
-                    local pname = NemesisChat:GetPetOwner(dguid);
-
-                    if(pname == "Unknown") then pullname = dname.." (pet)";
-                    else pullname = pname .. " (pet)";
-                    end
-
-                    if NemesisChat:UnitIsNotPulled(sguid) then
-                        -- Fire off a pet butt-pull event -- mob attacked a player's pet!
-
-                        return true, NC_PULL_EVENT_AGGRO, pullname, sname
-                    end
-                end
-            else
-                -- Summon
-                local player = NCRuntime:GetGroupRosterPlayer(sname)
-
-                if player ~= nil then
-                    NCRuntime:AddPetOwner(dguid, sname)
-                end
-
-                return false
-            end
-        end
-    end
-
-    function NemesisChat:IsEliteMob(name)
-        -- Iterate through all nameplates since we need a token to scan the tooltip
-        for i = 1, 40 do
-            local unit = "nameplate" .. i  -- Use nameplate tokens (e.g., nameplate1, nameplate2...)
-            if UnitName(unit) == name then
-                -- Name matches, scan the tooltip for Elite status
-                local frame = CreateFrame("GameTooltip", "TooltipScan", nil, "GameTooltipTemplate")
-                frame:SetOwner(WorldFrame, "ANCHOR_NONE")
-                frame:SetUnit(unit)  -- Use the nameplate unit token
-
-                for i = 1, frame:NumLines() do
-                    local text = _G["TooltipScanTextLeft" .. i]:GetText()
-                    if text and string.find(text, "Elite") then
-                        return true
-                    end
-                end
-
-                return false
-            end
-        end
-
-        return false
-    end
-
-    function NemesisChat:IsAffixMobHandled()
-        if not IsInInstance() or not IsInGroup() then
-            return false, nil, nil
-        end
-
-        local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
-
-        if NCRuntime:GetGroupRosterPlayer(sname) == nil then
-            return false, nil, nil
-        end
-
-        if UnitIsUnconscious(dguid) or UnitIsDead(dguid) or string.find(event, "INSTAKILL") then
-            return true, sname, dguid
-        end
-
-        if core.affixMobsHandles[dname] ~= nil and type(core.affixMobsHandles[dname]) == "table" then
-            for _, eventSubstr in pairs(core.affixMobsHandles[dname]) do
-                if eventSubstr == "CROWD_CONTROL" then
-                    local flags = LibPlayerSpells:GetSpellInfo(spellId)
-
-                    if flags and bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
-                        return true, sname, dguid
-                    end
-                else
-                    if string.find(event, eventSubstr) then
-                        return true, sname, dguid
-                    end
-                end
-            end
-        end
-
-        return false, nil, nil
-    end
-
-    function NemesisChat:ActionScoring()
-        local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
-
-        if not IsInInstance() or not IsInGroup() or not UnitInParty(sname) then
-            return
-        end
-
-        local flags = LibPlayerSpells:GetSpellInfo(spellId)
-
-        if not flags then
-            return
-        end
-
-        local description = ""
-
-        if bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
-            description = "Crowd control"
-
-            NCSegment:GlobalAddCrowdControl(sname)
-        elseif bit.band(flags, LibPlayerSpells.constants.DISPEL) ~= 0 then
-            description = "Dispel"
-
-            NCSegment:GlobalAddDispell(sname)
-        elseif bit.band(flags, LibPlayerSpells.constants.SURVIVAL) ~= 0 then
-            description = "Defensive"
-
-            local state = NCRuntime:GetPlayerState(sname)
-
-            if state then
-                state.lastDefensive = GetTime()
-            end
-
-            NCSegment:GlobalAddDefensive(sname)
-        else
-            return
-        end
-
-        NCSegment:GlobalAddActionPoints(1, sname, description)
-    end
-
-    function NemesisChat:IsAffixAuraHandled()
-        if not IsInInstance() or not IsInGroup() then
-            return false, nil
-        end
-
-        local _, event, _, _, sname, _, _, _, dname, _, _, _, _, _, dispelledId = CombatLogGetCurrentEventInfo()
-
-        if (NCRuntime:GetGroupRosterPlayer(sname) == nil and sname ~= GetMyName()) or (NCRuntime:GetGroupRosterPlayer(dname) == nil and dname ~= GetMyName()) or event ~= "SPELL_DISPEL" then
-            return false, nil
-        end
-
-        local isHandled = false
-
-        for _, auraData in pairs(core.affixMobsAuras) do
-            if auraData.spellId == dispelledId then
-                isHandled = true
-                break
-            end
-        end
-
-        return isHandled, sname
-    end
-
-    function NemesisChat:CheckIsAffix()
-        if not IsInInstance() or not IsInGroup() then
-            return false
-        end
-
-        local _,event,_,_,sname = CombatLogGetCurrentEventInfo()
-
-        return core.affixMobsLookup[sname] == true
-    end
-
-    function NemesisChat:CheckAffixes()
-        NemesisChat:CheckAffixAuras()
-
-        local isAffixMobHandled, affixMobHandlerName, affixMobHandledGuid = NemesisChat:IsAffixMobHandled()
-        local isAuraHandled, auraHandlerName = NemesisChat:IsAffixAuraHandled()
-
-        if isAffixMobHandled then
-            local mobName = UnitName(affixMobHandledGuid)
-            -- SetRaidTarget(affixMobHandledGuid, 0)
-
-            -- More score for caster mobs as opposed to simply CCing shades, for example
-            if core.affixMobsCastersLookup[mobName] then
-                NCSegment:GlobalAddAffix(affixMobHandlerName, 10)
-            else
-                NCSegment:GlobalAddAffix(affixMobHandlerName)
-            end
-        end
-
-        if isAuraHandled then
-            NCSegment:GlobalAddAffix(auraHandlerName)
-        end
-    end
-
-    function NemesisChat:SilentGroupSync()
-        if not IsInGroup() then
-            return
-        end
-
-        NCRuntime:ClearGroupRoster()
-
-        local members = NemesisChat:GetPlayersInGroup()
-
-        for key,val in pairs(members) do
-            if val ~= nil and val ~= GetMyName() then
-                NCRuntime:AddGroupRosterPlayer(val)
-            end
-        end
-    end
-
-    function NemesisChat:AttemptSyncItemLevels()
-        if not IsInGroup() then
-            return
-        end
-
-        for key,val in pairs(NCRuntime:GetGroupRoster()) do
-            if val ~= nil and val.itemLevel == nil then
-                local itemLevel = NemesisChat:GetItemLevel(key)
-
-                if itemLevel ~= nil then
-                    val.itemLevel = itemLevel
-                end
-            end
-        end
-    end
-
-    function NemesisChat:LowPriorityTimer()
-        NemesisChat:AttemptSyncItemLevels()
     end
 
     function NemesisChat:Print(...)
@@ -1410,34 +337,6 @@ function NemesisChat:InitializeHelpers()
     end
 end
 
--- Check combat log for application or dose of auras listed in core.affixMobsAuras
-function NemesisChat:CheckAffixAuras()
-    if not IsInInstance() or not IsInGroup() or not NCConfig:IsReportingAffixes_AuraStacks() then
-        return
-    end
-
-    local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,itype = CombatLogGetCurrentEventInfo()
-
-    if not core.affixMobsAuraSpells[arg1] then
-        return
-    end
-
-    if not string.find(event, "AURA_APPLIED") and not string.find(event, "AURA_DOSE") then
-        return
-    end
-
-    for _, auraData in pairs(core.affixMobsAuras) do
-        if auraData.spellId == arg1 then
-            local _, _, count = AuraUtil.FindAuraByName(auraData.spellName, dname, auraData.type)
-
-            if count ~= nil and tonumber(count) >= auraData.highStacks and NCRuntime:GetPlayerStatesLastAuraCheckDelta() >= 3 then
-                SendChatMessage("Nemesis Chat: " .. dname .. " has " .. auraData.name .. " at " .. count .. " stacks!", "YELL")
-                NCRuntime:UpdatePlayerStatesLastAuraCheck()
-            end
-        end
-    end
-end
-
 function NemesisChat:UnitHasAura(unit, auraName, auraType)
     if string.lower(auraType) == "buff" then
         auraType = "HELPFUL"
@@ -1464,22 +363,22 @@ function NemesisChat:InstantiateCore()
     NemesisChat:InstantiateController()
     NCController:Initialize()
 
-    NCSpell = DeepCopy(core.runtimeDefaults.ncSpell)
+    NCSpell = DeepCopy(core.runtimeDefaults.NCSpell)
     NemesisChat:InstantiateSpell()
 
-    NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
+    NCEvent = DeepCopy(core.runtimeDefaults.NCEvent)
     NemesisChat:InstantiateEvent()
 
-    if core.db.profile.cache.guild then
-        core.runtime.guild = DeepCopy(core.db.profile.cache.guild)
+    if NCCache:Exists(NC_CACHE_KEY_GUILD) then
+        core.runtime.guild = DeepCopy(NCCache:Pull(NC_CACHE_KEY_GUILD))
     end
 
-    if core.db.profile.cache.friends then
-        core.runtime.friends = DeepCopy(core.db.profile.cache.friends)
+    if NCCache:Exists(NC_CACHE_KEY_FRIENDS) then
+        core.runtime.friends = DeepCopy(NCCache:Pull(NC_CACHE_KEY_FRIENDS))
     end
 
-    if core.db.profile.cache.groupRoster and GetTime() - core.db.profile.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
-        core.runtime.groupRoster = DeepCopy(core.db.profile.cache.groupRoster)
+    if NCCache:Exists(NC_CACHE_KEY_GROUP) and NCCache:GetPushDelta(NC_CACHE_KEY_GROUP) <= NCState:GetGroupCacheExpiration() then
+        core.runtime.groupRoster = DeepCopy(NCCache:Get(NC_CACHE_KEY_GROUP))
     end
 
     NCDungeon:CheckCache()
@@ -1488,10 +387,58 @@ end
 function NemesisChat:Initialize()
     NemesisChat:InitializeConfig()
     NemesisChat:InitializeHelpers()
-    NemesisChat:InitializeTimers()
-    NemesisChat:PopulateFriends()
-    NemesisChat:RegisterPrefixes()
+    NemesisChat:InitializeGlobals()
     NemesisChat:RegisterToasts()
     NemesisChat:SetMyName()
     NCInfo:Initialize()
+end
+
+function NemesisChat:InitializeGlobals()
+    local count = 0
+    for key, value in pairs(_G) do
+        count = count + 1
+        for prefix, name in pairs(NemesisChat._globalPrefixes) do
+            if string.match(key, "^" .. prefix) then
+                if not NemesisChat[name] then
+                    NemesisChat[name] = {}
+                end
+
+                NemesisChat[name][key] = value
+            end
+        end
+    end
+
+    NemesisChat:Print("NemesisChat:InitializeGlobals() - Found " .. count .. " global variables.")
+end
+
+function NemesisChat:GetNameplateTokenByName(name)
+    for i = 1, 40 do
+        local unit = "nameplate" .. i -- Use nameplate tokens (e.g., nameplate1, nameplate2...)
+        if UnitName(unit) == name then
+            return unit
+        end
+    end
+    return nil
+end
+
+function NemesisChat:CheckEliteStatus(unit)
+    local frame = CreateFrame("GameTooltip", "TooltipScan", nil, "GameTooltipTemplate")
+    frame:SetOwner(WorldFrame, "ANCHOR_NONE")
+    frame:SetUnit(unit) -- Use the nameplate unit token
+
+    for i = 1, frame:NumLines() do
+        local text = _G["TooltipScanTextLeft" .. i]:GetText()
+        if text and string.find(text, "Elite") then
+            return true
+        end
+    end
+    return false
+end
+
+function NemesisChat:IsEliteMob(name)
+    local unit = NemesisChat:GetNameplateTokenByName(name)
+    if unit then
+        return NemesisChat:CheckEliteStatus(unit)
+    end
+    return false
 end

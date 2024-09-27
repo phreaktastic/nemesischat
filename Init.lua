@@ -19,14 +19,24 @@ LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
 -- Global functions
 -----------------------------------------------------
 
+NemesisChat._globalPrefixes = {}
+
+function NemesisChat:RegisterGlobalLookup(prefix, name)
+    tinsert(NemesisChat._globalPrefixes, { prefix = prefix, name = name })
+end
+
 -- When we don't want a reference (ie, resetting to refaults)
-function DeepCopy(orig)
+function DeepCopy(orig, skipPseudoPrivate)
     local orig_type = type(orig)
     local copy
     if orig_type == 'table' then
         copy = {}
         for orig_key, orig_value in next, orig, nil do
-            copy[DeepCopy(orig_key)] = DeepCopy(orig_value)
+            if (skipPseudoPrivate and string.match(orig_key, "^_")) then
+                copy[orig_key] = nil
+            else
+                copy[DeepCopy(orig_key, skipPseudoPrivate)] = DeepCopy(orig_value, skipPseudoPrivate)
+            end
         end
         setmetatable(copy, DeepCopy(getmetatable(orig)))
     else -- number, string, boolean, etc
@@ -82,10 +92,10 @@ end
 function GetRole(player)
     local role
 
-    if NCRuntime:GetGroupRosterPlayer(player) == nil then
+    if NCState:GetPlayerState(player) == nil then
         role = UnitGroupRolesAssigned(player)
     else
-        role = NCRuntime:GetGroupRosterPlayer(player).role
+        role = NCState:GetPlayerState(player).role
     end
 
     for key, val in pairs(core.roles) do
@@ -747,10 +757,14 @@ core.eventSubscriptions = {
     "UNIT_SPELLCAST_START",
     "UNIT_SPELLCAST_SUCCEEDED",
     "UNIT_SPELLCAST_INTERRUPTED",
+    "UNIT_CONNECTION",
 
     -- Self
     "PLAYER_TARGET_CHANGED",
     "COMBAT_LOG_EVENT_UNFILTERED",
+
+    -- Battle.net friends
+    "BN_FRIEND_INFO_CHANGED",
 }
 
 NC_PULL_EVENT_ATTACK = 0
@@ -760,6 +774,8 @@ NC_PULL_EVENT_PET = 2
 NC_EVENT_TYPE_GROUP = 0
 NC_EVENT_TYPE_GUILD = 1
 NC_EVENT_TYPE_MAXIMUM = 1 -- Used for logic that validates event types, increase as more are added
+
+NemesisChat:RegisterGlobalLookup("NC_EVENT_TYPE_", "Events")
 
 -- We reference this in a few areas, if Details is not installed, we need to set these to something
 if not DETAILS_SEGMENTID_OVERALL then
@@ -771,5 +787,4 @@ NCEvent = {}
 NCController = {}
 NCSpell = {}
 
-C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
-C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
+core.db = DeepCopy(core.defaults)

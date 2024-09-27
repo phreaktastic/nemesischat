@@ -5,20 +5,34 @@
 ## Notes: The event-driven, targeted message framework.
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB
-## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibGroupInSpecT, LibToast, LibCompress, LibSerialize, LibMobInfo-2.0
+## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibGroupInSpecT, LibToast, LibCompress, LibSerialize
 
 # Third party libraries
 Embeds.xml
+
+# TaintLess
+Libs\TaintLess\TaintLess.xml
+
+# Config defaults
+Config\Defaults.lua
 
 # Core NC initialization
 Init.lua
 Config\Config.lua
 
-#Core NC models
+# Core NC models (other models very likely reference these, so they MUST be loaded first)
 Models\DB.lua
-Models\Config.lua
-Models\Runtime.lua
+Models\Cache.lua
+Models\CombatLogEvent.lua
 Models\Colors.lua
+Models\Config.lua
+Models\Controller.lua
+Models\Message.lua
+Models\Runtime.lua
+Models\Rankings.lua
+Models\Segment.lua
+Models\State.lua
+Models\Synchronization.lua
 
 # Core NC configuration UI
 Config\General.lua
@@ -32,19 +46,18 @@ Config\About.lua
 Helpers.lua
 
 # NC models
-Models\CombatLogEvent.lua
-Models\Rankings.lua
-Models\Segment.lua
+Models\Action.lua
 Models\Boss.lua
+Models\Combat.lua
 Models\Dungeon.lua
 Models\Event.lua
-Models\Controller.lua
-Models\Spell.lua
-Models\Combat.lua
-Models\Report.lua
 Models\Info.lua
 Models\Migration.lua
+Models\Report.lua
 Models\Semver.lua
+Models\Spell.lua
+Models\Trigger.lua
+Models\Variable.lua
 
 # NC event handlers
 Events\BaseEvents.lua
@@ -53,10 +66,10 @@ Events\CustomEvents.lua
 # NC slash command handlers
 SlashCommands.lua
 
-# NC API core
+# NC API core (core logic for handling APIs)
 API.lua
 
-# NC core API
+# NC core API (official API providing base functionality)
 APIs\NemesisChat.lua
 
 # NC third party APIs

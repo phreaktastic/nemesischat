@@ -301,7 +301,7 @@ NCRankings = {
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
                         local secondFromTop = self.All[metric][order[#order-1]] or botVal
                         local secondFromBot = self.All[metric][order[2]] or topVal
-                        local topPlayerInfo = NCRuntime:GetGroupRosterPlayer(topPlayer)
+                        local topPlayerInfo = NCState:GetPlayerState(topPlayer)
 
                         if topPlayerInfo and topPlayerInfo.role == "TANK" then
                             return 0, (secondFromBot - botVal)
@@ -339,8 +339,8 @@ NCRankings = {
                         return GetRole(player) == "DPS"
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
-                        local topItemLevel = NemesisChat:GetItemLevel(topPlayer)
-                        local bottomItemLevel = NemesisChat:GetItemLevel(botPlayer)
+                        local topItemLevel = NCState:GetItemLevel(topPlayer)
+                        local bottomItemLevel = NCState:GetItemLevel(botPlayer)
 
                         local addTop = 0
                         local addBot = 0
@@ -358,7 +358,7 @@ NCRankings = {
                         end
 
                         -- If the bot player's DPS is lower than the tank or healer, they're dramatically underperforming
-                        if botVal < self._segment:GetStats(NCRuntime:GetGroupHealer(), "DPS") then
+                        if botVal < self._segment:GetStats(NCState:GetGroupHealer(), "DPS") then
                             addBot = addBot + self.Configuration.Increments.Metrics.DPS.BelowHealerIncrement
 
                             -- Add the scores for explanation on top / bottom placement(s)
@@ -369,7 +369,7 @@ NCRankings = {
                             else
                                 self.BottomScores[botPlayer]["DPS < Healer"] = addBot
                             end
-                        elseif botVal < self._segment:GetStats(NCRuntime:GetGroupTank(), "DPS") then
+                        elseif botVal < self._segment:GetStats(NCState:GetGroupTank(), "DPS") then
                             addBot = addBot + self.Configuration.Increments.Metrics.DPS.BelowTankIncrement
 
                             -- Add the scores for explanation on top / bottom placement(s)
@@ -386,7 +386,7 @@ NCRankings = {
                             order = GetKeysSortedByValue(self.All["DPS"], function(a, b) return a < b end)
 
                             if order and order[#order-1] then
-                                secondItemLevel = NemesisChat:GetItemLevel(order[#order-1]) or 0
+                                secondItemLevel = NCState:GetItemLevel(order[#order-1]) or 0
                             end
                         end
 
@@ -509,9 +509,13 @@ NCRankings = {
     ---@return NCRankings
     New = function(self, segment)
         local o = {
+            All = DeepCopy(self.All),
             Top = DeepCopy(self.Top),
+            TopTracker = {},
+            TopScores = {},
             Bottom = DeepCopy(self.Bottom),
             BottomTracker = {},
+            BottomScores = {},
             _segment = segment,
         }
         setmetatable(o, self)
@@ -532,7 +536,7 @@ NCRankings = {
             local topPlayer = nil
             local botPlayer = nil
 
-            for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
+            for playerName, playerData in pairs(NCState:GetGroupPlayers()) do
                 self.All[metricKey][playerName] = (self._segment:GetStats(playerName, metricKey) or nil)
 
                 topVal, botVal, topPlayer, botPlayer = self:_SetTopBottom(metricKey, playerData.role, playerName, topVal, botVal, topPlayer, botPlayer)

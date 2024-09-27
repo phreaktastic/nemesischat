@@ -11,19 +11,22 @@ local _, core = ...;
 
 NCMigration = {
     -- Unique string for checking if migration has been run.
-    identifier = "",
+    Identifier = "",
 
     -- Paths to erase from the database.
-    pathsToErase = {},
+    PathsToErase = {},
 
     -- Function to execute when migration is run.
-    exec = nil,
+    Exec = nil,
 
     -- Maximum version of the addon that this migration is compatible with.
-    lessThanVersion = nil,
+    LessThanVersion = nil,
 
     -- NCMigration (parent) ONLY, tracks all instantiated migrations.
-    migrations = {},
+    Migrations = {},
+
+    -- Condition to check if migration should run (function, optional).
+    Condition = nil,
 }
 
 function NCMigration:New(identifier, pathsToErase, exec)
@@ -36,25 +39,36 @@ function NCMigration:New(identifier, pathsToErase, exec)
     setmetatable(migration, self)
     self.__index = self
 
-    table.insert(NCMigration.migrations, migration)
+    table.insert(NCMigration.Migrations, migration)
 
     return migration
 end
 
 function NCMigration:AddPathToErase(path)
-    table.insert(self.pathsToErase, path)
+    table.insert(self.PathsToErase, path)
 
     return self
 end
 
 function NCMigration:SetExec(exec)
-    self.exec = exec
+    self.Exec = exec
 
     return self
 end
 
 function NCMigration:SetLessThanVersion(maxVersion)
-    self.lessThanVersion = maxVersion
+    self.LessThanVersion = maxVersion
+
+    return self
+end
+
+function NCMigration:SetCondition(condition)
+    if type(condition) ~= "function" then
+        NemesisChat:Print("Migration condition must be a function.")
+        return self
+    end
+
+    self.Condition = condition
 
     return self
 end
@@ -64,11 +78,11 @@ function NCMigration:Run()
         core.db.profile.migrations = {}
     end
 
-    local total = #NCMigration.migrations
+    local total = #NCMigration.Migrations
     local count = 0
 
-    for _, migration in pairs(NCMigration.migrations) do
-        if not core.db.profile.migrations[migration.identifier] and NCSemver:Less(migration.lessThanVersion) then
+    for _, migration in pairs(NCMigration.Migrations) do
+        if not core.db.profile.migrations[migration.identifier] and NCSemver:Less(migration.lessThanVersion) and (not migration.Condition or (migration.Condition and migration.Condition())) then
             if migration.pathsToErase then
                 for _, path in pairs(migration.pathsToErase) do
                     if string.find(path, "core.db.profile") ~= nil then
