@@ -46,8 +46,8 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         type = "NUMBER",
     })
     :AddSubject({
-        label = "Damage Taken",
-        value = "DAMAGE_TAKEN",
+        label = "Damage",
+        value = "EVENT_DAMAGE",
         category = "Combat",
         exec = function() return NCSpell:GetDamage() end,
         operators = core.constants.NUMERIC_OPERATORS,
