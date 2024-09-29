@@ -22,16 +22,20 @@ NCConfig = {
     ToggleEnabled = function(self)
         self.CoreDB:Toggle("enabled")
 
+        NemesisChat:CheckGroup()
+
         if self.CoreDB:GetKey("enabled") then
-                    NemesisChat:Enable()
-                    NemesisChat:Print("Enabled.")
-                else
-                    NemesisChat:Disable()
-                    NemesisChat:Print("Disabled.")
-                end
+            NemesisChat:Enable()
+            NemesisChat:Print("Enabled.")
+        else
+            NemesisChat:Disable()
+            NemesisChat:Print("Disabled.")
+        end
     end,
     SetEnabled = function(self, value)
         self.CoreDB:SetKey("enabled", value)
+
+        NemesisChat:CheckGroup()
 
         if value then
             NemesisChat:Enable()

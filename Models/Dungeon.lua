@@ -114,5 +114,4 @@ end
 function NCDungeon:ClearCache()
     core.db.profile.cache.NCDungeon = {}
     core.db.profile.cache.NCDungeonTime = 0
-    NCDungeon.RosterSnapshot = {}
 end

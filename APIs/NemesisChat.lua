@@ -46,6 +46,14 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         type = "NUMBER",
     })
     :AddSubject({
+        label = "Damage Taken",
+        value = "DAMAGE_TAKEN",
+        category = "Combat",
+        exec = function() return NCSpell:GetDamage() end,
+        operators = core.constants.NUMERIC_OPERATORS,
+        type = "NUMBER",
+    })
+    :AddSubject({
         label = "Dungeon Time",
         value = "DUNGEON_TIME",
         category = "Dungeon / Encounter",
@@ -620,7 +628,10 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Spell Name",
         value = "SPELL",
-        exec = function() if NCEvent:GetEvent() == "INTERRUPT" then return (NCSpell:GetExtraSpellLink() or "Spell") else return (NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or "Spell") end end,
+        exec = function()
+            if NCEvent:GetEvent() == "INTERRUPT" then return (NCSpell:GetExtraSpellLink() or "Spell")
+            else return (NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or NCSpell:GetSpellName() .. " (general)") end
+            end,
         description = "The name of the spell that was cast or interrupted.",
         isNumeric = false,
         example = function()
@@ -935,7 +946,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Damage",
         value = "DAMAGE",
         exec = function() return NemesisChat:FormatNumber(NCSpell:GetDamage()) or 0 end,
-        description = "The amount of damage dealt by the spell that was cast.",
+        description = "The amount of damage dealt by the spell/swing (if applicable).",
         isNumeric = true,
         example = function() return NemesisChat:FormatNumber(math.random(1, 1000000)) end,
     })

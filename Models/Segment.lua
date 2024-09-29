@@ -32,7 +32,7 @@ NCSegment = {
 
     -- Segment start time
     StartTime = 0,
- 
+
     -- Was this segment a success?
     Success = false,
 
@@ -467,7 +467,7 @@ NCSegment = {
         if player == nil then
             return self.OffHeals
         end
-        
+
         if self.OffHeals[player] == nil then
             self.OffHeals[player] = 0
         end
@@ -494,7 +494,7 @@ NCSegment = {
         if player == nil then
             return self.Pulls
         end
-        
+
         if self.Pulls[player] == nil then
             self.Pulls[player] = 0
         end
@@ -596,7 +596,6 @@ NCSegment = {
             if segment:IsActive() then
                 segment:AddAvoidableDamage(amount, player)
             end
-            
         end
     end,
     GlobalAddCrowdControl = function(self, player)

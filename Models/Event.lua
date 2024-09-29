@@ -231,8 +231,15 @@ function NemesisChat:InstantiateEvent()
         NCEvent:SetEvent("AVOIDABLE_DEATH")
     end
 
-    -- Damage event
+    --- Handles a damage event<br><br>
+    -- @param <b>source</b> string: The source of the damage<br>
+    -- @param <b>dest</b> string: The target of the damage<br>
+    -- @param <b>spellId</b> number: The ID of the spell causing the damage<br>
+    -- @param <b>spellName</b> string: The name of the spell causing the damage<br>
+    -- @param <b>amount</b> number: The amount of damage dealt<br>
+    -- @param <b>avoidable</b> boolean: Boolean indicating if the damage was avoidable<br>
     function NCEvent:Damage(source, dest, spellId, spellName, amount, avoidable)
+        local _, subEvent = CombatLogGetCurrentEventInfo()
         NCEvent:SetEvent("DAMAGE")
         NCEvent:SetTargetFromSource(dest)
 
@@ -240,7 +247,11 @@ function NemesisChat:InstantiateEvent()
             NCEvent:SetEvent("AVOIDABLE_DAMAGE")
         end
 
-        NCSpell:Damage(source, dest, spellId, spellName, amount)
+        if subEvent == "SWING_DAMAGE" then
+            NCSpell:Damage(source, dest, source, source, amount)
+        else
+            NCSpell:Damage(source, dest, spellId, spellName, amount)
+        end
     end
 
     -- Aura applied
@@ -332,7 +343,7 @@ function NemesisChat:InstantiateEvent()
 
     -- A player within the party has taken damage
     function NCEvent:IsDamageEvent(event, dest, misc4)
-        return ((event == "SPELL_PERIODIC_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_INSTAKILL" or event == "SWING_DAMAGE") or ((event=="SPELL_AURA_APPLIED" or event=="SPELL_AURA_APPLIED_DOSE" or event=="SPELL_AURA_REFRESH") and misc4=="DEBUFF")) and ((core.runtime.groupRoster[dest] ~= nil and core.runtime.groupRoster[dest] ~= "") or dest == GetMyName())
+        return misc4 and type(misc4) == "number" and misc4 > 0 and UnitInParty(dest)
     end
 
     function NCEvent:CombatStart()

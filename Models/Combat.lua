@@ -40,8 +40,6 @@ function NCCombat:FinishCallback()
         NCDungeon.Rankings:Calculate()
     end
 
-    NCInfo:Update()
-
     if NCConfig:ShouldShowInfoFrame() then
         NCInfo.StatsFrame:Show()
         NCInfo:Update()

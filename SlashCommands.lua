@@ -37,6 +37,9 @@ function NemesisChat:SlashCommand(msg)
 		core.db.profile.leavers[guid] = nil
 
 		self:Print("Wiped data for " .. name .. " (" .. guid .. ")")
+	elseif cmd == "debug" then
+		self:Print("Roster Data")
+		self:Print_r(NCRuntime:GetGroupRoster())
 	else
         if core.db.profile.dbg then
             self:Print("Invalid command issued.")

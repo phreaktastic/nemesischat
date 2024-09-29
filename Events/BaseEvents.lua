@@ -90,7 +90,7 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
                 -- Because we don't always add Brann Bronzebeard, this can fire errors unless we null check
                 if player and isLeader then
                     -- Imagine inviting a large group to a raid, we don't want to spam the chat
-                    if #joins <= 3 then
+                    if #joins < 3 then
                         NemesisChat:PLAYER_JOINS_GROUP(val, player.isNemesis)
                     end
                 end

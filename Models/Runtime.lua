@@ -351,6 +351,7 @@ NCRuntime = {
             rawClass = rawClass,
             groupLead = groupLead,
             name = playerName,
+            token = self:GetUnitTokenFromName(UnitName(playerName)),
         }
 
         core.runtime.groupRoster[playerName] = data
@@ -522,5 +523,26 @@ NCRuntime = {
     end,
     Set = function(self, key, value)
         core.runtime[key] = value
+    end,
+    GetUnitTokenFromName = function(self, playerName)
+        if playerName == UnitName("player") then
+            return "player"
+        end
+
+        for i = 1, 4 do
+            local unitToken = "party" .. i
+            if UnitName(unitToken) == playerName then
+                return unitToken
+            end
+        end
+
+        for i = 1, 40 do
+            local unitToken = "raid" .. i
+            if UnitName(unitToken) == playerName then
+                return unitToken
+            end
+        end
+
+        return nil
     end,
 }

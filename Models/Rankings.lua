@@ -237,7 +237,7 @@ NCRankings = {
             Metrics = {
                 Affixes = {
                     IsIncludedCallback = function(self, player)
-                        return true
+                        return false
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
@@ -295,7 +295,7 @@ NCRankings = {
                 },
                 Defensives = {
                     IsIncludedCallback = function(self, player)
-                        return GetRole(player) ~= "TANK"
+                        return true
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
@@ -336,7 +336,8 @@ NCRankings = {
                     BelowHealerIncrement = 30,
                     BelowTankIncrement = 20,
                     IsIncludedCallback = function(self, player)
-                        return GetRole(player) == "DPS"
+                        return true
+                        -- return GetRole(player) == "DPS"
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local topItemLevel = NemesisChat:GetItemLevel(topPlayer)
@@ -434,10 +435,11 @@ NCRankings = {
                         [30] = 3,
                     },
                     IsIncludedCallback = function(self, player)
-                        local _, classId = UnitClassBase(player)
+                        return true
+                        -- local _, classId = UnitClassBase(player)
 
-                        -- Priest and Druid are excluded
-                        return classId ~= 5 and classId ~= 11
+                        -- -- Priest and Druid are excluded
+                        -- return classId ~= 5 and classId ~= 11
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
@@ -455,16 +457,18 @@ NCRankings = {
                 },
                 Offheals = {
                     IsIncludedCallback = function(self, player)
+                        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(player)
+
                         -- If the player is a healer, they're excluded
-                        if GetRole(player) == "Healer" then
+                        if not rosterPlayer or rosterPlayer.role == "HEALER" then
                             return false
                         end
 
-                        local _, classId = UnitClassBase(player)
+                        local _, classId = UnitClassBase(rosterPlayer.token)
 
                         -- Only certain classes can offheal
                         -- Paladin, Priest, Shaman, Monk, Druid, Evoker
-                        return classId == 2 or classId == 5 or classId == 7 or classId == 10 or classId == 11 or classId == 13
+                        return (classId == 2 or classId == 5 or classId == 7 or classId == 10 or classId == 11 or classId == 13)
                     end,
                     AdditiveCallback = function(self, topPlayer, botPlayer, topVal, botVal, metric)
                         local order = GetKeysSortedByValue(self.All[metric], function(a, b) return a < b end)
@@ -492,7 +496,7 @@ NCRankings = {
 
     -- Metrics to calculate. If true, top is good. If false, bottom is good.
     METRICS = {
-        Affixes = true,
+        -- Affixes = true,
         AvoidableDamage = false,
         CrowdControl = true,
         Deaths = false,

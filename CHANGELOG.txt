@@ -9,6 +9,18 @@
 
 ## 🩹 Patches
 
+- **1.10.3**: Pass on the information pane. This pane is still in development and there is much more to come.
+   - The info pane is now _much_ more friendly and easier to use.
+      - All metrics are always visible for all classes, but you will now see metrics that are "greyed out" if they're not applicable to that player's class.
+      - Back/Forward navigation added.
+      - Channel selection for reporting the metrics
+      - More to come!
+   - Significant performance improvements across the board
+   - Resolution of race conditions affecting Avoidable Damage tracking and damage events
+   - Substantial reduction in memory usage
+   - Streamlined code for better maintainability and future development
+   - Enhanced overall stability and reliability
+   - Bug fixes for various existing features
 - **1.10.2**: Another small bugfix for the enabling/disabling of NC
 - **1.10.1**: Bugfix
 

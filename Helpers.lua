@@ -334,15 +334,12 @@ function NemesisChat:InitializeHelpers()
 
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
-        if not IsInInstance() then
-            return
-        end
-
         local _, subEvent, eventType, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _ = CombatLogGetCurrentEventInfo()
         local isPull, _, pullPlayerName, mobName = NemesisChat:IsPull()
+        local damage = NemesisChat:GetDamageAmount(subEvent, misc1, misc4)
 
         NemesisChat:SetMyName()
-        NemesisChat:UpdateGroupState()
+        -- NemesisChat:UpdateGroupState()
         NemesisChat:ActionScoring()
         NemesisChat:CheckAffixes()
 
@@ -364,7 +361,27 @@ function NemesisChat:InitializeHelpers()
             NCSegment:GlobalAddPull(UnitName(pullPlayerName))
         end
 
-        -- This could be more modular, the only problem is feasts...
+        if NCEvent:IsDamageEvent(subEvent, destName, damage) then
+            local GTFO = _G.GTFO
+            local playerState = NCRuntime:GetPlayerState(destName)
+            local isAvoidable = (GTFO and GTFO.SpellID[tostring(misc1)] ~= nil)
+
+            if isAvoidable then
+                NCSegment:GlobalAddAvoidableDamage(damage, destName)
+            end
+
+            if playerState then
+                playerState.lastDamageAvoidable = isAvoidable
+            end
+
+            NCEvent:Damage(sourceName, destName, misc1, misc2, damage, isAvoidable)
+
+            -- Damage events are handled in addition to everything else.
+            NemesisChat:HandleEvent()
+            NCEvent:Initialize()
+            NCEvent:SetCategory("COMBATLOG")
+        end
+
         if subEvent == "SPELL_INTERRUPT" then
             NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "SPELL_CAST_SUCCESS" then
@@ -403,20 +420,6 @@ function NemesisChat:InitializeHelpers()
             end
 
             NCSegment:GlobalAddDeath(destName)
-        elseif NCEvent:IsDamageEvent(subEvent, destName, misc4) then
-            local damage = tonumber(misc4) or 0
-            local state = NCRuntime:GetPlayerState(destName)
-            local isAvoidable = (GTFO and GTFO.SpellID[tostring(misc1)] ~= nil)
-
-            if isAvoidable then
-                NCSegment:GlobalAddAvoidableDamage(damage, destName)
-            end
-
-            if state then
-                state.lastDamageAvoidable = isAvoidable
-            end
-
-            NCEvent:Damage(sourceName, destName, isAvoidable, damage)
         elseif string.find(subEvent, "AURA_APPLIED") or string.find(subEvent, "AURA_DOSE") then
             NCEvent:Aura(sourceName, destName, misc1, misc2)
         else
@@ -425,6 +428,16 @@ function NemesisChat:InitializeHelpers()
         end
 
         NemesisChat:HandleEvent()
+    end
+
+    function NemesisChat:GetDamageAmount(event, arg1, arg4)
+        if event == "SWING_DAMAGE" then
+            return arg1 or 0
+        elseif event == "RANGE_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_PERIODIC_DAMAGE" then
+            return arg4 or 0
+        else
+            return 0
+        end
     end
 
     function NemesisChat:GetNemeses()
@@ -779,7 +792,9 @@ function NemesisChat:InitializeHelpers()
 
     -- Check the roster and (un/re)subscribe events appropriately
     function NemesisChat:CheckGroup()
-        local shouldSubscribe = NCRuntime:GetGroupRosterCountOthers() > 0
+        local isEnabled = IsNCEnabled()
+        local hasGroupMembers = NCRuntime:GetGroupRosterCountOthers() > 0
+        local shouldSubscribe = isEnabled and hasGroupMembers
 
         if NCRuntime.lastCheckSubscribe == shouldSubscribe then
             return
@@ -787,18 +802,20 @@ function NemesisChat:InitializeHelpers()
 
         NCRuntime.lastCheckSubscribe = shouldSubscribe
 
-        if shouldSubscribe and IsNCEnabled() then
-            NemesisChat:Print("Group state changed, re-subscribing to group based events.")
+        local action, reason
+        if isEnabled then
+            action = shouldSubscribe and "re-subscribing to" or "un-subscribing from"
+            reason = "Group state changed"
         else
-            NemesisChat:Print("Group state changed, un-subscribing from group based events.")
+            action = "un-subscribing from"
+            reason = "NemesisChat was disabled"
         end
 
+        NemesisChat:Print(("%s, %s group based events."):format(reason, action))
+
+        local method = shouldSubscribe and "RegisterEvent" or "UnregisterEvent"
         for _, event in pairs(core.eventSubscriptions) do
-            if shouldSubscribe and IsNCEnabled() then
-                NemesisChat:RegisterEvent(event)
-            else
-                NemesisChat:UnregisterEvent(event)
-            end
+            NemesisChat[method](NemesisChat, event)
         end
     end
 
@@ -1252,7 +1269,7 @@ function NemesisChat:InitializeHelpers()
     function NemesisChat:ActionScoring()
         local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
 
-        if not IsInInstance() or not IsInGroup() or not UnitInParty(sname) then
+        if not IsInGroup() or not UnitInParty(sname) then
             return
         end
 
@@ -1272,7 +1289,7 @@ function NemesisChat:InitializeHelpers()
             description = "Dispel"
 
             NCSegment:GlobalAddDispell(sname)
-        elseif bit.band(flags, LibPlayerSpells.constants.SURVIVAL) ~= 0 then
+        elseif bit.band(flags, LibPlayerSpells.constants.SURVIVAL) ~= 0 and bit.band(flags, LibPlayerSpells.constants.COOLDOWN) ~= 0 then
             description = "Defensive"
 
             local state = NCRuntime:GetPlayerState(sname)
@@ -1286,7 +1303,7 @@ function NemesisChat:InitializeHelpers()
             return
         end
 
-        NCSegment:GlobalAddActionPoints(1, sname, description)
+        -- NCSegment:GlobalAddActionPoints(1, sname, description)
     end
 
     function NemesisChat:IsAffixAuraHandled()
@@ -1346,10 +1363,6 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:SilentGroupSync()
-        if not IsInGroup() then
-            return
-        end
-
         NCRuntime:ClearGroupRoster()
 
         local members = NemesisChat:GetPlayersInGroup()

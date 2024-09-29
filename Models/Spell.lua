@@ -140,7 +140,7 @@ function NemesisChat:InstantiateSpell()
         NCSpell:SetActive()
     end
 
-    -- Helper for damaging spells
+    -- Helper for damaging spells/swings
     function NCSpell:Damage(source, dest, spellId, spellName, damage)
         NCSpell:Spell(source, dest, spellId, spellName)
         NCSpell:SetDamage(damage)
