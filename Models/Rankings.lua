@@ -773,7 +773,7 @@ NCRankings = {
     -- Get all (bad) metrics for a player, looking in self.Top if the metric value is true, and self.Bottom if it is false. 
     -- Returns the metric names for all metrics where playerName exists.
     GetPlayerMetrics = function(self, playerName)
-        local metrics = {}
+        local metrics = setmetatable({}, {__mode = "kv"})
 
         for metricKey, metricVal in pairs(self.METRICS) do
             if not metricVal then

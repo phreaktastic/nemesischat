@@ -11,7 +11,7 @@ local _, core = ...;
 -- Dungeon getters, setters, etc.
 -----------------------------------------------------
 
-NCDungeon = NCSegment:New()
+NCDungeon = NCSegmentPool:Acquire("DUNGEON")
 
 NCDungeon.Level = 0
 NCDungeon.Affixes = {}
@@ -33,6 +33,7 @@ function NCDungeon:StartCallback()
     NCDungeon:SetLevel(keystoneLevel)
     NCDungeon:SetKeystoneAffixes(affixIDs)
     NCDungeon:SetTimeLimit(timeLimit)
+    NCRuntime:ClearPetOwners()
 
     NCInfo:Update()
     NCDungeon:UpdateCache()
@@ -100,7 +101,8 @@ function NCDungeon:UpdateCache()
     if core.db.profile.cache.NCDungeon.Restore then
         core.db.profile.cache.NCDungeon:Restore(NCDungeon)
     else
-        core.db.profile.cache.NCDungeon = NCSegment:New()
+        NCSegmentPool:Release(NCDungeon)
+        core.db.profile.cache.NCDungeon = NCSegmentPool:Acquire("DUNGEON")
         core.db.profile.cache.NCDungeon:Restore(NCDungeon)
     end
 end

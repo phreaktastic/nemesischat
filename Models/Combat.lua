@@ -11,7 +11,7 @@ local _, core = ...;
 -- Event getters, setters, and helper methods
 -----------------------------------------------------
 
-NCCombat = NCSegment:New()
+NCCombat = NCSegmentPool:Acquire("COMBAT")
 
 function NCCombat:StartCallback()
     NCEvent:SetCategory("COMBATLOG")

@@ -616,12 +616,12 @@ NCConfig = {
         return self.CoreDB:GetKey("messages")
     end,
     AddMessage = function(self, message)
-        local messages = self:GetMessages() or {}
+        local messages = self:GetMessages() or setmetatable({}, {__mode = "kv"})
         table.insert(messages, message)
         self.CoreDB:SetKey("messages", messages)
     end,
     RemoveMessage = function(self, message)
-        local messages = self:GetMessages() or {}
+        local messages = self:GetMessages() or setmetatable({}, {__mode = "kv"})
         for i, msg in ipairs(messages) do
             if msg == message then
                 table.remove(messages, i)

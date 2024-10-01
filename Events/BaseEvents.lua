@@ -21,6 +21,7 @@ function NemesisChat:PLAYER_ENTERING_WORLD()
     NemesisChat:InstantiateCore()
     NemesisChat:SilentGroupSync()
     NemesisChat:CheckGroup()
+    NCRuntime:ClearPetOwners()
 end
 
 function NemesisChat:COMBAT_LOG_EVENT_UNFILTERED()
@@ -42,6 +43,7 @@ function NemesisChat:CHALLENGE_MODE_COMPLETED()
     NemesisChat:HandleEvent()
 
     NemesisChat:Report("DUNGEON")
+    NCRuntime:ClearPetOwners()
 end
 
 function NemesisChat:ENCOUNTER_START(_, encounterID, encounterName, difficultyID, groupSize, instanceID)
@@ -208,72 +210,4 @@ end
 
 function NemesisChat:CHAT_MSG_ADDON(_, prefix, payload, distribution, sender)
     NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
-end
-
-function NemesisChat:UNIT_SPELLCAST_START(_, unitTarget, castGUID, spellID)
-    if not IsInInstance() then
-        return
-    end
-
-    local casterName = UnitName(unitTarget)
-
-    if not core.affixMobsCastersLookup[casterName] then
-        return
-    end
-
-    if NCConfig:IsReportingAffixes_CastStart() and UnitIsEnemy("player", unitTarget) then
-        SendChatMessage("Nemesis Chat: " .. casterName .. " is casting!", "YELL")
-    end
-end
-
-function NemesisChat:UNIT_SPELLCAST_SUCCEEDED(_, unitTarget, castGUID, spellID)
-    if not IsInInstance() then
-        return
-    end
-
-    local casterName = UnitName(unitTarget)
-
-    if not core.affixMobsCastersLookup[casterName] then
-        return
-    end
-
-    if NCConfig:IsReportingAffixes_CastSuccess() and UnitIsEnemy("player", unitTarget) then
-        SendChatMessage("Nemesis Chat: " .. casterName .. " successfully cast!", "YELL")
-    end
-end
-
-function NemesisChat:UNIT_SPELLCAST_INTERRUPTED(_, unitId, spellName, rank, lineId, spellId)
-    if not IsInInstance() then
-        return
-    end
-
-    local casterName = UnitName(unitId)
-
-    if not core.affixMobsCastersLookup[casterName] then
-        return
-    end
-
-    local castInterruptedGuid = UnitGUID(unitId)
-    
-    if NCConfig:IsReportingAffixes_CastFailed() and not UnitIsUnconscious(castInterruptedGuid) and not UnitIsDead(castInterruptedGuid) then
-        SendChatMessage("Nemesis Chat: " .. casterName .. " cast interrupted, but not incapacitated/dead!", "YELL")
-    end
-end
-
-function NemesisChat:PLAYER_TARGET_CHANGED(_, unitTarget)
-    if not IsInInstance() then
-        return
-    end
-
-    local targetName = UnitName("target")
-
-    if not targetName or not core.affixMobsCastersLookup[targetName] or UnitIsDead("player") or not core.db.profile.reportConfig["AFFIXES"]["MARKERS"] then
-        return
-    end
-
-    local configMarker = core.db.profile.reportConfig["AFFIXES"]["MARKER"] or 5
-    local marker = core.markers[configMarker]
-
-    SetRaidTarget("target", marker.index)
-    SendChatMessage(string.format("Nemesis Chat: I am currently handling {%s} %s {%s}!", marker.value, marker.name, marker.value), NemesisChat:GetActualChannel("GROUP"))
 end

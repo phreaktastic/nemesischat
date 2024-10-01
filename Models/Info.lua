@@ -32,14 +32,15 @@ NCInfo = {
         ["OTHER"] = "Other",
     },
 
-    dropdownWidth = 150,
+    DropdownWidth = 150,
 
     -- State variables
-    CurrentPlayer = nil,
+    CurrentPlayer = UnitName("player"),
     SelectedChannel = nil,
     CustomWhisperTarget = nil,
     PreviousSelectedChannel = nil,
     MetricKeys = {}, -- Will be initialized as a sorted clone of NCRankings.METRICS's keys
+    IsMinimized = false,
 
     -- Main frame
     StatsFrame = nil,
@@ -47,8 +48,6 @@ NCInfo = {
     -- Initialization function
     Initialize = function(self)
         self:_SetMetricKeys()
-
-        self.CurrentPlayer = UnitName("player")
 
         -- Set default selected channel
         if not self.SelectedChannel then
@@ -107,6 +106,17 @@ NCInfo = {
             f:Hide()
         end)
 
+        -- Minimize Button
+        f.minimizeButton = CreateFrame("Button", nil, f)
+        f.minimizeButton:SetSize(16, 16)
+        f.minimizeButton:SetPoint("RIGHT", f.closeButton, "LEFT", -5, 0)
+        f.minimizeButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Up")
+        f.minimizeButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Down")
+        f.minimizeButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
+        f.minimizeButton:SetScript("OnClick", function()
+            NCInfo:ToggleMinimize()
+        end)
+
         -- Header Frame
         f.headerFrame = CreateFrame("Frame", nil, f)
         f.headerFrame:SetPoint("TOPLEFT", f.title, "BOTTOMLEFT", 0, -5)
@@ -127,7 +137,7 @@ NCInfo = {
 
         -- Player Dropdown
         f.playerDropdown = CreateFrame("Frame", "NemesisChatStatsFramePlayerDropdown", f.dropdownFrame, "UIDropDownMenuTemplate")
-        UIDropDownMenu_SetWidth(f.playerDropdown, self.dropdownWidth)
+        UIDropDownMenu_SetWidth(f.playerDropdown, self.DropdownWidth)
         UIDropDownMenu_SetText(f.playerDropdown, self.CurrentPlayer)
         UIDropDownMenu_Initialize(f.playerDropdown, function(self, level, menuList)
             NCInfo:UpdatePlayerDropdown()
@@ -140,7 +150,7 @@ NCInfo = {
         f.prevPlayerButton = CreateFrame("Button", nil, f.dropdownFrame, "UIPanelButtonTemplate")
         f.prevPlayerButton:SetSize(24, 24)
         -- Anchoring
-        f.prevPlayerButton:SetPoint("RIGHT", f.playerDropdown, "LEFT", -2, 1)
+        f.prevPlayerButton:SetPoint("RIGHT", f.playerDropdown, "LEFT", -2, 0)
         f.prevPlayerButton:SetText("<")
         f.prevPlayerButton:SetScript("OnClick", function()
             NCInfo:SelectPreviousPlayer()
@@ -150,7 +160,7 @@ NCInfo = {
         f.nextPlayerButton = CreateFrame("Button", nil, f.dropdownFrame, "UIPanelButtonTemplate")
         f.nextPlayerButton:SetSize(24, 24)
         -- Anchoring
-        f.nextPlayerButton:SetPoint("LEFT", f.playerDropdown, "RIGHT", 2, 1)
+        f.nextPlayerButton:SetPoint("LEFT", f.playerDropdown, "RIGHT", 2, 0)
         f.nextPlayerButton:SetText(">")
         f.nextPlayerButton:SetScript("OnClick", function()
             NCInfo:SelectNextPlayer()
@@ -177,11 +187,11 @@ NCInfo = {
         f.channelDropdown:SetPoint("LEFT", f.footerFrame, "LEFT", 4, 0)
         UIDropDownMenu_SetWidth(f.channelDropdown, 150)
         UIDropDownMenu_SetText(f.channelDropdown, "Channel: " .. (self:GetChannelDisplayName(self.SelectedChannel) or "Select Channel"))
-        UIDropDownMenu_Initialize(f.channelDropdown, function(self, level, menuList)
-            NCInfo:InitializeChannelDropdown()
-        end)
 
-        -- Customize the dropdown appearance
+        -- Initialize the channel dropdown
+        self:InitializeChannelDropdown()
+
+        -- Customize the dropdown appearance AFTER initialization
         local dropdownName = f.channelDropdown:GetName()
 
         -- Remove the border and background
@@ -189,7 +199,7 @@ NCInfo = {
         _G[dropdownName .. "Middle"]:SetAlpha(0)
         _G[dropdownName .. "Right"]:SetAlpha(0)
 
-        -- Move the dropdown button (arrow) to the left
+        -- Move the dropdown button (arrow) to the left and center it vertically
         local button = _G[dropdownName .. "Button"]
         button:ClearAllPoints()
         button:SetPoint("LEFT", f.channelDropdown, "LEFT", 5, 0)
@@ -204,9 +214,9 @@ NCInfo = {
         text:SetTextColor(1, 0.82, 0)  -- WoW yellow/gold color
 
         -- Use a font without shadows for cleaner appearance
-        text:SetFontObject("GameFontNormal")
+        text:SetFontObject("GameFontWhiteSmall")
 
-        -- Adjust the dropdown frame size to fit contents
+        -- Set the dropdown height
         f.channelDropdown:SetHeight(16)
 
         -- Clear Button
@@ -273,15 +283,14 @@ NCInfo = {
         f.infoFrame.text:SetJustifyH("CENTER")
 
         -- Initialize rows table
-        f.scrollFrame.scrollChild.rows = {}
+        f.scrollFrame.scrollChild.rows = f.scrollFrame.scrollChild.rows or {}
 
-        -- OnSizeChanged handler optimization
-        local resizeTimer
+        if not f.resizeTimer then
+            f.resizeTimer = C_Timer.NewTimer(0.1, function() end)
+        end
         f:SetScript("OnSizeChanged", function()
-            if resizeTimer then
-                resizeTimer:Cancel()
-            end
-            resizeTimer = C_Timer.NewTimer(0.1, function()
+            f.resizeTimer:Cancel()
+            f.resizeTimer = C_Timer.NewTimer(0.1, function()
                 NCInfo:OnResize()
             end)
         end)
@@ -297,11 +306,14 @@ NCInfo = {
 
     -- OnResize function
     OnResize = function(self)
+        if self.IsMinimized then
+            return  -- Do nothing if minimized
+        end
+
         local f = self.StatsFrame
         local scrollFrame = f.scrollFrame
         scrollFrame.scrollChild:SetWidth(scrollFrame:GetWidth())
 
-        -- Update the content if needed
         self:Update()
     end,
 
@@ -321,7 +333,17 @@ NCInfo = {
         local disabledColor = {0.25, 0.25, 0.25}
 
         local rosterPlayer = NCRuntime:GetGroupRosterPlayer(self.CurrentPlayer)
+
+        if not rosterPlayer or type(rosterPlayer) ~= "table" then
+            return
+        end
+
         local snapshotPlayer = NCDungeon.RosterSnapshot[self.CurrentPlayer]
+
+        if not snapshotPlayer or type(snapshotPlayer) ~= "table" then
+            snapshotPlayer = setmetatable({}, {__mode = "kv"})
+        end
+
         local playerInfo = MapMerge(rosterPlayer, snapshotPlayer)
         local race = playerInfo.race or UnitRace(self.CurrentPlayer) or "Unknown"
         local class = playerInfo.class or UnitClass(self.CurrentPlayer) or "Unknown"
@@ -453,8 +475,9 @@ NCInfo = {
                 row:Enable()
             else
                 row.columns[1]:SetTextColor(unpack(disabledColor))
+                row.columns[1].desiredColor = disabledColor
                 row.columns[2]:SetTextColor(unpack(disabledColor))
-                -- row:Disable()
+                row.columns[2].desiredColor = disabledColor
 
                 row:SetScript("OnEnter", function(self)
                     self.columns[1]:SetTextColor(1, 1, 1)
@@ -488,10 +511,17 @@ NCInfo = {
         local minHeight = titleHeight + headerFrameHeight + dropdownFrameHeight + infoFrameHeight + compareCheckboxHeight + contentHeight + footerFrameHeight
 
         -- Set a reasonable minimum width
-        local minWidth = 48 + 8 + self.dropdownWidth + 8 + 48
+        local minWidth = 48 + 8 + self.DropdownWidth + 8 + 48
 
         -- Set the minimum size of the frame
-        f:SetResizeBounds(minWidth, minHeight)
+        if not self.IsMinimized then
+            -- Set the minimum size while expanded
+            f:SetResizeBounds(minWidth, minHeight)
+        else
+            -- Set minimum size to current minimized size
+            local minimizedHeight = f:GetHeight()
+            f:SetResizeBounds(minWidth, minimizedHeight)
+        end
 
         if minWidth > f:GetWidth() then
             f:SetWidth(minWidth)
@@ -499,6 +529,18 @@ NCInfo = {
 
         if minHeight > f:GetHeight() then
             f:SetHeight(minHeight)
+        end
+
+        if self.IsMinimized then
+            f.footerFrame:Hide()
+            f.scrollFrame:Hide()
+            f.dropdownFrame:Hide()
+            f.resizeButton:Hide()
+        else
+            f.footerFrame:Show()
+            f.scrollFrame:Show()
+            f.dropdownFrame:Show()
+            f.resizeButton:Show()
         end
 
         -- Update player dropdown text
@@ -547,71 +589,62 @@ NCInfo = {
 
     -- Initialize channel dropdown
     InitializeChannelDropdown = function(self)
-        local channels = {}
+        local f = self.StatsFrame
+        if not f then return end
 
-        -- Always available channels
-        table.insert(channels, { text = "Say", value = "SAY" })
-        if IsInGuild() then
-            table.insert(channels, { text = "Guild", value = "GUILD" })
+        -- Set up the dropdown menu if it hasn't been set up already
+        if not self.channelDropdownInitialized then
+            UIDropDownMenu_SetInitializeFunction(f.channelDropdown, function(dropdown, level, menuList)
+                NCInfo:RefreshChannelDropdown(dropdown, level, menuList)
+            end)
+            -- UIDropDownMenu_SetDisplayMode(f.channelDropdown, "MENU")
+            self.channelDropdownInitialized = true
+        end
+    end,
+
+    RefreshChannelDropdown = function(self, dropdown, level, menuList)
+        local channels = self:_GetAvailableChannels()
+        dropdown = dropdown or self.StatsFrame.channelDropdown
+    
+        -- Check if the currently selected channel is still available
+        local selectedChannelAvailable = false
+        for _, channelInfo in ipairs(channels) do
+            if channelInfo.value == self.SelectedChannel then
+                selectedChannelAvailable = true
+                break
+            end
         end
 
-        -- "Whisper: Targeted Player" option
-        table.insert(channels, { text = "Whisper: Targeted Player", value = "WHISPER_TARGET" })
-
-        -- Context-sensitive channels
-        if IsInGroup(LE_PARTY_CATEGORY_HOME) then
-            table.insert(channels, { text = "Party", value = "PARTY" })
-        end
-        if IsInRaid(LE_PARTY_CATEGORY_HOME) then
-            table.insert(channels, { text = "Raid", value = "RAID" })
-        end
-        if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
-            table.insert(channels, { text = "Instance", value = "INSTANCE_CHAT" })
-        end
-        if C_GuildInfo and C_GuildInfo.CanSpeakInOfficerChat and C_GuildInfo.CanSpeakInOfficerChat() then
-            table.insert(channels, { text = "Officer", value = "OFFICER" })
+        -- If not available, reset to default channel
+        if not selectedChannelAvailable then
+            self.SelectedChannel = self:GetDefaultChannel()
         end
 
-        -- Whisper options
-        if IsInGroup() then
-            local numGroupMembers = GetNumGroupMembers()
-            for i = 1, numGroupMembers do
-                local unit = "party" .. i
-                if UnitExists(unit) then
-                    local name, realm = UnitName(unit)
-                    if realm and realm ~= "" then
-                        name = name .. "-" .. realm
-                    end
-                    table.insert(channels, { text = "Whisper: " .. name, value = "WHISPER_" .. name })
+        -- Clear existing menu items
+        UIDropDownMenu_ClearAll(dropdown)
+
+        -- Create new menu items
+        for _, channelInfo in ipairs(channels) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = channelInfo.text
+            info.value = channelInfo.value
+            info.func = function(itemSelf)
+                if itemSelf.value == "WHISPER_CUSTOM" then
+                    NCInfo.PreviousSelectedChannel = NCInfo.SelectedChannel
+                    StaticPopup_Show("NCINFO_CUSTOM_WHISPER")
+                else
+                    NCInfo.SelectedChannel = itemSelf.value
+                    local displayText = NCInfo:GetChannelDisplayName(itemSelf.value)
+                    UIDropDownMenu_SetText(dropdown, "Channel: " .. displayText)
                 end
             end
-            -- Add player (self) for completeness
-            local myName = GetUnitName("player", true)
-            table.insert(channels, { text = "Whisper: " .. myName, value = "WHISPER_" .. myName })
+            info.checked = (self.SelectedChannel == channelInfo.value)
+            UIDropDownMenu_AddButton(info, level)
         end
 
-        -- Custom whisper option
-        table.insert(channels, { text = "Whisper: Custom", value = "WHISPER_CUSTOM" })
-
-        UIDropDownMenu_Initialize(self.StatsFrame.channelDropdown, function(self, level, menuList)
-            for _, channelInfo in ipairs(channels) do
-                local info = UIDropDownMenu_CreateInfo()
-                info.text = channelInfo.text
-                info.value = channelInfo.value
-                info.func = function(self)
-                    if self.value == "WHISPER_CUSTOM" then
-                        NCInfo.PreviousSelectedChannel = NCInfo.SelectedChannel
-                        StaticPopup_Show("NCINFO_CUSTOM_WHISPER")
-                    else
-                        NCInfo.SelectedChannel = self.value
-                        local displayText = NCInfo:GetChannelDisplayName(self.value)
-                        UIDropDownMenu_SetText(NCInfo.StatsFrame.channelDropdown, "Channel: " .. displayText)
-                    end
-                end
-                info.checked = (NCInfo.SelectedChannel == channelInfo.value)
-                UIDropDownMenu_AddButton(info)
-            end
-        end)
+        -- Update the displayed text
+        local displayText = self:GetChannelDisplayName(self.SelectedChannel)
+        UIDropDownMenu_SetText(dropdown, "Channel: " .. displayText)
     end,
 
     -- Get channel display name
@@ -803,11 +836,115 @@ NCInfo = {
         end
     end,
 
+    ToggleMinimize = function(self)
+        local f = self.StatsFrame
+        if self.IsMinimized then
+            -- Expand the frame
+            self.IsMinimized = false
+            f.minimizeButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Up")
+            f.minimizeButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Down")
+            f.minimizeButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Highlight")
+
+            -- Show all elements
+            f:SetHeight(self.ExpandedHeight or 300)  -- Restore previous height or default
+            f:SetResizable(true)
+            f.resizeButton:Show()
+            f.footerFrame:Show()
+            f.scrollFrame:Show()
+            f.dropdownFrame:Show()
+            f.resizeButton:Show()
+        else
+            -- Minimize the frame
+            self.IsMinimized = true
+            f.minimizeButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-ExpandButton-Up")
+            f.minimizeButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-ExpandButton-Down")
+            f.minimizeButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-ExpandButton-Highlight")
+
+            -- Save current height
+            self.ExpandedHeight = f:GetHeight()
+
+            -- Adjust frame height to only show title and header
+            local titleHeight = f.title:GetHeight() + 8  -- Include top padding
+            local headerFrameHeight = f.headerFrame:GetHeight() + 5  -- Include spacing
+            local newHeight = titleHeight + headerFrameHeight + 10  -- Add extra padding
+
+            f:SetHeight(newHeight)
+            f:SetResizable(false)
+            f.resizeButton:Hide()
+            f.footerFrame:Hide()
+            f.scrollFrame:Hide()
+            f.dropdownFrame:Hide()
+            f.resizeButton:Hide()
+        end
+    end,
+
+    -- Called when the group composition changes
+    OnGroupChanged = function(self)
+        if self.StatsFrame and self.StatsFrame:IsShown() then
+            -- Refresh the dropdown menu
+            UIDropDownMenu_Refresh(self.StatsFrame.channelDropdown)
+        end
+    end,
+
     _SetMetricKeys = function(self)
         local keys = NemesisChat:GetKeys(NCRankings.METRICS)
         table.sort(keys)
 
         self.MetricKeys = keys
+    end,
+
+    -- Generate the list of available channels based on current group state
+    _GetAvailableChannels = function(self)
+        local channels = {}
+
+        -- Always available channels
+        table.insert(channels, { text = "Say", value = "SAY" })
+        if IsInGuild() then
+            table.insert(channels, { text = "Guild", value = "GUILD" })
+        end
+
+        -- "Whisper: Targeted Player" option
+        table.insert(channels, { text = "Whisper: Targeted Player", value = "WHISPER_TARGET" })
+
+        -- Context-sensitive channels
+        if IsInGroup(LE_PARTY_CATEGORY_HOME) then
+            table.insert(channels, { text = "Party", value = "PARTY" })
+        end
+        if IsInRaid(LE_PARTY_CATEGORY_HOME) then
+            table.insert(channels, { text = "Raid", value = "RAID" })
+        end
+        if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
+            table.insert(channels, { text = "Instance", value = "INSTANCE_CHAT" })
+        end
+        if C_GuildInfo and C_GuildInfo.CanSpeakInOfficerChat and C_GuildInfo.CanSpeakInOfficerChat() then
+            table.insert(channels, { text = "Officer", value = "OFFICER" })
+        end
+
+        -- Whisper options
+        if IsInGroup() then
+            local numGroupMembers = GetNumGroupMembers()
+            local unitPrefix = IsInRaid() and "raid" or "party"
+            local startIndex = IsInRaid() and 1 or 0
+            for i = startIndex, numGroupMembers do
+                local unit = i == 0 and "player" or unitPrefix .. i
+                if UnitExists(unit) then
+                    local name, realm = UnitName(unit)
+                    if realm and realm ~= "" then
+                        name = name .. "-" .. realm
+                    end
+                    table.insert(channels, { text = "Whisper: " .. name, value = "WHISPER_" .. name })
+                end
+            end
+        else
+            -- Add player (self) for completeness
+            local myName = GetUnitName("player", true)
+            table.insert(channels, { text = "Whisper: " .. myName, value = "WHISPER_" .. myName })
+        end
+
+        -- Custom whisper option
+        table.insert(channels, { text = "Whisper: Custom", value = "WHISPER_CUSTOM" })
+
+        return channels
     end,
 }
 

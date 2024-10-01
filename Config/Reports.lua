@@ -714,7 +714,7 @@ core.options.args.reportsGroup = {
 }
 
 function NemesisChat:GetMarkerOptionsWithIcons()
-    local options = {}
+    local options = setmetatable({}, {__mode = "kv"})
 
     for key,val in ipairs(core.markers) do
         options[key] = val.name

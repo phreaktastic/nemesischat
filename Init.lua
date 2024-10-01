@@ -24,7 +24,7 @@ function DeepCopy(orig)
     local orig_type = type(orig)
     local copy
     if orig_type == 'table' then
-        copy = {}
+        copy = setmetatable({}, {__mode = "kv"})
         for orig_key, orig_value in next, orig, nil do
             copy[DeepCopy(orig_key)] = DeepCopy(orig_value)
         end
@@ -36,7 +36,7 @@ function DeepCopy(orig)
 end
 
 function ArrayMerge(...)
-    local returnTable = {}
+    local returnTable = setmetatable({}, {__mode = "kv"})
     local tables = {...}
 
     if not tables then
@@ -55,7 +55,7 @@ function ArrayMerge(...)
 end
 
 function MapMerge(...)
-    local mergedMap = {}
+    local mergedMap = setmetatable({}, {__mode = "kv"})
     local maps = {...}
 
     if not maps then
@@ -98,7 +98,7 @@ function GetRole(player)
 end
 
 function GetKeysSortedByValue(tbl, sortFunction)
-    local keys = {}
+    local keys = setmetatable({}, {__mode = "kv"})
     for key in pairs(tbl) do
         table.insert(keys, key)
     end
@@ -111,7 +111,7 @@ function GetKeysSortedByValue(tbl, sortFunction)
 end
 
 function Split(str, sep)
-    local result = {}
+    local result = setmetatable({}, {__mode = "kv"})
     local regex = ("([^%s]+)"):format(sep)
 
     for each in str:gmatch(regex) do
@@ -122,7 +122,7 @@ function Split(str, sep)
  end
 
  function ShuffleTable(t)
-    local tbl = {}
+    local tbl = setmetatable({}, {__mode = "kv"})
     for i = 1, #t do
       tbl[i] = t[i]
     end
@@ -134,7 +134,7 @@ function Split(str, sep)
   end
 
 function GetHashmapKeys(hashmap)
-    local keys = {}
+    local keys = setmetatable({}, {__mode = "kv"})
 
     if hashmap == nil then
         return keys
@@ -743,13 +743,13 @@ core.eventSubscriptions = {
     "CHALLENGE_MODE_START", -- M+ start
     "CHALLENGE_MODE_COMPLETED", -- M+ complete
 
-    -- Unit Actions
-    "UNIT_SPELLCAST_START",
-    "UNIT_SPELLCAST_SUCCEEDED",
-    "UNIT_SPELLCAST_INTERRUPTED",
+    -- Unit Actions -- no longer necessary as M+ mobs aren't a thing
+    -- "UNIT_SPELLCAST_START",
+    -- "UNIT_SPELLCAST_SUCCEEDED",
+    -- "UNIT_SPELLCAST_INTERRUPTED",
 
     -- Self
-    "PLAYER_TARGET_CHANGED",
+    -- "PLAYER_TARGET_CHANGED",
     "COMBAT_LOG_EVENT_UNFILTERED",
 }
 
@@ -773,3 +773,20 @@ NCSpell = {}
 
 C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
 C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
+C_Timer.NewTicker(60, function()
+    if not NCCombat:IsActive() then
+        local count = 0
+
+        for key, val in pairs(core.db.global.lastSync) do
+            if GetTime() - val > 1800 then
+                count = count + 1
+
+                core.db.global.lastSync[key] = nil
+            end
+
+            if count > 100 then
+                break
+            end
+        end
+    end
+end)

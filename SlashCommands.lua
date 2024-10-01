@@ -38,8 +38,56 @@ function NemesisChat:SlashCommand(msg)
 
 		self:Print("Wiped data for " .. name .. " (" .. guid .. ")")
 	elseif cmd == "debug" then
-		self:Print("Roster Data")
-		self:Print_r(NCRuntime:GetGroupRoster())
+			-- Open a new window that shows entries and their #count, for both leavers and low performers (core.db.profile.leavers and core.db.profile.lowPerformers)
+			local function CreateDebugWindow()
+				local frame = CreateFrame("Frame", "NemesisChatDebugWindow", UIParent, "BasicFrameTemplateWithInset")
+				frame:SetSize(400, 300)
+				frame:SetPoint("CENTER")
+				frame:SetMovable(true)
+				frame:EnableMouse(true)
+				frame:RegisterForDrag("LeftButton")
+				frame:SetScript("OnDragStart", frame.StartMoving)
+				frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+
+				local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
+				scrollFrame:SetPoint("TOPLEFT", 12, -30)
+				scrollFrame:SetPoint("BOTTOMRIGHT", -30, 10)
+
+				local content = CreateFrame("Frame", nil, scrollFrame)
+				content:SetSize(330, 240)
+				scrollFrame:SetScrollChild(content)
+
+				local text = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+				text:SetPoint("TOPLEFT")
+				text:SetJustifyH("LEFT")
+
+				local debugInfo = "Leavers:\n"
+				for guid, timestampTable in pairs(core.db.profile.leavers) do
+					debugInfo = debugInfo .. guid .. ": " .. #timestampTable .. "\n"
+				end
+				debugInfo = debugInfo .. "\nLow Performers:\n"
+				for guid, timestampTable in pairs(core.db.profile.lowPerformers) do
+					debugInfo = debugInfo .. guid .. ": " .. #timestampTable .. "\n"
+				end
+
+				debugInfo = debugInfo .. "\nPet Owners:\n"
+				local ownerCount = 0
+				for guid, timestampTable in pairs(NCRuntime:GetPetOwners()) do
+					ownerCount = ownerCount + 1
+				end
+				debugInfo = debugInfo .. ownerCount .. "\n"
+
+				debugInfo = debugInfo .. "\nSegments:\n" .. #NCSegment.Segments .. "\n"
+				debugInfo = debugInfo .. "\nLast Syncs:\n" .. #core.db.global.lastSync .. "\n"
+				debugInfo = debugInfo .. "\nGroup Roster Size:\n" .. #NCRuntime:GetGroupRoster() .. "\n"
+				debugInfo = debugInfo .. "\nRoster Snapshot Size:\n" .. #NCDungeon.RosterSnapshot .. "\n"
+				debugInfo = debugInfo .. "\nNemeses Count:\n" .. #core.db.profile.nemeses .. "\n"
+
+				text:SetText(debugInfo)
+				frame:Show()
+			end
+
+			CreateDebugWindow()
 	else
         if core.db.profile.dbg then
             self:Print("Invalid command issued.")

@@ -300,10 +300,10 @@ function NemesisChat:InstantiateController()
     -- Get a pool of conditional messages pertaining to the current scenarios
     function NCController:GetConditionalMessages(pool)
         if pool == nil or #pool == 0 then
-            return {}
+            return setmetatable({}, {__mode = "kv"})
         end
 
-        local returnMessages = {}
+        local returnMessages = setmetatable({}, {__mode = "kv"})
 
         for key, value in pairs(pool) do
             if NCController:CheckAllConditions(value) then
