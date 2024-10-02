@@ -525,24 +525,14 @@ NCRuntime = {
         core.runtime[key] = value
     end,
     GetUnitTokenFromName = function(self, playerName)
-        if playerName == UnitName("player") then
-            return "player"
-        end
-
-        for i = 1, 4 do
-            local unitToken = "party" .. i
-            if UnitName(unitToken) == playerName then
-                return unitToken
+        if not self.playerNameToToken then
+            self.playerNameToToken = {}
+            for i = 1, 40 do
+                local token = (i > 1) and ("raid" .. i) or "player"
+                local name = UnitName(token)
+                if name then self.playerNameToToken[name] = token end
             end
         end
-
-        for i = 1, 40 do
-            local unitToken = "raid" .. i
-            if UnitName(unitToken) == playerName then
-                return unitToken
-            end
-        end
-
-        return nil
+        return self.playerNameToToken[playerName]
     end,
 }

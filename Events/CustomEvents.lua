@@ -205,7 +205,7 @@ function NemesisChat:CheckGuild()
             if name and core.runtime.guild[name] then
                 if core.runtime.guild[name].online ~= online then
                     core.runtime.guild[name].online = online
-                    NemesisChat:TriggerCustomEvent(online and "GUILD_MEMBER_LOGGED_IN" or "GUILD_MEMBER_LOGGED_OUT", name)
+                    _ = online and NemesisChat:GUILD_PLAYER_LOGIN(name, IsNemesis(name)) or NemesisChat:GUILD_PLAYER_LOGOUT(name, IsNemesis(name))
                 end
             end
         end
