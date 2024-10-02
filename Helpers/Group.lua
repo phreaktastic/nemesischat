@@ -142,7 +142,7 @@ function NemesisChat:ProcessLeaves(leaves)
             local player = NCRuntime:GetGroupRosterPlayer(playerName)
             if not player then
                 -- Skip processing if player retrieval failed
-                self:Print("Failed to retrieve player from roster:", playerName)
+                -- self:Print("Failed to retrieve player from roster:", playerName)
                 -- Optionally, log this error or handle it as needed
                 return
             end

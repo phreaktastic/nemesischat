@@ -211,6 +211,5 @@ function NemesisChat:CheckGuild()
         end
     end
 
-    core.db.profile.cache.guild = DeepCopy(core.runtime.guild)
+    core.db.profile.cache.guild = core.runtime.guild
 end
-

@@ -14,7 +14,7 @@ end
 
 function UnitPopupToggleNemesisMixin:CanShow(contextData)
     -- Only show for other players, not for the current player
-    return UnitIsPlayer(contextData.unit) and not UnitIsUnit(contextData.unit, "player");
+    return not UnitIsUnit(contextData.unit, "player");
 end
 
 function UnitPopupToggleNemesisMixin:OnClick(contextData)
