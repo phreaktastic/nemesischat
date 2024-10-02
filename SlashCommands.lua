@@ -79,8 +79,8 @@ function NemesisChat:SlashCommand(msg)
 
 				debugInfo = debugInfo .. "\nSegments:\n" .. #NCSegment.Segments .. "\n"
 				debugInfo = debugInfo .. "\nLast Syncs:\n" .. #core.db.global.lastSync .. "\n"
-				debugInfo = debugInfo .. "\nGroup Roster Size:\n" .. #NCRuntime:GetGroupRoster() .. "\n"
-				debugInfo = debugInfo .. "\nRoster Snapshot Size:\n" .. #NCDungeon.RosterSnapshot .. "\n"
+				debugInfo = debugInfo .. "\nGroup Roster Size:\n" .. NCRuntime:GetGroupRosterCount() .. "\n"
+				debugInfo = debugInfo .. "\nRoster Snapshot Size:\n" .. #NemesisChat:GetKeys(NCDungeon.RosterSnapshot) .. "\n"
 				debugInfo = debugInfo .. "\nNemeses Count:\n" .. #core.db.profile.nemeses .. "\n"
 
 				text:SetText(debugInfo)

@@ -25,8 +25,24 @@ function NCDungeon:StartCallback()
     NCEvent:RandomBystander()
     NCDungeon:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
 
-    local keystoneLevel, affixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
-    local name, _, timeLimit = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
+    local keystoneLevel, affixIDs, name, timeLimit
+
+    if C_ChallengeMode.IsChallengeModeActive() then
+        keystoneLevel, affixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
+        name, _, timeLimit = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
+    else
+        keystoneLevel = 0
+        affixIDs = {}
+        name = "Unknown"
+        timeLimit = 0
+
+        local dName, type, difficultyIndex, difficultyName, maxPlayers,
+        dynamicDifficulty, isDynamic, instanceMapId, lfgID = GetInstanceInfo()
+
+        if dName and difficultyName then
+            name = dName .. " " .. difficultyName
+        end
+    end
 
     NCDungeon:ClearCache()
     NCDungeon:SetIdentifier(name)

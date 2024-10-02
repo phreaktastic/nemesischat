@@ -450,7 +450,7 @@ function NemesisChatAPI:InitializeReplacements()
     end
 
     for name, api in pairs(core.apis) do
-        if api:IsEnabled() or name == "CORE" then
+        if (api and api.IsEnabled and api:IsEnabled()) or name == "CORE" then
             local isCompatible = true
 
             for _, check in pairs(api.compatibilityChecks) do

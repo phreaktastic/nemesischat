@@ -27,7 +27,6 @@ NCSegmentPool = {
 
 function NCSegmentPool:Acquire(identifier)
     local segment = table.remove(self.pool) or NCSegment:New(identifier)
-    segment:Reset(identifier)
     return segment
 end
 
@@ -38,8 +37,6 @@ function NCSegmentPool:Release(segment)
         segment:Destroy()
     end
 end
-
-local defaultTable = {__index = function() return 0 end}
 
 NCSegment = {
     -- Is this segment active?
@@ -636,6 +633,7 @@ NCSegment = {
     end,
     GlobalAddInterrupt = function(self, player)
         if not player then return end
+
         for _, segment in ipairs(self.ActiveSegments) do
             segment:AddInterrupt(player)
         end
@@ -715,7 +713,7 @@ NCSegment = {
         for k, v in pairs(NCSegment) do
             -- We don't care about maintaining tables, just reset to {}
             if type(v) == "table" and k ~= "Rankings" and not string.find(k, "__") then
-                self[k] = setmetatable({}, defaultTable)
+                self[k] = {}
             elseif type(v) ~= "function" and k ~= "Rankings" and not string.find(k, "__") then
                 self[k] = v
             end

@@ -22,21 +22,20 @@ LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
 -- When we don't want a reference (ie, resetting to refaults)
 function DeepCopy(orig)
     local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = setmetatable({}, {__mode = "kv"})
-        for orig_key, orig_value in next, orig, nil do
-            copy[DeepCopy(orig_key)] = DeepCopy(orig_value)
+    if orig_type ~= 'table' then return orig end
+    local copy = {}
+    for orig_key, orig_value in pairs(orig) do
+        if type(orig_value) == 'table' then
+            copy[orig_key] = DeepCopy(orig_value)
+        else
+            copy[orig_key] = orig_value
         end
-        setmetatable(copy, DeepCopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
     end
     return copy
 end
 
 function ArrayMerge(...)
-    local returnTable = setmetatable({}, {__mode = "kv"})
+    local returnTable = {}
     local tables = {...}
 
     if not tables then
@@ -55,7 +54,7 @@ function ArrayMerge(...)
 end
 
 function MapMerge(...)
-    local mergedMap = setmetatable({}, {__mode = "kv"})
+    local mergedMap = {}
     local maps = {...}
 
     if not maps then
@@ -774,6 +773,9 @@ NCSpell = {}
 C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
 C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
 C_Timer.NewTicker(60, function()
+    if not NCCombat or not NCCombat.IsActive then
+        return
+    end
     if not NCCombat:IsActive() then
         local count = 0
 

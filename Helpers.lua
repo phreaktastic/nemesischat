@@ -18,6 +18,8 @@ local scanTipText = format("%sTextLeft2", scanTipName)
 local scanTip = CreateFrame("GameTooltip", scanTipName, WorldFrame, "GameTooltipTemplate")
 local scanTipTitles = {}
 
+local eventInfo = setmetatable({}, {__mode = "kv"})
+
 local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
 local GetTime = GetTime
 local UnitIsDead = UnitIsDead
@@ -220,10 +222,6 @@ function NemesisChat:InitializeHelpers()
         end)
     end
 
-    function NemesisChat:ShowStatsFrame()
-        
-    end
-
     function NemesisChat:AddLeaver(guid)
         if core.db.profile.leavers == nil then
             core.db.profile.leavers = {}
@@ -348,21 +346,12 @@ function NemesisChat:InitializeHelpers()
             return true
         end
 
-        -- Unit is/has cast(ing) a spell, but are not in the party
-        -- if NCSpell:IsValidSpell() and not UnitInParty(NCSpell:GetSource()) then
-        --     if NCConfig:IsDebugging() then 
-        --         self:Print("Source is not in party.")
-        --     end
-        --     return true
-        -- end
-
         return false
     end
 
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
-        local eventInfo = eventInfo or setmetatable({}, {__mode = "kv"})
-        CombatLogGetCurrentEventInfo(eventInfo)
+        eventInfo.time, eventInfo.subEvent, eventInfo.hidecaster, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.sourceRaidFlags, eventInfo.destGUID, eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4 = CombatLogGetCurrentEventInfo()
 
         if not NCRuntime:GetGroupRosterPlayer(eventInfo.sourceName) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) then
             wipe(eventInfo)
@@ -370,8 +359,8 @@ function NemesisChat:InitializeHelpers()
         end
 
         local subEvent, eventType, sourceName, destName, misc1, misc2, misc4 = eventInfo.subEvent, eventInfo.eventType, eventInfo.sourceName, eventInfo.destName, eventInfo.misc1, eventInfo.misc2, eventInfo.misc4
-        local pullInfo = pullInfo or setmetatable({}, {__mode = "kv"})
-        local isPull, pullPlayerName, mobName = NemesisChat:IsPull(pullInfo)
+        local pullInfo = pullInfo or {}
+        local isPull, pullType, pullPlayerName, mobName = NemesisChat:IsPull(pullInfo)
         local damage = NemesisChat:GetDamageAmount(subEvent, misc1, misc4)
 
         NemesisChat:SetMyName()
@@ -389,13 +378,15 @@ function NemesisChat:InitializeHelpers()
                     SendChatMessage("Nemesis Chat: " .. UnitName(pullPlayerName) .. " pulled " .. mobName, "YELL")
                 end
 
-                NemesisChat:SpawnToast("Pull", UnitName(pullPlayerName), mobName)
+                NemesisChat:SpawnToast("Pull", pullPlayerName, mobName)
                 NCRuntime:UpdateLastUnsafePullToast()
             end
 
             NCRuntime:SetLastUnsafePull(UnitName(pullPlayerName), mobName)
             NCSegment:GlobalAddPull(UnitName(pullPlayerName))
         end
+
+        wipe(pullInfo)
 
         if NCEvent:IsDamageEvent(subEvent, destName, damage) then
             local GTFO = _G.GTFO
@@ -531,7 +522,9 @@ function NemesisChat:InitializeHelpers()
             return nil
         end
 
-        return partyBystanders[NemesisChat:GetRandomKey(partyBystanders)]
+        local bystander = partyBystanders[NemesisChat:GetRandomKey(partyBystanders)]
+
+        return bystander
     end
 
     function NemesisChat:GetRandomGuildBystander()
@@ -1302,8 +1295,7 @@ function NemesisChat:InitializeHelpers()
         local SURVIVAL = LibPlayerSpells.constants.SURVIVAL
         local COOLDOWN = LibPlayerSpells.constants.COOLDOWN
         local eventInfo = eventInfo or setmetatable({}, {__mode = "kv"})
-        CombatLogGetCurrentEventInfo(eventInfo)
-        local event, sname, spellId = eventInfo[2], eventInfo[5], eventInfo[12]
+        local event, sname, spellId = eventInfo.subEvent, eventInfo.sourceName, eventInfo.misc1
 
         if not IsInGroup() or not UnitInParty(sname) then
             return

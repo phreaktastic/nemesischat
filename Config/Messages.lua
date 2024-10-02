@@ -533,6 +533,8 @@ function NemesisChat:DeleteMessage()
     messageChannel = ""
     messageConditions = ""
     messageLabel = ""
+
+    NCController:PreprocessMessages()
 end
 
 function NemesisChat:DeselectMessage()
@@ -953,6 +955,8 @@ function StoreMessage()
         table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], saveMessage)
         NemesisChat:SetConfiguredMessage(nil, #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] .. "")
     end
+
+    NCController:PreprocessMessages()
 end
 
 function BuildStorePath()

@@ -23,7 +23,7 @@ function NemesisChat:InstantiateEvent()
     end
 
     function NCEvent:GetCategory()
-        if NCEvent.category == nil then 
+        if NCEvent.category == nil then
             return ""
         end
 
@@ -97,7 +97,7 @@ function NemesisChat:InstantiateEvent()
     end
 
     function NCEvent:GetBystander()
-        if NCEvent.bystander == nil then 
+        if NCEvent.bystander == nil then
             return ""
         end
 
