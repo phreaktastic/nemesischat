@@ -23,7 +23,7 @@ function UnitPopupToggleNemesisMixin:OnClick(contextData)
         core.db.profile.nemeses[playerName] = nil;
         NemesisChat:Print(playerName .. " is no longer marked as a nemesis.");
     else
-        core.db.profile.nemeses[playerName] = true;
+        core.db.profile.nemeses[playerName] = playerName;
         NemesisChat:Print(playerName .. " is now marked as a nemesis!");
     end
     CloseDropDownMenus();

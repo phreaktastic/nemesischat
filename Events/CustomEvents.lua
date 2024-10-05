@@ -160,6 +160,10 @@ local lastFullUpdate = 0
 local updateInterval = 60 -- Full update every 60 seconds
 
 function NemesisChat:CheckGuild()
+    if not IsNCEnabled() then
+        return
+    end
+
     if not IsInGuild() then
         core.runtime.guild = {}
         return

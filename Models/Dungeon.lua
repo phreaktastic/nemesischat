@@ -66,7 +66,11 @@ function NCDungeon:FinishCallback(success)
         NCEvent:SetEvent("SUCCESS")
     end
 
-    NCDungeon:UpdateCache()
+    if NCDungeon and type(NCDungeon.UpdateCache) == "function" then
+        NCDungeon:UpdateCache()
+    else
+        NemesisChat:Print("Error: NCDungeon is not properly initialized in Combat FinishCallback")
+    end
 end
 
 function NCDungeon:ResetCallback()
@@ -114,12 +118,21 @@ function NCDungeon:GetTimeLeft()
 end
 
 function NCDungeon:UpdateCache()
-    if core.db.profile.cache.NCDungeon.Restore then
+    if not NCDungeon then
+        NemesisChat:Print("Error: NCDungeon is nil in UpdateCache")
+        return
+    end
+
+    if core.db.profile.cache.NCDungeon and type(core.db.profile.cache.NCDungeon.Restore) == "function" then
         core.db.profile.cache.NCDungeon:Restore(NCDungeon)
     else
         NCSegmentPool:Release(NCDungeon)
         core.db.profile.cache.NCDungeon = NCSegmentPool:Acquire("DUNGEON")
-        core.db.profile.cache.NCDungeon:Restore(NCDungeon)
+        if type(core.db.profile.cache.NCDungeon.Restore) == "function" then
+            core.db.profile.cache.NCDungeon:Restore(NCDungeon)
+        else
+            NemesisChat:Print("Error: Restore function not found on cache.NCDungeon")
+        end
     end
 end
 

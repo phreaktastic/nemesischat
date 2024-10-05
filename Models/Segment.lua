@@ -110,6 +110,30 @@ NCSegment = {
 
     DetailsSegment = DETAILS_SEGMENTID_CURRENT,
 
+    -- Template for initial state
+    template = {
+        Active = false,
+        FinishTime = 0,
+        StartTime = 0,
+        Success = false,
+        TotalTime = 0,
+        Wipe = false,
+        ActionPoints = {},
+        Affixes = {},
+        AvoidableDamage = {},
+        CrowdControl = {},
+        Deaths = {},
+        Defensives = {},
+        Dispells = {},
+        Heals = {},
+        Interrupts = {},
+        Kills = {},
+        OffHeals = {},
+        Pulls = {},
+        RosterSnapshot = {},
+        DetailsSegment = DETAILS_SEGMENTID_CURRENT,
+    },
+
     StartPreHook = function(self)
         -- Override me
     end,
@@ -182,7 +206,7 @@ NCSegment = {
     GetTotalTime = function(self)
         return self.TotalTime
     end,
-    GetAffixes = function(player)
+    GetAffixes = function(self, player)
         local affixes = self.Affixes or {}
         self.Affixes = affixes
         if player then
@@ -651,37 +675,31 @@ NCSegment = {
         end
     end,
     GlobalReset = function(self)
-        for _, segment in pairs(NCSegment.Segments) do
-            segment:Reset()
+        if not self.Segments then
+            self.Segments = {}
+        end
+        for _, segment in pairs(self.Segments) do
+            if segment and type(segment.Reset) == "function" then
+                segment:Reset()
+            end
         end
     end,
     New = function(self, identifier)
-        local o = {
-            Identifier = identifier,
-            Active = false,
-            FinishTime = 0,
-            StartTime = 0,
-            Success = false,
-            TotalTime = 0,
-            Wipe = false,
-            ActionPoints = {},
-            Affixes = {},
-            AvoidableDamage = {},
-            CrowdControl = {},
-            Deaths = {},
-            Defensives = {},
-            Dispells = {},
-            Heals = {},
-            Interrupts = {},
-            Kills = {},
-            OffHeals = {},
-            Pulls = {},
-            RosterSnapshot = {},
-            DetailsSegment = DETAILS_SEGMENTID_CURRENT,
-        }
+        local o = {}
         setmetatable(o, self)
         self.__index = self
 
+        -- Initialize using the template
+        for key, defaultValue in pairs(self.template) do
+            if type(defaultValue) == "table" then
+                o[key] = {}
+            else
+                o[key] = defaultValue
+            end
+        end
+
+        o.Segments = nil
+        o.Identifier = identifier
         o.Rankings = NCRankings:New(o)
 
         table.insert(self.Segments, o)
@@ -702,25 +720,31 @@ NCSegment = {
         self = nil
     end,
     Reset = function(self, optIdentifier, optStart)
-        -- Don't reset the base segment
-        if self == NCSegment then
-            return
-        end
+        if self == NCSegment then return end
 
         local identifier = optIdentifier or self:GetIdentifier() or ""
 
-        -- Don't touch anything that's not inherited
-        for k, v in pairs(NCSegment) do
-            -- We don't care about maintaining tables, just reset to {}
-            if type(v) == "table" and k ~= "Rankings" and not string.find(k, "__") then
-                self[k] = {}
-            elseif type(v) ~= "function" and k ~= "Rankings" and not string.find(k, "__") then
-                self[k] = v
+        -- Reset properties using the template
+        for key, defaultValue in pairs(self.template) do
+            if type(defaultValue) == "table" then
+                if self[key] then
+                    wipe(self[key])  -- Clear existing table
+                else
+                    self[key] = {}   -- Create new table if it doesn't exist
+                end
+            else
+                self[key] = defaultValue  -- Reset to default value
             end
         end
 
         self.Identifier = identifier
-        self.Rankings = NCRankings:New(self)
+
+        -- Reset Rankings without destroying its structure
+        if self.Rankings then
+            self.Rankings:Reset(self)
+        else
+            self.Rankings = NCRankings:New(self)
+        end
 
         self:ResetCallback(optIdentifier, optStart)
 

@@ -871,7 +871,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
                 return "Dwarf"
             end
 
-            local race = UnitRace(NCEvent:GetBystander())
+            local race = UnitRace(NCRuntime:GetUnitTokenFromName(NCEvent:GetBystander()))
 
             if (not race) then
                 error("Could not retrieve race for " + NCEvent:GetBystander() + "! This is likely a WoW API issue.")
@@ -919,7 +919,8 @@ NemesisChatAPI:AddAPI("CORE", "Core")
             if (NCEvent:GetBystander() == "Brann Bronzebeard") then
                 return "Hunter"
             end
-            return UnitClass(NCEvent:GetBystander())
+            -- Token is FAR safer to use here as raids may throw errors
+            return UnitClass(NCRuntime:GetUnitTokenFromName(NCEvent:GetBystander()))
         end,
         description = "The class of the Bystander's character.",
         isNumeric = false,

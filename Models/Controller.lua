@@ -22,13 +22,16 @@ function NemesisChat:InstantiateController()
     end
 
     function NCController:PreprocessMessages()
-        wipe(messageCache)
-        local count = 0
         for category, events in pairs(core.db.profile.messages) do
             for event, targets in pairs(events) do
                 for target, messages in pairs(targets) do
                     local eventKey = category .. "_" .. event .. "_" .. target
-                    messageCache[eventKey] = {nemesis = {}, regular = {}}
+                    if not messageCache[eventKey] then
+                        messageCache[eventKey] = {nemesis = {}, regular = {}}
+                    else
+                        wipe(messageCache[eventKey].nemesis)
+                        wipe(messageCache[eventKey].regular)
+                    end
                     for _, message in ipairs(messages) do
                         local processedMessage = {
                             label = message.label,
@@ -42,7 +45,6 @@ function NemesisChat:InstantiateController()
                         else
                             table.insert(messageCache[eventKey].regular, processedMessage)
                         end
-                        count = count + 1
                     end
                 end
             end

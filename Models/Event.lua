@@ -342,8 +342,8 @@ function NemesisChat:InstantiateEvent()
     end
 
     -- A player within the party has taken damage
-    function NCEvent:IsDamageEvent(event, dest, misc4)
-        return misc4 and type(misc4) == "number" and misc4 > 0 and UnitInParty(dest)
+    function NCEvent:IsDamageEvent(event, dest, damage)
+        return damage and type(damage) == "number" and damage > 0 and UnitInParty(dest)
     end
 
     function NCEvent:CombatStart()

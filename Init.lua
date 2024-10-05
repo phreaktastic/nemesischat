@@ -75,7 +75,7 @@ function GetMyName()
 end
 
 function IsNCEnabled()
-    return core.db.profile.enabled
+    return core.db.profile.enabled == true
 end
 
 function GetRole(player)
@@ -741,11 +741,7 @@ core.eventSubscriptions = {
     "ENCOUNTER_END", -- Boss end
     "CHALLENGE_MODE_START", -- M+ start
     "CHALLENGE_MODE_COMPLETED", -- M+ complete
-
-    -- Unit Actions -- no longer necessary as M+ mobs aren't a thing
-    -- "UNIT_SPELLCAST_START",
-    -- "UNIT_SPELLCAST_SUCCEEDED",
-    -- "UNIT_SPELLCAST_INTERRUPTED",
+    "CHALLENGE_MODE_RESET", -- M+ reset
 
     -- Self
     -- "PLAYER_TARGET_CHANGED",
@@ -770,8 +766,8 @@ NCEvent = {}
 NCController = {}
 NCSpell = {}
 
-C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
-C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
+C_Timer.NewTicker(0.1, function() if IsNCEnabled() then NemesisChat:CheckGuild() end end)
+C_Timer.NewTicker(5, function() if IsNCEnabled() then NemesisChat:LowPriorityTimer() end end)
 C_Timer.NewTicker(60, function()
     if not NCCombat or not NCCombat.IsActive then
         return

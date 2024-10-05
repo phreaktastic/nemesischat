@@ -331,27 +331,42 @@ NCRuntime = {
     end,
     AddGroupRosterPlayer = function(self, playerName)
         if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
-            return
+            return nil
         end
 
         local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
         local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
         local itemLevel = NemesisChat:GetItemLevel(playerName)
         local groupLead = UnitIsGroupLeader(playerName) ~= nil
-        local class, rawClass = UnitClass(playerName)
-        local data =  {
-            guid = UnitGUID(playerName),
+
+        local class, rawClass = "Unknown", "UNKNOWN"
+        local race = "Unknown"
+        local role = "NONE"
+        local guid = nil
+
+        -- Use pcall to catch any errors when calling WoW API functions
+        pcall(function()
+            if UnitExists(playerName) then
+                class, rawClass = UnitClass(playerName)
+                race = UnitRace(playerName) or "Unknown"
+                role = UnitGroupRolesAssigned(playerName)
+                guid = UnitGUID(playerName)
+            end
+        end)
+
+        local data = {
+            guid = guid,
             isGuildmate = isInGuild,
             isFriend = NCRuntime:IsFriend(playerName),
             isNemesis = isNemesis,
-            role = UnitGroupRolesAssigned(playerName),
+            role = role,
             itemLevel = itemLevel,
-            race = UnitRace(playerName),
+            race = race,
             class = class,
             rawClass = rawClass,
             groupLead = groupLead,
             name = playerName,
-            token = self:GetUnitTokenFromName(UnitName(playerName)),
+            token = self:GetUnitTokenFromName(playerName),
         }
 
         core.runtime.groupRoster[playerName] = data

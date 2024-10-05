@@ -227,15 +227,52 @@ NCInfo = {
         f.clearButton:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
         f.clearButton:SetPushedTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
         f.clearButton:SetScript("OnClick", function()
-            NCDungeon:ClearCache()
-            NCDungeon:Reset()
-            NCDungeon:SetIdentifier(nil)
-            NCDungeon:UpdateCache()
-            NCDungeon.RosterSnapshot = {}
+            -- Clear NCDungeon data
+            if NCDungeon then
+                NCDungeon:ClearCache()
+                NCDungeon:Reset()
+                NCDungeon:SetIdentifier(nil)
+                NCDungeon:UpdateCache()
+                NCDungeon.RosterSnapshot = {}
+            end
+
+            -- Clear other segment data
+            if NCBoss then NCBoss:Reset() end
+            if NCCombat then NCCombat:Reset() end
+
+            -- Clear runtime data
+            NCRuntime:ClearGroupRoster()
+            NCRuntime:ClearPlayerStates()
+            NCRuntime:ClearPulledUnits()
+            NCRuntime:ClearPetOwners()
+
+            -- Reset event data
+            NCEvent:Initialize()
+
+            -- Reset controller data
+            NCController:Initialize()
+
+            -- Reset spell data
+            NCSpell:Initialize()
+
+            -- Clear any stored rankings
+            if NCDungeon.Rankings then NCDungeon.Rankings:Reset(NCDungeon) end
+
+            -- Clear any stored caches
+            wipe(core.db.profile.cache)
+
+            -- Reinitialize core components
             NemesisChat:InstantiateCore()
+
+            -- Resync group data
             NemesisChat:SilentGroupSync()
             NemesisChat:CheckGroup()
+
+            -- Update the info frame
             NCInfo:Update()
+
+            -- Print confirmation message
+            NemesisChat:Print("All data has been cleared and reset.")
         end)
         f.clearButton:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
@@ -350,7 +387,7 @@ NCInfo = {
         local rawClass = playerInfo.rawClass or select(2, UnitClass(self.CurrentPlayer)) or "Unknown"
 
         -- Update header
-        if NCDungeon:GetIdentifier() == "" then
+        if NCDungeon:GetIdentifier() == "" or NCDungeon:GetIdentifier() == "DUNGEON" then
             f.header:SetText("Dungeon Info & Stats")
         else
             if NCDungeon:GetLevel() == 0 then
@@ -398,6 +435,8 @@ NCInfo = {
         checkbox:Show()
         yOffset = yOffset - checkbox:GetHeight() - 5
 
+        local isInGroup = IsInGroup()
+
         -- Update metric rows
         for _, key in ipairs(self.MetricKeys) do
             local metric = key
@@ -414,11 +453,14 @@ NCInfo = {
                 row.columns[1]:SetWidth(leftColWidth)
                 row.columns[1]:SetJustifyH("LEFT")
                 row.columns[1]:SetTextColor(0.5, 0.6, 0.85)
+                row.columns[1].desiredColor = {0.5, 0.6, 0.85}
 
                 row.columns[2] = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
                 row.columns[2]:SetPoint("LEFT", row.columns[1], "RIGHT", 0, 0)
                 row.columns[2]:SetPoint("RIGHT", row, "RIGHT", 0, 0)
                 row.columns[2]:SetJustifyH("RIGHT")
+                row.columns[2]:SetTextColor(0.5, 0.6, 0.85)
+                row.columns[2].desiredColor = {0.5, 0.6, 0.85}
 
                 content.rows[metric] = row
 
@@ -430,7 +472,7 @@ NCInfo = {
                     GameTooltip:Show()
                 end)
                 row:SetScript("OnLeave", function(self)
-                    self.columns[1]:SetTextColor(unpack(self.columns[2].desiredColor))
+                    self.columns[1]:SetTextColor(unpack(self.columns[1].desiredColor))
                     self.columns[2]:SetTextColor(unpack(self.columns[2].desiredColor))
                     GameTooltip:Hide()
                 end)
@@ -471,9 +513,7 @@ NCInfo = {
 
             yOffset = yOffset - rowHeight
 
-            if NCRankings.Configuration.Increments.Metrics[metric]:IsIncludedCallback(self.CurrentPlayer) then
-                row:Enable()
-            else
+            if isInGroup and not NCRankings:IsMetricApplicable(metric, self.CurrentPlayer) then
                 row.columns[1]:SetTextColor(unpack(disabledColor))
                 row.columns[1].desiredColor = disabledColor
                 row.columns[2]:SetTextColor(unpack(disabledColor))
@@ -486,6 +526,19 @@ NCInfo = {
                     self.columns[2].desiredColor = disabledColor
                     GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
                     GameTooltip:AddLine("Left click: Report to selected channel.\n\nNOTE: This metric is likely not ideal for this player.")
+                    GameTooltip:Show()
+                end)
+            else
+                row.columns[1]:SetTextColor(0.5, 0.6, 0.85)
+                row.columns[1].desiredColor = {0.5, 0.6, 0.85}
+                row.columns[2]:SetTextColor(0.5, 0.6, 0.85)
+                row.columns[2].desiredColor = {0.5, 0.6, 0.85}
+
+                row:SetScript("OnEnter", function(self)
+                    self.columns[1]:SetTextColor(1, 1, 1)
+                    self.columns[2]:SetTextColor(1, 1, 1)
+                    GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+                    GameTooltip:AddLine("Left click: Report to selected channel")
                     GameTooltip:Show()
                 end)
             end
@@ -889,8 +942,8 @@ NCInfo = {
     _SetMetricKeys = function(self)
         local keys = NemesisChat:GetKeys(NCRankings.METRICS)
         table.sort(keys)
-
         self.MetricKeys = keys
+        NemesisChat:Print("Metric keys set: " .. table.concat(keys, ", "))
     end,
 
     -- Generate the list of available channels based on current group state

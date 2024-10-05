@@ -30,7 +30,9 @@ function NemesisChat:HandleRosterUpdate()
     if self:IsGroupDisband(leaves, othersCount) then
         self:HandleGroupDisband(leaves)
     elseif self:IsGroupFormation(joins, othersCount) then
-        self:HandleGroupFormation(joins)
+        pcall(function()
+            self:HandleGroupFormation(joins)
+        end)
     else
         self:HandleGeneralGroupChanges(joins, leaves)
     end
@@ -55,7 +57,16 @@ end
 
 -- Handles the group formation scenario
 function NemesisChat:HandleGroupFormation(joins)
-    NCSegment:GlobalReset()
+    -- Ensure NCSegment is properly initialized
+    if not NCSegment or type(NCSegment.GlobalReset) ~= "function" then
+        self:Print("Error: NCSegment not properly initialized")
+        return
+    end
+
+    -- Call GlobalReset
+    pcall(function()
+        NCSegment:GlobalReset()
+    end)
 
     local members = NemesisChat:GetPlayersInGroup()
     local isLeader = UnitIsGroupLeader(GetMyName())
@@ -95,20 +106,21 @@ function NemesisChat:ProcessJoins(joins)
         if playerName and playerName ~= GetMyName() then
             local player = NCRuntime:GetGroupRosterPlayer(playerName)
             if not player then
-                -- Skip processing if player addition failed
-                self:Print("Failed to add player to roster:", playerName)
-                -- Optionally, log this error or handle it as needed
-                return
+                player = NCRuntime:AddGroupRosterPlayer(playerName)
             end
 
-            local leavesCount = NemesisChat:LeaveCount(player.guid) or 0
-            local lowPerforms = NemesisChat:LowPerformerCount(player.guid) or 0
+            if player then
+                local leavesCount = NemesisChat:LeaveCount(player.guid) or 0
+                local lowPerforms = NemesisChat:LowPerformerCount(player.guid) or 0
 
-            if #joins < 3 then
-                NemesisChat:PLAYER_JOINS_GROUP(playerName, player.isNemesis)
+                if #joins < 3 then
+                    NemesisChat:PLAYER_JOINS_GROUP(playerName, player.isNemesis)
+                end
+
+                self:ReportPlayerStatistics(playerName, leavesCount, lowPerforms)
+            else
+                self:Print("Failed to find player in roster:", playerName)
             end
-
-            self:ReportPlayerStatistics(playerName, leavesCount, lowPerforms)
         end
     end
 end
@@ -140,18 +152,15 @@ function NemesisChat:ProcessLeaves(leaves)
     for _, playerName in ipairs(leaves) do
         if playerName and playerName ~= GetMyName() then
             local player = NCRuntime:GetGroupRosterPlayer(playerName)
-            if not player then
-                -- Skip processing if player retrieval failed
-                -- self:Print("Failed to retrieve player from roster:", playerName)
-                -- Optionally, log this error or handle it as needed
-                return
-            end
+            if player then
+                if #leaves <= 3 then
+                    NemesisChat:PLAYER_LEAVES_GROUP(playerName, player.isNemesis)
+                end
 
-            if #leaves <= 3 then
-                NemesisChat:PLAYER_LEAVES_GROUP(playerName, player.isNemesis)
+                self:HandleDungeonLeaver(player, playerName)
+            else
+                self:Print("Failed to retrieve player from roster:", playerName)
             end
-
-            self:HandleDungeonLeaver(player, playerName)
         end
     end
 end
