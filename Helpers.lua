@@ -40,7 +40,7 @@ local eventPatterns = {
 }
 
 -- Weak cache, for memory optimization
-local weakCache = setmetatable({}, {__mode = "k"})
+local weakCache = setmetatable({}, {__mode = "kv"})
 local function getCachedValue(key, defaultValue)
     if not weakCache[key] then
         weakCache[key] = defaultValue
