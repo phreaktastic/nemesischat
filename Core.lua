@@ -8,6 +8,7 @@
 local _, core = ...;
 
 function NemesisChat:OnInitialize()
+    if not IsNCEnabled() then return end
     core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
     NemesisChatAPI:SetAPIConfigOptions()
     NemesisChat:Initialize()
@@ -28,19 +29,22 @@ function NemesisChat:OnEnable()
 
     NemesisChat:SetMyName()
     NemesisChat:PopulateFriends()
+
+    NCInfo:OnEnableStateChanged(true)
 end
 
 function NemesisChat:OnDisable()
     NemesisChat:UnregisterAllEvents()
+    NCInfo:OnEnableStateChanged(false)
 end
 
 local origErrorHandler = geterrorhandler()
 
 seterrorhandler(function(err)
+    if not IsNCEnabled() then return origErrorHandler(err) end
     if string.find(err, "attempt to index .* %(a nil value%)") then
         NemesisChat:Print("Nil Index Error: " .. err)
         -- Considering more debugging here
     end
     return origErrorHandler(err)
 end)
-

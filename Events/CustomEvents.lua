@@ -11,8 +11,8 @@ local _, core = ...;
 -- Event handling for Nemesis Chat events
 -----------------------------------------------------
 
--- Event handling
 function NemesisChat:HandleEvent()
+    if not IsNCEnabled() then return end
     if NemesisChat:ShouldExitEventHandler() then
         return
     end
@@ -26,8 +26,8 @@ function NemesisChat:HandleEvent()
     NCController:Handle()
 end
 
--- A player joins the group we are currently in
 function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
+    if not IsNCEnabled() then return end
     if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
         NCEvent:Initialize()
         return
@@ -58,8 +58,8 @@ function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
     NemesisChat:HandleEvent()
 end
 
--- A player leaves the group we are currently in
 function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
+    if not IsNCEnabled() then return end
     if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
         NCEvent:Initialize()
         return
@@ -90,8 +90,8 @@ function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
     NemesisChat:HandleEvent()
 end
 
--- A player in the guild logs in
 function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
+    if not IsNCEnabled() then return end
     NCEvent:SetCategory("GUILD")
     NCEvent:SetEvent("LOGIN")
 
@@ -112,8 +112,8 @@ function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
     NemesisChat:HandleEvent()
 end
 
--- A player in the guild logs out
 function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
+    if not IsNCEnabled() then return end
     NCEvent:SetCategory("GUILD")
     NCEvent:SetEvent("LOGOUT")
 
@@ -135,34 +135,31 @@ function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
 end
 
 function NemesisChat:START_DUNGEON()
+    if not IsNCEnabled() then return end
     NCEvent:Initialize()
     NCDungeon:Reset()
     NCDungeon:Start()
 end
 
 function NemesisChat:END_DUNGEON()
+    if not IsNCEnabled() then return end
     NCEvent:Initialize()
     NCDungeon:End()
 end
 
 function NemesisChat:GROUP_DISBANDED()
+    if not IsNCEnabled() then return end
     -- Stub
 end
 
 -----------------------------------------------------
 -- Guild Sync
 -----------------------------------------------------
---- While this is not actually an event, it is used
---- to sync the guild roster and fire custom events.
------------------------------------------------------
-
 local lastFullUpdate = 0
 local updateInterval = 60 -- Full update every 60 seconds
 
 function NemesisChat:CheckGuild()
-    if not IsNCEnabled() then
-        return
-    end
+    if not IsNCEnabled() then return end
 
     if not IsInGuild() then
         core.runtime.guild = {}
@@ -187,15 +184,12 @@ function NemesisChat:CheckGuild()
                     if core.runtime.guild[name].online ~= online then
                         _ = online and NemesisChat:GUILD_PLAYER_LOGIN(name, IsNemesis(name)) or NemesisChat:GUILD_PLAYER_LOGOUT(name, IsNemesis(name))
                     end
-                else
-                    -- NemesisChat:TriggerCustomEvent("GUILD_MEMBER_ADDED", name)
                 end
             end
         end
 
         for name, info in pairs(core.runtime.guild) do
             if not guildRoster[name] then
-                -- NemesisChat:TriggerCustomEvent("GUILD_MEMBER_REMOVED", name)
                 core.runtime.guild[name] = nil
             end
         end
