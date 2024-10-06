@@ -1,32 +1,80 @@
-# 🎯 Key Changes
+# 📢 Summary
 
-## 📢 Summary
-**1.10.x**: New configuration options for tracking and reporting leavers and low-performers (thank you Gutz!). The War Within fixes, delve support, and a lot of refactoring to prepare for 2.x.
+Version 1.13.0 brings a comprehensive update to the addon, focusing on performance optimization, feature enhancements, and bug fixes. Key highlights include:
 
-**1.9.x**: Massive stability and performance pass. Pre-release for 2.x with a new, highly refined approach.
+1. Major performance improvements, reducing memory usage and eliminating lag-causing memory leaks.
+2. Significant enhancements to the information pane, making it more user-friendly and feature-rich.
+3. Introduction of delve support, expanding functionality to match M+ expectations.
+4. New context menu options for player management.
+5. Extensive code refactoring for improved stability and maintainability.
+6. Multiple bug fixes addressing issues with combat log processing, avoidable damage tracking, and UI elements.
+7. Compatibility updates for The War Within expansion.
+8. New configuration options for tracking leavers and low-performers.
+9. Improvements to unsafe pulls detection accuracy.
+10. Enhanced message handling and trigger refinements.
 
-**1.8.x**: Things are spicing up with M+ leaver detection and low performer detection! 
+This update represents a substantial overhaul of the addon, setting the stage for future developments and ensuring a more robust and efficient user experience.
 
-## 🩹 Patches
+>❗**Leavers and low performers may need to be wiped in a future version**❗
+>
+> The way leavers and low performers are tracked is currently by GUID. This is to ensure that the addon will properly handle a scenario where a player changed their name, server, etc. To keep this performant, that is all that is stored. I will be digging into this soon, and a refactor is likely needed. Without this, reporting on metrics (servers, classes, specs, guilds, etc.) will be impossible.
 
-- **1.10.3**: Pass on the information pane. This pane is still in development and there is much more to come.
-   - The info pane is now _much_ more friendly and easier to use.
-      - All metrics are always visible for all classes, but you will now see metrics that are "greyed out" if they're not applicable to that player's class.
-      - Back/Forward navigation added.
-      - Channel selection for reporting the metrics
-      - More to come!
-   - Significant performance improvements across the board
-   - Resolution of race conditions affecting Avoidable Damage tracking and damage events
-   - Substantial reduction in memory usage
-   - Streamlined code for better maintainability and future development
-   - Enhanced overall stability and reliability
-   - Bug fixes for various existing features
-- **1.10.2**: Another small bugfix for the enabling/disabling of NC
-- **1.10.1**: Bugfix
+# 🩹 Patches
 
-## ⭐ Latest Versions
+## 🚀 **1.10.3**: Huge optimization pass
 
-### 1.10.0
+> **Note**
+>
+> This particular pass started as a simple update to the information pane, but it quickly grew into a major overhaul of the entire addon. Realistically, this should be a version bump (not a patch), but the vast majority of this release is refactoring/optimization, and I've decided to release it as a patch.
+>
+> I greatly appreciate the feedback and suggestions from the community, and I'm excited to continue working on improving the addon. Please continue to provide feedback and suggestions, and I'll do my best to incorporate them into future updates. Thank you for your continued support!
+
+### **Information Pane Enhancements:**
+   ---
+   - The info pane is now significantly more user-friendly and intuitive.
+   - All metrics are visible for all classes, with non-applicable metrics greyed out for clarity.
+   - Added Back/Forward navigation to improve user experience.
+   - Introduced channel selection for reporting metrics.
+   - Additional features and improvements are planned for future updates.
+      - Please note that the information pane is still a work in progress, and more features and improvements are planned for future updates.
+      - Your feedback is imperative in shaping the future of the addon, so please don't hesitate to share your thoughts and ideas. Especially with an adjustment like this!
+
+### **New Features:**
+   ---
+   - Added delve support, enhancing the addon's functionality and user experience.
+      - All expected functionality that you'd expect from M+ is now available within delves.
+      - This is still a work in progress, and more will come when more is exposed in the Blizzard API.
+   - Introduced a context menu option to mark or unmark players as nemeses.
+
+### **Performance Improvements:**
+   ---
+   - Achieved significant performance enhancements across various components.
+   - Resolved race conditions affecting Avoidable Damage tracking and damage events.
+   - Substantial reduction in memory usage, addressing previous memory leaks that caused lag.
+
+### **Code and Stability Enhancements:**
+   ---
+   - Streamlined codebase for better maintainability and easier future development.
+   - Enhanced overall stability and reliability of the system.
+
+### **Bug Fixes:**
+   ---
+   - Fixed issues with handling nil values in various functions to prevent runtime errors.
+   - Corrected logic for handling combat log events to ensure accurate event processing.
+   - Addressed memory leaks that previously caused performance degradation.
+   - Addressed issues with the "clear" button in the info pane.
+   - Addressed issues with NC still running background logic when disabled.
+   - The info pane will no longer be visible (or functional / processing) when the addon is disabled.
+   - Fixed an issue where the addon would crash when the player's name was not found in the combat log.
+   - Fixed issues with instability regarding certain replacement strings; a much more robust system is in place to handle scenarios where we need to replace text based on unit frames instead of the player's name.
+   - Fixed multiple issues with core logic:
+      - Damage events will no longer prevent other events from being processed.
+      - Avoidable damage will now be tracked correctly.
+      - Avoidable damage events will no longer prevent other events from being processed.
+## 🚀 **1.10.2**: Another small bugfix for the enabling/disabling of NC.
+## 🚀 **1.10.1**: Bugfix for more TWW compatibility.
+
+## 🚀 1.10.0 Initial Release
 
 - The War Within Fixes
    - Several bug fixes
@@ -43,58 +91,3 @@
    - Brann doesn't break messages with particular details / replacements
    - A little more hardening in non-problematic areas just to ensure reliability
 - Special thanks to **</TYLER>** for the constant communication, testing, bug-reporting, etc. <3
-
-### 1.9.0
-
-- New UI with stats and the ability to report as desired.
-   - This is a preview of 2.x functionality.
-- New trackers:
-   - Crowd control
-   - Defensives
-   - Dispells
-- New replacements, events, conditions, etc.
-- Performance tracking which will attempt to rank players within the group based on:
-   - DPS (for DPS only)
-      - Tracks when a DPS is lower than tank and/or healer DPS
-      - Tracks when a DPS is significantly lower / higher than others in the group
-   - Affixes
-      - Attempts to understand which classes / specs should be exempt 
-      - Scoring based on handling affixes (CCing souls counts, for example)
-   - Avoidable Damage
-   - Crowd Control
-   - Deaths
-   - Usage of defensive abilities
-   - Dispells
-   - Interrupts
-   - Offheals
-   - Butt pulls
-   - And more!
-- Overperformer and underperformer tracking
-   - Stored in permanent DB
-   - DB synchronization with other players
-   - Reporting for when someone joins who was marked as either over/under performing recently
-   - Based on scoring of all of the above metrics
-   - Smart scoring -- for example, a Resto Druid will not be negatively scored for a lack of **interrupts** (yes, they can disrupt / CC)
-- The same process which happens for nemeses and configured messages will now happen for bystanders:
-   - All bystanders will be checked for matching conditions
-   - The most optimal message will be chosen based on all criteria
-   - This allows one to set hyper-specific criteria, and know that if someone ever meets that criteria, the message will be used
-- Mountains of fixes and optimizations
-
-### 1.8.0
-
-- Nemesis prioritization for scenarios where more than one message is retrieved for an event.
-- Beta features: hardening and optimization -- they're very close to full release state!
-- Enable / disable messages for APIs.
-- M+ early leaver storage and sync
-   - Leavers will now be logged in a persistent DB.
-   - Leavers will be synced between players in-game.
-- M+ low performers storage and sync
-   - Low performers will now be logged in a persistent DB.
-   - Low performers will be synced between players in-game.
-   - Low performers are currently defined as:
-      - At least 2 spots in the bottom (bottom affixes / DPS (non-DPS exempt) / offheals, most pulls (tank exempt) / deaths / avoidable damage).
-         - Deaths are taken fairly lightly, as that can be due to any number of reasons. Deaths are primarily examined base on how much avoidable damage was taken.
-      - Within those spots on the bottom, there must be a difference of >= 30% between them and the top for said metric.
-- Fix for dungeon keystone level.
-- Lots of new stuff behind the scenes, paving the way for some really awesome future features!
