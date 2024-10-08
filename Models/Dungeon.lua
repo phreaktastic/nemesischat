@@ -45,11 +45,13 @@ function NCDungeon:StartCallback()
     end
 
     NCDungeon:ClearCache()
+    NCRuntime:ClearPetOwners()
+
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
     NCDungeon:SetKeystoneAffixes(affixIDs)
     NCDungeon:SetTimeLimit(timeLimit)
-    NCRuntime:ClearPetOwners()
+    NCDungeon:SnapshotCurrentRoster()
 
     NCInfo:Update()
     NCDungeon:UpdateCache()
@@ -66,15 +68,14 @@ function NCDungeon:FinishCallback(success)
         NCEvent:SetEvent("SUCCESS")
     end
 
-    if NCDungeon and type(NCDungeon.UpdateCache) == "function" then
-        NCDungeon:UpdateCache()
-    else
-        NemesisChat:Print("Error: NCDungeon is not properly initialized in Combat FinishCallback")
-    end
+    NCDungeon:UpdateCache()
+    NCRuntime:ClearPetOwners()
 end
 
 function NCDungeon:ResetCallback()
-    NCDungeon:SetLevel(0)
+    self:SetLevel(0)
+    wipe(self.Affixes)
+    self.TimeLimit = 0
 end
 
 function NCDungeon:GetLevel()
@@ -118,31 +119,23 @@ function NCDungeon:GetTimeLeft()
 end
 
 function NCDungeon:UpdateCache()
-    if not NCDungeon then
-        NemesisChat:Print("Error: NCDungeon is nil in UpdateCache")
-        return
-    end
-
-    if core.db.profile.cache.NCDungeon and type(core.db.profile.cache.NCDungeon.Restore) == "function" then
-        core.db.profile.cache.NCDungeon:Restore(NCDungeon)
-    else
-        NCSegmentPool:Release(NCDungeon)
-        core.db.profile.cache.NCDungeon = NCSegmentPool:Acquire("DUNGEON")
-        if type(core.db.profile.cache.NCDungeon.Restore) == "function" then
-            core.db.profile.cache.NCDungeon:Restore(NCDungeon)
-        else
-            NemesisChat:Print("Error: Restore function not found on cache.NCDungeon")
-        end
-    end
+    core.db.profile.cache.NCDungeon = NCDungeon:GetBackup()
+    core.db.profile.cache.DungeonRankings = NCDungeon.Rankings:GetBackup()
 end
 
 function NCDungeon:CheckCache()
-    if core.db.profile.cache.NCDungeon ~= nil and core.db.profile.cache.NCDungeon ~= {} then
-        NCDungeon:Restore(core.db.profile.cache.NCDungeon)
+    local cachedDungeon = core.db.profile.cache.NCDungeon
+    if cachedDungeon ~= nil and cachedDungeon ~= {} then
+        if cachedDungeon.backupTime and cachedDungeon.backupTime > GetTime() - 300 then
+            NCDungeon:Restore(core.db.profile.cache.NCDungeon)
+        else
+            self:ClearCache()
+        end
     end
 end
 
 function NCDungeon:ClearCache()
     core.db.profile.cache.NCDungeon = {}
     core.db.profile.cache.NCDungeonTime = 0
+    core.db.profile.cache.DungeonRankings = {}
 end

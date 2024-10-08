@@ -68,7 +68,7 @@ NCInfo = {
     end,
 
     CreateMainFrame = function(self)
-        if not IsNCEnabled() then return end
+        if not IsNCEnabled() or self.StatsFrame then return end
 
         local f = CreateFrame("Frame", "NemesisChatStatsFrame", UIParent, "BackdropTemplate")
         self.StatsFrame = f
@@ -226,8 +226,7 @@ NCInfo = {
         f.clearButton:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
         f.clearButton:SetPushedTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
         f.clearButton:SetScript("OnClick", function()
-            -- Clear data logic
-            -- ... (existing clear data logic remains unchanged)
+            NemesisChat:ClearAllData()
         end)
         f.clearButton:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
@@ -273,6 +272,20 @@ NCInfo = {
         f.infoFrame.text = f.infoFrame:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
         f.infoFrame.text:SetAllPoints()
         f.infoFrame.text:SetJustifyH("CENTER")
+
+        f:SetPassThroughButtons("RightButton")
+        f.title:SetPassThroughButtons("RightButton")
+        f.headerFrame:SetPassThroughButtons("RightButton")
+        f.footerFrame:SetPassThroughButtons("RightButton")
+        f.scrollFrame:SetPassThroughButtons("RightButton")
+        f.scrollFrame.scrollChild:SetPassThroughButtons("RightButton")
+        f.infoFrame:SetPassThroughButtons("RightButton")
+        f.clearButton:SetPassThroughButtons("RightButton")
+        f.resizeButton:SetPassThroughButtons("RightButton")
+        f.playerDropdown:SetPassThroughButtons("RightButton")
+        f.prevPlayerButton:SetPassThroughButtons("RightButton")
+        f.nextPlayerButton:SetPassThroughButtons("RightButton")
+        f.channelDropdown:SetPassThroughButtons("RightButton")
 
         -- Initialize rows table
         f.scrollFrame.scrollChild.rows = f.scrollFrame.scrollChild.rows or {}
@@ -320,26 +333,33 @@ NCInfo = {
         local neutral = {0.5, 0.6, 0.85}
         local disabledColor = {0.25, 0.25, 0.25}
 
-        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(self.CurrentPlayer)
+        local currentRoster = NCRuntime:GetGroupRoster()
+        local mergedRoster = setmetatable({}, {__mode = "kv"})
 
-        if not rosterPlayer or type(rosterPlayer) ~= "table" then
-            return
+        for player, rosterData in pairs(currentRoster) do
+            mergedRoster[player] = rosterData
         end
 
-        local snapshotPlayer = NCDungeon.RosterSnapshot[self.CurrentPlayer]
-
-        if not snapshotPlayer or type(snapshotPlayer) ~= "table" then
-            snapshotPlayer = setmetatable({}, {__mode = "kv"})
+        for player, snapshotData in pairs(NCDungeon.RosterSnapshot) do
+            if not mergedRoster[player] then
+                mergedRoster[player] = snapshotData
+            else
+                for key, value in pairs(snapshotData) do
+                    if mergedRoster[player][key] == nil then
+                        mergedRoster[player][key] = value
+                    end
+                end
+            end
         end
 
-        local playerInfo = MapMerge(rosterPlayer, snapshotPlayer)
-        local race = playerInfo.race or UnitRace(self.CurrentPlayer) or "Unknown"
-        local class = playerInfo.class or UnitClass(self.CurrentPlayer) or "Unknown"
-        local rawClass = playerInfo.rawClass or select(2, UnitClass(self.CurrentPlayer)) or "Unknown"
+        local playerInfo = mergedRoster[self.CurrentPlayer] or setmetatable({}, {__mode = "kv"})
+        local race = playerInfo.race or UnitRace(self.CurrentPlayer) or ""
+        local class = playerInfo.class or UnitClass(self.CurrentPlayer) or ""
+        local rawClass = playerInfo.rawClass or select(2, UnitClass(self.CurrentPlayer)) or ""
 
         -- Update header
         if NCDungeon:GetIdentifier() == "" or NCDungeon:GetIdentifier() == "DUNGEON" then
-            f.header:SetText("Dungeon Info & Stats")
+            f.header:SetText(NemesisChat.CurrentPlayerLocation or "Dungeon Info & Stats")
         else
             if NCDungeon:GetLevel() == 0 then
                 f.header:SetText(NCDungeon:GetIdentifier())
@@ -430,6 +450,7 @@ NCInfo = {
                 row:SetScript("OnClick", function()
                     NCInfo:ReportMetric(metric, self.CurrentPlayer)
                 end)
+                row:SetPassThroughButtons("RightButton")
             end
 
             local row = content.rows[metric]
@@ -486,8 +507,6 @@ NCInfo = {
                 row.columns[2].desiredColor = {0.5, 0.6, 0.85}
 
                 row:SetScript("OnEnter", function(self)
-                    self.columns[1]:SetTextColor(1, 1, 1)
-                    self.columns[2]:SetTextColor(1, 1, 1)
                     GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
                     GameTooltip:AddLine("Left click: Report to selected channel")
                     GameTooltip:Show()
@@ -871,6 +890,7 @@ NCInfo = {
             f.scrollFrame:Show()
             f.dropdownFrame:Show()
             f.resizeButton:Show()
+            self:Update()
         else
             -- Minimize the frame
             self.IsMinimized = true
@@ -881,18 +901,7 @@ NCInfo = {
             -- Save current height
             self.ExpandedHeight = f:GetHeight()
 
-            -- Adjust frame height to only show title and header
-            local titleHeight = f.title:GetHeight() + 8  -- Include top padding
-            local headerFrameHeight = f.headerFrame:GetHeight() + 5  -- Include spacing
-            local newHeight = titleHeight + headerFrameHeight + 10  -- Add extra padding
-
-            f:SetHeight(newHeight)
-            f:SetResizable(false)
-            f.resizeButton:Hide()
-            f.footerFrame:Hide()
-            f.scrollFrame:Hide()
-            f.dropdownFrame:Hide()
-            f.resizeButton:Hide()
+            self:ShowMinimized()
         end
     end,
 
@@ -919,6 +928,23 @@ NCInfo = {
         if self.StatsFrame then
             self.StatsFrame:Hide()
         end
+    end,
+
+    ShowMinimized = function(self)
+        if not IsNCEnabled() or not self.StatsFrame then return end
+
+        local f = self.StatsFrame
+        local titleHeight = f.title:GetHeight() + 8  -- Include top padding
+        local headerFrameHeight = f.headerFrame:GetHeight() + 5  -- Include spacing
+        local newHeight = titleHeight + headerFrameHeight + 10  -- Add extra padding
+
+        f:SetHeight(newHeight)
+        f:SetResizable(false)
+        f.resizeButton:Hide()
+        f.footerFrame:Hide()
+        f.scrollFrame:Hide()
+        f.dropdownFrame:Hide()
+        f.resizeButton:Hide()
     end,
 
     _SetMetricKeys = function(self)

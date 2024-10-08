@@ -166,7 +166,11 @@ function NemesisChat:InstantiateController()
                     local val = v()
 
                     if type(val) == "string" or type(val) == "number" then
-                        msg = msg:gsub(k, val)
+                        if not pcall(function()
+                            msg = msg:gsub(k, val)
+                        end) then
+                            NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+                        end
                     else
                         NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
                     end
@@ -189,7 +193,11 @@ function NemesisChat:InstantiateController()
                 end
 
                 if type(val) == "string" or type(val) == "number" then
-                    msg = msg:gsub(k, val)
+                    if not pcall(function()
+                        msg = msg:gsub(k, val)
+                    end) then
+                        NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+                    end
                 else
                     if not useExamples then
                         NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))

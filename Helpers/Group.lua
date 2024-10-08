@@ -25,14 +25,13 @@ function NemesisChat:HandleRosterUpdate()
 
     -- Update the internal group roster first
     self:SilentGroupSync()
+    NemesisChat:CheckGroup()
 
     -- After updating the roster, handle events based on changes
     if self:IsGroupDisband(leaves, othersCount) then
         self:HandleGroupDisband(leaves)
     elseif self:IsGroupFormation(joins, othersCount) then
-        pcall(function()
-            self:HandleGroupFormation(joins)
-        end)
+        self:HandleGroupFormation(joins)
     else
         self:HandleGeneralGroupChanges(joins, leaves)
     end
@@ -51,7 +50,6 @@ end
 -- Handles the group disband scenario
 function NemesisChat:HandleGroupDisband(leaves)
     NCRuntime:ClearGroupRoster()
-    NemesisChat:CheckGroup()
     -- Trigger a group disband event
 end
 
@@ -59,14 +57,10 @@ end
 function NemesisChat:HandleGroupFormation(joins)
     -- Ensure NCSegment is properly initialized
     if not NCSegment or type(NCSegment.GlobalReset) ~= "function" then
-        self:Print("Error: NCSegment not properly initialized")
         return
     end
 
-    -- Call GlobalReset
-    pcall(function()
-        NCSegment:GlobalReset()
-    end)
+    NCSegment:GlobalReset()
 
     local members = NemesisChat:GetPlayersInGroup()
     local isLeader = UnitIsGroupLeader(GetMyName())
@@ -85,8 +79,6 @@ function NemesisChat:HandleGroupFormation(joins)
     if not isLeader then
         NemesisChat:PLAYER_JOINS_GROUP(GetMyName(), false)
     end
-
-    NemesisChat:CheckGroup()
 end
 
 -- Handles general group changes (joins and leaves)
@@ -170,20 +162,23 @@ function NemesisChat:HandleDungeonLeaver(player, playerName)
     local timeLeft = NCDungeon:GetTimeLeft()
 
     if NCDungeon:IsActive() and NCDungeon:GetLevel() > 0 and player.guid and NCRuntime:GetGroupRosterCountOthers() == 4
-       and timeLeft >= 360 and not IsInRaid() and NCDungeon:GetLevel() <= 20 then
+       and timeLeft >= 360 and not IsInRaid() and NCDungeon:GetLevel() <= 10 then
+        local minutes = math.floor(timeLeft / 60)
+        local seconds = timeLeft - (minutes * 60)
+        local timeLeftFormatted = string.format("%02d:%02d", minutes, seconds)
 
         local leaverGuid, leaverName = self:FindOfflineLeaver(player.guid, playerName)
 
         if leaverGuid and leaverName then
             if NCConfig:IsTrackingLeavers() then
+                NemesisChat:AddLeaver(leaverGuid)
+
                 local message = string.format(
                     "Nemesis Chat: %s has disconnected with a dungeon in progress (%s left) and has been added to the global leaver DB.",
-                    leaverName, NemesisChat:GetDuration(timeLeft)
+                    leaverName, timeLeftFormatted
                 )
-                NemesisChat:TriggerCustomEvent("REPORT_DUNGEON_LEAVER", message, "GROUP")
-                NemesisChat:TriggerCustomEvent("ADD_LEAVER_TO_DB", leaverName, leaverGuid)
+                SendChatMessage(message, "PARTY")
             end
-            NemesisChat:AddLeaver(leaverGuid)
         end
     end
 end

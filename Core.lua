@@ -8,7 +8,6 @@
 local _, core = ...;
 
 function NemesisChat:OnInitialize()
-    if not IsNCEnabled() then return end
     core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
     NemesisChatAPI:SetAPIConfigOptions()
     NemesisChat:Initialize()
@@ -20,21 +19,30 @@ function NemesisChat:OnInitialize()
 end
 
 function NemesisChat:OnEnable()
-    NemesisChat:RegisterEvent("GROUP_ROSTER_UPDATE")
-    NemesisChat:RegisterEvent("PLAYER_ENTERING_WORLD")
-    NemesisChat:RegisterEvent("PLAYER_LEAVING_WORLD")
-    NemesisChat:RegisterEvent("CHAT_MSG_ADDON")
-    NemesisChat:RegisterEvent("ACTIVE_DELVE_DATA_UPDATE")
-    NemesisChat:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+    self:InitIfEnabled()
 
-    NemesisChat:SetMyName()
-    NemesisChat:PopulateFriends()
+    self:RegisterEvent("GROUP_ROSTER_UPDATE")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterEvent("PLAYER_LEAVING_WORLD")
+    self:RegisterEvent("CHAT_MSG_ADDON")
+    self:RegisterEvent("ACTIVE_DELVE_DATA_UPDATE")
+    self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+    self:RegisterEvent("SCENARIO_CRITERIA_UPDATE")
+    self:RegisterEvent("SCENARIO_COMPLETED")
+
+    self:SetMyName()
+    self:PopulateFriends()
+    self:InstantiateCore()
+    self:SilentGroupSync()
+    self:CheckGroup()
+
+    self:PLAYER_ENTERING_WORLD()
 
     NCInfo:OnEnableStateChanged(true)
 end
 
 function NemesisChat:OnDisable()
-    NemesisChat:UnregisterAllEvents()
+    self:UnregisterAllEvents()
     NCInfo:OnEnableStateChanged(false)
 end
 
@@ -42,9 +50,31 @@ local origErrorHandler = geterrorhandler()
 
 seterrorhandler(function(err)
     if not IsNCEnabled() then return origErrorHandler(err) end
-    if string.find(err, "attempt to index .* %(a nil value%)") then
-        NemesisChat:Print("Nil Index Error: " .. err)
-        -- Considering more debugging here
+
+    -- Initialize the SessionErrors table if it doesn't exist
+    NemesisChat.SessionErrors = NemesisChat.SessionErrors or {}
+
+    local stackTrace = debugstack(2)
+
+    -- Update or add the error entry
+    if NemesisChat.SessionErrors[err] then
+        NemesisChat.SessionErrors[err].count = NemesisChat.SessionErrors[err].count + 1
+    else
+        NemesisChat.SessionErrors[err] = {count = 1, stackTrace = stackTrace}
     end
-    return origErrorHandler(err)
+
+    -- Ensure only the last 3 errors are stored
+    local errorKeys = {}
+    for key in pairs(NemesisChat.SessionErrors) do
+        table.insert(errorKeys, key)
+    end
+    table.sort(errorKeys, function(a, b)
+        return NemesisChat.SessionErrors[a].count > NemesisChat.SessionErrors[b].count
+    end)
+    while #errorKeys > 3 do
+        NemesisChat.SessionErrors[errorKeys[#errorKeys]] = nil
+        table.remove(errorKeys)
+    end
+
+    NemesisChat:Print("An error has occurred within Nemesis Chat. Please use /nc debug to see the errors and relevant information.")
 end)

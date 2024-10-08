@@ -11,7 +11,7 @@ local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 
 local E = ElvUI and unpack(ElvUI) or nil
-local GTFO = GTFO and unpack(GTFO) or nil
+local GTFO = _G["GTFO"]
 
 local scanTipName = format("%s_ScanTooltip", addonName)
 local scanTipText = format("%sTextLeft2", scanTipName)
@@ -315,7 +315,7 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:InitializeTimers()
-        self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitSyncData", 60)
+        if not self.SyncLeaversTimer then self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitSyncData", 60) end
     end
 
     function NemesisChat:GetMyName()
@@ -355,7 +355,7 @@ function NemesisChat:InitializeHelpers()
 
         eventInfo.time, eventInfo.subEvent, eventInfo.hidecaster, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.sourceRaidFlags, eventInfo.destGUID, eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4 = CombatLogGetCurrentEventInfo()
 
-        if not NCRuntime:GetGroupRosterPlayer(eventInfo.sourceName) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) then
+        if not NCRuntime:GetGroupRosterPlayer(eventInfo.sourceName) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) and not bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
             wipe(eventInfo)
             return
         end
@@ -365,10 +365,12 @@ function NemesisChat:InitializeHelpers()
         local isPull, pullType, pullPlayerName, mobName = NemesisChat:IsPull(pullInfo)
         local damage = NemesisChat:GetDamageAmount(subEvent, misc1, misc4)
 
+        if bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
+            eventInfo.sourceName = NemesisChat:GetPetOwner(eventInfo.sourceGUID)
+        end
+
         NemesisChat:SetMyName()
-        -- NemesisChat:UpdateGroupState()
         NemesisChat:ActionScoring()
-        -- NemesisChat:CheckAffixes()
 
         NCEvent:Initialize()
         NCEvent:SetCategory("COMBATLOG")
@@ -391,17 +393,13 @@ function NemesisChat:InitializeHelpers()
         wipe(pullInfo)
 
         if NCEvent:IsDamageEvent(subEvent, destName, damage) then
-            local playerState = playerState or setmetatable({}, {__mode = "kv"})
-            NCRuntime:GetPlayerState(destName)
             local isAvoidable = (GTFO and GTFO.SpellID[tostring(misc1)] ~= nil)
 
             if isAvoidable then
                 NCSegment:GlobalAddAvoidableDamage(damage, destName)
             end
 
-            if playerState then
-                playerState.lastDamageAvoidable = isAvoidable
-            end
+            NCRuntime:SetPlayerStateValue(destName, "lastDamageAvoidable", isAvoidable)
 
             NCEvent:Damage(sourceName, destName, misc1, misc2, damage, isAvoidable)
 
@@ -1414,10 +1412,6 @@ function NemesisChat:InstantiateCore()
     NCEvent = DeepCopy(core.runtimeDefaults.ncEvent)
     NemesisChat:InstantiateEvent()
 
-    if not NCDungeon or type(NCDungeon.Reset) ~= "function" then
-        NCDungeon = NCSegmentPool:Acquire("DUNGEON")
-    end
-
     if core.db.profile.cache.guild then
         core.runtime.guild = DeepCopy(core.db.profile.cache.guild)
     end
@@ -1434,13 +1428,71 @@ function NemesisChat:InstantiateCore()
 end
 
 function NemesisChat:Initialize()
+    NemesisChat:SetEnabledState(IsNCEnabled())
+
     NemesisChat:InitializeConfig()
     NemesisChat:InitializeHelpers()
+    NemesisChat:SetMyName()
+
+    NemesisChat:InitIfEnabled()
+end
+
+function NemesisChat:InitIfEnabled()
+    if not IsNCEnabled() then return end
+
+    NCInfo:Initialize()
     NemesisChat:InitializeTimers()
     NemesisChat:PopulateFriends()
     NemesisChat:RegisterPrefixes()
     NemesisChat:RegisterToasts()
-    NemesisChat:SetMyName()
     NemesisChat:SilentGroupSync()
-    NCInfo:Initialize()
+    NCRuntime:UpdateInitializationTime()
+end
+
+function NemesisChat:ClearAllData()
+    -- Clear NCDungeon data
+    if NCDungeon then
+        NCDungeon:ClearCache()
+        NCDungeon:Reset()
+        NCDungeon:SetIdentifier(nil)
+        NCDungeon.RosterSnapshot = {}
+    end
+
+    -- Clear other segment data
+    if NCBoss then NCBoss:Reset() end
+    if NCCombat then NCCombat:Reset() end
+
+    -- Clear runtime data
+    NCRuntime:ClearGroupRoster()
+    NCRuntime:ClearPlayerStates()
+    NCRuntime:ClearPulledUnits()
+    NCRuntime:ClearPetOwners()
+
+    -- Reset event data
+    NCEvent:Initialize()
+
+    -- Reset controller data
+    NCController:Initialize()
+
+    -- Reset spell data
+    NCSpell:Initialize()
+
+    -- Clear any stored rankings
+    if NCDungeon.Rankings then NCDungeon.Rankings:Reset(NCDungeon) end
+
+    -- Clear any stored caches
+    wipe(core.db.profile.cache)
+
+    -- Reinitialize core components
+    NemesisChat:InstantiateCore()
+
+    -- Resync group data
+    NemesisChat:SilentGroupSync()
+    NemesisChat:CheckGroup()
+
+    -- Update the info frame
+    NCInfo:Update()
+
+    -- Print confirmation message
+    NemesisChat:Print("All data has been cleared and reset.")
 end

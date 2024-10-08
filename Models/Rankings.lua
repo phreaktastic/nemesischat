@@ -63,6 +63,7 @@ NCRankings = {
 
         setmetatable(o, self)
         self.__index = self
+
         return o
     end,
 
@@ -83,6 +84,9 @@ NCRankings = {
     end,
 
     UpdateMetric = function(self, metricKey, playerName, newValue)
+        if not self.All[metricKey] then
+            self.All[metricKey] = {}
+        end
         local metric = self.All[metricKey]
         local oldValue = metric[playerName]
         metric[playerName] = newValue
@@ -93,6 +97,9 @@ NCRankings = {
     end,
 
     UpdateSortedList = function(self, metricKey, playerName, oldValue, newValue)
+        if not self.sortedPlayers[metricKey] then
+            self.sortedPlayers[metricKey] = {}
+        end
         local sorted = self.sortedPlayers[metricKey]
         local playerIndex = nil
 
@@ -263,5 +270,42 @@ NCRankings = {
         end
 
         return self.METRIC_APPLICABILITY[metricKey][playerRole] or false
-    end
+    end,
+
+    GetBackup =  function(self)
+        local backup = {
+            Top = {},
+            Bottom = {},
+            All = {},
+            sortedPlayers = {},
+            cache = {},
+            lastUpdateTime = {},
+        }
+
+        for metricKey, _ in pairs(self.METRICS) do
+            backup.Top[metricKey] = self.Top[metricKey]
+            backup.Bottom[metricKey] = self.Bottom[metricKey]
+            backup.All[metricKey] = self.All[metricKey]
+            backup.sortedPlayers[metricKey] = self.sortedPlayers[metricKey]
+            backup.cache[metricKey] = self.cache[metricKey]
+            backup.lastUpdateTime[metricKey] = self.lastUpdateTime[metricKey]
+        end
+
+        backup.backupTime = GetTime()
+
+        return backup
+    end,
+
+    Restore = function(self)
+        local backup = core.db.profile.cache.DungeonRankings
+
+        for metricKey, _ in pairs(self.METRICS) do
+            self.Top[metricKey] = backup.Top[metricKey]
+            self.Bottom[metricKey] = backup.Bottom[metricKey]
+            self.All[metricKey] = backup.All[metricKey]
+            self.sortedPlayers[metricKey] = backup.sortedPlayers[metricKey]
+            self.cache[metricKey] = backup.cache[metricKey]
+            self.lastUpdateTime[metricKey] = backup.lastUpdateTime[metricKey]
+        end
+    end,
 }

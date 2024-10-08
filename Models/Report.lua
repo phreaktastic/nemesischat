@@ -35,9 +35,8 @@ function NemesisChat:Report(event, success)
             botMsg = "Lowest DPS for %s: %s at %s.",
         },
         ["AVOIDABLE"] = {
-            topMsg = "Highest avoidable damage taken for %s: %s at %s.",
-            botMsg = "Shout out to %s with the lowest avoidable damage taken for %s, at %s!",
-            inverted = true,
+            topMsg = "Shout out to %s with the lowest avoidable damage taken for %s, at %s!",
+            botMsg = "Highest avoidable damage taken for %s: %s at %s.",
         },
         ["INTERRUPTS"] = {
             topMsg = "Shout out to %s with the most interrupts for %s, at %s!",
@@ -56,25 +55,20 @@ function NemesisChat:Report(event, success)
                 if lifePercent > 100 then
                     local lifeMultiplier = math.floor(lifePercent / 10) / 10
 
-                    topMsg = "Highest deaths for %s: %s at %s, with " .. adFormatted .. " avoidable damage taken (" .. lifeMultiplier .. "x their max health)."
+                    botMsg = "Most deaths for %s: %s at %s, with " .. adFormatted .. " avoidable damage taken (" .. lifeMultiplier .. "x their max health)."
                 else
-                    topMsg = "Highest deaths for %s: %s at %s, with " .. adFormatted .. " avoidable damage taken."
+                    botMsg = "Most deaths for %s: %s at %s, with " .. adFormatted .. " avoidable damage taken."
                 end
 
                 return topMsg, botMsg
             end,
             topMsg = "Shout out to %s with the lowest deaths for %s, at %s!",
             botMsg = "Most deaths for %s: %s at %s.",
-            inverted = true,
-        },
-        ["AFFIXES"] = {
-            topMsg = "Shout out to %s with the most affixes for %s, at %s!",
-            botMsg = "Lowest affixes for %s: %s at %s.",
         },
     }
     local shoutOutFormat = function(message, player, segmentName, value) return string.format(message, player, segmentName, NemesisChat:FormatNumber(value)) end
     local callOutFormat = function(message, player, segmentName, value) return string.format(message, segmentName, player, NemesisChat:FormatNumber(value)) end
-    
+
     if not tContains(EVENTS, event) then
         return
     end
@@ -97,10 +91,10 @@ function NemesisChat:Report(event, success)
             end
 
             local data = typeData[type]
-            local topVal = bucket.Rankings.Top[rankingType].Value or 0
-            local topPlayer = bucket.Rankings.Top[rankingType].Player or nil
-            local botVal = bucket.Rankings.Bottom[rankingType].Value or 99999999
-            local botPlayer = bucket.Rankings.Bottom[rankingType].Player or nil
+            local topVal = (bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].Value) and bucket.Rankings.Top[rankingType].Value or 0
+            local topPlayer = (bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].Player) and bucket.Rankings.Top[rankingType].Player or nil
+            local botVal = (bucket.Rankings.Bottom and bucket.Rankings.Bottom[rankingType] and bucket.Rankings.Bottom[rankingType].Value) and bucket.Rankings.Bottom[rankingType].Value or 99999999
+            local botPlayer = (bucket.Rankings.Bottom and bucket.Rankings.Bottom[rankingType] and bucket.Rankings.Bottom[rankingType].Player) and bucket.Rankings.Bottom[rankingType].Player or nil
 
             if topPlayer == nil then
                 topMsg = nil

@@ -6,8 +6,6 @@
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB
 ## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibToast, LibCompress, LibSerialize
-## LoadOnDemand: 0
-## LoadWith: Blizzard_UnitPopupMenus
 
 # Third party libraries
 Embeds.xml
@@ -71,6 +69,3 @@ Migrations.lua
 
 # NC core functionality
 Core.lua
-
-# Lower level NC functionality
-NemesisContextMenu.lua

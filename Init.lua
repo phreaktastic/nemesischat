@@ -75,7 +75,7 @@ function GetMyName()
 end
 
 function IsNCEnabled()
-    return core.db.profile.enabled == true
+    return NCConfig:IsEnabled()
 end
 
 function GetRole(player)
@@ -742,6 +742,8 @@ core.eventSubscriptions = {
     "CHALLENGE_MODE_START", -- M+ start
     "CHALLENGE_MODE_COMPLETED", -- M+ complete
     "CHALLENGE_MODE_RESET", -- M+ reset
+    "SCENARIO_CRITERIA_UPDATE", -- Follower dungeon
+    "SCENARIO_COMPLETED", -- Follower dungeon
 
     -- Self
     -- "PLAYER_TARGET_CHANGED",
