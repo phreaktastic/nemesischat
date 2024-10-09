@@ -366,7 +366,17 @@ function NemesisChat:InitializeHelpers()
         local damage = NemesisChat:GetDamageAmount(subEvent, misc1, misc4)
 
         if bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
-            eventInfo.sourceName = NemesisChat:GetPetOwner(eventInfo.sourceGUID)
+            local petOwner = NemesisChat:GetPetOwner(eventInfo.sourceGUID)
+
+            if petOwner then
+                eventInfo.sourceName = petOwner
+                sourceName = eventInfo.sourceName
+
+                if not NCRuntime:GetGroupRosterPlayer(petOwner) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) then
+                    wipe(eventInfo)
+                    return
+                end
+            end
         end
 
         NemesisChat:SetMyName()

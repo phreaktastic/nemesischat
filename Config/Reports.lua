@@ -547,6 +547,7 @@ core.options.args.reportsGroup = {
             order = 14,
             type = "group",
             name = "Affixes (Beta)",
+            disabled = true,
             args = {
                 affixesHeader = {
                     order = 0,

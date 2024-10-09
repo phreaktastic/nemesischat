@@ -21,7 +21,6 @@ function NemesisChat:Report(event, success)
         ["INTERRUPTS"] = "Interrupts",
         ["OFFHEALS"] = "Offheals",
         ["DEATHS"] = "Deaths",
-        ["AFFIXES"] = "Affixes",
     }
     local EVENTS = {
         "COMBAT",

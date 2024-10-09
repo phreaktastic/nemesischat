@@ -160,7 +160,7 @@ NCInfo = {
         -- Previous Player Button
         f.prevPlayerButton = CreateFrame("Button", nil, f.dropdownFrame, "UIPanelButtonTemplate")
         f.prevPlayerButton:SetSize(24, 24)
-        f.prevPlayerButton:SetPoint("RIGHT", f.playerDropdown, "LEFT", -2, 0)
+        f.prevPlayerButton:SetPoint("RIGHT", f.playerDropdown, "LEFT", -2, 3)
         f.prevPlayerButton:SetText("<")
         f.prevPlayerButton:SetScript("OnClick", function()
             NCInfo:SelectPreviousPlayer()
@@ -169,7 +169,7 @@ NCInfo = {
         -- Next Player Button
         f.nextPlayerButton = CreateFrame("Button", nil, f.dropdownFrame, "UIPanelButtonTemplate")
         f.nextPlayerButton:SetSize(24, 24)
-        f.nextPlayerButton:SetPoint("LEFT", f.playerDropdown, "RIGHT", 2, 0)
+        f.nextPlayerButton:SetPoint("LEFT", f.playerDropdown, "RIGHT", 2, 3)
         f.nextPlayerButton:SetText(">")
         f.nextPlayerButton:SetScript("OnClick", function()
             NCInfo:SelectNextPlayer()
@@ -333,46 +333,37 @@ NCInfo = {
         local neutral = {0.5, 0.6, 0.85}
         local disabledColor = {0.25, 0.25, 0.25}
 
-        local currentRoster = NCRuntime:GetGroupRoster()
-        local mergedRoster = setmetatable({}, {__mode = "kv"})
-
-        for player, rosterData in pairs(currentRoster) do
-            mergedRoster[player] = rosterData
-        end
-
-        for player, snapshotData in pairs(NCDungeon.RosterSnapshot) do
-            if not mergedRoster[player] then
-                mergedRoster[player] = snapshotData
-            else
-                for key, value in pairs(snapshotData) do
-                    if mergedRoster[player][key] == nil then
-                        mergedRoster[player][key] = value
-                    end
-                end
-            end
-        end
+        -- Use LastCompletedDungeon if available, otherwise use current data
+        local currentDungeon = NCDungeon:IsActive() and NCDungeon or nil
+        local lastCompletedDungeon = NCRuntime:GetLastCompletedDungeon()
+        local dungeonData = currentDungeon or lastCompletedDungeon
+        local mergedRoster = (dungeonData and dungeonData.RosterSnapshot) or NCRuntime:GetGroupRoster()
 
         local playerInfo = mergedRoster[self.CurrentPlayer] or setmetatable({}, {__mode = "kv"})
         local race = playerInfo.race or UnitRace(self.CurrentPlayer) or ""
         local class = playerInfo.class or UnitClass(self.CurrentPlayer) or ""
         local rawClass = playerInfo.rawClass or select(2, UnitClass(self.CurrentPlayer)) or ""
+        local spec = playerInfo.spec
+        local leftText = spec or race
+        local rightText = class
 
         -- Update header
-        if NCDungeon:GetIdentifier() == "" or NCDungeon:GetIdentifier() == "DUNGEON" then
-            f.header:SetText(NemesisChat.CurrentPlayerLocation or "Dungeon Info & Stats")
-        else
-            if NCDungeon:GetLevel() == 0 then
-                f.header:SetText(NCDungeon:GetIdentifier())
+        if dungeonData and dungeonData.Identifier and dungeonData.Identifier ~= "" and dungeonData.Identifier ~= "DUNGEON" then
+            if dungeonData.Level and dungeonData.Level > 0 then
+                f.header:SetText(dungeonData.Identifier .. " +" .. dungeonData.Level)
             else
-                f.header:SetText(NCDungeon:GetIdentifier() .. " +" .. NCDungeon:GetLevel())
+                f.header:SetText(dungeonData.Identifier)
             end
+        else
+            f.header:SetText("Dungeon Info & Stats")
         end
 
         -- Update player info text
-        f.infoFrame.text:SetText(NCColors.ClassColor(rawClass, race .. " " .. class))
-
-        -- Set player info text color to their class color
-        local colorized = NCColors.ClassColor(rawClass, self.CurrentPlayer)
+        if UnitIsPlayer(self.CurrentPlayer) then
+            f.infoFrame.text:SetText(NCColors.ClassColor(rawClass, leftText .. " " .. rightText))
+        else
+            f.infoFrame.text:SetText(NCColors.ClassColor(rawClass, rightText))
+        end
 
         -- Positioning variables
         local yOffset = -5  -- Start below the infoFrame
@@ -457,10 +448,15 @@ NCInfo = {
             row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, yOffset)
             row:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, yOffset)
 
+            row.columns[1]:SetTextColor(0.5, 0.6, 0.85)
+            row.columns[1].desiredColor = {0.5, 0.6, 0.85}
+            row.columns[2]:SetTextColor(0.5, 0.6, 0.85)
+            row.columns[2].desiredColor = {0.5, 0.6, 0.85}
+
             row.columns[1]:SetText(self.METRIC_REPLACEMENTS[metric] or metric)
 
-            local playerStat = NCDungeon:GetStats(self.CurrentPlayer, metric)
-            local myStat = NCDungeon:GetStats(UnitName("player"), metric)
+            local playerStat = self:GetDungeonStat(dungeonData, self.CurrentPlayer, key)
+            local myStat = self:GetDungeonStat(dungeonData, UnitName("player"), key)
             local delta = playerStat - myStat
 
             if core.db.profile.infoClickCompare and self.CurrentPlayer ~= UnitName("player") then
@@ -501,10 +497,10 @@ NCInfo = {
                     GameTooltip:Show()
                 end)
             else
-                row.columns[1]:SetTextColor(0.5, 0.6, 0.85)
-                row.columns[1].desiredColor = {0.5, 0.6, 0.85}
-                row.columns[2]:SetTextColor(0.5, 0.6, 0.85)
-                row.columns[2].desiredColor = {0.5, 0.6, 0.85}
+                -- row.columns[1]:SetTextColor(0.5, 0.6, 0.85)
+                -- row.columns[1].desiredColor = {0.5, 0.6, 0.85}
+                -- row.columns[2]:SetTextColor(0.5, 0.6, 0.85)
+                -- row.columns[2].desiredColor = {0.5, 0.6, 0.85}
 
                 row:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
@@ -581,32 +577,33 @@ NCInfo = {
 
         UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, self.CurrentPlayer)
         UIDropDownMenu_Initialize(self.StatsFrame.playerDropdown, function(dropdown, level, menuList)
-        local roster = NCRuntime:GetGroupRoster()
-        local snapshot = NCDungeon.RosterSnapshot
-        local mergedData = MapMerge(snapshot, roster)
+            local currentDungeon = NCDungeon:IsActive() and NCDungeon or nil
+            local lastCompletedDungeon = NCRuntime:GetLastCompletedDungeon()
+            local dungeonData = currentDungeon or lastCompletedDungeon
+            local mergedRoster = (dungeonData and dungeonData.RosterSnapshot) or NCRuntime:GetGroupRoster()
 
-        for name, player in pairs(mergedData) do
-            local info = UIDropDownMenu_CreateInfo()
-            local class = player.class or UnitClass(name) or "Unknown"
-            local rawClass = player.rawClass or select(2, UnitClass(name)) or "Unknown"
-            local role = player.role or UnitGroupRolesAssigned(name) or "OTHER"
-            local replacedRole = self.ROLE_REPLACEMENTS[role] or "Other"
-            local infoString = class .. " " .. replacedRole
-            local colorized = NCColors.ClassColor(rawClass, name .. " (" .. infoString .. ")")
+            for name, player in pairs(mergedRoster) do
+                local info = UIDropDownMenu_CreateInfo()
+                local class = player.class or UnitClass(name) or "Unknown"
+                local rawClass = player.rawClass or select(2, UnitClass(name)) or "Unknown"
+                local role = player.role or UnitGroupRolesAssigned(name) or "OTHER"
+                local replacedRole = self.ROLE_REPLACEMENTS[role] or "Other"
+                local infoString = class .. " " .. replacedRole
+                local colorized = NCColors.ClassColor(rawClass, name .. " (" .. infoString .. ")")
 
-            if name == UnitName("player") then
-                colorized = NCColors.Emphasize(name)
+                if name == UnitName("player") then
+                    colorized = NCColors.Emphasize(name)
+                end
+
+                info.text = colorized
+                info.value = name
+                info.checked = (name == self.CurrentPlayer)
+                info.func = function(self)
+                    NCInfo.CurrentPlayer = self.value
+                    NCInfo:Update()
+                end
+                UIDropDownMenu_AddButton(info)
             end
-
-            info.text = colorized
-            info.value = name
-            info.checked = (name == self.CurrentPlayer)
-            info.func = function(self)
-                NCInfo.CurrentPlayer = self.value
-                NCInfo:Update()
-            end
-            UIDropDownMenu_AddButton(info)
-        end
         end)
     end,
 
@@ -945,6 +942,19 @@ NCInfo = {
         f.scrollFrame:Hide()
         f.dropdownFrame:Hide()
         f.resizeButton:Hide()
+    end,
+
+    GetDungeonStat = function(self, dungeonData, playerName, metric)
+        if not dungeonData then return 0 end
+
+        if dungeonData == NCDungeon then
+            -- Current dungeon, use NCDungeon methods
+            return NCDungeon:GetStats(playerName, metric)
+        else
+            -- Completed dungeon, use stored stats
+            local stats = dungeonData.Stats[metric]
+            return stats and stats[playerName] or 0
+        end
     end,
 
     _SetMetricKeys = function(self)

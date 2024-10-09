@@ -150,6 +150,15 @@ NCConfig = {
         end
         self.ReportDB:SetKey("reportLowPerformersOnJoinThreshold", value)
     end,
+    IsRollingMessages = function(self)
+        return self.CoreDB:GetKey("rollingMessages")
+    end,
+    ToggleRollingMessages = function(self)
+        self.CoreDB:Toggle("rollingMessages")
+    end,
+    SetRollingMessages = function(self, value)
+        self.CoreDB:SetKey("rollingMessages", value)
+    end,
     IsAIEnabled = function(self)
         return self.CoreDB:GetKey("ai")
     end,

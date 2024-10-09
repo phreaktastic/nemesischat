@@ -743,7 +743,8 @@ core.eventSubscriptions = {
     "CHALLENGE_MODE_COMPLETED", -- M+ complete
     "CHALLENGE_MODE_RESET", -- M+ reset
     "SCENARIO_CRITERIA_UPDATE", -- Follower dungeon
-    "SCENARIO_COMPLETED", -- Follower dungeon
+    "SCENARIO_COMPLETED", -- Follower dungeon complete
+    "INSPECT_READY", -- Inspect ready
 
     -- Self
     -- "PLAYER_TARGET_CHANGED",
@@ -769,6 +770,13 @@ NCController = {}
 NCSpell = {}
 
 C_Timer.NewTicker(0.1, function() if IsNCEnabled() then NemesisChat:CheckGuild() end end)
+-- C_Timer.NewTicker(0.25, function()
+--     if NemesisChat:HasPartyNemeses() and not IsInInstance() then
+--         local nemesisName = NemesisChat:GetRandomPartyNemesis()
+--         local nemesis = NCRuntime:GetGroupRosterPlayer(nemesisName)
+--         SetRaidTarget(nemesis.token, math.random(8))
+--     end
+-- end)
 C_Timer.NewTicker(5, function() if IsNCEnabled() then NemesisChat:LowPriorityTimer() end end)
 C_Timer.NewTicker(60, function()
     if not NCCombat or not NCCombat.IsActive then

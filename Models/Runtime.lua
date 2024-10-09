@@ -29,6 +29,9 @@ core.runtimeDefaults = {
     groupHealer = nil,
     groupRosterCount = 1,
     groupRoster = {},
+    playerNameToToken = {}, -- Cache for unit token lookups by player name
+    pendingInspections = {}, -- Cache for pending inspection requests
+    lastCompletedDungeon = nil,
     pulledUnits = {},
     playerStates = {},
     friends = {
@@ -309,7 +312,9 @@ NCRuntime = {
         return core.runtime.groupRoster[playerName]
     end,
     ClearGroupRoster = function(self)
-        core.runtime.groupRoster = {}
+        wipe(core.runtime.groupRoster)
+        wipe(core.runtime.playerNameToToken)
+        wipe(core.runtime.pendingInspections)
         core.runtime.groupRosterCount = 0
         core.runtime.groupTank = nil
         core.runtime.groupHealer = nil
@@ -327,6 +332,9 @@ NCRuntime = {
             NCInfo:UpdatePlayerDropdown()
         end
 
+        wipe(core.runtime.playerNameToToken)
+        wipe(core.runtime.pendingInspections)
+
         self:CacheGroupRoster()
     end,
     AddGroupRosterPlayer = function(self, playerName)
@@ -337,7 +345,7 @@ NCRuntime = {
         local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
         local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
         local itemLevel = NemesisChat:GetItemLevel(playerName)
-        local groupLead = UnitIsGroupLeader(playerName) ~= nil
+        local groupLead = UnitIsGroupLeader(playerName) == true
 
         local class, rawClass = "Unknown", "UNKNOWN"
         local race = "Unknown"
@@ -364,10 +372,17 @@ NCRuntime = {
             race = race,
             class = class,
             rawClass = rawClass,
+            spec = "Unknown",
             groupLead = groupLead,
             name = playerName,
-            token = self:GetUnitTokenFromName(playerName),
+            token = "",
         }
+
+        data.token = self:GetUnitTokenFromName(playerName)
+
+        if playerName ~= GetMyName() then
+            self:RequestInspection(data)
+        end
 
         core.runtime.groupRoster[playerName] = data
         core.runtime.groupRosterCount = core.runtime.groupRosterCount + 1
@@ -384,6 +399,7 @@ NCRuntime = {
 
         NCInfo:UpdatePlayerDropdown()
 
+        self:AttemptRetrieveSpec(data)
         self:CacheGroupRoster()
 
         return data
@@ -397,6 +413,14 @@ NCRuntime = {
             if not val.itemLevel then
                 val.itemLevel = NemesisChat:GetItemLevel(key)
             end
+
+            -- Re-attempt to get the token
+            if not val.token then
+                val.token = self:GetUnitTokenFromName(key)
+            end
+
+            -- Attempt to get specialization information
+            self:AttemptRetrieveSpec(val)
         end
     end,
     CacheGroupRoster = function(self)
@@ -533,6 +557,38 @@ NCRuntime = {
     TimeSinceInitialization = function(self)
         return GetTime() - (core.runtime.initializationTime or 0)
     end,
+    SetLastCompletedDungeon = function(self, dungeonData)
+        local stats = {
+            Affixes = dungeonData:GetAffixes(),
+            AvoidableDamage = dungeonData:GetAvoidableDamage(),
+            CrowdControl = dungeonData:GetCrowdControls(),
+            Deaths = dungeonData:GetDeaths(),
+            Defensives = dungeonData:GetDefensives(),
+            Dispells = dungeonData:GetDispells(),
+            Interrupts = dungeonData:GetInterrupts(),
+            Offheals = dungeonData:GetOffHeals(),
+            Pulls = dungeonData:GetPulls(),
+            DPS = {}
+        }
+
+        -- Populate DPS for each player
+        for playerName, _ in pairs(dungeonData.RosterSnapshot) do
+            stats.DPS[playerName] = dungeonData:GetDps(playerName)
+        end
+
+        core.runtime.lastCompletedDungeon = {
+            Identifier = dungeonData:GetIdentifier(),
+            Level = dungeonData:GetLevel(),
+            RosterSnapshot = dungeonData.RosterSnapshot,
+            Stats = stats
+        }
+    end,
+    GetLastCompletedDungeon = function(self)
+        return core.runtime.lastCompletedDungeon or nil
+    end,
+    ClearLastCompletedDungeon = function(self)
+        core.runtime.lastCompletedDungeon = nil
+    end,
     Get = function(self, key)
         return core.runtime[key]
     end,
@@ -540,14 +596,67 @@ NCRuntime = {
         core.runtime[key] = value
     end,
     GetUnitTokenFromName = function(self, playerName)
-        if not self.playerNameToToken then
-            self.playerNameToToken = {}
-            for i = 1, 40 do
-                local token = (i > 1) and ("raid" .. i) or "player"
-                local name = UnitName(token)
-                if name then self.playerNameToToken[name] = token end
+        if next(core.runtime.playerNameToToken) == nil then
+            -- Always include the player
+            core.runtime.playerNameToToken[GetMyName()] = "player"
+
+            if IsInRaid() then
+                -- In a raid group
+                local numGroupMembers = GetNumGroupMembers()
+                for i = 1, numGroupMembers do
+                    local unit = "raid" .. i
+                    local name = UnitName(unit)
+                    if name then
+                        core.runtime.playerNameToToken[name] = unit
+                    end
+                end
+            elseif IsInGroup() then
+                -- In a party (not a raid)
+                for i = 1, GetNumGroupMembers() - 1 do
+                    local unit = "party" .. i
+                    local name = UnitName(unit)
+                    if name then
+                        core.runtime.playerNameToToken[name] = unit
+                    end
+                end
+            else
+                -- Solo play; only "player" unit exists
+                -- Already added "player" unit above
             end
         end
-        return self.playerNameToToken[playerName]
+        return core.runtime.playerNameToToken[playerName]
+    end,
+    AttemptRetrieveSpec = function(self, unit)
+        if unit.token and UnitExists(unit.token) and UnitIsConnected(unit.token) then
+            if UnitIsUnit(unit.token, "player") then
+                -- For the player character, use GetSpecialization()
+                local specIndex = GetSpecialization()
+                if specIndex then
+                    local id, specName, description, icon, role, classFile, className = GetSpecializationInfo(specIndex)
+                    if specName then
+                        unit.spec = specName
+                    end
+                end
+            else
+                -- For other players, use inspection
+                local specID = GetInspectSpecialization(unit.token)
+                if specID and specID > 0 then
+                    -- Spec data is available
+                    local id, specName, description, icon, role, classFile, className = GetSpecializationInfoByID(specID)
+                    if specName then
+                        unit.spec = specName
+                    end
+                else
+                    -- Wait for INSPECT_READY event
+                end
+            end
+        end
+    end,
+    RequestInspection = function(self, unit)
+        if unit and UnitExists(unit.token) and unit.token ~= "player" then
+            -- Add unit to pending inspections
+            core.runtime.pendingInspections[unit.guid] = unit
+            NotifyInspect(unit.token)
+        end
     end,
 }

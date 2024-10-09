@@ -18,6 +18,7 @@ function NemesisChat:HandleRosterUpdate()
     -- Initialize events and update friends list
     NCEvent:Initialize()
     NemesisChat:PopulateFriends()
+    NCRuntime:CacheGroupRoster()
 
     -- Get the changes in the group roster
     local joins, leaves = NemesisChat:GetRosterDelta()
@@ -90,6 +91,8 @@ function NemesisChat:HandleGeneralGroupChanges(joins, leaves)
     if #leaves > 0 then
         self:ProcessLeaves(leaves)
     end
+
+    NCRuntime:CacheGroupRoster()
 end
 
 -- Processes players joining the group
@@ -110,8 +113,6 @@ function NemesisChat:ProcessJoins(joins)
                 end
 
                 self:ReportPlayerStatistics(playerName, leavesCount, lowPerforms)
-            else
-                self:Print("Failed to find player in roster:", playerName)
             end
         end
     end
@@ -144,14 +145,13 @@ function NemesisChat:ProcessLeaves(leaves)
     for _, playerName in ipairs(leaves) do
         if playerName and playerName ~= GetMyName() then
             local player = NCRuntime:GetGroupRosterPlayer(playerName)
+            if not player then player = core.db.profile.cache.groupRoster and core.db.profile.cache.groupRoster[playerName] or nil end
             if player then
                 if #leaves <= 3 then
                     NemesisChat:PLAYER_LEAVES_GROUP(playerName, player.isNemesis)
                 end
 
                 self:HandleDungeonLeaver(player, playerName)
-            else
-                self:Print("Failed to retrieve player from roster:", playerName)
             end
         end
     end

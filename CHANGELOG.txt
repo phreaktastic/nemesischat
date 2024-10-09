@@ -1,17 +1,17 @@
 # 📢 Summary
 
-Version 1.13.0 brings a comprehensive update to the addon, focusing on performance optimization, feature enhancements, and bug fixes. Key highlights include:
+Version 1.10.x brings a comprehensive update to the addon, focusing on performance optimization, feature enhancements, and bug fixes. Key highlights include:
 
 1. Major performance improvements, reducing memory usage and eliminating lag-causing memory leaks.
 2. Significant enhancements to the information pane, making it more user-friendly and feature-rich.
-3. Introduction of delve support, expanding functionality to match M+ expectations.
-4. New context menu options for player management.
-5. Extensive code refactoring for improved stability and maintainability.
-6. Multiple bug fixes addressing issues with combat log processing, avoidable damage tracking, and UI elements.
-7. Compatibility updates for The War Within expansion.
-8. New configuration options for tracking leavers and low-performers.
-9. Improvements to unsafe pulls detection accuracy.
-10. Enhanced message handling and trigger refinements.
+3. Introduction of delve + dungeon + follower dungeon support, expanding functionality to match M+ expectations.
+4. Extensive code refactoring for improved stability and maintainability.
+5. Multiple bug fixes addressing issues with combat log processing, avoidable damage tracking, and UI elements.
+6. Compatibility updates for The War Within expansion.
+7. New configuration options for tracking leavers and low-performers.
+8. Improvements to unsafe pulls detection accuracy.
+9. Enhanced message handling and trigger refinements.
+10. Compatibility for message triggers while not in an instance.
 
 This update represents a substantial overhaul of the addon, setting the stage for future developments and ensuring a more robust and efficient user experience.
 
@@ -19,15 +19,28 @@ This update represents a substantial overhaul of the addon, setting the stage fo
 >
 > The way leavers and low performers are tracked is currently by GUID. This is to ensure that the addon will properly handle a scenario where a player changed their name, server, etc. To keep this performant, that is all that is stored. I will be digging into this soon, and a refactor is likely needed. Without this, reporting on metrics (servers, classes, specs, guilds, etc.) will be impossible.
 
+# 🙌 Shout-Outs
+
+I'd like to express my gratitude to the following individuals who have contributed to the development of this addon:
+
+- TAB
+- Locke38
+- Gutz
+- \</TYLER\>
+
+**Without their contributions, this addon would not be where it is today. From testing to feedback, their contributions have been invaluable.**
+
 # 🩹 Patches
 
-## 🚀 **1.10.3**: Huge optimization pass
+## 🚀 **1.10.3**: **Huge** optimization pass
 
 > **Note**
 >
 > This particular pass started as a simple update to the information pane, but it quickly grew into a major overhaul of the entire addon. Realistically, this should be a version bump (not a patch), but the vast majority of this release is refactoring/optimization, and I've decided to release it as a patch.
 >
-> I greatly appreciate the feedback and suggestions from the community, and I'm excited to continue working on improving the addon. Please continue to provide feedback and suggestions, and I'll do my best to incorporate them into future updates. Thank you for your continued support!
+> I greatly appreciate the feedback and suggestions from the community, and I'm excited to continue working on improving the addon. Please continue to provide feedback and suggestions, and I'll do my best to incorporate them into future updates. 
+>
+> **Thank you for your continued support!**
 
 ### **Information Pane Enhancements:**
    ---
@@ -37,14 +50,20 @@ This update represents a substantial overhaul of the addon, setting the stage fo
    - Introduced channel selection for reporting metrics.
    - Additional features and improvements are planned for future updates.
       - Please note that the information pane is still a work in progress, and more features and improvements are planned for future updates.
-      - Your feedback is imperative in shaping the future of the addon, so please don't hesitate to share your thoughts and ideas. Especially with an adjustment like this!
+      - Your feedback is imperative in shaping the future of the addon, so **please** don't hesitate to share your thoughts and ideas. Especially with UI changes!
 
 ### **New Features:**
    ---
-   - Added delve support, enhancing the addon's functionality and user experience.
-      - All expected functionality that you'd expect from M+ is now available within delves.
-      - This is still a work in progress, and more will come when more is exposed in the Blizzard API.
-   - Introduced a context menu option to mark or unmark players as nemeses.
+   - Rolling messages are now supported, allowing for more dynamic and engaging communication.
+      - The option is available in the configuration menu (General Settings, Core), and the default is set to "On".
+      - For any events that have a pool of messages, we'll roll through the messages instead of picking a random one.
+      - This helps for scenarios that have a large number of messages, and it also helps to avoid the same message being repeated too often.
+   - Added delve support.
+   - Added follower dungeon support.
+   - Added normal dungeon support.
+
+   > All expected functionality that you'd expect from M+ is now available within delves, normal dungeons, and follower dungeons.
+   > This is still a work in progress, and more will come when more is exposed in the Blizzard API.
 
 ### **Performance Improvements:**
    ---
@@ -71,6 +90,8 @@ This update represents a substantial overhaul of the addon, setting the stage fo
       - Damage events will no longer prevent other events from being processed.
       - Avoidable damage will now be tracked correctly.
       - Avoidable damage events will no longer prevent other events from being processed.
+   - Fixed issues with the "clear" button in the info pane.
+   - Fixed an issue where interrupts were not correctly tracked due to the player's pet performing the interrupt (Warlocks for example).
 ## 🚀 **1.10.2**: Another small bugfix for the enabling/disabling of NC.
 ## 🚀 **1.10.1**: Bugfix for more TWW compatibility.
 

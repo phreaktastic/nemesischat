@@ -20,18 +20,42 @@ local C_ScenarioInfo = C_ScenarioInfo
 -- Local vars for base events
 local inDelve = false
 local currentDelveID = nil
+local delveStartTime = nil
 local inFollowerDungeon = false
 local currentFollowerDungeonID = nil
 local LE_SCENARIO_TYPE_FOLLOWER_DUNGEON = 4
 
 local function HandleLeaveDelve()
-    if inDelve then  -- Only run if we are currently in a delve
-        local hasDelve = C_DelvesUI.HasActiveDelve()
-        if hasDelve and currentDelveID and not C_DelvesUI.IsEligibleForActiveDelveRewards("player") and NCDungeon and NCDungeon:IsActive() then
-            NCDungeon:Reset()
-        end
+    if inDelve then
         inDelve = false
         currentDelveID = nil
+        delveStartTime = nil
+        if NCDungeon and NCDungeon:IsActive() then
+            NCDungeon:Finish(false)
+            NemesisChat:Print("Delve ended.")
+        end
+    end
+end
+
+local function CheckAndUpdateDelveStatus()
+    local name, type, difficultyIndex, difficultyName, maxPlayers,
+        dynamicDifficulty, isDynamic, instanceMapId, lfgID = GetInstanceInfo()
+    local dName, instanceType, isHeroic, isChallengeMode, _, _, toggleDifficultyID = GetDifficultyInfo(difficultyIndex);
+
+    -- NemesisChat:Print("Difficulty Name: " .. difficultyName, "LFG ID: " .. lfgID, "Name: " .. name)
+
+    if dName == "Delves" and not inDelve and lfgID then
+        inDelve = true
+        currentDelveID = instanceMapId
+        delveStartTime = GetTime()
+        NCDungeon:Start(name .. " (Delve)")
+        NemesisChat:Print("Delve started: " .. name)
+    elseif dName ~= "Delves" and inDelve then
+        local delveTime = GetTime() - delveStartTime
+        if delveTime < 5 then  -- If we've been in the delve for less than 5 seconds, it's probably a false positive
+            return
+        end
+        HandleLeaveDelve()
     end
 end
 
@@ -86,6 +110,7 @@ function NemesisChat:PLAYER_ENTERING_WORLD()
     NCRuntime:ClearPetOwners()
     NemesisChat:SilentGroupSync()
     HandleZoneChanges()
+    CheckAndUpdateDelveStatus()
 end
 
 function NemesisChat:PLAYER_LEAVING_WORLD()
@@ -96,6 +121,13 @@ function NemesisChat:PLAYER_LEAVING_WORLD()
         NemesisChat:Print("Follower Dungeon abandoned.")
         inFollowerDungeon = false
         currentFollowerDungeonID = nil
+    end
+    if inDelve then
+        NCEvent:Initialize()
+        NCDungeon:Finish(false)
+        NemesisChat:Print("Delve abandoned.")
+        inDelve = false
+        currentDelveID = nil
     end
     NCRuntime:ClearPetOwners()
     HandleLeaveDelve()
@@ -185,10 +217,9 @@ function NemesisChat:GROUP_ROSTER_UPDATE()
         return
     end
 
-    local success, error = pcall(NemesisChat.HandleRosterUpdate, NemesisChat)
-    if not success then
-        NemesisChat:Print("Error in HandleRosterUpdate:", error)
-    end
+    CheckAndUpdateDelveStatus()
+
+    pcall(NemesisChat.HandleRosterUpdate, NemesisChat)
 end
 
 function NemesisChat:PLAYER_REGEN_DISABLED()
@@ -197,6 +228,7 @@ function NemesisChat:PLAYER_REGEN_DISABLED()
     NCCombat:Reset("Combat Segment " .. GetTime(), true)
     NCRuntime:ClearPlayerStates()
     NemesisChat:HandleEvent()
+    CheckAndUpdateDelveStatus()
 end
 
 function NemesisChat:PLAYER_REGEN_ENABLED()
@@ -221,24 +253,30 @@ end
 
 function NemesisChat:ACTIVE_DELVE_DATA_UPDATE()
     if not IsNCEnabled() then return end
-    if C_DelvesUI.HasActiveDelve() and not inDelve then
-        -- Player has started a delve
-        inDelve = true
-        currentDelveID = C_Map.GetBestMapForUnit("player")  -- Use the player's current map ID as an identifier
-        NCDungeon:Start(NemesisChat.CurrentPlayerLocation)
-    elseif inDelve and not C_DelvesUI.HasActiveDelve() then
-        -- Delve is completed or ended normally
-        inDelve = false
-        currentDelveID = nil
 
-        if NCDungeon and NCDungeon:IsActive() then
-            NCDungeon:Finish()
-        end
-    end
+    CheckAndUpdateDelveStatus()
 end
 
 function NemesisChat:ZONE_CHANGED_NEW_AREA()
     if not IsNCEnabled() then return end
-    HandleLeaveDelve()
+    CheckAndUpdateDelveStatus()
     HandleZoneChanges()
+end
+
+function NemesisChat:INSPECT_READY(event, guid)
+    if not IsNCEnabled() then return end
+
+    local unit = core.runtime.pendingInspections[guid]
+    if unit then
+        local specID = GetInspectSpecialization(unit.token)
+        if specID and specID > 0 then
+            local id, specName, description, icon, role, classFile, className = GetSpecializationInfoByID(specID)
+            if specName then
+                unit.spec = specName
+            end
+        end
+        -- Clean up
+        core.runtime.pendingInspections[guid] = nil
+        ClearInspectPlayer()
+    end
 end

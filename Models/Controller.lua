@@ -22,15 +22,23 @@ function NemesisChat:InstantiateController()
     end
 
     function NCController:PreprocessMessages()
+        wipe(messageCache)
         for category, events in pairs(core.db.profile.messages) do
             for event, targets in pairs(events) do
                 for target, messages in pairs(targets) do
                     local eventKey = category .. "_" .. event .. "_" .. target
                     if not messageCache[eventKey] then
-                        messageCache[eventKey] = {nemesis = {}, regular = {}}
+                        messageCache[eventKey] = {
+                            nemesis = {},
+                            regular = {},
+                            lastNemesisIndex = 0,
+                            lastRegularIndex = 0
+                        }
                     else
                         wipe(messageCache[eventKey].nemesis)
                         wipe(messageCache[eventKey].regular)
+                        messageCache[eventKey].lastNemesisIndex = 0
+                        messageCache[eventKey].lastRegularIndex = 0
                     end
                     for _, message in ipairs(messages) do
                         local processedMessage = {
@@ -217,14 +225,14 @@ function NemesisChat:InstantiateController()
         end
 
         -- Config driven minimum time between messages
-        if GetTime() - NCRuntime:GetLastMessage() < core.db.profile.minimumTime and not NCController:IsMinTimeException() then
+        if GetTime() - NCRuntime:GetLastMessage() < NCConfig:GetMinimumTime() and not NCController:IsMinTimeException() then
             NCEvent:Initialize()
             return
         end
 
         -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
         -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
-        if core.db.profile.nonCombatMode and NCCombat:IsActive() and not NCController:IsNonCombatModeException() then
+        if NCConfig:IsNonCombatMode() and NCCombat:IsActive() and not NCController:IsNonCombatModeException() then
             NCEvent:Initialize()
             return
         end
@@ -292,33 +300,79 @@ function NemesisChat:InstantiateController()
 
         if not relevantMessages then return end
 
+        local selectedMessage = NCConfig:IsRollingMessages()
+            and self:GetRollingMessage(relevantMessages)
+            or self:GetRandomMessage(relevantMessages)
+
+        if selectedMessage then
+            self.message = selectedMessage.message
+            self.channel = selectedMessage.channel
+        end
+    end
+
+    function NCController:GetRollingMessage(relevantMessages)
+        local nemesisMessage = self:GetNextValidMessage(relevantMessages.nemesis, relevantMessages.lastNemesisIndex)
+        if nemesisMessage then
+            relevantMessages.lastNemesisIndex = nemesisMessage.index
+            return nemesisMessage.message
+        end
+
+        local regularMessage = self:GetNextValidMessage(relevantMessages.regular, relevantMessages.lastRegularIndex)
+        if regularMessage then
+            relevantMessages.lastRegularIndex = regularMessage.index
+            return regularMessage.message
+        end
+
+        return nil
+    end
+
+    function NCController:GetNextValidMessage(messages, lastIndex)
+        local startIndex = (lastIndex % #messages) + 1
+        for i = 0, #messages - 1 do
+            local index = ((startIndex + i - 1) % #messages) + 1
+            local message = messages[index]
+            if self:IsValidMessage(message) and self:CheckAllConditions(message) then
+                return {message = message, index = index}
+            end
+        end
+        return nil
+    end
+
+    function NCController:GetRandomMessage(relevantMessages)
+        local validNemesisMessages = self:GetValidMessages(relevantMessages.nemesis)
+        if #validNemesisMessages > 0 then
+            return validNemesisMessages[math.random(#validNemesisMessages)]
+        end
+
+        local validRegularMessages = self:GetValidMessages(relevantMessages.regular)
+        if #validRegularMessages > 0 then
+            return validRegularMessages[math.random(#validRegularMessages)]
+        end
+
+        return nil
+    end
+
+    function NCController:GetValidMessages(messages)
+        local validMessages = {}
+        for _, message in ipairs(messages) do
+            if self:IsValidMessage(message) and self:CheckAllConditions(message) then
+                table.insert(validMessages, message)
+            end
+        end
+        return validMessages
+    end
+
+    function NCController:IsValidMessage(message)
         local hasNemesis = NemesisChat:HasPartyNemeses()
         local hasBystander = NemesisChat:HasPartyBystanders()
 
-        local function isValidMessage(message)
-            if (not hasNemesis and message.message:find("%[NEMESIS%]")) or
-               (not hasBystander and message.message:find("%[BYSTANDER%]")) then
-                return false
-            end
-            return true
-        end
-
-        local function processMessages(messages, targetType)
-            if (targetType == "NEMESIS" and not hasNemesis) or (targetType == "BYSTANDER" and not hasBystander) then
-                return false
-            end
-            for _, message in ipairs(messages) do
-                if isValidMessage(message) and self:CheckAllConditions(message) then
-                    self.message = message.message
-                    self.channel = message.channel
-                    return true
-                end
-            end
+        if (not hasNemesis and message.message:find("%[NEMESIS%]")) or
+           (not hasNemesis and message.channel == "WHISPER_NEMESIS") or
+           (not hasBystander and message.channel == "WHISPER_BYSTANDER") or
+           (not hasBystander and message.message:find("%[BYSTANDER%]")) then
             return false
         end
-
-        if processMessages(relevantMessages.nemesis, "NEMESIS") then return end
-        processMessages(relevantMessages.regular, "BYSTANDER")
+        return true
     end
 
     -- Get a pool of conditional messages pertaining to the current scenarios

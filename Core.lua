@@ -36,9 +36,13 @@ function NemesisChat:OnEnable()
     self:SilentGroupSync()
     self:CheckGroup()
 
-    self:PLAYER_ENTERING_WORLD()
-
     NCInfo:OnEnableStateChanged(true)
+
+    if (NCRuntime:TimeSinceInitialization() < 1) then
+        return
+    end
+
+    self:PLAYER_ENTERING_WORLD()
 end
 
 function NemesisChat:OnDisable()

@@ -46,6 +46,7 @@ function NCDungeon:StartCallback()
 
     NCDungeon:ClearCache()
     NCRuntime:ClearPetOwners()
+    NCRuntime:ClearLastCompletedDungeon()
 
     NCDungeon:SetIdentifier(name)
     NCDungeon:SetLevel(keystoneLevel)
@@ -59,17 +60,15 @@ end
 
 function NCDungeon:FinishCallback(success)
     NCEvent:SetCategory("CHALLENGE")
-    NCEvent:SetEvent("FAIL")
+    NCEvent:SetEvent(success and "SUCCESS" or "FAIL")
     NCEvent:SetTarget("NA")
     NCEvent:RandomNemesis()
     NCEvent:RandomBystander()
 
-    if success then
-        NCEvent:SetEvent("SUCCESS")
-    end
-
     NCDungeon:UpdateCache()
     NCRuntime:ClearPetOwners()
+
+    NCRuntime:SetLastCompletedDungeon(self)
 end
 
 function NCDungeon:ResetCallback()

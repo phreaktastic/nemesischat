@@ -28,6 +28,7 @@ core.defaults = {
         trackLowPerformers = true,
         reportLowPerformersOnJoin = true,
         reportLowPerformersOnJoinThreshold = 5,
+        rollingMessages = true,
         reportConfig = {
             channel = "GROUP",
             excludeNemeses = false,
