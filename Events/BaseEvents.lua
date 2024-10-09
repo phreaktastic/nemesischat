@@ -122,12 +122,16 @@ function NemesisChat:PLAYER_LEAVING_WORLD()
         inFollowerDungeon = false
         currentFollowerDungeonID = nil
     end
-    if inDelve then
+    if inDelve and NCDungeon:IsActive() then
         NCEvent:Initialize()
         NCDungeon:Finish(false)
         NemesisChat:Print("Delve abandoned.")
         inDelve = false
         currentDelveID = nil
+    elseif inDelve and not NCDungeon:IsActive() then
+        inDelve = false
+        currentDelveID = nil
+        NemesisChat:Print("Delve completed.")
     end
     NCRuntime:ClearPetOwners()
     HandleLeaveDelve()
@@ -180,6 +184,13 @@ function NemesisChat:SCENARIO_COMPLETED()
         inFollowerDungeon = false
         currentFollowerDungeonID = nil
         NemesisChat:Print("Follower Dungeon completed")
+    elseif inDelve then
+        NCDungeon:Finish(true)
+        NemesisChat:HandleEvent()
+        NemesisChat:Report("DUNGEON")
+        inDelve = false
+        currentDelveID = nil
+        NemesisChat:Print("Delve completed.")
     else
         -- Handle other completed scenarios as before
         local scenarioInfo = C_ScenarioInfo.GetScenarioInfo()
