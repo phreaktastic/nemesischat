@@ -19,17 +19,13 @@ local C_ScenarioInfo = C_ScenarioInfo
 
 -- Local vars for base events
 local inDelve = false
-local currentDelveID = nil
-local delveStartTime = nil
+local lastDelveTime = 0
 local inFollowerDungeon = false
-local currentFollowerDungeonID = nil
-local LE_SCENARIO_TYPE_FOLLOWER_DUNGEON = 4
 
 local function HandleLeaveDelve()
     if inDelve then
         inDelve = false
-        currentDelveID = nil
-        delveStartTime = nil
+        lastDelveTime = GetTime()
         if NCDungeon and NCDungeon:IsActive() then
             NCDungeon:Finish(false)
             NemesisChat:Print("Delve ended.")
@@ -42,19 +38,13 @@ local function CheckAndUpdateDelveStatus()
         dynamicDifficulty, isDynamic, instanceMapId, lfgID = GetInstanceInfo()
     local dName, instanceType, isHeroic, isChallengeMode, _, _, toggleDifficultyID = GetDifficultyInfo(difficultyIndex);
 
-    -- NemesisChat:Print("Difficulty Name: " .. difficultyName, "LFG ID: " .. lfgID, "Name: " .. name)
+    -- NemesisChat:Print("Difficulty Name: " .. difficultyName, "LFG ID: " .. lfgID, "Name: " .. name, "Instance Type: " .. (instanceType or "Nil"))
 
-    if dName == "Delves" and not inDelve and lfgID then
+    if dName == "Delves" and not inDelve and lfgID and instanceType and instanceType == "scenario" and GetTime() - lastDelveTime > 1 then
         inDelve = true
-        currentDelveID = instanceMapId
-        delveStartTime = GetTime()
         NCDungeon:Start(name .. " (Delve)")
         NemesisChat:Print("Delve started: " .. name)
     elseif dName ~= "Delves" and inDelve then
-        local delveTime = GetTime() - delveStartTime
-        if delveTime < 5 then  -- If we've been in the delve for less than 5 seconds, it's probably a false positive
-            return
-        end
         HandleLeaveDelve()
     end
 end
@@ -74,7 +64,6 @@ local function CheckFollowerDungeonStatus()
 
     if isInFollowerDungeon and not inFollowerDungeon then
         inFollowerDungeon = true
-        currentFollowerDungeonID = scenarioInfo.scenarioID
         NCEvent:Initialize()
         NCDungeon:Start(scenarioInfo.name .. " (Follower)")
         NemesisChat:HandleEvent()
@@ -82,7 +71,6 @@ local function CheckFollowerDungeonStatus()
         NemesisChat:Print("Follower Dungeon started: " .. scenarioInfo.name)
     elseif not isInFollowerDungeon and inFollowerDungeon then
         inFollowerDungeon = false
-        currentFollowerDungeonID = nil
         if NCDungeon:IsActive() then
             NCEvent:Initialize()
             NCDungeon:Finish(true)
@@ -120,17 +108,16 @@ function NemesisChat:PLAYER_LEAVING_WORLD()
         NCDungeon:Finish(false)
         NemesisChat:Print("Follower Dungeon abandoned.")
         inFollowerDungeon = false
-        currentFollowerDungeonID = nil
     end
     if inDelve and NCDungeon:IsActive() then
         NCEvent:Initialize()
         NCDungeon:Finish(false)
         NemesisChat:Print("Delve abandoned.")
         inDelve = false
-        currentDelveID = nil
+        lastDelveTime = GetTime()
     elseif inDelve and not NCDungeon:IsActive() then
         inDelve = false
-        currentDelveID = nil
+        lastDelveTime = GetTime()
         NemesisChat:Print("Delve completed.")
     end
     NCRuntime:ClearPetOwners()
@@ -182,14 +169,13 @@ function NemesisChat:SCENARIO_COMPLETED()
         NemesisChat:HandleEvent()
         NemesisChat:Report("DUNGEON")
         inFollowerDungeon = false
-        currentFollowerDungeonID = nil
         NemesisChat:Print("Follower Dungeon completed")
     elseif inDelve then
         NCDungeon:Finish(true)
         NemesisChat:HandleEvent()
         NemesisChat:Report("DUNGEON")
         inDelve = false
-        currentDelveID = nil
+        lastDelveTime = GetTime()
         NemesisChat:Print("Delve completed.")
     else
         -- Handle other completed scenarios as before
