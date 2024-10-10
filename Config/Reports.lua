@@ -547,6 +547,7 @@ core.options.args.reportsGroup = {
             order = 14,
             type = "group",
             name = "Affixes (Beta)",
+            disabled = true,
             args = {
                 affixesHeader = {
                     order = 0,
@@ -714,7 +715,7 @@ core.options.args.reportsGroup = {
 }
 
 function NemesisChat:GetMarkerOptionsWithIcons()
-    local options = {}
+    local options = setmetatable({}, {__mode = "kv"})
 
     for key,val in ipairs(core.markers) do
         options[key] = val.name

@@ -22,16 +22,20 @@ NCConfig = {
     ToggleEnabled = function(self)
         self.CoreDB:Toggle("enabled")
 
+        NemesisChat:CheckGroup()
+
         if self.CoreDB:GetKey("enabled") then
-                    NemesisChat:Enable()
-                    NemesisChat:Print("Enabled.")
-                else
-                    NemesisChat:Disable()
-                    NemesisChat:Print("Disabled.")
-                end
+            NemesisChat:Enable()
+            NemesisChat:Print("Enabled.")
+        else
+            NemesisChat:Disable()
+            NemesisChat:Print("Disabled.")
+        end
     end,
     SetEnabled = function(self, value)
         self.CoreDB:SetKey("enabled", value)
+
+        NemesisChat:CheckGroup()
 
         if value then
             NemesisChat:Enable()
@@ -145,6 +149,15 @@ NCConfig = {
             value = 5
         end
         self.ReportDB:SetKey("reportLowPerformersOnJoinThreshold", value)
+    end,
+    IsRollingMessages = function(self)
+        return self.CoreDB:GetKey("rollingMessages")
+    end,
+    ToggleRollingMessages = function(self)
+        self.CoreDB:Toggle("rollingMessages")
+    end,
+    SetRollingMessages = function(self, value)
+        self.CoreDB:SetKey("rollingMessages", value)
     end,
     IsAIEnabled = function(self)
         return self.CoreDB:GetKey("ai")
@@ -612,12 +625,12 @@ NCConfig = {
         return self.CoreDB:GetKey("messages")
     end,
     AddMessage = function(self, message)
-        local messages = self:GetMessages() or {}
+        local messages = self:GetMessages() or setmetatable({}, {__mode = "kv"})
         table.insert(messages, message)
         self.CoreDB:SetKey("messages", messages)
     end,
     RemoveMessage = function(self, message)
-        local messages = self:GetMessages() or {}
+        local messages = self:GetMessages() or setmetatable({}, {__mode = "kv"})
         for i, msg in ipairs(messages) do
             if msg == message then
                 table.remove(messages, i)

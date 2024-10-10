@@ -22,11 +22,17 @@ NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
     })
     :AddCompatibilityCheck({
         configCheck = false,
-        exec = function() 
+        exec = function()
             if GTFO == nil then
                 return false, "GTFO is not installed."
             end
-    
+
+            local test = GTFO.SpellID["447917"] -- Test for a spell ID that should exist in GTFO
+
+            if test == nil then
+                return false, "GTFO is installed, but something went wrong. This is likely due to a change on their end, which NC will need to update for."
+            end
+
             return true, nil
         end
     })

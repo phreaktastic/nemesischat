@@ -22,15 +22,14 @@ LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
 -- When we don't want a reference (ie, resetting to refaults)
 function DeepCopy(orig)
     local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[DeepCopy(orig_key)] = DeepCopy(orig_value)
+    if orig_type ~= 'table' then return orig end
+    local copy = {}
+    for orig_key, orig_value in pairs(orig) do
+        if type(orig_value) == 'table' then
+            copy[orig_key] = DeepCopy(orig_value)
+        else
+            copy[orig_key] = orig_value
         end
-        setmetatable(copy, DeepCopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
     end
     return copy
 end
@@ -76,7 +75,7 @@ function GetMyName()
 end
 
 function IsNCEnabled()
-    return core.db.profile.enabled
+    return NCConfig:IsEnabled()
 end
 
 function GetRole(player)
@@ -98,7 +97,7 @@ function GetRole(player)
 end
 
 function GetKeysSortedByValue(tbl, sortFunction)
-    local keys = {}
+    local keys = setmetatable({}, {__mode = "kv"})
     for key in pairs(tbl) do
         table.insert(keys, key)
     end
@@ -111,7 +110,7 @@ function GetKeysSortedByValue(tbl, sortFunction)
 end
 
 function Split(str, sep)
-    local result = {}
+    local result = setmetatable({}, {__mode = "kv"})
     local regex = ("([^%s]+)"):format(sep)
 
     for each in str:gmatch(regex) do
@@ -122,7 +121,7 @@ function Split(str, sep)
  end
 
  function ShuffleTable(t)
-    local tbl = {}
+    local tbl = setmetatable({}, {__mode = "kv"})
     for i = 1, #t do
       tbl[i] = t[i]
     end
@@ -134,7 +133,7 @@ function Split(str, sep)
   end
 
 function GetHashmapKeys(hashmap)
-    local keys = {}
+    local keys = setmetatable({}, {__mode = "kv"})
 
     if hashmap == nil then
         return keys
@@ -742,14 +741,13 @@ core.eventSubscriptions = {
     "ENCOUNTER_END", -- Boss end
     "CHALLENGE_MODE_START", -- M+ start
     "CHALLENGE_MODE_COMPLETED", -- M+ complete
-
-    -- Unit Actions
-    "UNIT_SPELLCAST_START",
-    "UNIT_SPELLCAST_SUCCEEDED",
-    "UNIT_SPELLCAST_INTERRUPTED",
+    "CHALLENGE_MODE_RESET", -- M+ reset
+    "SCENARIO_CRITERIA_UPDATE", -- Follower dungeon
+    "SCENARIO_COMPLETED", -- Follower dungeon complete
+    "INSPECT_READY", -- Inspect ready
 
     -- Self
-    "PLAYER_TARGET_CHANGED",
+    -- "PLAYER_TARGET_CHANGED",
     "COMBAT_LOG_EVENT_UNFILTERED",
 }
 
@@ -771,5 +769,32 @@ NCEvent = {}
 NCController = {}
 NCSpell = {}
 
-C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
-C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
+C_Timer.NewTicker(0.1, function() if IsNCEnabled() then NemesisChat:CheckGuild() end end)
+-- C_Timer.NewTicker(0.25, function()
+--     if NemesisChat:HasPartyNemeses() and not IsInInstance() then
+--         local nemesisName = NemesisChat:GetRandomPartyNemesis()
+--         local nemesis = NCRuntime:GetGroupRosterPlayer(nemesisName)
+--         SetRaidTarget(nemesis.token, math.random(8))
+--     end
+-- end)
+C_Timer.NewTicker(5, function() if IsNCEnabled() then NemesisChat:LowPriorityTimer() end end)
+C_Timer.NewTicker(60, function()
+    if not NCCombat or not NCCombat.IsActive then
+        return
+    end
+    if not NCCombat:IsActive() then
+        local count = 0
+
+        for key, val in pairs(core.db.global.lastSync) do
+            if GetTime() - val > 1800 then
+                count = count + 1
+
+                core.db.global.lastSync[key] = nil
+            end
+
+            if count > 100 then
+                break
+            end
+        end
+    end
+end)

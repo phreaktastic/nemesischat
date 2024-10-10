@@ -83,6 +83,14 @@ core.options.args.generalGroup = {
                     get = function() return NCConfig:GetMinimumTime() end,
                     set = function(_, value) return NCConfig:SetMinimumTime(value) end,
                 },
+                rollingMessagesCheckbox = {
+                    order = 7,
+                    type = "toggle",
+                    name = "Rolling Messages",
+                    desc = "This allows you to cycle through messages, rather than sending a random message.",
+                    get = function() return NCConfig:IsRollingMessages() end,
+                    set = function(_, value) return NCConfig:ToggleRollingMessages() end,
+                },
             }
         },
         nonCombatMode = {

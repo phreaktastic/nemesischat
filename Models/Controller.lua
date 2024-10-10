@@ -6,6 +6,7 @@
 -- Namespaces
 -----------------------------------------------------
 local _, core = ...;
+local messageCache = {}
 
 -----------------------------------------------------
 -- Controller logic for handling events
@@ -17,6 +18,57 @@ function NemesisChat:InstantiateController()
 
         NemesisChat:InstantiateController()
         NemesisChatAPI:InitializeReplacements()
+        self:PreprocessMessages()
+    end
+
+    function NCController:PreprocessMessages()
+        wipe(messageCache)
+        for category, events in pairs(core.db.profile.messages) do
+            for event, targets in pairs(events) do
+                for target, messages in pairs(targets) do
+                    local eventKey = category .. "_" .. event .. "_" .. target
+                    if not messageCache[eventKey] then
+                        messageCache[eventKey] = {
+                            nemesis = {},
+                            regular = {},
+                            lastNemesisIndex = 0,
+                            lastRegularIndex = 0
+                        }
+                    else
+                        wipe(messageCache[eventKey].nemesis)
+                        wipe(messageCache[eventKey].regular)
+                        messageCache[eventKey].lastNemesisIndex = 0
+                        messageCache[eventKey].lastRegularIndex = 0
+                    end
+                    for _, message in ipairs(messages) do
+                        local processedMessage = {
+                            label = message.label,
+                            channel = message.channel,
+                            message = message.message,
+                            chance = message.chance,
+                            conditions = message.conditions
+                        }
+                        if target == "NEMESIS" then
+                            table.insert(messageCache[eventKey].nemesis, processedMessage)
+                        else
+                            table.insert(messageCache[eventKey].regular, processedMessage)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    function NCController:InspectMessageDatabase()
+        local count = 0
+        for category, events in pairs(core.db.profile.messages) do
+            for event, targets in pairs(events) do
+                for target, messages in pairs(targets) do
+                    count = count + #messages
+                end
+            end
+        end
+        NemesisChat:Print("Message database contains " .. count .. " messages")
     end
 
     function NCController:GetChannel()
@@ -99,7 +151,7 @@ function NemesisChat:InstantiateController()
     end
 
     function NCController:GetReplacedString(input, useExamples)
-        if input == "" then
+        if not input or input == "" then
             return ""
         end
 
@@ -120,9 +172,13 @@ function NemesisChat:InstantiateController()
                 -- First check for condition specific replacements
                 if msg:match(k) then
                     local val = v()
-    
+
                     if type(val) == "string" or type(val) == "number" then
-                        msg = msg:gsub(k, val)
+                        if not pcall(function()
+                            msg = msg:gsub(k, val)
+                        end) then
+                            NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+                        end
                     else
                         NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
                     end
@@ -145,7 +201,11 @@ function NemesisChat:InstantiateController()
                 end
 
                 if type(val) == "string" or type(val) == "number" then
-                    msg = msg:gsub(k, val)
+                    if not pcall(function()
+                        msg = msg:gsub(k, val)
+                    end) then
+                        NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
+                    end
                 else
                     if not useExamples then
                         NemesisChat:Print("ERROR!", "Replacement for", k, "is not a string!", type(val))
@@ -165,14 +225,14 @@ function NemesisChat:InstantiateController()
         end
 
         -- Config driven minimum time between messages
-        if GetTime() - NCRuntime:GetLastMessage() < core.db.profile.minimumTime and not NCController:IsMinTimeException() then
+        if GetTime() - NCRuntime:GetLastMessage() < NCConfig:GetMinimumTime() and not NCController:IsMinTimeException() then
             NCEvent:Initialize()
             return
         end
 
         -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
         -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
-        if core.db.profile.nonCombatMode and NCCombat:IsActive() and not NCController:IsNonCombatModeException() then
+        if NCConfig:IsNonCombatMode() and NCCombat:IsActive() and not NCController:IsNonCombatModeException() then
             NCEvent:Initialize()
             return
         end
@@ -235,166 +295,136 @@ function NemesisChat:InstantiateController()
 
     -- Set values for a random configured message
     function NCController:ConfigMessage()
-        -- If a global chance is configured, respect it
-        if core.db.profile.useGlobalChance == true then
-            if not NemesisChat:Roll(core.db.profile.globalChance or 1) then
-                NCEvent:Initialize()
-                return
+        local eventKey = NCEvent:GetCategory() .. "_" .. NCEvent:GetEvent() .. "_" .. NCEvent:GetTarget()
+        local relevantMessages = messageCache[eventKey]
+
+        if not relevantMessages then return end
+
+        local selectedMessage = NCConfig:IsRollingMessages()
+            and self:GetRollingMessage(relevantMessages)
+            or self:GetRandomMessage(relevantMessages)
+
+        if selectedMessage then
+            self.message = selectedMessage.message
+            self.channel = selectedMessage.channel
+        end
+    end
+
+    function NCController:GetRollingMessage(relevantMessages)
+        local nemesisMessage = self:GetNextValidMessage(relevantMessages.nemesis, relevantMessages.lastNemesisIndex)
+        if nemesisMessage then
+            relevantMessages.lastNemesisIndex = nemesisMessage.index
+            return nemesisMessage.message
+        end
+
+        local regularMessage = self:GetNextValidMessage(relevantMessages.regular, relevantMessages.lastRegularIndex)
+        if regularMessage then
+            relevantMessages.lastRegularIndex = regularMessage.index
+            return regularMessage.message
+        end
+
+        return nil
+    end
+
+    function NCController:GetNextValidMessage(messages, lastIndex)
+        local startIndex = (lastIndex % #messages) + 1
+        for i = 0, #messages - 1 do
+            local index = ((startIndex + i - 1) % #messages) + 1
+            local message = messages[index]
+            if self:IsValidMessage(message) and self:CheckAllConditions(message) then
+                return {message = message, index = index}
             end
         end
+        return nil
+    end
 
-        if core.db.profile.messages[NCEvent:GetCategory()] == nil or core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()] == nil or core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()] == nil then
-            return
+    function NCController:GetRandomMessage(relevantMessages)
+        local validNemesisMessages = self:GetValidMessages(relevantMessages.nemesis)
+        if #validNemesisMessages > 0 then
+            return validNemesisMessages[math.random(#validNemesisMessages)]
         end
 
-        local profileMessages = core.db.profile.messages[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()]
-
-        if profileMessages == nil then
-            NCEvent:Initialize()
-            return
+        local validRegularMessages = self:GetValidMessages(relevantMessages.regular)
+        if #validRegularMessages > 0 then
+            return validRegularMessages[math.random(#validRegularMessages)]
         end
 
-        local msg = ""
+        return nil
+    end
 
-        -- Ensure conditions are met on all messages
-        local availableMessages = NCController:GetConditionalMessages(ShuffleTable(profileMessages))
-
-        if availableMessages == nil then
-            NCEvent:Initialize()
-            return
-        end
-
-        if #availableMessages == 1 then
-            msg = availableMessages[1]
-        elseif #availableMessages == 0 then
-            NCEvent:Initialize()
-            return
-        else
-            -- If we have more than one message that is available for an event, prioritize Nemesis based messages
-            local nemesisMsg
-
-            for _, aMsg in pairs(ShuffleTable(availableMessages)) do
-                if string.find(aMsg.message, "%[(NEMESIS)[A-Za-z]*%]") ~= nil then
-                    nemesisMsg = aMsg
-                    break
-                end
-            end
-
-            if nemesisMsg then
-                msg = nemesisMsg
-            else
-                msg = availableMessages[random(#availableMessages)]
+    function NCController:GetValidMessages(messages)
+        local validMessages = {}
+        for _, message in ipairs(messages) do
+            if self:IsValidMessage(message) and self:CheckAllConditions(message) then
+                table.insert(validMessages, message)
             end
         end
+        return validMessages
+    end
 
-        -- Roll the message chance
-        if (msg.chance < 1.0 and not NemesisChat:Roll(msg.chance)) or msg.chance == 0.0 then
-            NCEvent:Initialize()
-            return
+    function NCController:IsValidMessage(message)
+        local hasNemesis = NemesisChat:HasPartyNemeses()
+        local hasBystander = NemesisChat:HasPartyBystanders()
+
+        if (not hasNemesis and message.message:find("%[NEMESIS%]")) or
+           (not hasNemesis and message.channel == "WHISPER_NEMESIS") or
+           (not hasBystander and message.channel == "WHISPER_BYSTANDER") or
+           (not hasBystander and message.message:find("%[BYSTANDER%]")) then
+            return false
         end
-
-        NCController:SetChannel(msg.channel)
-        NCController:SetMessage(msg.message)
+        return true
     end
 
     -- Get a pool of conditional messages pertaining to the current scenarios
     function NCController:GetConditionalMessages(pool)
-        if pool == nil or #pool == 0 then
-            return {}
-        end
+        local conditionalMessages = {}
+        local unconditionalMessages = {}
 
-        local returnMessages = {}
-
-        for key, value in pairs(pool) do
-            if NCController:CheckAllConditions(value) then
-                table.insert(returnMessages, value)
+        for _, message in ipairs(pool) do
+            if message.conditions and #message.conditions > 0 then
+                table.insert(conditionalMessages, message)
+            else
+                table.insert(unconditionalMessages, message)
             end
         end
 
-        -- Keep rolling through Nemeses to see if one matches conditions
-        if #returnMessages == 0 and NCEvent:GetTarget() ~= "NEMESIS" and NemesisChat:GetPartyNemesesCount() > 1 then
-            table.insert(NCController.excludedNemeses, NCEvent:GetNemesis())
-
-            local newNemesis = NemesisChat:GetNonExcludedNemesis()
-
-            if newNemesis ~= nil then
-                NCEvent:SetNemesis(newNemesis)
-
-                return NCController:GetConditionalMessages(pool)
-            end
-        end
-
-        -- Keep rolling through Bystanders to see if one matches conditions
-        if #returnMessages == 0 and NCEvent:GetTarget() ~= "BYSTANDER" and NemesisChat:GetPartyBystandersCount() > 1 then
-            table.insert(NCController.excludedBystanders, NCEvent:GetBystander())
-
-            local newBystander = NemesisChat:GetNonExcludedBystander()
-
-            if newBystander ~= nil then
-                NCEvent:SetBystander(newBystander)
-
-                return NCController:GetConditionalMessages(pool)
-            end
-        end
-
-        return returnMessages
+        return #conditionalMessages > 0 and conditionalMessages or unconditionalMessages
     end
 
     function NCController:CheckAllConditions(message)
-        local includesNemesis = (string.find(message.message, "[NEMESIS]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_NEMESIS" and (NCEvent:GetTarget() == "SELF" or NCEvent:GetTarget() == "NA"))
-        local includesBystander = (string.find(message.message, "[BYSTANDER]", nil, true) ~= nil) or (message.channel == "WHISPER" and NCEvent:GetTarget() == "SELF") or (message.channel == "WHISPER_BYSTANDER" and (NCEvent:GetTarget() == "SELF" or NCEvent:GetTarget() == "NA"))
+        if not message.conditions then return true end
 
-        if includesNemesis and not NemesisChat:HasPartyNemeses() then
-            return false
-        end
-
-        if includesBystander and not NemesisChat:HasPartyBystanders() then
-            return false
-        end
-
-        if message.conditions == nil or #message.conditions == 0 then
-            return true
-        end
-
-        local pass = true
-
-        for condKey, condVal in pairs(message.conditions) do
-            if NCController:CheckCondition(condVal) == false then
-                pass = false
+        for _, condition in ipairs(message.conditions) do
+            if not self:CheckCondition(condition) then
+                return false
             end
         end
 
-        return pass
+        return true
     end
 
     function NCController:CheckCondition(condition)
         local subjectFunc = NCController.Condition[condition.left]
 
-        if subjectFunc == nil then
-            for k, api in pairs(core.apis) do
-                local tempSubjectFunc
-
-                for i, subject in pairs(api.subjects) do
+        if not subjectFunc then
+            for _, api in pairs(core.apis) do
+                for _, subject in pairs(api.subjects) do
                     if subject.value == condition.left then
-                        tempSubjectFunc = subject.exec
+                        subjectFunc = subject.exec
                         break
                     end
                 end
-
-                if tempSubjectFunc ~= nil then
-                    subjectFunc = tempSubjectFunc
-                    break
-                end
+                if subjectFunc then break end
             end
         end
 
-        if subjectFunc == nil then
+        if not subjectFunc then
             NemesisChat:Print("ERROR: Condition subject function not found for " .. condition.left .. "!")
             return false
         end
 
         local val1 = subjectFunc()
-        local val2 = NCController:GetReplacedString(condition.right:gsub("%[([A-Z_]*)%]", "[%1_CONDITION]")) -- Set this to a condition-specific replacement, non-formatted, ie [NEMESISDPS] -> [NEMESISDPS_CONDITION]
+        local val2 = self:GetReplacedString(condition.right:gsub("%[([A-Z_]*)%]", "[%1_CONDITION]"))
         local operator = condition.operator
 
         return NCController.Condition[operator](val1, val2)

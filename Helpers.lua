@@ -11,12 +11,42 @@ local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 
 local E = ElvUI and unpack(ElvUI) or nil
-local GTFO = GTFO and unpack(GTFO) or nil
+local GTFO = _G["GTFO"]
 
 local scanTipName = format("%s_ScanTooltip", addonName)
 local scanTipText = format("%sTextLeft2", scanTipName)
 local scanTip = CreateFrame("GameTooltip", scanTipName, WorldFrame, "GameTooltipTemplate")
 local scanTipTitles = {}
+
+local eventInfo = setmetatable({}, {__mode = "kv"})
+
+local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
+local GetTime = GetTime
+local UnitIsDead = UnitIsDead
+local UnitName = UnitName
+local tContains = tContains
+local string_find = string.find
+local IsInGroup = IsInGroup
+local UnitInParty = UnitInParty
+local bit_band = bit.band
+
+local eventPatterns = {
+    ["SPELL_INTERRUPT"] = true,
+    ["SPELL_CAST_SUCCESS"] = true,
+    ["SPELL_CAST_START"] = true,
+    ["SPELL_HEAL"] = true,
+    ["PARTY_KILL"] = true,
+    ["UNIT_DIED"] = true,
+}
+
+-- Weak cache, for memory optimization
+local weakCache = setmetatable({}, {__mode = "kv"})
+local function getCachedValue(key, defaultValue)
+    if not weakCache[key] then
+        weakCache[key] = defaultValue
+    end
+    return weakCache[key]
+end
 
 -----------------------------------------------------
 -- Core global helper functions
@@ -73,17 +103,19 @@ function NemesisChat:InitializeHelpers()
         end
     end
 
+    local syncTable = setmetatable({}, {__mode = "kv"})
+
     function NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
         if not prefix or not string.find(prefix, "NC_") then return end
 
         local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
 
         if not core.db.global.lastSync then
-            core.db.global.lastSync = {}
+            core.db.global.lastSync = setmetatable({}, {__mode = "kv"})
         end
 
         -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
-        if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and GetTime() - core.db.global.lastSync[sender] <= 1800) then
+        if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and (GetTime() - core.db.global.lastSync[sender] <= 1800)) then
             return
         end
 
@@ -91,26 +123,24 @@ function NemesisChat:InitializeHelpers()
 
         NemesisChat:Print("Synchronizing data received from " .. Ambiguate(sender, "guild"))
 
-        core.runtime.sync = {}
-
-        core.runtime.sync.decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
-        if not core.runtime.sync.decoded then return end
-        core.runtime.sync.decompressed = LibDeflate:DecompressDeflate(core.runtime.sync.decoded)
-        if not core.runtime.sync.decompressed then return end
-        core.runtime.sync.success, core.runtime.sync.data = LibSerialize:Deserialize(core.runtime.sync.decompressed)
-        if not core.runtime.sync.success then return end
+        syncTable.decoded = LibDeflate:DecodeForWoWAddonChannel(payload)
+        if not syncTable.decoded then return end
+        syncTable.decompressed = LibDeflate:DecompressDeflate(syncTable.decoded)
+        if not syncTable.decompressed then return end
+        syncTable.success, syncTable.data = LibSerialize:Deserialize(syncTable.decompressed)
+        if not syncTable.success then return end
 
         payload = nil
-        core.runtime.sync.decoded = nil
-        core.runtime.sync.decompressed = nil
+        syncTable.decoded = nil
+        syncTable.decompressed = nil
 
         if prefix == "NC_LEAVERS" then
-            NemesisChat:ProcessLeavers(core.runtime.sync.data)
+            NemesisChat:ProcessLeavers(syncTable.data)
         elseif prefix == "NC_LOWPERFORMERS" then
-            NemesisChat:ProcessLowPerformers(core.runtime.sync.data)
+            NemesisChat:ProcessLowPerformers(syncTable.data)
         end
 
-        core.runtime.sync.data = nil
+        wipe(syncTable)
     end
 
     function NemesisChat:ProcessLeavers(leavers)
@@ -135,22 +165,21 @@ function NemesisChat:InitializeHelpers()
         end
 
         if core.db.profile[configKey] == nil then
-            core.db.profile[configKey] = {}
+            core.db.profile[configKey] = setmetatable({}, {__mode = "kv"})
         end
 
         local count = 0
+        local combinedRow = setmetatable({}, {__mode = "kv"})
 
         for key,val in pairs(data) do
             count = count + 1
             if core.db.profile[configKey][key] == nil then
                 core.db.profile[configKey][key] = val
             else
-                core.runtime.sync.combinedRow = ArrayMerge(core.db.profile[configKey][key], val)
-                core.db.profile[configKey][key] = core.runtime.sync.combinedRow
+                combinedRow = ArrayMerge(core.db.profile[configKey][key], val)
+                core.db.profile[configKey][key] = combinedRow
             end
         end
-
-        core.runtime.sync.combinedRow = {}
     end
 
     function NemesisChat:PrintNumberOfLeavers()
@@ -191,10 +220,6 @@ function NemesisChat:InitializeHelpers()
             toast:SetIconTexture([[Interface\ICONS\INV_10_Engineering2_BoxOfBombs_Dangerous_Color3]])
             toast:SetUrgencyLevel("emergency")
         end)
-    end
-
-    function NemesisChat:ShowStatsFrame()
-        
     end
 
     function NemesisChat:AddLeaver(guid)
@@ -290,7 +315,7 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:InitializeTimers()
-        self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitSyncData", 60)
+        if not self.SyncLeaversTimer then self.SyncLeaversTimer = self:ScheduleRepeatingTimer("TransmitSyncData", 60) end
     end
 
     function NemesisChat:GetMyName()
@@ -321,30 +346,41 @@ function NemesisChat:InitializeHelpers()
             return true
         end
 
-        -- Unit is/has cast(ing) a spell, but are not in the party
-        -- if NCSpell:IsValidSpell() and not UnitInParty(NCSpell:GetSource()) then
-        --     if NCConfig:IsDebugging() then 
-        --         self:Print("Source is not in party.")
-        --     end
-        --     return true
-        -- end
-
         return false
     end
 
     -- Combat Log event hydration
     function NemesisChat:PopulateCombatEventDetails()
-        if not IsInInstance() then
+        wipe(eventInfo)
+
+        eventInfo.time, eventInfo.subEvent, eventInfo.hidecaster, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.sourceRaidFlags, eventInfo.destGUID, eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4 = CombatLogGetCurrentEventInfo()
+
+        if not NCRuntime:GetGroupRosterPlayer(eventInfo.sourceName) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) and not bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
+            wipe(eventInfo)
             return
         end
 
-        local _, subEvent, eventType, _, sourceName, _, _, _, destName, _, _, misc1, misc2, _, misc4, _, _, _, _, _, _ = CombatLogGetCurrentEventInfo()
-        local isPull, _, pullPlayerName, mobName = NemesisChat:IsPull()
+        local subEvent, eventType, sourceName, destName, misc1, misc2, misc4 = eventInfo.subEvent, eventInfo.eventType, eventInfo.sourceName, eventInfo.destName, eventInfo.misc1, eventInfo.misc2, eventInfo.misc4
+        local pullInfo = pullInfo or {}
+        local isPull, pullType, pullPlayerName, mobName = NemesisChat:IsPull(pullInfo)
+        local damage = NemesisChat:GetDamageAmount(subEvent, misc1, misc4)
+
+        if bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
+            local petOwner = NemesisChat:GetPetOwner(eventInfo.sourceGUID)
+
+            if petOwner then
+                eventInfo.sourceName = petOwner
+                sourceName = eventInfo.sourceName
+
+                if not NCRuntime:GetGroupRosterPlayer(petOwner) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) then
+                    wipe(eventInfo)
+                    return
+                end
+            end
+        end
 
         NemesisChat:SetMyName()
-        NemesisChat:UpdateGroupState()
         NemesisChat:ActionScoring()
-        NemesisChat:CheckAffixes()
 
         NCEvent:Initialize()
         NCEvent:SetCategory("COMBATLOG")
@@ -356,7 +392,7 @@ function NemesisChat:InitializeHelpers()
                     SendChatMessage("Nemesis Chat: " .. UnitName(pullPlayerName) .. " pulled " .. mobName, "YELL")
                 end
 
-                NemesisChat:SpawnToast("Pull", UnitName(pullPlayerName), mobName)
+                NemesisChat:SpawnToast("Pull", pullPlayerName, mobName)
                 NCRuntime:UpdateLastUnsafePullToast()
             end
 
@@ -364,67 +400,64 @@ function NemesisChat:InitializeHelpers()
             NCSegment:GlobalAddPull(UnitName(pullPlayerName))
         end
 
-        -- This could be more modular, the only problem is feasts...
-        if subEvent == "SPELL_INTERRUPT" then
-            NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
-        elseif subEvent == "SPELL_CAST_SUCCESS" then
-            NCEvent:Spell(sourceName, destName, misc1, misc2)
+        wipe(pullInfo)
 
-            -- This needs to be handled in a more modular way
-            if misc2 == "Blessing of Freedom" and tContains(NCDungeon:GetKeystoneAffixes(), 134) then
-                if sourceName ~= destName then
-                    NCSegment:GlobalAddAffix(sourceName, 10)
-                else
-                    -- Currently not awarding any affix points for casting on self, esp when it's easy to spec into
-                end
-            end
-        -- Spell start
-        elseif subEvent == "SPELL_CAST_START" then
-            NCEvent:SpellStart(sourceName, destName, misc1, misc2)
-        elseif subEvent == "SPELL_HEAL" then
-            NCEvent:Heal(sourceName, destName, misc1, misc2, misc4)
-        elseif subEvent == "PARTY_KILL" then
-            NCEvent:Kill(sourceName, destName)
-        elseif subEvent == "UNIT_DIED" then
-            if not UnitInParty(destName) then
-                return
-            end
-
-            NCEvent:Death(destName)
-
-            local state = NCRuntime:GetPlayerState(destName)
-
-            if state and state.lastDamageAvoidable then
-                NCEvent:AvoidableDeath(destName)
-
-                if not NCEvent:EventHasMessages() then
-                    NCEvent:Death(destName)
-                end
-            end
-
-            NCSegment:GlobalAddDeath(destName)
-        elseif NCEvent:IsDamageEvent(subEvent, destName, misc4) then
-            local damage = tonumber(misc4) or 0
-            local state = NCRuntime:GetPlayerState(destName)
+        if NCEvent:IsDamageEvent(subEvent, destName, damage) then
             local isAvoidable = (GTFO and GTFO.SpellID[tostring(misc1)] ~= nil)
 
             if isAvoidable then
                 NCSegment:GlobalAddAvoidableDamage(damage, destName)
             end
 
-            if state then
-                state.lastDamageAvoidable = isAvoidable
-            end
+            NCRuntime:SetPlayerStateValue(destName, "lastDamageAvoidable", isAvoidable)
 
-            NCEvent:Damage(sourceName, destName, isAvoidable, damage)
-        elseif string.find(subEvent, "AURA_APPLIED") or string.find(subEvent, "AURA_DOSE") then
+            NCEvent:Damage(sourceName, destName, misc1, misc2, damage, isAvoidable)
+
+            -- Damage events are handled in addition to everything else.
+            NemesisChat:HandleEvent()
+            NCEvent:Initialize()
+            NCEvent:SetCategory("COMBATLOG")
+        end
+
+        if eventPatterns[subEvent] then
+            if subEvent == "SPELL_INTERRUPT" then
+                NCEvent:Interrupt(sourceName, destName, misc1, misc2, misc4)
+            elseif subEvent == "SPELL_CAST_SUCCESS" then
+                NCEvent:Spell(sourceName, destName, misc1, misc2)
+                -- Handle Blessing of Freedom logic here
+            elseif subEvent == "SPELL_CAST_START" then
+                NCEvent:SpellStart(sourceName, destName, misc1, misc2)
+            elseif subEvent == "SPELL_HEAL" then
+                NCEvent:Heal(sourceName, destName, misc1, misc2, misc4)
+            elseif subEvent == "PARTY_KILL" then
+                NCEvent:Kill(sourceName, destName)
+            elseif subEvent == "UNIT_DIED" then
+                if UnitInParty(destName) then
+                    NCEvent:Death(destName)
+                    -- Handle avoidable death logic here
+                    NCSegment:GlobalAddDeath(destName)
+                end
+            end
+        elseif string_find(subEvent, "AURA_APPLIED") or string_find(subEvent, "AURA_DOSE") then
             NCEvent:Aura(sourceName, destName, misc1, misc2)
         else
-            -- Something unsupported.
+            -- Handle unsupported events or return early
+            wipe(eventInfo)
             return
         end
 
+        wipe(eventInfo)
         NemesisChat:HandleEvent()
+    end
+
+    function NemesisChat:GetDamageAmount(event, arg1, arg4)
+        if event == "SWING_DAMAGE" then
+            return arg1 or 0
+        elseif event == "RANGE_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_PERIODIC_DAMAGE" then
+            return arg4 or 0
+        else
+            return 0
+        end
     end
 
     function NemesisChat:GetNemeses()
@@ -498,7 +531,9 @@ function NemesisChat:InitializeHelpers()
             return nil
         end
 
-        return partyBystanders[NemesisChat:GetRandomKey(partyBystanders)]
+        local bystander = partyBystanders[NemesisChat:GetRandomKey(partyBystanders)]
+
+        return bystander
     end
 
     function NemesisChat:GetRandomGuildBystander()
@@ -638,7 +673,7 @@ function NemesisChat:InitializeHelpers()
 
     -- Get all the players in the group, as a hashmap (key = name, val = name)
     function NemesisChat:GetPlayersInGroup()
-        local plist = {}
+        local plist = setmetatable({}, {__mode = "kv"})
 
         if IsInRaid() then
             for i=1,40 do
@@ -779,7 +814,9 @@ function NemesisChat:InitializeHelpers()
 
     -- Check the roster and (un/re)subscribe events appropriately
     function NemesisChat:CheckGroup()
-        local shouldSubscribe = NCRuntime:GetGroupRosterCountOthers() > 0
+        local isEnabled = IsNCEnabled()
+        local hasGroupMembers = NCRuntime:GetGroupRosterCountOthers() > 0
+        local shouldSubscribe = isEnabled and hasGroupMembers
 
         if NCRuntime.lastCheckSubscribe == shouldSubscribe then
             return
@@ -787,18 +824,20 @@ function NemesisChat:InitializeHelpers()
 
         NCRuntime.lastCheckSubscribe = shouldSubscribe
 
-        if shouldSubscribe and IsNCEnabled() then
-            NemesisChat:Print("Group state changed, re-subscribing to group based events.")
+        local action, reason
+        if isEnabled then
+            action = shouldSubscribe and "re-subscribing to" or "un-subscribing from"
+            reason = "Group state changed"
         else
-            NemesisChat:Print("Group state changed, un-subscribing from group based events.")
+            action = "un-subscribing from"
+            reason = "NemesisChat was disabled"
         end
 
+        NemesisChat:Print(("%s, %s group based events."):format(reason, action))
+
+        local method = shouldSubscribe and "RegisterEvent" or "UnregisterEvent"
         for _, event in pairs(core.eventSubscriptions) do
-            if shouldSubscribe and IsNCEnabled() then
-                NemesisChat:RegisterEvent(event)
-            else
-                NemesisChat:UnregisterEvent(event)
-            end
+            NemesisChat[method](NemesisChat, event)
         end
     end
 
@@ -1084,7 +1123,7 @@ function NemesisChat:InitializeHelpers()
             return false
         end
 
-        local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,arg4 = CombatLogGetCurrentEventInfo()
+        local _, event, _, sguid, sname, sflags, _, dguid, dname, dflags, _, arg1, _, _, arg4 = eventInfo.time, eventInfo.subEvent, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.destGUID, eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4
 
         if not UnitInParty(sname) and not UnitInParty(dname) then
             return false
@@ -1111,7 +1150,7 @@ function NemesisChat:InitializeHelpers()
             elseif event == "SPELL_PERIODIC_DAMAGE" then
                 damageAmount = arg4
             end
-            
+
             if(not string.find(event,"_SUMMON")) then
                 if(bit.band(sflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit.band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                     -- A player is attacking a mob
@@ -1215,78 +1254,46 @@ function NemesisChat:InitializeHelpers()
         return false
     end
 
-    function NemesisChat:IsAffixMobHandled()
-        if not IsInInstance() or not IsInGroup() then
-            return false, nil, nil
-        end
-
-        local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
-
-        if NCRuntime:GetGroupRosterPlayer(sname) == nil then
-            return false, nil, nil
-        end
-
-        if UnitIsUnconscious(dguid) or UnitIsDead(dguid) or string.find(event, "INSTAKILL") then
-            return true, sname, dguid
-        end
-
-        if core.affixMobsHandles[dname] ~= nil and type(core.affixMobsHandles[dname]) == "table" then
-            for _, eventSubstr in pairs(core.affixMobsHandles[dname]) do
-                if eventSubstr == "CROWD_CONTROL" then
-                    local flags = LibPlayerSpells:GetSpellInfo(spellId)
-
-                    if flags and bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
-                        return true, sname, dguid
-                    end
-                else
-                    if string.find(event, eventSubstr) then
-                        return true, sname, dguid
-                    end
-                end
+    local function checkFlags(flags, ...)
+        for i = 1, select('#', ...) do
+            if bit_band(flags, select(i, ...)) == 0 then
+                return false
             end
         end
-
-        return false, nil, nil
+        return true
     end
 
     function NemesisChat:ActionScoring()
-        local _,event,_,sguid,sname,_,_,dguid,dname,_,_,spellId = CombatLogGetCurrentEventInfo()
+        local playerState = playerState or {}
+        local CROWD_CTRL = LibPlayerSpells.constants.CROWD_CTRL
+        local DISPEL = LibPlayerSpells.constants.DISPEL
+        local SURVIVAL = LibPlayerSpells.constants.SURVIVAL
+        local COOLDOWN = LibPlayerSpells.constants.COOLDOWN
+        local eventInfo = eventInfo or setmetatable({}, {__mode = "kv"})
+        local event, sname, spellId = eventInfo.subEvent, eventInfo.sourceName, eventInfo.misc1
 
-        if not IsInInstance() or not IsInGroup() or not UnitInParty(sname) then
+        if not IsInGroup() or not UnitInParty(sname) then
             return
         end
 
         local flags = LibPlayerSpells:GetSpellInfo(spellId)
-
         if not flags then
             return
         end
 
-        local description = ""
-
-        if bit.band(flags, LibPlayerSpells.constants.CROWD_CTRL) ~= 0 then
-            description = "Crowd control"
-
+        if checkFlags(flags, CROWD_CTRL) then
             NCSegment:GlobalAddCrowdControl(sname)
-        elseif bit.band(flags, LibPlayerSpells.constants.DISPEL) ~= 0 then
-            description = "Dispel"
-
+        elseif checkFlags(flags, DISPEL) then
             NCSegment:GlobalAddDispell(sname)
-        elseif bit.band(flags, LibPlayerSpells.constants.SURVIVAL) ~= 0 then
-            description = "Defensive"
-
-            local state = NCRuntime:GetPlayerState(sname)
-
-            if state then
-                state.lastDefensive = GetTime()
+        elseif checkFlags(flags, SURVIVAL, COOLDOWN) then
+            NCRuntime:GetPlayerState(sname, playerState)
+            if playerState then
+                playerState.lastDefensive = GetTime()
             end
-
             NCSegment:GlobalAddDefensive(sname)
-        else
-            return
         end
 
-        NCSegment:GlobalAddActionPoints(1, sname, description)
+        -- NCSegment:GlobalAddActionPoints(1, sname, description)
     end
 
     function NemesisChat:IsAffixAuraHandled()
@@ -1322,34 +1329,7 @@ function NemesisChat:InitializeHelpers()
         return core.affixMobsLookup[sname] == true
     end
 
-    function NemesisChat:CheckAffixes()
-        NemesisChat:CheckAffixAuras()
-
-        local isAffixMobHandled, affixMobHandlerName, affixMobHandledGuid = NemesisChat:IsAffixMobHandled()
-        local isAuraHandled, auraHandlerName = NemesisChat:IsAffixAuraHandled()
-
-        if isAffixMobHandled then
-            local mobName = UnitName(affixMobHandledGuid)
-            -- SetRaidTarget(affixMobHandledGuid, 0)
-
-            -- More score for caster mobs as opposed to simply CCing shades, for example
-            if core.affixMobsCastersLookup[mobName] then
-                NCSegment:GlobalAddAffix(affixMobHandlerName, 10)
-            else
-                NCSegment:GlobalAddAffix(affixMobHandlerName)
-            end
-        end
-
-        if isAuraHandled then
-            NCSegment:GlobalAddAffix(auraHandlerName)
-        end
-    end
-
     function NemesisChat:SilentGroupSync()
-        if not IsInGroup() then
-            return
-        end
-
         NCRuntime:ClearGroupRoster()
 
         local members = NemesisChat:GetPlayersInGroup()
@@ -1410,34 +1390,6 @@ function NemesisChat:InitializeHelpers()
     end
 end
 
--- Check combat log for application or dose of auras listed in core.affixMobsAuras
-function NemesisChat:CheckAffixAuras()
-    if not IsInInstance() or not IsInGroup() or not NCConfig:IsReportingAffixes_AuraStacks() then
-        return
-    end
-
-    local time,event,hidecaster,sguid,sname,sflags,sraidflags,dguid,dname,dflags,draidflags,arg1,arg2,arg3,itype = CombatLogGetCurrentEventInfo()
-
-    if not core.affixMobsAuraSpells[arg1] then
-        return
-    end
-
-    if not string.find(event, "AURA_APPLIED") and not string.find(event, "AURA_DOSE") then
-        return
-    end
-
-    for _, auraData in pairs(core.affixMobsAuras) do
-        if auraData.spellId == arg1 then
-            local _, _, count = AuraUtil.FindAuraByName(auraData.spellName, dname, auraData.type)
-
-            if count ~= nil and tonumber(count) >= auraData.highStacks and NCRuntime:GetPlayerStatesLastAuraCheckDelta() >= 3 then
-                SendChatMessage("Nemesis Chat: " .. dname .. " has " .. auraData.name .. " at " .. count .. " stacks!", "YELL")
-                NCRuntime:UpdatePlayerStatesLastAuraCheck()
-            end
-        end
-    end
-end
-
 function NemesisChat:UnitHasAura(unit, auraName, auraType)
     if string.lower(auraType) == "buff" then
         auraType = "HELPFUL"
@@ -1486,12 +1438,71 @@ function NemesisChat:InstantiateCore()
 end
 
 function NemesisChat:Initialize()
+    NemesisChat:SetEnabledState(IsNCEnabled())
+
     NemesisChat:InitializeConfig()
     NemesisChat:InitializeHelpers()
+    NemesisChat:SetMyName()
+
+    NemesisChat:InitIfEnabled()
+end
+
+function NemesisChat:InitIfEnabled()
+    if not IsNCEnabled() then return end
+
+    NCInfo:Initialize()
     NemesisChat:InitializeTimers()
     NemesisChat:PopulateFriends()
     NemesisChat:RegisterPrefixes()
     NemesisChat:RegisterToasts()
-    NemesisChat:SetMyName()
-    NCInfo:Initialize()
+    NemesisChat:SilentGroupSync()
+    NCRuntime:UpdateInitializationTime()
+end
+
+function NemesisChat:ClearAllData()
+    -- Clear NCDungeon data
+    if NCDungeon then
+        NCDungeon:ClearCache()
+        NCDungeon:Reset()
+        NCDungeon:SetIdentifier(nil)
+        NCDungeon.RosterSnapshot = {}
+    end
+
+    -- Clear other segment data
+    if NCBoss then NCBoss:Reset() end
+    if NCCombat then NCCombat:Reset() end
+
+    -- Clear runtime data
+    NCRuntime:ClearGroupRoster()
+    NCRuntime:ClearPlayerStates()
+    NCRuntime:ClearPulledUnits()
+    NCRuntime:ClearPetOwners()
+
+    -- Reset event data
+    NCEvent:Initialize()
+
+    -- Reset controller data
+    NCController:Initialize()
+
+    -- Reset spell data
+    NCSpell:Initialize()
+
+    -- Clear any stored rankings
+    if NCDungeon.Rankings then NCDungeon.Rankings:Reset(NCDungeon) end
+
+    -- Clear any stored caches
+    wipe(core.db.profile.cache)
+
+    -- Reinitialize core components
+    NemesisChat:InstantiateCore()
+
+    -- Resync group data
+    NemesisChat:SilentGroupSync()
+    NemesisChat:CheckGroup()
+
+    -- Update the info frame
+    NCInfo:Update()
+
+    -- Print confirmation message
+    NemesisChat:Print("All data has been cleared and reset.")
 end
