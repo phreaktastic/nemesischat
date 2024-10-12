@@ -37,7 +37,7 @@ I'd like to express my gratitude to the following individuals who have contribut
 
 > **Note**
 >
-> This particular pass started as a simple update to the information pane, but it quickly grew into a major overhaul of the entire addon. Realistically, this should be a version bump (not a patch), but the vast majority of this release is refactoring/optimization, and I've decided to release it as a patch.
+This update began as a minor change to the information pane but evolved into a comprehensive addon overhaul. While the scope of changes typically warrants a version bump, we've opted for a patch release (e.g., 1.2.3 to 1.2.4) because most changes involve internal refactoring and optimization. This approach aligns with our versioning strategy of reserving minor version increases (e.g., 1.2.0 to 1.3.0) for user-facing feature additions or significant API changes.
 >
 > I greatly appreciate the feedback and suggestions from the community, and I'm excited to continue working on improving the addon. Please continue to provide feedback and suggestions, and I'll do my best to incorporate them into future updates. 
 >
