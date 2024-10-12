@@ -616,28 +616,19 @@ NCConfig = {
         return self.NemesisDB:GetKey(name)
     end,
     AddNemesis = function(self, name)
-        self.NemesisDB:InsertIntoArray(name, name)
+        self.NemesisDB:SetKey(name, name)
     end,
     RemoveNemesis = function(self, name)
-        self.NemesisDB:RemoveFromArray(name, name)
+        self.NemesisDB:DeleteKey(name)
     end,
     GetMessages = function(self)
         return self.CoreDB:GetKey("messages")
     end,
     AddMessage = function(self, message)
-        local messages = self:GetMessages() or setmetatable({}, {__mode = "kv"})
-        table.insert(messages, message)
-        self.CoreDB:SetKey("messages", messages)
+        self.CoreDB:InsertIntoArray("messages", message)
     end,
     RemoveMessage = function(self, message)
-        local messages = self:GetMessages() or setmetatable({}, {__mode = "kv"})
-        for i, msg in ipairs(messages) do
-            if msg == message then
-                table.remove(messages, i)
-                break
-            end
-        end
-        self.CoreDB:SetKey("messages", messages)
+        self.CoreDB:DeleteFromArray("messages", message)
     end,
     ShouldShowInfoFrame = function(self)
         return self.CoreDB:GetKey("showInfoFrame")
@@ -647,5 +638,32 @@ NCConfig = {
     end,
     SetShowInfoFrame = function(self, value)
         self.CoreDB:SetKey("showInfoFrame", value)
+    end,
+    GetNotifyWhenTankApplies = function(self)
+        return self.CoreDB:GetKey("notifyWhenTankApplies")
+    end,
+    ToggleNotifyWhenTankApplies = function(self)
+        self.CoreDB:Toggle("notifyWhenTankApplies")
+    end,
+    SetNotifyWhenTankApplies = function(self, value)
+        self.CoreDB:SetKey("notifyWhenTankApplies", value)
+    end,
+    GetNotifyWhenHealerApplies = function(self)
+        return self.CoreDB:GetKey("notifyWhenHealerApplies")
+    end,
+    ToggleNotifyWhenHealerApplies = function(self)
+        self.CoreDB:Toggle("notifyWhenHealerApplies")
+    end,
+    SetNotifyWhenHealerApplies = function(self, value)
+        self.CoreDB:SetKey("notifyWhenHealerApplies", value)
+    end,
+    GetNotifyWhenDPSApplies = function(self)
+        return self.CoreDB:GetKey("notifyWhenDPSApplies")
+    end,
+    ToggleNotifyWhenDPSApplies = function(self)
+        self.CoreDB:Toggle("notifyWhenDPSApplies")
+    end,
+    SetNotifyWhenDPSApplies = function(self, value)
+        self.CoreDB:SetKey("notifyWhenDPSApplies", value)
     end,
 }

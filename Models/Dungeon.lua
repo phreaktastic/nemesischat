@@ -69,6 +69,7 @@ function NCDungeon:FinishCallback(success)
     NCRuntime:ClearPetOwners()
 
     NCRuntime:SetLastCompletedDungeon(self)
+    NCInfo:Update(true)
 end
 
 function NCDungeon:ResetCallback()

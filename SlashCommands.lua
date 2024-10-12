@@ -5,14 +5,28 @@
 -----------------------------------------------------
 -- Namespaces
 -----------------------------------------------------
-local _, core = ...;
+local _, core = ...
+
+-- Declare these as local if they're defined elsewhere in the addon
+local NCConfig = NCConfig
+local NCInfo = NCInfo
+local Settings = Settings
 
 local debugFrame
+
+-----------------------------------------------------
+-- Debug Window Functions
+-----------------------------------------------------
+
+local function GetAddonMemoryUsage()
+    UpdateAddOnMemoryUsage()
+    return GetAddOnMemoryUsage("NemesisChat")  -- Replace with your addon's actual name
+end
 
 local function CreateDebugWindow()
     if debugFrame then
         debugFrame:Show()
-        return
+        return debugFrame
     end
 
     debugFrame = CreateFrame("Frame", "NemesisChatDebugWindow", UIParent, "BasicFrameTemplateWithInset")
@@ -23,6 +37,8 @@ local function CreateDebugWindow()
     debugFrame:RegisterForDrag("LeftButton")
     debugFrame:SetScript("OnDragStart", debugFrame.StartMoving)
     debugFrame:SetScript("OnDragStop", debugFrame.StopMovingOrSizing)
+    debugFrame.TitleText:SetText("NemesisChat Debugger")
+    debugFrame.TitleText:SetPoint("TOP", debugFrame, "TOP", 0, -5)
 
     -- Session Errors Section
     local errorLabel = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -30,14 +46,16 @@ local function CreateDebugWindow()
     errorLabel:SetText("Session Errors")
 
     local errorScrollFrame = CreateFrame("ScrollFrame", nil, debugFrame, "UIPanelScrollFrameTemplate")
-    errorScrollFrame:SetPoint("TOPLEFT", 12, -50)
+    errorScrollFrame:SetPoint("TOPLEFT", debugFrame, "TOPLEFT", 12, -50)
     errorScrollFrame:SetPoint("BOTTOMRIGHT", debugFrame, "BOTTOMRIGHT", -30, 140)
 
     local errorContent = CreateFrame("Frame", nil, errorScrollFrame)
-    errorContent:SetSize(330, 240)
+    errorContent:SetWidth(errorScrollFrame:GetWidth())
+    errorContent:SetHeight(1)  -- Will be resized dynamically
     errorScrollFrame:SetScrollChild(errorContent)
 
-	debugFrame.errorContent = errorContent
+    debugFrame.errorContent = errorContent
+    debugFrame.errorScrollFrame = errorScrollFrame
 
     local errorText = errorContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     errorText:SetPoint("TOPLEFT")
@@ -62,71 +80,170 @@ local function CreateDebugWindow()
 
     debugFrame.errorText = errorText
     debugFrame.debugText = debugText
+
+    return debugFrame
 end
 
-local function CreateErrorRow(parent, error, data)
-    local row = CreateFrame("Button", nil, parent)
-    row:SetSize(330, 20)
-    row:SetNormalFontObject("GameFontNormal")
-    
-    local truncatedError = error:sub(1, 50) .. (error:len() > 50 and "..." or "")
-    row:SetText(string.format("%s (%d times)", truncatedError, data.count))
-    
-    local stackTrace = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    stackTrace:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 10, -5)
-    stackTrace:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", -10, -5)
-    stackTrace:SetJustifyH("LEFT")
-    stackTrace:SetText(data.stackTrace)
-    stackTrace:Hide()
-    
-    row:SetScript("OnClick", function()
-        stackTrace:SetShown(not stackTrace:IsShown())
-    end)
-    
-    return row, stackTrace
+local debugFramePool = setmetatable({}, {__mode = "v"})
+
+local function GetOrCreateRow(errorContent)
+    local frame = next(debugFramePool)
+    if not frame then
+        frame = CreateFrame("Button", nil, errorContent)
+        frame:SetHeight(25)
+        frame:SetNormalFontObject("GameFontNormal")
+
+        local errorText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        errorText:SetPoint("LEFT", 5, 0)
+        errorText:SetPoint("RIGHT", -25, 0)
+        errorText:SetJustifyH("LEFT")
+        frame.errorText = errorText
+
+        local expandButton = CreateFrame("Button", nil, frame)
+        expandButton:SetSize(16, 16)
+        expandButton:SetPoint("RIGHT", -5, 0)
+        expandButton:SetNormalTexture("Interface\\Buttons\\UI-PlusButton-Up")
+        frame.expandButton = expandButton
+
+        local stackTraceFrame = CreateFrame("Frame", nil, frame)
+        stackTraceFrame:SetHeight(100)
+        stackTraceFrame:Hide()
+
+        local stackTraceScroll = CreateFrame("ScrollFrame", nil, stackTraceFrame, "UIPanelScrollFrameTemplate")
+        stackTraceScroll:SetPoint("TOPLEFT", 5, -5)
+        stackTraceScroll:SetPoint("BOTTOMRIGHT", -25, 30)
+
+        local stackTraceEdit = CreateFrame("EditBox", nil, stackTraceScroll)
+        stackTraceEdit:SetMultiLine(true)
+        stackTraceEdit:SetFontObject(GameFontHighlight)
+        stackTraceEdit:SetAutoFocus(false)
+        stackTraceEdit:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+        stackTraceScroll:SetScrollChild(stackTraceEdit)
+
+        local selectAllButton = CreateFrame("Button", nil, stackTraceFrame, "UIPanelButtonTemplate")
+        selectAllButton:SetSize(80, 22)
+        selectAllButton:SetPoint("BOTTOMRIGHT", -5, 5)
+        selectAllButton:SetText("Select All")
+        selectAllButton:SetScript("OnClick", function()
+            stackTraceEdit:SetFocus()
+            stackTraceEdit:HighlightText()
+        end)
+
+        frame.stackTraceFrame = stackTraceFrame
+        frame.stackTraceEdit = stackTraceEdit
+    else
+        frame:Show()
+        debugFramePool[frame] = nil
+    end
+
+    frame:SetWidth(errorContent:GetWidth())
+    frame.stackTraceFrame:SetWidth(frame:GetWidth())
+    frame.stackTraceEdit:SetWidth(frame:GetWidth() - 30)
+
+    frame.expandButton:SetNormalTexture("Interface\\Buttons\\UI-PlusButton-Up")
+    frame.stackTraceFrame:Hide()
+
+    return frame
+end
+
+local function UpdateLayout(errorContent)
+    local currentYOffset = 0
+    for _, child in ipairs({errorContent:GetChildren()}) do
+        if child:IsShown() then
+            child:SetPoint("TOPLEFT", errorContent, "TOPLEFT", 0, -currentYOffset)
+            child:SetPoint("TOPRIGHT", errorContent, "TOPRIGHT", 0, -currentYOffset)
+            child:SetWidth(errorContent:GetWidth())
+            currentYOffset = currentYOffset + child:GetHeight() + 2
+            
+            local stackTrace = child.stackTraceFrame
+            if stackTrace and stackTrace:IsShown() then
+                stackTrace:SetPoint("TOPLEFT", child, "BOTTOMLEFT", 0, 0)
+                stackTrace:SetPoint("TOPRIGHT", child, "BOTTOMRIGHT", 0, 0)
+                stackTrace:SetWidth(child:GetWidth())
+                child.stackTraceEdit:SetWidth(child:GetWidth() - 30)
+                currentYOffset = currentYOffset + stackTrace:GetHeight() + 2
+            end
+        end
+    end
+    errorContent:SetHeight(math.max(1, currentYOffset))
 end
 
 local function UpdateDebugWindow()
     if not debugFrame or not debugFrame.errorContent then return end
 
-    -- Clear previous content
-    debugFrame.errorContent:SetHeight(1)
-    for _, child in pairs({debugFrame.errorContent:GetChildren()}) do
-        child:Hide()
-        child:SetParent(nil)
+    local errorContent = debugFrame.errorContent
+    local scrollFrame = debugFrame.errorScrollFrame
+    errorContent:SetWidth(scrollFrame:GetWidth())
+
+    -- Hide all existing frames
+    for _, frame in pairs({errorContent:GetChildren()}) do
+        frame:Hide()
+        debugFramePool[frame] = true
     end
 
-    -- Update Session Errors
+    local hasErrors = false
     local yOffset = 0
+
     if NemesisChat.SessionErrors then
+        local sortedErrors = {}
         for err, data in pairs(NemesisChat.SessionErrors) do
-            local row, stackTrace = CreateErrorRow(debugFrame.errorContent, err, data)
-            row:SetPoint("TOPLEFT", debugFrame.errorContent, "TOPLEFT", 0, -yOffset)
-            row:SetPoint("TOPRIGHT", debugFrame.errorContent, "TOPRIGHT", 0, -yOffset)
-            yOffset = yOffset + row:GetHeight() + (stackTrace:IsShown() and stackTrace:GetHeight() or 0) + 5
+            table.insert(sortedErrors, {error = err, data = data})
         end
-    else
-        local noErrors = debugFrame.errorContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        noErrors:SetPoint("TOPLEFT")
-        noErrors:SetText("No session errors \\o/")
-        yOffset = noErrors:GetHeight()
+        table.sort(sortedErrors, function(a, b) return a.data.count > b.data.count end)
+
+        for err, errorData in pairs(sortedErrors) do
+            local err = errorData.error
+            local data = errorData.data
+            hasErrors = true
+            local row = GetOrCreateRow(errorContent)
+            local truncatedError = err:sub(1, 50) .. (err:len() > 50 and "..." or "")
+            row.errorText:SetText(string.format("%s (%d times)", truncatedError, data.count))
+
+            row:SetPoint("TOPLEFT", errorContent, "TOPLEFT", 0, -yOffset)
+            row:SetPoint("TOPRIGHT", errorContent, "TOPRIGHT", 0, -yOffset)
+            row:SetWidth(errorContent:GetWidth())
+
+            yOffset = yOffset + row:GetHeight() + 2
+
+            row.expandButton:SetScript("OnClick", function()
+                row.stackTraceFrame:SetShown(not row.stackTraceFrame:IsShown())
+
+                if row.stackTraceFrame:IsShown() then
+                    row.expandButton:SetNormalTexture("Interface\\Buttons\\UI-MinusButton-Up")
+                    local fullErrorInfo = err .. "\n\n" .. data.stackTrace
+                    row.stackTraceEdit:SetText(fullErrorInfo)
+                    row.stackTraceFrame:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 0, 0)
+                    row.stackTraceFrame:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, 0)
+                    row.stackTraceFrame:SetWidth(row:GetWidth())
+                    row.stackTraceEdit:SetWidth(row:GetWidth() - 30)
+                else
+                    row.expandButton:SetNormalTexture("Interface\\Buttons\\UI-PlusButton-Up")
+                end
+
+                UpdateLayout(errorContent)
+            end)
+
+            row:Show()
+            debugFramePool[row] = nil
+        end
     end
 
-    debugFrame.errorContent:SetHeight(yOffset)
-
-    -- Update Debug Info
-    local debugInfo = "Leavers:\n"
-    for guid, timestampTable in pairs(core.db.profile.leavers) do
-        debugInfo = debugInfo .. guid .. ": " .. #timestampTable .. "\n"
+    if not hasErrors then
+        local noErrors = GetOrCreateRow(errorContent)
+        noErrors.errorText:SetText("No session errors \\o/")
+        noErrors.expandButton:Hide()
+        noErrors:Show()
+        noErrors:SetPoint("TOPLEFT", errorContent, "TOPLEFT", 0, 0)
+        noErrors:SetPoint("TOPRIGHT", errorContent, "TOPRIGHT", 0, 0)
+        noErrors:SetWidth(errorContent:GetWidth())
+        debugFramePool[noErrors] = nil
     end
-    debugInfo = debugInfo .. "\nLow Performers:\n"
-    for guid, timestampTable in pairs(core.db.profile.lowPerformers) do
-        debugInfo = debugInfo .. guid .. ": " .. #timestampTable .. "\n"
-    end
 
-    -- Add other debug info as before...
+    local memoryUsage = GetAddonMemoryUsage()
+    local formattedMemory = string.format("%.2f MB", (memoryUsage / 1024))
+    debugFrame.debugText:SetText("Memory Usage: " .. formattedMemory)
 
-    debugFrame.debugText:SetText(debugInfo)
+    UpdateLayout(errorContent)
 end
 
 -----------------------------------------------------
@@ -134,49 +251,76 @@ end
 -----------------------------------------------------
 
 function NemesisChat:SlashCommand(msg)
-	local cmd, args = self:GetArgs(msg, 2)
+    local cmd, args = self:GetArgs(msg, 2)
 
-	if not msg or msg:trim() == "" then
-		Settings.OpenToCategory("NemesisChat")
-	elseif cmd == "showinfo" then
-		NCConfig:SetShowInfoFrame(true)
-		NCInfo.StatsFrame:Show()
-	elseif cmd == "hideinfo" then
-		NCConfig:SetShowInfoFrame(false)
-		NCInfo.StatsFrame:Hide()
-	elseif cmd == "dbinfo" then
-		NemesisChat:Print("Leavers:", #core.db.profile.leavers, "Low performers:", #core.db.profile.lowPerformers)
-	elseif cmd == "wipe" then
-		local name = UnitName(args)
-		local guid = UnitGUID(name)
+    if not msg or msg:trim() == "" then
+        if Settings then
+            Settings.OpenToCategory("NemesisChat")
+        else
+            self:Print("Settings panel not found. Please check your addon configuration.")
+        end
+    elseif cmd == "showinfo" then
+        NCConfig:SetShowInfoFrame(true)
+        NCInfo.StatsFrame:Show()
+    elseif cmd == "hideinfo" then
+        NCConfig:SetShowInfoFrame(false)
+        NCInfo.StatsFrame:Hide()
+    elseif cmd == "dbinfo" then
+        local leaversCount = core.db and core.db.profile and core.db.profile.leavers and #core.db.profile.leavers or 0
+        local lowPerformersCount = core.db and core.db.profile and core.db.profile.lowPerformers and #core.db.profile.lowPerformers or 0
+        self:Print(string.format("Leavers: %d, Low performers: %d", leaversCount, lowPerformersCount))
+    elseif cmd == "wipe" then
+        local name = args and UnitName(args)
+        local guid = name and UnitGUID(name)
 
-		if not guid then
-			self:Print("Invalid unit.")
-			return
-		end
+        if not guid then
+            self:Print("Invalid unit or unit not found.")
+            return
+        end
 
-		core.db.profile.lowPerformers[guid] = nil
-		core.db.profile.leavers[guid] = nil
+        if core.db and core.db.profile then
+            core.db.profile.lowPerformers[guid] = nil
+            core.db.profile.leavers[guid] = nil
+            self:Print(string.format("Wiped data for %s (%s)", name, guid))
+        else
+            self:Print("Database not initialized.")
+        end
+    elseif cmd == "debug" then
+        local frame = CreateDebugWindow()
+        UpdateDebugWindow()
+        frame:Show()
 
-		self:Print("Wiped data for " .. name .. " (" .. guid .. ")")
-	elseif cmd == "debug" then
-		CreateDebugWindow()
-    	UpdateDebugWindow()
-	elseif cmd == "fixnemeses" then
-		for name, nemesis in pairs(NCConfig:GetNemeses()) do
-			NemesisChat:Print("Fixing nemesis " .. name)
-			core.db.profile.nemeses[name] = name
-		end
-	elseif cmd == "testerror" then
-		local function generateError()
-			pcall(function()
-				error("This is a test error thrown by NemesisChat")
-			end)
-		end
-		generateError()
-	else
-        if core.db.profile.dbg then
+        frame:SetScript("OnUpdate", function(self, elapsed)
+            self.timer = (self.timer or 0) + elapsed
+            if self.timer >= 1 then  -- Update every second
+                self.timer = 0
+                UpdateDebugWindow()
+            end
+        end)
+    elseif cmd == "fixnemeses" then
+        local nemeses = NCConfig:GetNemeses()
+        if nemeses then
+            for name, nemesis in pairs(nemeses) do
+                self:Print(string.format("Fixing nemesis %s", name))
+                if core.db and core.db.profile and core.db.profile.nemeses then
+                    core.db.profile.nemeses[name] = name
+                else
+                    self:Print("Database or nemeses table not initialized.")
+                    break
+                end
+            end
+        else
+            self:Print("No nemeses found or NCConfig:GetNemeses() returned nil.")
+        end
+    elseif cmd == "testerror" then
+        self:TestErrorHandler()
+        if debugFrame then
+            UpdateDebugWindow()
+            debugFrame:Show()
+        end
+    else
+        if core.db and core.db.profile and core.db.profile.dbg then
             self:Print("Invalid command issued.")
         end
-	end
+    end
 end

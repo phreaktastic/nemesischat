@@ -7,6 +7,7 @@
 -----------------------------------------------------
 local _, core = ...;
 local messageCache = {}
+local eventLookup = {}
 
 -----------------------------------------------------
 -- Controller logic for handling events
@@ -23,6 +24,7 @@ function NemesisChat:InstantiateController()
 
     function NCController:PreprocessMessages()
         wipe(messageCache)
+        wipe(eventLookup)
         for category, events in pairs(core.db.profile.messages) do
             for event, targets in pairs(events) do
                 for target, messages in pairs(targets) do
@@ -50,13 +52,27 @@ function NemesisChat:InstantiateController()
                         }
                         if target == "NEMESIS" then
                             table.insert(messageCache[eventKey].nemesis, processedMessage)
+                            eventLookup[eventKey] = true
                         else
                             table.insert(messageCache[eventKey].regular, processedMessage)
+                            eventLookup[eventKey] = true
                         end
                     end
                 end
             end
         end
+    end
+
+    function NCController:GetMessageCache()
+        return messageCache
+    end
+
+    function NCController:GetEventLookup()
+        return eventLookup
+    end
+
+    function NCController:EventHasMessages(eventKey)
+        return eventLookup[eventKey] == true
     end
 
     function NCController:InspectMessageDatabase()

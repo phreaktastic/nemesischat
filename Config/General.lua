@@ -93,8 +93,46 @@ core.options.args.generalGroup = {
                 },
             }
         },
-        nonCombatMode = {
+        lfgQoL = {
             order = 2,
+            type = "group",
+            name = "LFG QoL",
+            inline = true,
+            args = {
+                notifyWhenTankApplies = {
+                    order = 1,
+                    type = "toggle",
+                    name = "Notify When Tank Applies",
+                    desc = "Display a message and play a sound when a tank applies to your group.",
+                    get = function() return NCConfig:GetNotifyWhenTankApplies() end,
+                    set = function(_, value) NCConfig:ToggleNotifyWhenTankApplies() end,
+                },
+                notifyWhenHealerApplies = {
+                    order = 2,
+                    type = "toggle",
+                    name = "Notify When Healer Applies",
+                    desc = "Display a message and play a sound when a healer applies to your group.",
+                    get = function() return NCConfig:GetNotifyWhenHealerApplies() end,
+                    set = function(_, value) NCConfig:ToggleNotifyWhenHealerApplies() end,
+                },
+                notifyWhenDPSApplies = {
+                    order = 3,
+                    type = "toggle",
+                    name = "Notify When DPS Applies",
+                    desc = "Display a message and play a sound when a DPS applies to your group.",
+                    get = function() return NCConfig:GetNotifyWhenDPSApplies() end,
+                    set = function(_, value) NCConfig:ToggleNotifyWhenDPSApplies() end,
+                },
+                disclaimer = {
+                    order = 4,
+                    type = "description",
+                    fontSize = "medium",
+                    name = "NOTE: This group is experimental. In the future, you'll be able to customize the messages and sounds.",
+                }
+            },
+        },
+        nonCombatMode = {
+            order = 3,
             type = "group",
             name = "Non-Combat Mode",
             inline = true,
@@ -142,7 +180,7 @@ core.options.args.generalGroup = {
             }
         },
         delves = {
-            order = 3,
+            order = 4,
             type = "group",
             name = "Delve Configuration",
             inline = true,
@@ -158,7 +196,7 @@ core.options.args.generalGroup = {
             }
         },
         mPlusPerformance = {
-            order = 4,
+            order = 5,
             type = "group",
             name = "Mythic+ Tracking & Announcing",
             inline = true,
@@ -228,7 +266,7 @@ core.options.args.generalGroup = {
             }
         },
         apis = {
-            order = 5,
+            order = 6,
             type = "group",
             name = "APIs",
             inline = false,

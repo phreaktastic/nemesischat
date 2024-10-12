@@ -143,6 +143,51 @@ function NCDB:InsertIntoArray(key, value)
     table.insert(core.db[self.basePath][self.prefix][key], value)
 end
 
+function NCDB:DeleteFromArray(key, value)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        if core.db[self.basePath][key] == nil then
+            return
+        end
+
+        for i = 1, #core.db[self.basePath][key] do
+            if core.db[self.basePath][key][i] == value then
+                table.remove(core.db[self.basePath][key], i)
+                return
+            end
+        end
+
+        return
+    end
+
+    if core.db[self.basePath][self.prefix][key] == nil then
+        return
+    end
+
+    for i = 1, #core.db[self.basePath][self.prefix][key] do
+        if core.db[self.basePath][self.prefix][key][i] == value then
+            table.remove(core.db[self.basePath][self.prefix][key], i)
+            return
+        end
+    end
+end
+
+function NCDB:InsertIntoMap(key, value)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        core.db[self.basePath][key] = value
+        return
+    end
+
+    core.db[self.basePath][self.prefix][key] = value
+end
+
 -- Complex keys, meaning dots to parse and null check
 function NCDB:GetPath(key)
     if not key then

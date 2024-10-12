@@ -345,7 +345,6 @@ NCRuntime = {
         local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
         local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
         local itemLevel = NemesisChat:GetItemLevel(playerName)
-        local groupLead = UnitIsGroupLeader(playerName) == true
 
         local class, rawClass = "Unknown", "UNKNOWN"
         local race = "Unknown"
@@ -372,15 +371,19 @@ NCRuntime = {
             race = race,
             class = class,
             rawClass = rawClass,
-            spec = "Unknown",
-            groupLead = groupLead,
+            spec = nil,
+            specTimer = nil,
+            groupLead = false,
             name = playerName,
-            token = "",
+            token = self:GetUnitTokenFromName(playerName),
         }
 
-        data.token = self:GetUnitTokenFromName(playerName)
+        if UnitIsGroupLeader(data.token) == true then
+            data.groupLead = true
+            core.runtime.groupLead = playerName
+        end
 
-        if playerName ~= GetMyName() then
+        if playerName ~= GetMyName() and not core.runtime.pendingInspections[guid] and not data.spec then
             self:RequestInspection(data)
         end
 
@@ -391,10 +394,6 @@ NCRuntime = {
             core.runtime.groupTank = playerName
         elseif data.role == "HEALER" then
             core.runtime.groupHealer = playerName
-        end
-
-        if groupLead then
-            core.runtime.groupLead = playerName
         end
 
         NCInfo:UpdatePlayerDropdown()
@@ -596,7 +595,7 @@ NCRuntime = {
         core.runtime[key] = value
     end,
     GetUnitTokenFromName = function(self, playerName)
-        if next(core.runtime.playerNameToToken) == nil then
+        if next(core.runtime.playerNameToToken) == nil or not core.runtime.playerNameToToken[playerName] then
             -- Always include the player
             core.runtime.playerNameToToken[GetMyName()] = "player"
 
@@ -605,7 +604,7 @@ NCRuntime = {
                 local numGroupMembers = GetNumGroupMembers()
                 for i = 1, numGroupMembers do
                     local unit = "raid" .. i
-                    local name = UnitName(unit)
+                    local name = Ambiguate(UnitName(unit), "none")
                     if name then
                         core.runtime.playerNameToToken[name] = unit
                     end
@@ -614,7 +613,7 @@ NCRuntime = {
                 -- In a party (not a raid)
                 for i = 1, GetNumGroupMembers() - 1 do
                     local unit = "party" .. i
-                    local name = UnitName(unit)
+                    local name = Ambiguate(UnitName(unit), "none")
                     if name then
                         core.runtime.playerNameToToken[name] = unit
                     end
@@ -624,7 +623,7 @@ NCRuntime = {
                 -- Already added "player" unit above
             end
         end
-        return core.runtime.playerNameToToken[playerName]
+        return core.runtime.playerNameToToken[Ambiguate(UnitName(playerName), "none")]
     end,
     AttemptRetrieveSpec = function(self, unit)
         if unit.token and UnitExists(unit.token) and UnitIsConnected(unit.token) then
@@ -653,7 +652,7 @@ NCRuntime = {
         end
     end,
     RequestInspection = function(self, unit)
-        if unit and UnitExists(unit.token) and unit.token ~= "player" then
+        if unit and unit.token and UnitExists(unit.token) and unit.token ~= "player" then
             -- Add unit to pending inspections
             core.runtime.pendingInspections[unit.guid] = unit
             NotifyInspect(unit.token)

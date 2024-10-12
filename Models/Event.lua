@@ -31,10 +31,14 @@ function NemesisChat:InstantiateEvent()
     end
 
     function NCEvent:SetCategory(category)
-        NCEvent.category = category
+        self.category = category
 
         if category == "GUILD" then
             NCController:SetEventType(NC_EVENT_TYPE_GUILD)
+        end
+
+        if self:IsValidEvent() and not self:EventHasMessages() then
+            self:Initialize()
         end
     end
 
@@ -48,10 +52,14 @@ function NemesisChat:InstantiateEvent()
 
     function NCEvent:SetEvent(event)
         NCEvent.event = event
+
+        if self:IsValidEvent() and not self:EventHasMessages() then
+            self:Initialize()
+        end
     end
 
     function NCEvent:GetTarget()
-        if NCEvent.target == nil then 
+        if NCEvent.target == nil then
             return ""
         end
 
@@ -60,10 +68,14 @@ function NemesisChat:InstantiateEvent()
 
     function NCEvent:SetTarget(target)
         NCEvent.target = target
+
+        if self:IsValidEvent() and not self:EventHasMessages() then
+            self:Initialize()
+        end
     end
 
     function NCEvent:GetNemesis()
-        if NCEvent.nemesis == nil then 
+        if NCEvent.nemesis == nil then
             return ""
         end
 
@@ -310,35 +322,17 @@ function NemesisChat:InstantiateEvent()
     end
 
     function NCEvent:IsValidEvent()
-        return (NCEvent:GetCategory() ~= "" and NCEvent:GetEvent() ~= "" and NCEvent:GetTarget() ~= "")
+        return (self.category ~= "" and self.event ~= "" and self.target ~= "")
     end
 
     function NCEvent:EventHasMessages()
-        if NCEvent:GetCategory() == "" or NCEvent:GetEvent() == "" or NCEvent:GetTarget() == "" then
+        if not self:IsValidEvent() then
             return false
         end
 
-        local category = core.db.profile.messages[NCEvent:GetCategory()]
+        local eventKey = self.category .. "_" .. self.event .. "_" .. self.target
 
-        if category == nil then
-            return false
-        end
-
-        local event = category[NCEvent:GetEvent()]
-
-        if event == nil then
-            return false
-        end
-
-        local profileMessages = event[NCEvent:GetTarget()]
-
-        if profileMessages == nil or #profileMessages == 0 then
-            return false
-        end
-
-        local availableMessages = NCController:GetConditionalMessages(profileMessages)
-
-        return availableMessages ~= nil and #availableMessages > 0
+        return NCController:EventHasMessages(eventKey)
     end
 
     -- A player within the party has taken damage

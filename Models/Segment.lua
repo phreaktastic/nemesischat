@@ -109,6 +109,9 @@ NCSegment = {
     -- Roster snapshot at the beginning of the segment
     RosterSnapshot = {},
 
+    -- Table of observers, used for notifying observers of stat updates
+    Observers = {},
+
     DetailsSegment = DETAILS_SEGMENTID_CURRENT,
 
     -- Template for initial state
@@ -132,6 +135,7 @@ NCSegment = {
         OffHeals = {},
         Pulls = {},
         RosterSnapshot = {},
+        Observers = {},
         DetailsSegment = DETAILS_SEGMENTID_CURRENT,
     },
 
@@ -303,6 +307,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("AvoidableDamage", player, self.AvoidableDamage[player])
+        self:NotifyObservers("AvoidableDamage", player, self:GetAvoidableDamage(player))
         self:AddAvoidableDamageCallback(amount, player)
     end,
     AddAvoidableDamageCallback = function(self, amount, player)
@@ -330,6 +335,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("CrowdControl", player, self.CrowdControl[player])
+        self:NotifyObservers("CrowdControl", player, self:GetCrowdControls(player))
         self:AddCrowdControlCallback(player)
     end,
     AddCrowdControlCallback = function(self, player)
@@ -357,6 +363,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Deaths", player, self.Deaths[player])
+        self:NotifyObservers("Deaths", player, self:GetDeaths(player))
         self:AddDeathCallback(player)
     end,
     AddDeathCallback = function(self, player)
@@ -384,6 +391,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Defensives", player, self.Defensives[player])
+        self:NotifyObservers("Defensives", player, self:GetDefensives(player))
         self:AddDefensiveCallback(player)
     end,
     AddDefensiveCallback = function(self, player)
@@ -411,6 +419,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Dispells", player, self.Dispells[player])
+        self:NotifyObservers("Dispells", player, self:GetDispells(player))
         self:AddDispellCallback(player)
     end,
     AddDispellCallback = function(self, player)
@@ -483,6 +492,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Interrupts", player, self.Interrupts[player])
+        self:NotifyObservers("Interrupts", player, self:GetInterrupts(player))
         self:AddInterruptCallback(player)
     end,
     AddInterruptCallback = function(self, player)
@@ -536,6 +546,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("OffHeals", player, self.OffHeals[player])
+        self:NotifyObservers("Offheals", player, self:GetOffHeals(player))
         self:AddOffHealsCallback(amount, player)
     end,
     AddOffHealsCallback = function(self, amount, player)
@@ -563,7 +574,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Pulls", player, self.Pulls[player])
-
+        self:NotifyObservers("Pulls", player, self:GetPulls(player))
         self:AddPullCallback(player)
     end,
     AddPullCallback = function(self, player)
@@ -802,6 +813,22 @@ NCSegment = {
         backup.backupTime = GetTime()
 
         return backup
+    end,
+    RegisterObserver = function(self, observer)
+        table.insert(self.Observers, observer)
+    end,
+    UnregisterObserver = function(self, observer)
+        for i, obs in ipairs(self.Observers) do
+            if obs == observer then
+                table.remove(self.Observers, i)
+                break
+            end
+        end
+    end,
+    NotifyObservers = function(self, statType, player, value)
+        for _, observer in ipairs(self.Observers) do
+            observer:OnStatUpdate(statType, player, value)
+        end
     end,
 }
 

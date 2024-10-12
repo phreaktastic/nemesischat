@@ -21,6 +21,7 @@ local C_ScenarioInfo = C_ScenarioInfo
 local inDelve = false
 local lastDelveTime = 0
 local inFollowerDungeon = false
+local applicantIdCache = setmetatable({}, {__mode = "kv"})
 
 local function HandleLeaveDelve()
     if inDelve then
@@ -38,9 +39,8 @@ local function CheckAndUpdateDelveStatus()
         dynamicDifficulty, isDynamic, instanceMapId, lfgID = GetInstanceInfo()
     local dName, instanceType, isHeroic, isChallengeMode, _, _, toggleDifficultyID = GetDifficultyInfo(difficultyIndex);
 
-    -- NemesisChat:Print("Difficulty Name: " .. difficultyName, "LFG ID: " .. lfgID, "Name: " .. name, "Instance Type: " .. (instanceType or "Nil"))
-
-    if dName == "Delves" and not inDelve and lfgID and instanceType and instanceType == "scenario" and GetTime() - lastDelveTime > 1 then
+    -- After leaving a delve, these parameters will all still be true (for a brief moment), there for we need to check the lastDelveTime as well
+    if dName == "Delves" and not inDelve and lfgID and instanceType and instanceType == "scenario" and GetTime() - lastDelveTime > 3 then
         inDelve = true
         NCDungeon:Start(name .. " (Delve)")
         NemesisChat:Print("Delve started: " .. name)
@@ -275,5 +275,42 @@ function NemesisChat:INSPECT_READY(event, guid)
         -- Clean up
         core.runtime.pendingInspections[guid] = nil
         ClearInspectPlayer()
+    end
+end
+
+function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
+    local activeEntryInfo = C_LFGList.GetActiveEntryInfo()
+    if not activeEntryInfo then
+        NemesisChat:Print("No active group listing")
+        return
+    end
+
+    local data = C_LFGList.GetApplicantInfo(applicantID)
+
+    if not data or not data.isNew or applicantIdCache[applicantID] == true then
+        return
+    end
+
+    applicantIdCache[applicantID] = true
+
+    for i = 1, data.numMembers do
+        local name, class, localizedClass, level, itemLevel, honorLevel, tank, healer, damage, assignedRole = C_LFGList.GetApplicantMemberInfo(applicantID, i)
+
+        if tank and NCConfig:GetNotifyWhenTankApplies() then
+            local message = string.format("A %d ilvl %s tank has applied to your group.", itemLevel, localizedClass or class or "Unknown Class")
+            NemesisChat:Print(message)
+            PlaySound(8959, "Master")
+            break
+        elseif healer and NCConfig:GetNotifyWhenHealerApplies() then
+            local message = string.format("A %d ilvl %s healer has applied to your group.", itemLevel, localizedClass or class or "Unknown Class")
+            NemesisChat:Print(message)
+            PlaySound(8959, "Master")
+            break
+        elseif damage and NCConfig:GetNotifyWhenDPSApplies() then
+            local message = string.format("A %d ilvl %s DPS has applied to your group.", itemLevel, localizedClass or class or "Unknown Class")
+            NemesisChat:Print(message)
+            PlaySound(18019, "Master")
+            break
+        end
     end
 end

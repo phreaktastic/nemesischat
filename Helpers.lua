@@ -812,35 +812,6 @@ function NemesisChat:InitializeHelpers()
         return nil
     end
 
-    -- Check the roster and (un/re)subscribe events appropriately
-    function NemesisChat:CheckGroup()
-        local isEnabled = IsNCEnabled()
-        local hasGroupMembers = NCRuntime:GetGroupRosterCountOthers() > 0
-        local shouldSubscribe = isEnabled and hasGroupMembers
-
-        if NCRuntime.lastCheckSubscribe == shouldSubscribe then
-            return
-        end
-
-        NCRuntime.lastCheckSubscribe = shouldSubscribe
-
-        local action, reason
-        if isEnabled then
-            action = shouldSubscribe and "re-subscribing to" or "un-subscribing from"
-            reason = "Group state changed"
-        else
-            action = "un-subscribing from"
-            reason = "NemesisChat was disabled"
-        end
-
-        NemesisChat:Print(("%s, %s group based events."):format(reason, action))
-
-        local method = shouldSubscribe and "RegisterEvent" or "UnregisterEvent"
-        for _, event in pairs(core.eventSubscriptions) do
-            NemesisChat[method](NemesisChat, event)
-        end
-    end
-
     -- Roll with a chance and return TRUE for successful rolls
     function NemesisChat:Roll(chance)
         local roll = math.random()
