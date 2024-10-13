@@ -51,7 +51,7 @@ end
 -- Handles the group disband scenario
 function NemesisChat:HandleGroupDisband(leaves)
     NCRuntime:ClearGroupRoster()
-    -- Trigger a group disband event
+    NCController:PreprocessMessages()
 end
 
 -- Handles the group formation scenario
@@ -80,6 +80,8 @@ function NemesisChat:HandleGroupFormation(joins)
     if not isLeader then
         NemesisChat:PLAYER_JOINS_GROUP(GetMyName(), false)
     end
+
+    NCController:PreprocessMessages()
 end
 
 -- Handles general group changes (joins and leaves)
@@ -116,6 +118,8 @@ function NemesisChat:ProcessJoins(joins)
             end
         end
     end
+
+    NCController:PreprocessMessages()
 end
 
 -- Reports statistics about players who joined
@@ -155,6 +159,8 @@ function NemesisChat:ProcessLeaves(leaves)
             end
         end
     end
+
+    NCController:PreprocessMessages()
 end
 
 -- Handles scenarios where a player leaves during an active dungeon

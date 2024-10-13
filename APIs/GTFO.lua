@@ -13,11 +13,11 @@ GTFO = _G.GTFO;
 -- GTFO functions for altering event responses
 -----------------------------------------------------
 
-NemesisChatAPI:AddAPI("NC_GTFO", "GTFO API")
+NemesisChatAPI:AddAPI("NC_GTFO", "GTFO Plugin")
     :AddConfigOption({
-        label = "Enable GTFO API",
+        label = "Enable GTFO Plguin",
         value = "ENABLED", -- This will read in config options as NC_GTFO_ENABLED
-        description = "Enable the GTFO API for use in messages.",
+        description = "Enable the GTFO Plugin for use in messages.",
         primary = true,
     })
     :AddCompatibilityCheck({

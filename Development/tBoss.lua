@@ -1,0 +1,3 @@
+--- @class NCBoss : NCSegment
+--- @field StartCallback fun(self: NCBoss)
+--- @field FinishCallback fun(self: NCBoss, success: boolean)

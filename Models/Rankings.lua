@@ -4,6 +4,7 @@
 -- Namespaces
 local _, core = ...;
 
+
 NCRankings = {
     METRICS = {
         AvoidableDamage = false,

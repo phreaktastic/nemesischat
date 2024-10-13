@@ -323,20 +323,32 @@ function NemesisChat:InstantiateController()
         if selectedMessage then
             self.message = selectedMessage.message
             self.channel = selectedMessage.channel
+            self.selectedMessageChance = selectedMessage.chance or 1
         end
     end
 
     function NCController:GetRollingMessage(relevantMessages)
-        local nemesisMessage = self:GetNextValidMessage(relevantMessages.nemesis, relevantMessages.lastNemesisIndex)
-        if nemesisMessage then
-            relevantMessages.lastNemesisIndex = nemesisMessage.index
-            return nemesisMessage.message
+        local function getNextMessage(messages, lastIndex)
+            for i = 1, #messages do
+                local index = (lastIndex + i) % #messages + 1
+                local message = messages[index]
+                if self:IsValidMessage(message) and self:CheckAllConditions(message) then
+                    return message, index
+                end
+            end
+            return nil
         end
 
-        local regularMessage = self:GetNextValidMessage(relevantMessages.regular, relevantMessages.lastRegularIndex)
+        local nemesisMessage, nemesisIndex = getNextMessage(relevantMessages.nemesis, relevantMessages.lastNemesisIndex)
+        if nemesisMessage then
+            relevantMessages.lastNemesisIndex = nemesisIndex
+            return nemesisMessage
+        end
+
+        local regularMessage, regularIndex = getNextMessage(relevantMessages.regular, relevantMessages.lastRegularIndex)
         if regularMessage then
-            relevantMessages.lastRegularIndex = regularMessage.index
-            return regularMessage.message
+            relevantMessages.lastRegularIndex = regularIndex
+            return regularMessage
         end
 
         return nil
@@ -370,9 +382,42 @@ function NemesisChat:InstantiateController()
 
     function NCController:GetValidMessages(messages)
         local validMessages = {}
+        local currentNemesis = NCEvent:GetNemesis()
+        local currentBystander = NCEvent:GetBystander()
+        local partyNemeses = NemesisChat:GetPartyNemeses()
+        local partyBystanders = NemesisChat:GetPartyBystanders()
+
         for _, message in ipairs(messages) do
-            if self:IsValidMessage(message) and self:CheckAllConditions(message) then
-                table.insert(validMessages, message)
+            if self:IsValidMessage(message) then
+                if self:CheckAllConditions(message) then
+                    table.insert(validMessages, message)
+                else
+                    -- Check other party nemeses and bystanders
+                    local checked = false
+                    for _, nemesis in ipairs(partyNemeses) do
+                        if nemesis ~= currentNemesis then
+                            NCEvent:SetNemesis(nemesis)
+                            if self:CheckAllConditions(message) then
+                                table.insert(validMessages, message)
+                                checked = true
+                                break
+                            end
+                        end
+                    end
+                    if not checked then
+                        for _, bystander in ipairs(partyBystanders) do
+                            if bystander ~= currentBystander then
+                                NCEvent:SetBystander(bystander)
+                                if self:CheckAllConditions(message) then
+                                    table.insert(validMessages, message)
+                                    break
+                                end
+                            end
+                        end
+                    end
+                    NCEvent:SetNemesis(currentNemesis)
+                    NCEvent:SetBystander(currentBystander)
+                end
             end
         end
         return validMessages
@@ -461,7 +506,18 @@ function NemesisChat:InstantiateController()
 
     -- Perform all pre-send logic, and send the message to the appropriate channel
     function NCController:Handle()
+        if not NCController:HasMessages() then
+            return
+        end
+
+        NCController:ConfigMessage()
+
         if not NCController:ValidMessage() then
+            return
+        end
+
+        local messageChance = NCController.selectedMessageChance or 1
+        if not NemesisChat:Roll(messageChance) then
             return
         end
 

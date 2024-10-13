@@ -125,11 +125,6 @@ function NemesisChat:PLAYER_LEAVING_WORLD()
     CheckFollowerDungeonStatus()
 end
 
-function NemesisChat:COMBAT_LOG_EVENT_UNFILTERED()
-    if not IsNCEnabled() then return end
-    NemesisChat:PopulateCombatEventDetails()
-end
-
 function NemesisChat:CHALLENGE_MODE_START()
     if not IsNCEnabled() then return end
     NemesisChat:CheckGroup()
@@ -177,16 +172,6 @@ function NemesisChat:SCENARIO_COMPLETED()
         inDelve = false
         lastDelveTime = GetTime()
         NemesisChat:Print("Delve completed.")
-    else
-        -- Handle other completed scenarios as before
-        local scenarioInfo = C_ScenarioInfo.GetScenarioInfo()
-        if scenarioInfo and scenarioInfo.isComplete then
-            NCDungeon:Finish(true)
-            NemesisChat:HandleEvent()
-            NemesisChat:Report("DUNGEON")
-        else
-            NCDungeon:Reset()
-        end
     end
 
     NCRuntime:ClearPetOwners()
@@ -245,7 +230,7 @@ end
 
 function NemesisChat:CHAT_MSG_ADDON(_, prefix, payload, distribution, sender)
     if not IsNCEnabled() then return end
-    NemesisChat:OnCommReceived(prefix, payload, distribution, sender)
+    core.AddonCommunication:OnCommReceived(prefix, payload, distribution, sender)
 end
 
 function NemesisChat:ACTIVE_DELVE_DATA_UPDATE()
@@ -297,20 +282,26 @@ function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
         local name, class, localizedClass, level, itemLevel, honorLevel, tank, healer, damage, assignedRole = C_LFGList.GetApplicantMemberInfo(applicantID, i)
 
         if tank and NCConfig:GetNotifyWhenTankApplies() then
-            local message = string.format("A %d ilvl %s tank has applied to your group.", itemLevel, localizedClass or class or "Unknown Class")
+            local message = string.format("A %d ilvl tank has applied to your group.", itemLevel)
             NemesisChat:Print(message)
             PlaySound(8959, "Master")
             break
         elseif healer and NCConfig:GetNotifyWhenHealerApplies() then
-            local message = string.format("A %d ilvl %s healer has applied to your group.", itemLevel, localizedClass or class or "Unknown Class")
+            local message = string.format("A %d ilvl healer has applied to your group.", itemLevel)
             NemesisChat:Print(message)
             PlaySound(8959, "Master")
             break
         elseif damage and NCConfig:GetNotifyWhenDPSApplies() then
-            local message = string.format("A %d ilvl %s DPS has applied to your group.", itemLevel, localizedClass or class or "Unknown Class")
+            local message = string.format("A %d ilvl DPS has applied to your group.", itemLevel)
             NemesisChat:Print(message)
             PlaySound(18019, "Master")
             break
         end
     end
+end
+
+function NemesisChat:COMBAT_LOG_EVENT_UNFILTERED()
+    if not IsNCEnabled() then return end
+
+    core.CombatEventHandler:Fire()
 end

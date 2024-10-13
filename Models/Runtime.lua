@@ -11,44 +11,70 @@ local _, core = ...;
 -- Model for interacting with runtime data
 -----------------------------------------------------
 
+--- @class NCRuntime
 core.runtimeDefaults = {
+    --- @type number
     dbCacheExpiration = 600, -- 10 minutes
+    --- @type string
     myName = "",
+    --- @type number
     lastFeast = 0,
+    --- @type number
     lastFriendCheck = 0,
+    --- @type string
     lastLeaverSyncType = "GUILD",
+    --- @type string
     lastLowPerformerSyncType = "GUILD",
+    --- @type number
     lastMessage = 0,
+    --- @type number
     lastUnsafePullToast = 0,
+    --- @type string
     lastUnsafePullName = "",
+    --- @type string
     lastUnsafePullMob = "",
+    --- @type number
     lastUnsafePullCount = 0,
+    --- @type string
     lastSyncType = "",
+    --- @type number
     currentMarkerIndex = 0,
+    --- @type string|nil
     groupTank = nil,
+    --- @type string|nil
     groupHealer = nil,
+    --- @type number
     groupRosterCount = 1,
+    --- @type table<string, GroupRosterPlayer>
     groupRoster = {},
+    --- @type table<string, string>
     playerNameToToken = {}, -- Cache for unit token lookups by player name
+    --- @type table<string, GroupRosterPlayer>
     pendingInspections = {}, -- Cache for pending inspection requests
+    --- @type table|nil
     lastCompletedDungeon = nil,
+    --- @type table<string, boolean>
     pulledUnits = {},
+
+    --- @type table<string, PlayerState>
     playerStates = {},
+
+    --- @type table<string, number>
     friends = {
         -- A simple cache for any online friends, with their character names as the key. Allows for
         -- different interactions with friends, such as whispering them when they join a group.
         -- ["CharacterName"] = 1,
     },
-    guild = {
-        -- A simple cache for any online guild members, with their character names as the key. Allows for
-        -- different interactions with guild members, such as whispering them when they join a group.
-        -- ["characterName"] = {"guid" = guid, "isNemesis" = true/false},
-    },
+    --- @type GuildCache
+    guild = {},
+    --- @type table<string, number>
     lastSync = {
         -- A simple cache for the last time we synced with a particular player, with their character names as the key.
         -- ["CharacterName-Realm"] = 0,
     },
+    --- @type table<string, string>
     petOwners = {},
+    --- @type table
     ncEvent = {
         category = "",
         event = "",
@@ -56,6 +82,7 @@ core.runtimeDefaults = {
         nemesis = "",
         bystander = "",
     },
+    --- @type table
     NCController = {
         channel = "SAY",
         message = "",
@@ -65,24 +92,7 @@ core.runtimeDefaults = {
         excludedNemeses = {},
         excludedBystanders = {},
     },
-    ncDungeon = {
-        active = false,
-        level = 0,
-        startTime = 0,
-        completeTime = 0,
-        totalTime = 0,
-        success = false,
-        deathCounter = {},
-        killCounter = {},
-        avoidableDamage = {},
-        interrupts = {},
-    },
-    ncBoss = {
-        active = false,
-        startTime = 0,
-        name = "",
-        success = false,
-    },
+    --- @type table
     ncSpell = {
         active = false,
         source = "",
@@ -92,66 +102,19 @@ core.runtimeDefaults = {
         extraSpellId = 0,
         damage = 0,
     },
-    ncCombat = {
-        inCombat = false,
-        interrupts = {}, -- key = string (player name), value = integer (number of interrupts)
-        avoidableDamage = {}, -- key = string (player name), value = integer (avoidable damage taken)
-    },
+    --- @type table
     ncApi = {
         -- Sample values provided as reference for API
         friendlyName = "",
-        configOptions = {
-            -- {
-            --     name = "Details! API",
-            --     value = "detailsApi",
-            --     description = "Enable the Details! API for use in messages."
-            --     primary = true, -- Flags the config option as the primary toggle for the API
-            -- }
-        },
-        compatibilityChecks = {
-            -- {
-            --     configCheck = true, -- This must be TRUE for config checks, otherwise we will not be able to enable it
-            --     exec = function()
-            --         if not NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() then
-            --             return false, "GTFO API is not enabled."
-            --         end
-            
-            --         return true, nil
-            --     end,
-            -- },
-            -- {
-            --     configCheck = false, -- This must be FALSE, otherwise it will not be checked when enabling
-            --     exec = function() 
-            --         if GTFO == nil then
-            --             return false, "GTFO is not installed."
-            --         end
-            
-            --         return true, nil
-            --     end,
-            -- }
-        },
-        subjects = {
-            -- {
-            --     label = "Nemesis DPS",
-            --     value = "NEMESIS_DPS",
-            --     exec = function() return 0 end,
-            --     operators = core.constants.NUMERIC_OPERATORS,
-            --     type = "NUMBER",
-            -- }
-        },
+        configOptions = {},
+        compatibilityChecks = {},
+        subjects = {},
         operators = {},
-        replacements = {
-            -- {
-            --     label = "Nemesis DPS",
-            --     value = "NEMESISDPS",
-            --     exec = function() return 0 end,
-            --     description = "The DPS of the Nemesis for the current fight."
-            --     isNumeric = true,
-            -- }
-        },
+        replacements = {},
         subjectMethods = {},
         replacementMethods = {},
     },
+    --- @type ConfiguredMessage
     configuredMessage = {
         label = "",
         channel = "GROUP",
@@ -159,15 +122,18 @@ core.runtimeDefaults = {
         chance = 1.0,
         conditions = {}
     },
+    --- @type MessageCondition
     messageCondition = {
         leftCategory = "Nemesis",
         left = "NEMESIS_ROLE",
         operator = "IS",
         right = "DAMAGER",
     },
+    --- @type number|nil
     initializationTime = nil,
 }
 
+--- @class NCRuntime
 core.runtime = DeepCopy(core.runtimeDefaults)
 
 NCRuntime = {
@@ -342,8 +308,8 @@ NCRuntime = {
             return nil
         end
 
-        local isInGuild = UnitIsInMyGuild(playerName) ~= nil and playerName ~= GetMyName()
-        local isNemesis = (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses())) and playerName ~= GetMyName()
+        local isInGuild = playerName ~= GetMyName() and UnitIsInMyGuild(playerName) ~= nil
+        local isNemesis = playerName ~= GetMyName() and (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
         local itemLevel = NemesisChat:GetItemLevel(playerName)
 
         local class, rawClass = "Unknown", "UNKNOWN"
@@ -372,15 +338,19 @@ NCRuntime = {
             class = class,
             rawClass = rawClass,
             spec = nil,
-            specTimer = nil,
             groupLead = false,
             name = playerName,
             token = self:GetUnitTokenFromName(playerName),
         }
 
-        if UnitIsGroupLeader(data.token) == true then
-            data.groupLead = true
-            core.runtime.groupLead = playerName
+        if data.token then
+            local success, isGroupLead = pcall(UnitIsGroupLeader, data.token)
+            if success and isGroupLead then
+                data.groupLead = true
+                core.runtime.groupLead = playerName
+            end
+
+            data.role = UnitGroupRolesAssigned(data.token)
         end
 
         if playerName ~= GetMyName() and not core.runtime.pendingInspections[guid] and not data.spec then
@@ -449,6 +419,11 @@ NCRuntime = {
     GetPlayerStates = function(self)
         return core.runtime.playerStates
     end,
+
+    --- Gets the player state for the specified player name.
+    --- @param self table
+    --- @param playerName string The name of the player
+    --- @return PlayerState The player state for the specified player
     GetPlayerState = function(self, playerName)
         return core.runtime.playerStates[playerName]
     end,
@@ -619,8 +594,7 @@ NCRuntime = {
                     end
                 end
             else
-                -- Solo play; only "player" unit exists
-                -- Already added "player" unit above
+                return core.runtime.playerNameToToken["player"]
             end
         end
         return core.runtime.playerNameToToken[Ambiguate(UnitName(playerName), "none")]

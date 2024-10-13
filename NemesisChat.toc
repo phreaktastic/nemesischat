@@ -47,7 +47,7 @@ Models\Info.lua
 Models\Migration.lua
 Models\Semver.lua
 
-# NC event handlers
+# NC events
 Events\BaseEvents.lua
 Events\CustomEvents.lua
 
@@ -69,3 +69,7 @@ Migrations.lua
 
 # NC core functionality
 Core.lua
+
+# NC Handlers
+Handlers\CombatLog.lua
+Handlers\AddonCommunication.lua

@@ -39,6 +39,7 @@ function NCSegmentPool:Release(segment)
     end
 end
 
+--- @type NCSegment
 NCSegment = {
     -- Is this segment active?
     Active = false,

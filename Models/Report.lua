@@ -19,7 +19,7 @@ function NemesisChat:Report(event, success)
         ["DAMAGE"] = "DPS",
         ["AVOIDABLE"] = "AvoidableDamage",
         ["INTERRUPTS"] = "Interrupts",
-        ["OFFHEALS"] = "Offheals",
+        ["OFFHEALS"] = "OffHeals",
         ["DEATHS"] = "Deaths",
     }
     local EVENTS = {
@@ -36,6 +36,7 @@ function NemesisChat:Report(event, success)
         ["AVOIDABLE"] = {
             topMsg = "Shout out to %s with the lowest avoidable damage taken for %s, at %s!",
             botMsg = "Highest avoidable damage taken for %s: %s at %s.",
+            inverted = true,
         },
         ["INTERRUPTS"] = {
             topMsg = "Shout out to %s with the most interrupts for %s, at %s!",
@@ -63,6 +64,7 @@ function NemesisChat:Report(event, success)
             end,
             topMsg = "Shout out to %s with the lowest deaths for %s, at %s!",
             botMsg = "Most deaths for %s: %s at %s.",
+            inverted = true,
         },
     }
     local shoutOutFormat = function(message, player, segmentName, value) return string.format(message, player, segmentName, NemesisChat:FormatNumber(value)) end
@@ -78,12 +80,11 @@ function NemesisChat:Report(event, success)
         local segName = "this combat segment"
 
         if config then
-            if event == "COMBAT" or event == "BOSS" then
-                bucket = NCCombat
+            bucket = NCCombat
 
-                if event == "BOSS" then
-                    segName = NCBoss:GetIdentifier()
-                end
+            if event == "BOSS" then
+                bucket = NCBoss
+                segName = NCBoss:GetIdentifier()
             elseif event == "DUNGEON" then
                 bucket = NCDungeon
                 segName = NCDungeon:GetIdentifier()
@@ -94,6 +95,11 @@ function NemesisChat:Report(event, success)
             local topPlayer = (bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].Player) and bucket.Rankings.Top[rankingType].Player or nil
             local botVal = (bucket.Rankings.Bottom and bucket.Rankings.Bottom[rankingType] and bucket.Rankings.Bottom[rankingType].Value) and bucket.Rankings.Bottom[rankingType].Value or 99999999
             local botPlayer = (bucket.Rankings.Bottom and bucket.Rankings.Bottom[rankingType] and bucket.Rankings.Bottom[rankingType].Player) and bucket.Rankings.Bottom[rankingType].Player or nil
+
+            if data.inverted then
+                topVal, botVal = botVal, topVal
+                topPlayer, botPlayer = botPlayer, topPlayer
+            end
 
             if topPlayer == nil then
                 topMsg = nil
@@ -112,23 +118,15 @@ function NemesisChat:Report(event, success)
             end
 
             if topMsg ~= nil then
-                if data.inverted == true then
-                    topMsg = callOutFormat(topMsg, topPlayer, segName, topVal)
+                if data.topMsgSpecial and bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].DeltaPercent and bucket.Rankings.Top[rankingType].DeltaPercent >= 25 then
+                    topMsg = shoutOutFormat(data.topMsgSpecial, topPlayer, segName, topVal)
                 else
-                    if data.topMsgSpecial and bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].DeltaPercent and bucket.Rankings.Top[rankingType].DeltaPercent >= 25 then
-                        topMsg = shoutOutFormat(data.topMsgSpecial, topPlayer, segName, topVal)
-                    else
-                        topMsg = shoutOutFormat(topMsg, topPlayer, segName, topVal)
-                    end
+                    topMsg = shoutOutFormat(topMsg, topPlayer, segName, topVal)
                 end
             end
-
+            
             if botMsg ~= nil then
-                if data.inverted == true then
-                    botMsg = shoutOutFormat(botMsg, botPlayer, segName, botVal)
-                else
-                    botMsg = callOutFormat(botMsg, botPlayer, segName, botVal)
-                end
+                botMsg = callOutFormat(botMsg, botPlayer, segName, botVal)
             end
 
             local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())

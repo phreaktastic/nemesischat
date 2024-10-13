@@ -268,7 +268,7 @@ core.options.args.generalGroup = {
         apis = {
             order = 6,
             type = "group",
-            name = "APIs",
+            name = "Plugins",
             inline = false,
             hidden = function() return core.apiConfigOptions == {} end,
         },

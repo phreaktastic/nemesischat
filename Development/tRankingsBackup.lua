@@ -1,0 +1,8 @@
+--- @class NCRankingsBackup
+--- @field Top table<string, {Player: string|nil, Value: number, Delta: number, DeltaPercent: number}>
+--- @field Bottom table<string, {Player: string|nil, Value: number, Delta: number, DeltaPercent: number}>
+--- @field All table<string, table<string, number>>
+--- @field sortedPlayers table<string, {name: string, value: number}[]>
+--- @field cache table<string, any>
+--- @field lastUpdateTime table<string, number>
+--- @field backupTime number
