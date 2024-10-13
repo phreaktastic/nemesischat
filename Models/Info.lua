@@ -33,7 +33,14 @@ local function GetMaxChannelTextLength(frame)
     return baseLength + additionalChars
 end
 
-local debounceTimer
+local function GetMaxDropdownTextLength(frame)
+    local width = frame:GetWidth()
+    local baseLength = 12
+    local widthPerChar = 6
+    local additionalWidth = (width - NCInfo.DropdownWidth) or (width - 150)
+    local additionalChars = math.floor(additionalWidth / widthPerChar)
+    return baseLength + additionalChars
+end
 
 NCInfo = {
     -- Configuration tables
@@ -85,6 +92,7 @@ NCInfo = {
         -- Only update if the frame was successfully created
         if self.StatsFrame then
             self:Update()
+            self:UpdateDropdownText()  -- Add this line
         end
     end,
 
@@ -169,20 +177,38 @@ NCInfo = {
         f.dropdownFrame:SetHeight(24)
 
         -- Player Dropdown
-        f.playerDropdown = CreateFrame("Frame", "NemesisChatStatsFramePlayerDropdown", f.dropdownFrame, "UIDropDownMenuTemplate")
-        UIDropDownMenu_SetWidth(f.playerDropdown, self.DropdownWidth)
-        UIDropDownMenu_SetText(f.playerDropdown, self.CurrentPlayer)
-        UIDropDownMenu_Initialize(f.playerDropdown, function(self, level, menuList)
-            NCInfo:UpdatePlayerDropdown()
-        end)
+        f.playerDropdown = CreateFrame("Frame", "NCInfoPlayerDropdown", f.dropdownFrame, "UIDropDownMenuTemplate")
+        f.playerDropdown:SetPoint("LEFT", f.dropdownFrame, "LEFT", 30, 0)
+        f.playerDropdown:SetPoint("RIGHT", f.dropdownFrame, "RIGHT", -30, 0)
+        UIDropDownMenu_SetWidth(f.playerDropdown, f:GetWidth() - 60)
 
-        -- Center the player dropdown
-        f.playerDropdown:SetPoint("CENTER", f.dropdownFrame, "CENTER", 0, 0)
+        -- Customize the dropdown appearance
+        local dropdownName = f.playerDropdown:GetName()
+        _G[dropdownName .. "Left"]:SetAlpha(0)
+        _G[dropdownName .. "Middle"]:SetAlpha(0)
+        _G[dropdownName .. "Right"]:SetAlpha(0)
+        local button = _G[dropdownName .. "Button"]
+        button:ClearAllPoints()
+        button:SetPoint("LEFT", f.playerDropdown, "LEFT", 5, 0)
+        button:SetSize(16, 16)
+        local text = _G[dropdownName .. "Text"]
+        text:ClearAllPoints()
+        text:SetPoint("LEFT", button, "RIGHT", 2, 0)
+        text:SetPoint("RIGHT", f.playerDropdown, "RIGHT", -2, 0)
+        text:SetJustifyH("LEFT")
+        text:SetTextColor(1, 0.82, 0)
+        text:SetFontObject("GameFontWhiteSmall")
+        text:SetText(self.CurrentPlayer)
+        f.playerDropdown:SetHeight(16)
+
+        -- Set initial text
+        local truncatedName = TruncateName(self.CurrentPlayer, 12)
+        UIDropDownMenu_SetText(f.playerDropdown, truncatedName)
 
         -- Previous Player Button
         f.prevPlayerButton = CreateFrame("Button", nil, f.dropdownFrame, "UIPanelButtonTemplate")
         f.prevPlayerButton:SetSize(24, 24)
-        f.prevPlayerButton:SetPoint("RIGHT", f.playerDropdown, "LEFT", 12, 2)
+        f.prevPlayerButton:SetPoint("LEFT", f.dropdownFrame, "LEFT", 2, 0)
         f.prevPlayerButton:SetText("<")
         f.prevPlayerButton:SetScript("OnClick", function()
             NCInfo:SelectPreviousPlayer()
@@ -191,7 +217,7 @@ NCInfo = {
         -- Next Player Button
         f.nextPlayerButton = CreateFrame("Button", nil, f.dropdownFrame, "UIPanelButtonTemplate")
         f.nextPlayerButton:SetSize(24, 24)
-        f.nextPlayerButton:SetPoint("LEFT", f.playerDropdown, "RIGHT", -12, 2)
+        f.nextPlayerButton:SetPoint("RIGHT", f.dropdownFrame, "RIGHT", -2, 0)
         f.nextPlayerButton:SetText(">")
         f.nextPlayerButton:SetScript("OnClick", function()
             NCInfo:SelectNextPlayer()
@@ -323,6 +349,13 @@ NCInfo = {
             end)
         end)
 
+        -- OnShow handler
+        f:SetScript("OnShow", function()
+            if IsNCEnabled() then
+                self:UpdateDropdownText()
+            end
+        end)
+
         -- OnHide handler
         f:SetScript("OnHide", function()
             if IsNCEnabled() then
@@ -331,6 +364,8 @@ NCInfo = {
         end)
 
         self:CreateCompareCheckbox()
+        self:InitializePlayerDropdown()
+        self:UpdateLayout()
     end,
 
     CreateCompareCheckbox = function(self)
@@ -354,20 +389,19 @@ NCInfo = {
         if not IsNCEnabled() then return end
         if self.IsMinimized then return end
 
-        if debounceTimer then
-            C_Timer.After(0.1, function() debounceTimer = nil end)
-            return
-        end
-        debounceTimer = true
-
         local f = self.StatsFrame
         local scrollFrame = f.scrollFrame
         scrollFrame.scrollChild:SetWidth(scrollFrame:GetWidth())
 
         -- Update channel dropdown text
-        local maxLength = GetMaxChannelTextLength(f)
-        local displayText = TruncateName(self:GetChannelDisplayName(self.SelectedChannel), maxLength)
-        UIDropDownMenu_SetText(f.channelDropdown, "Channel: " .. displayText)
+        local maxChannelLength = GetMaxChannelTextLength(f)
+        local channelDisplayText = TruncateName(self:GetChannelDisplayName(self.SelectedChannel), maxChannelLength)
+        UIDropDownMenu_SetText(f.channelDropdown, "Channel: " .. channelDisplayText)
+
+        -- Update player dropdown text
+        local maxPlayerLength = GetMaxDropdownTextLength(f)
+        local playerDisplayText = TruncateName(self.CurrentPlayer, maxPlayerLength)
+        UIDropDownMenu_SetText(f.playerDropdown, playerDisplayText)
 
         self:Update()
     end,
@@ -382,11 +416,16 @@ NCInfo = {
             dungeonData = NCRuntime:GetLastCompletedDungeon()
         end
 
+        if not IsInGroup() and self.CurrentPlayer ~= UnitName("player") then
+            self.CurrentPlayer = UnitName("player")
+        end
+
         self:UpdateHeader(dungeonData)
         self:UpdatePlayerInfo(dungeonData)
         self:UpdateCompareCheckbox()
         self:UpdateMetrics(dungeonData)
         self:UpdateLayout()
+        self:UpdateDropdownText()
         self:UpdateChannelDropdown()
         self:UpdatePrevNextButtons(dungeonData)
     end,
@@ -451,15 +490,15 @@ NCInfo = {
         local contentPadding = 10
 
         -- Calculate minimum height components
-        local titleHeight = f.title:GetHeight() + 8  -- Include top padding
-        local headerFrameHeight = f.headerFrame:GetHeight() + 5  -- Include spacing
-        local dropdownFrameHeight = f.dropdownFrame:GetHeight() + 5  -- Include spacing
-        local infoFrameHeight = f.infoFrame:GetHeight() + 5  -- Include spacing
+        local titleHeight = f.title:GetHeight() + 8
+        local headerFrameHeight = f.headerFrame:GetHeight() + 5
+        local dropdownFrameHeight = f.dropdownFrame:GetHeight() + 10  -- Increased spacing
+        local infoFrameHeight = f.infoFrame:GetHeight() + 5
         local compareCheckboxHeight = 0
         if content.compareCheckbox and content.compareCheckbox:IsShown() then
-            compareCheckboxHeight = content.compareCheckbox:GetHeight() + 5  -- Include spacing
+            compareCheckboxHeight = content.compareCheckbox:GetHeight() + 5
         end
-        local footerFrameHeight = f.footerFrame:GetHeight() + 5  -- Include bottom padding
+        local footerFrameHeight = f.footerFrame:GetHeight() + 5
 
         f.infoFrame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
         f.infoFrame:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
@@ -494,19 +533,19 @@ NCInfo = {
             yOffset = yOffset - rowHeight
             contentHeight = contentHeight + rowHeight
         end
-    
+
         content:SetHeight(math.abs(yOffset))
-    
+
         -- Calculate total minimum height
         local contentHeight = #self.MetricKeys * rowHeight
         local minHeight = titleHeight + headerFrameHeight + dropdownFrameHeight + infoFrameHeight + compareCheckboxHeight + contentHeight + footerFrameHeight + contentPadding
-    
+
         -- Set a reasonable minimum width
         local minWidth = 200
-    
+
         -- Set the minimum size of the frame
         f:SetResizeBounds(minWidth, minHeight)
-    
+
         -- Ensure the frame is at least the minimum size
         if f:GetWidth() < minWidth then
             f:SetWidth(minWidth)
@@ -514,7 +553,7 @@ NCInfo = {
         if f:GetHeight() < minHeight then
             f:SetHeight(minHeight)
         end
-    
+
         -- Adjust scroll frame height
         f.scrollFrame:SetHeight(f:GetHeight() - (titleHeight + headerFrameHeight + dropdownFrameHeight + footerFrameHeight))
     end,
@@ -563,6 +602,12 @@ NCInfo = {
     end,
 
     UpdatePrevNextButtons = function(self, dungeonData)
+        if not IsInGroup() then
+            self.StatsFrame.prevPlayerButton:Disable()
+            self.StatsFrame.nextPlayerButton:Disable()
+            return
+        end
+
         if not self.playerList or GetTime() - (self.lastPlayerListUpdate or 0) > 1 then
             local roster = NCRuntime:GetGroupRoster()
             local snapshot = dungeonData and dungeonData.RosterSnapshot or {}
@@ -597,38 +642,141 @@ NCInfo = {
             return
         end
 
-        local truncatedName = TruncateName(self.CurrentPlayer, 10)
-        UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, truncatedName)
+        local maxPlayerLength = GetMaxDropdownTextLength(self.StatsFrame)
+        local playerDisplayText = TruncateName(self.CurrentPlayer, maxPlayerLength)
+        UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, playerDisplayText)
         UIDropDownMenu_SetWidth(self.StatsFrame.playerDropdown, self.DropdownWidth)
+
         UIDropDownMenu_Initialize(self.StatsFrame.playerDropdown, function(dropdown, level, menuList)
-            local currentDungeon = NCDungeon:IsActive() and NCDungeon or nil
-            local lastCompletedDungeon = NCRuntime:GetLastCompletedDungeon()
-            local dungeonData = currentDungeon or lastCompletedDungeon
-            local mergedRoster = (dungeonData and dungeonData.RosterSnapshot) or NCRuntime:GetGroupRoster()
+            self:InitializePlayerDropdown(dropdown, level, menuList)
+        end)
+    end,
 
-            for name, player in pairs(mergedRoster) do
-                local info = UIDropDownMenu_CreateInfo()
-                local class = player.class or UnitClass(name) or "Unknown"
-                local rawClass = player.rawClass or select(2, UnitClass(name)) or "Unknown"
-                local role = player.role or UnitGroupRolesAssigned(name) or "OTHER"
-                local replacedRole = self.ROLE_REPLACEMENTS[role] or "Other"
-                local infoString = class .. " " .. replacedRole
-                local colorized = NCColors.ClassColor(rawClass, name .. " (" .. infoString .. ")")
+    InitializePlayerDropdown = function(self)
+        if not self.StatsFrame then return end
 
-                if name == UnitName("player") then
-                    colorized = NCColors.Emphasize(name)
+        local f = self.StatsFrame
+        UIDropDownMenu_Initialize(f.playerDropdown, function(dropdown, level, menuList)
+            if level == 1 then
+                if IsInRaid() then
+                    self:CreateRaidGroupedDropdown(dropdown, level)
+                elseif IsInGroup() then
+                    self:CreateNormalDropdown(dropdown, level)
+                else
+                    self:CreateSoloDropdown(dropdown, level)
                 end
-
-                info.text = colorized
-                info.value = name
-                info.checked = (name == self.CurrentPlayer)
-                info.func = function(self)
-                    NCInfo.CurrentPlayer = self.value
-                    NCInfo:Update()
-                end
-                UIDropDownMenu_AddButton(info)
+            elseif level == 2 and menuList then
+                self:CreateRaidGroupMenu(menuList, dropdown, level)
             end
         end)
+
+        self:UpdateDropdownText()
+    end,
+
+    CreateRaidGroupedDropdown = function(self, dropdown, level)
+        local groupedPlayers = self:GroupRaidPlayers()
+
+        for i = 1, 8 do
+            if groupedPlayers[i] and #groupedPlayers[i] > 0 then
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = "Group " .. i
+                info.hasArrow = true
+                info.notCheckable = true
+                info.menuList = groupedPlayers[i]
+                UIDropDownMenu_AddButton(info, level)
+            end
+        end
+    end,
+
+    CreateRaidGroupMenu = function(self, players, dropdown, level)
+        for _, playerInfo in ipairs(players) do
+            self:AddPlayerToDropdown(playerInfo, dropdown, level)
+        end
+    end,
+
+    CreateNormalDropdown = function(self, dropdown, level)
+        local roster = NCDungeon.RosterSnapshot or NCRuntime:GetGroupRoster()
+        for name, player in pairs(roster) do
+            self:AddPlayerToDropdown({name = name, data = player}, dropdown, level)
+        end
+    end,
+
+    GroupRaidPlayers = function(self)
+        local groupedPlayers = {}
+        for i = 1, 8 do groupedPlayers[i] = {} end
+
+        if IsInRaid() then
+            for i = 1, 40 do
+                local name, _, subgroup = GetRaidRosterInfo(i)
+                if name then
+                    local playerData = NCRuntime:GetGroupRoster()[name] or {}
+                    table.insert(groupedPlayers[subgroup], {name = name, data = playerData})
+                end
+            end
+        end
+
+        return groupedPlayers
+    end,
+
+    CreateSoloDropdown = function(self, dropdown, level)
+        local playerName = UnitName("player")
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = NCColors.Emphasize(playerName)
+        info.checked = true
+        info.isNotRadio = true
+        info.func = function(self)
+            NCInfo:UpdatePlayerInfo()
+            NCInfo:UpdateMetrics()
+            NCInfo:UpdateDropdownText()
+            CloseDropDownMenus()
+        end
+        UIDropDownMenu_AddButton(info, level)
+    end,
+
+    DebugPrintRaidInfo = function(self)
+        if IsInRaid() then
+            print("Raid Roster Debug:")
+            for i = 1, 40 do
+                local name, _, subgroup = GetRaidRosterInfo(i)
+                if name then
+                    print(string.format("Player: %s, Group: %d", name, subgroup))
+                end
+            end
+        else
+            print("Not in a raid group.")
+        end
+    end,
+
+    AddPlayerToDropdown = function(self, playerInfo, dropdown, level)
+        local info = UIDropDownMenu_CreateInfo()
+        local name, player = playerInfo.name, playerInfo.data
+        local class = player.class or UnitClass(name) or "Unknown"
+        local rawClass = player.rawClass or select(2, UnitClass(name)) or "Unknown"
+        local role = player.role or UnitGroupRolesAssigned(name) or "OTHER"
+        local replacedRole = self.ROLE_REPLACEMENTS[role] or "Other"
+        local infoString = class .. " " .. replacedRole
+
+        local maxLength = GetMaxDropdownTextLength(self.StatsFrame)
+        local truncatedName = TruncateName(name, maxLength - #infoString - 3) -- 3 for " ()"
+
+        local colorized = NCColors.ClassColor(rawClass, truncatedName .. " (" .. infoString .. ")")
+
+        if name == UnitName("player") then
+            colorized = NCColors.Emphasize(truncatedName)
+        end
+
+        info.text = colorized
+        info.value = name
+        info.checked = (name == self.CurrentPlayer)
+        info.func = function(self)
+            NCInfo.CurrentPlayer = self.value
+            NCInfo:UpdateDropdownText()
+            NCInfo:UpdatePlayerInfo()
+            NCInfo:UpdateMetrics()
+            CloseDropDownMenus()
+        end
+
+        UIDropDownMenu_AddButton(info, level)
     end,
 
     -- Initialize channel dropdown
@@ -814,38 +962,16 @@ NCInfo = {
         end
     end,
 
-    -- Select previous player
-    SelectPreviousPlayer = function(self)
-        if not IsNCEnabled() then return end
-
-        local roster = NCRuntime:GetGroupRoster()
-        local snapshot = NCDungeon.RosterSnapshot
-        local mergedData = MapMerge(snapshot, roster)
-        local playerList = {}
-        for name in pairs(mergedData) do
-            table.insert(playerList, name)
+    UpdateDropdownText = function(self)
+        if not self.StatsFrame or not self.StatsFrame.playerDropdown then
+            return
         end
-        --table.sort(playerList)
-
-        local currentIndex = nil
-        for index, name in ipairs(playerList) do
-            if name == self.CurrentPlayer then
-                currentIndex = index
-                break
-            end
-        end
-
-        if currentIndex then
-            local prevIndex = currentIndex - 1
-            if prevIndex < 1 then
-                prevIndex = #playerList
-            end
-            self.CurrentPlayer = playerList[prevIndex]
-            self:Update()
-        end
+        local maxLength = GetMaxDropdownTextLength(self.StatsFrame)
+        local truncatedName = TruncateName(self.CurrentPlayer, maxLength)
+        UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, truncatedName)
+        _G[self.StatsFrame.playerDropdown:GetName() .. "Text"]:SetTextColor(1, 0.82, 0)
     end,
 
-    -- Select next player
     SelectNextPlayer = function(self)
         if not IsNCEnabled() then return end
 
@@ -856,7 +982,7 @@ NCInfo = {
         for name in pairs(mergedData) do
             table.insert(playerList, name)
         end
-        --table.sort(playerList)
+        table.sort(playerList)
 
         local currentIndex = nil
         for index, name in ipairs(playerList) do
@@ -872,7 +998,43 @@ NCInfo = {
                 nextIndex = 1
             end
             self.CurrentPlayer = playerList[nextIndex]
-            self:Update()
+            self:UpdatePlayerInfo()
+            self:UpdateMetrics()
+            self:UpdateDropdownText()
+            UIDropDownMenu_Refresh(self.StatsFrame.playerDropdown)
+        end
+    end,
+
+    SelectPreviousPlayer = function(self)
+        if not IsNCEnabled() then return end
+
+        local roster = NCRuntime:GetGroupRoster()
+        local snapshot = NCDungeon.RosterSnapshot
+        local mergedData = MapMerge(snapshot, roster)
+        local playerList = {}
+        for name in pairs(mergedData) do
+            table.insert(playerList, name)
+        end
+        table.sort(playerList)
+
+        local currentIndex = nil
+        for index, name in ipairs(playerList) do
+            if name == self.CurrentPlayer then
+                currentIndex = index
+                break
+            end
+        end
+
+        if currentIndex then
+            local prevIndex = currentIndex - 1
+            if prevIndex < 1 then
+                prevIndex = #playerList
+            end
+            self.CurrentPlayer = playerList[prevIndex]
+            self:UpdatePlayerInfo()
+            self:UpdateMetrics()
+            self:UpdateDropdownText()
+            UIDropDownMenu_Refresh(self.StatsFrame.playerDropdown)
         end
     end,
 

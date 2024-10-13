@@ -344,13 +344,11 @@ NCRuntime = {
         }
 
         if data.token then
-            local success, isGroupLead = pcall(UnitIsGroupLeader, data.token)
-            if success and isGroupLead then
+            local success, isGroupLead = pcall(UnitIsGroupLeader, playerName)
+            if success and isGroupLead == true then
                 data.groupLead = true
                 core.runtime.groupLead = playerName
             end
-
-            data.role = UnitGroupRolesAssigned(data.token)
         end
 
         if playerName ~= GetMyName() and not core.runtime.pendingInspections[guid] and not data.spec then
