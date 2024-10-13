@@ -33,6 +33,8 @@ local function GetMaxChannelTextLength(frame)
     return baseLength + additionalChars
 end
 
+local debounceTimer
+
 NCInfo = {
     -- Configuration tables
     METRIC_REPLACEMENTS = {
@@ -351,16 +353,22 @@ NCInfo = {
     OnResize = function(self)
         if not IsNCEnabled() then return end
         if self.IsMinimized then return end
-    
+
+        if debounceTimer then
+            C_Timer.After(0.1, function() debounceTimer = nil end)
+            return
+        end
+        debounceTimer = true
+
         local f = self.StatsFrame
         local scrollFrame = f.scrollFrame
         scrollFrame.scrollChild:SetWidth(scrollFrame:GetWidth())
-    
+
         -- Update channel dropdown text
         local maxLength = GetMaxChannelTextLength(f)
         local displayText = TruncateName(self:GetChannelDisplayName(self.SelectedChannel), maxLength)
         UIDropDownMenu_SetText(f.channelDropdown, "Channel: " .. displayText)
-    
+
         self:Update()
     end,
 
