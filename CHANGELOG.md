@@ -43,7 +43,7 @@ A big thanks to these people who helped make this addon better:
 > **Note**
 > This update started as a small change to the information window but turned into a big overhaul of the whole addon. Usually, this many changes would mean a bigger version number jump, but we're calling it a patch (like going from 1.2.3 to 1.2.4) because most changes are behind-the-scenes improvements. We save bigger version jumps (like 1.2.0 to 1.3.0) for when we add new features you can see or make big changes to how other addons can use ours.
 >
-> We really appreciate all the feedback and ideas from the community, and we're excited to keep making the addon better. Please keep sharing your thoughts and suggestions, and we'll do our best to include them in future updates. 
+> We really appreciate all the feedback and ideas from the community, and we're excited to keep making the addon better. Please keep sharing your thoughts and suggestions, and we'll do our best to include them in future updates.
 >
 > **Thanks for your support!**
 
@@ -101,7 +101,6 @@ A big thanks to these people who helped make this addon better:
       - Damage events no longer block other events from being processed.
       - Avoidable damage is now tracked correctly.
       - Avoidable damage events no longer prevent other events from being processed.
-   - Fixed problems with the "clear" button in the info window.
    - Fixed an issue where interrupts weren't being tracked correctly when a player's pet (like a Warlock's demon) did the interrupt.
    - Fixed an issue where the addon was still running in the background when disabled.
    - Lots more bug fixes!
