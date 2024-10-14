@@ -84,7 +84,6 @@ function CombatEventHandler:Fire()
     end
 
     local subEvent, eventType, sourceName, destName, misc1, misc2, misc4 = eventInfo.subEvent, eventInfo.eventType, eventInfo.sourceName, eventInfo.destName, eventInfo.misc1, eventInfo.misc2, eventInfo.misc4
-    local isPull, pullType, pullPlayerName, mobName = CombatEventHandler:IsPull()
     local damage = CombatEventHandler:GetDamageAmount(subEvent, misc1, misc4)
 
     if bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
@@ -106,19 +105,22 @@ function CombatEventHandler:Fire()
     NCEvent:Initialize()
     NCEvent:SetCategory("COMBATLOG")
 
-    if isPull and pullPlayerName then
-        if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
-            -- Nesting this in to prevent spam
-            if NCConfig:IsReportingPulls_Realtime() then
-                SendChatMessage("Nemesis Chat: " .. UnitName(pullPlayerName) .. " pulled " .. mobName, "YELL")
+    if NCConfig:IsAnnouncingPulls() then
+        local isPull, pullType, pullPlayerName, mobName = CombatEventHandler:IsPull()
+        if isPull and pullPlayerName then
+            if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
+                -- Nesting this in to prevent spam
+                if NCConfig:IsReportingPulls_Realtime() then
+                    SendChatMessage("Nemesis Chat: " .. UnitName(pullPlayerName) .. " pulled " .. mobName, "YELL")
+                end
+
+                NemesisChat:SpawnToast("Pull", pullPlayerName, mobName)
+                NCRuntime:UpdateLastUnsafePullToast()
             end
 
-            NemesisChat:SpawnToast("Pull", pullPlayerName, mobName)
-            NCRuntime:UpdateLastUnsafePullToast()
+            NCRuntime:SetLastUnsafePull(UnitName(pullPlayerName), mobName)
+            NCSegment:GlobalAddPull(UnitName(pullPlayerName))
         end
-
-        NCRuntime:SetLastUnsafePull(UnitName(pullPlayerName), mobName)
-        NCSegment:GlobalAddPull(UnitName(pullPlayerName))
     end
 
     if NCEvent:IsDamageEvent(subEvent, destName, damage) then
@@ -180,6 +182,7 @@ function CombatEventHandler:GetDamageAmount(event, arg1, arg4)
 end
 
 -- Originally taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with heavy modifications
+--- @return boolean, string|nil, string|nil, string|nil
 function CombatEventHandler:IsPull()
     if not IsInGroup() or (NCBoss:IsActive() and NCDungeon:IsActive()) or IsInRaid() then
         return false
@@ -250,9 +253,9 @@ function CombatEventHandler:IsPull()
                 local pullname;
                 local pname = CombatEventHandler:GetPetOwner(sguid);
 
-                if (pname == "Unknown") then 
+                if (pname == "Unknown") then
                     pullname = sname.." (pet)"
-                else 
+                else
                     pullname = pname
                 end
 
@@ -361,7 +364,7 @@ function CombatEventHandler:GetPetOwner(petGuid)
     local owner = CombatEventHandler:ScanTooltipForPetOwner(petGuid)
 
     NCRuntime:AddPetOwner(petGuid, owner)
-    
+
     return owner
 end
 

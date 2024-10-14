@@ -50,7 +50,7 @@ core.runtimeDefaults = {
     --- @type table<string, string>
     playerNameToToken = {}, -- Cache for unit token lookups by player name
     --- @type table<string, GroupRosterPlayer>
-    pendingInspections = {}, -- Cache for pending inspection requests
+    playerGuidToRoster = {}, -- Cache for player lookups by GUID
     --- @type table|nil
     lastCompletedDungeon = nil,
     --- @type table<string, boolean>
@@ -280,7 +280,7 @@ NCRuntime = {
     ClearGroupRoster = function(self)
         wipe(core.runtime.groupRoster)
         wipe(core.runtime.playerNameToToken)
-        wipe(core.runtime.pendingInspections)
+        wipe(core.runtime.playerGuidToRoster)
         core.runtime.groupRosterCount = 0
         core.runtime.groupTank = nil
         core.runtime.groupHealer = nil
@@ -299,7 +299,6 @@ NCRuntime = {
         end
 
         wipe(core.runtime.playerNameToToken)
-        wipe(core.runtime.pendingInspections)
 
         self:CacheGroupRoster()
     end,
@@ -341,6 +340,7 @@ NCRuntime = {
             groupLead = false,
             name = playerName,
             token = self:GetUnitTokenFromName(playerName),
+            group = 0,
         }
 
         if data.token then
@@ -349,10 +349,6 @@ NCRuntime = {
                 data.groupLead = true
                 core.runtime.groupLead = playerName
             end
-        end
-
-        if playerName ~= GetMyName() and not core.runtime.pendingInspections[guid] and not data.spec then
-            self:RequestInspection(data)
         end
 
         core.runtime.groupRoster[playerName] = data
@@ -364,10 +360,18 @@ NCRuntime = {
             core.runtime.groupHealer = playerName
         end
 
-        NCInfo:UpdatePlayerDropdown()
-
         self:AttemptRetrieveSpec(data)
         self:CacheGroupRoster()
+
+        NCInfo:UpdatePlayerDropdown()
+
+        if playerName ~= GetMyName() and guid then
+            self.playerGuidToRoster[guid] = data
+
+            if not data.spec then
+                NemesisChat.InspectQueueManager:QueuePlayerForInspect(guid)
+            end
+        end
 
         return data
     end,
@@ -570,7 +574,7 @@ NCRuntime = {
     GetUnitTokenFromName = function(self, playerName)
         if next(core.runtime.playerNameToToken) == nil or not core.runtime.playerNameToToken[playerName] then
             -- Always include the player
-            core.runtime.playerNameToToken[GetMyName()] = "player"
+            core.runtime.playerNameToToken[Ambiguate(UnitName("player"), "none")] = "player"
 
             if IsInRaid() then
                 -- In a raid group
@@ -580,6 +584,10 @@ NCRuntime = {
                     local name = Ambiguate(UnitName(unit), "none")
                     if name then
                         core.runtime.playerNameToToken[name] = unit
+                        local rosterPlayer = NCRuntime:GetGroupRosterPlayer(name)
+                        if rosterPlayer then
+                            rosterPlayer.group = select(2, GetRaidRosterInfo(i))
+                        end
                     end
                 end
             elseif IsInGroup() then
@@ -592,7 +600,7 @@ NCRuntime = {
                     end
                 end
             else
-                return core.runtime.playerNameToToken["player"]
+                return core.runtime.playerNameToToken[Ambiguate(UnitName(playerName), "none")]
             end
         end
         return core.runtime.playerNameToToken[Ambiguate(UnitName(playerName), "none")]
@@ -623,11 +631,10 @@ NCRuntime = {
             end
         end
     end,
-    RequestInspection = function(self, unit)
-        if unit and unit.token and UnitExists(unit.token) and unit.token ~= "player" then
-            -- Add unit to pending inspections
-            core.runtime.pendingInspections[unit.guid] = unit
-            NotifyInspect(unit.token)
-        end
+    GetPlayerFromGuid = function(self, guid)
+        return core.runtime.playerGuidToRoster[guid]
+    end,
+    ClearPlayerGuidToRoster = function(self)
+        wipe(core.runtime.playerGuidToRoster)
     end,
 }

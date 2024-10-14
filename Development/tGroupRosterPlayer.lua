@@ -12,3 +12,4 @@
 --- @field groupLead boolean
 --- @field name string
 --- @field token "party1"|...|"party5"|"player"|"pet"|"raid1"|...|"raid40"
+--- @field group number

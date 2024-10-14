@@ -10,8 +10,6 @@ local _, core = ...;
 local IsInInstance = IsInInstance
 local GetInstanceInfo = GetInstanceInfo
 local GetZoneText = GetZoneText
-local C_DelvesUI = C_DelvesUI
-local C_Map = C_Map
 local C_ChallengeMode = C_ChallengeMode
 local GetTime = GetTime
 local C_LFGInfo = C_LFGInfo
@@ -248,7 +246,9 @@ end
 function NemesisChat:INSPECT_READY(event, guid)
     if not IsNCEnabled() then return end
 
-    local unit = core.runtime.pendingInspections[guid]
+    self.InspectQueueManager:OnInspectReady(guid)
+
+    local unit = NCRuntime:GetPlayerFromGuid(guid)
     if unit then
         local specID = GetInspectSpecialization(unit.token)
         if specID and specID > 0 then
@@ -257,9 +257,6 @@ function NemesisChat:INSPECT_READY(event, guid)
                 unit.spec = specName
             end
         end
-        -- Clean up
-        core.runtime.pendingInspections[guid] = nil
-        ClearInspectPlayer()
     end
 end
 

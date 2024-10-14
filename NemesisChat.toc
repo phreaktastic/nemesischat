@@ -73,3 +73,4 @@ Core.lua
 # NC Handlers
 Handlers\CombatLog.lua
 Handlers\AddonCommunication.lua
+Handlers\InspectQueueManager.lua

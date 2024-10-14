@@ -104,7 +104,7 @@ NCInfo = {
 
         f:SetPoint("CENTER", UIParent, "CENTER")
         f:SetSize(200, 300)  -- Initial size
-        f:SetResizeBounds(200, 300)  -- Initial minimum size
+        f:SetResizeBounds(200, 220)  -- Initial minimum size
 
         f:SetMovable(true)
         f:SetResizable(true)
@@ -207,7 +207,7 @@ NCInfo = {
 
         -- Previous Player Button
         f.prevPlayerButton = CreateFrame("Button", nil, f.dropdownFrame, "UIPanelButtonTemplate")
-        f.prevPlayerButton:SetSize(24, 24)
+        f.prevPlayerButton:SetSize(20, 20)
         f.prevPlayerButton:SetPoint("LEFT", f.dropdownFrame, "LEFT", 2, 0)
         f.prevPlayerButton:SetText("<")
         f.prevPlayerButton:SetScript("OnClick", function()
@@ -216,7 +216,7 @@ NCInfo = {
 
         -- Next Player Button
         f.nextPlayerButton = CreateFrame("Button", nil, f.dropdownFrame, "UIPanelButtonTemplate")
-        f.nextPlayerButton:SetSize(24, 24)
+        f.nextPlayerButton:SetSize(20, 20)
         f.nextPlayerButton:SetPoint("RIGHT", f.dropdownFrame, "RIGHT", -2, 0)
         f.nextPlayerButton:SetText(">")
         f.nextPlayerButton:SetScript("OnClick", function()
@@ -374,13 +374,15 @@ NCInfo = {
         if not content.compareCheckbox then
             content.compareCheckbox = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
             content.compareCheckbox:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -5)
+            content.compareCheckbox:SetSize(16, 16)  -- Set a smaller size
             content.compareCheckbox:SetScript("OnClick", function(self)
                 core.db.profile.infoClickCompare = self:GetChecked()
                 NCInfo:Update()
             end)
             content.compareCheckbox.text = content.compareCheckbox:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-            content.compareCheckbox.text:SetPoint("LEFT", content.compareCheckbox, "RIGHT", 0, 0)
+            content.compareCheckbox.text:SetPoint("LEFT", content.compareCheckbox, "RIGHT", 2, 0)  -- Adjusted text position
             content.compareCheckbox.text:SetText("Compare Metrics")
+            content.compareCheckbox.text:SetFontObject("GameFontNormalSmall")  -- Use a smaller font
         end
     end,
 
@@ -538,7 +540,7 @@ NCInfo = {
 
         -- Calculate total minimum height
         local contentHeight = #self.MetricKeys * rowHeight
-        local minHeight = titleHeight + headerFrameHeight + dropdownFrameHeight + infoFrameHeight + compareCheckboxHeight + contentHeight + footerFrameHeight + contentPadding
+        local minHeight = titleHeight + headerFrameHeight + dropdownFrameHeight + infoFrameHeight + compareCheckboxHeight + contentHeight + footerFrameHeight + contentPadding - 80
 
         -- Set a reasonable minimum width
         local minWidth = 200
@@ -599,6 +601,15 @@ NCInfo = {
             row.columns[1]:SetTextColor(0.5, 0.6, 0.85)
             row.columns[1].desiredColor = {0.5, 0.6, 0.85}
         end
+
+        row:SetScript("OnEnter", function()
+            row.columns[1]:SetTextColor(1, 1, 1)
+            row.columns[2]:SetTextColor(1, 1, 1)
+        end)
+        row:SetScript("OnLeave", function()
+            row.columns[1]:SetTextColor(unpack(row.columns[1].desiredColor))
+            row.columns[2]:SetTextColor(unpack(row.columns[2].desiredColor))
+        end)
     end,
 
     UpdatePrevNextButtons = function(self, dungeonData)
@@ -655,12 +666,15 @@ NCInfo = {
     InitializePlayerDropdown = function(self)
         if not self.StatsFrame then return end
 
+        local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        local playerCount = dungeonData and NemesisChat:GetLength(dungeonData.RosterSnapshot) or NemesisChat:GetLength(NCRuntime:GetGroupRoster())
+
         local f = self.StatsFrame
         UIDropDownMenu_Initialize(f.playerDropdown, function(dropdown, level, menuList)
             if level == 1 then
-                if IsInRaid() then
+                if playerCount > 5 then
                     self:CreateRaidGroupedDropdown(dropdown, level)
-                elseif IsInGroup() then
+                elseif playerCount > 1 then
                     self:CreateNormalDropdown(dropdown, level)
                 else
                     self:CreateSoloDropdown(dropdown, level)
@@ -695,7 +709,7 @@ NCInfo = {
     end,
 
     CreateNormalDropdown = function(self, dropdown, level)
-        local roster = NCDungeon.RosterSnapshot or NCRuntime:GetGroupRoster()
+        local roster = NCDungeon:IsActive() and NCDungeon.RosterSnapshot or (NCRuntime:GetLastCompletedDungeon() and NCRuntime:GetLastCompletedDungeon().RosterSnapshot or nil) or NCRuntime:GetGroupRoster()
         for name, player in pairs(roster) do
             self:AddPlayerToDropdown({name = name, data = player}, dropdown, level)
         end
@@ -704,14 +718,12 @@ NCInfo = {
     GroupRaidPlayers = function(self)
         local groupedPlayers = {}
         for i = 1, 8 do groupedPlayers[i] = {} end
+        local roster = NCDungeon:IsActive() and NCDungeon.RosterSnapshot or (NCRuntime:GetLastCompletedDungeon() and NCRuntime:GetLastCompletedDungeon().RosterSnapshot or nil) or NCRuntime:GetGroupRoster()
 
-        if IsInRaid() then
-            for i = 1, 40 do
-                local name, _, subgroup = GetRaidRosterInfo(i)
-                if name then
-                    local playerData = NCRuntime:GetGroupRoster()[name] or {}
-                    table.insert(groupedPlayers[subgroup], {name = name, data = playerData})
-                end
+        if NemesisChat:GetLength(roster) > 5 then
+            for name, player in pairs(roster) do
+                local subgroup = player.group or select(2, GetRaidRosterInfo(tonumber(string.gsub(player.token, "raid", ""))))
+                table.insert(groupedPlayers[subgroup], {name = name, data = player})
             end
         end
 
@@ -757,7 +769,7 @@ NCInfo = {
         local infoString = class .. " " .. replacedRole
 
         local maxLength = GetMaxDropdownTextLength(self.StatsFrame)
-        local truncatedName = TruncateName(name, maxLength - #infoString - 3) -- 3 for " ()"
+        local truncatedName = TruncateName(name, maxLength - #infoString - 3)
 
         local colorized = NCColors.ClassColor(rawClass, truncatedName .. " (" .. infoString .. ")")
 

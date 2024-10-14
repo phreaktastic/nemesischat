@@ -125,11 +125,16 @@ end
 
 function NCDungeon:CheckCache()
     local cachedDungeon = core.db.profile.cache.NCDungeon
-    if cachedDungeon ~= nil and cachedDungeon ~= {} then
+    if cachedDungeon ~= nil and cachedDungeon ~= {} and cachedDungeon.Identifier and cachedDungeon.Identifier ~= "DUNGEON" then
         if cachedDungeon.backupTime and cachedDungeon.backupTime > GetTime() - 300 then
-            NCDungeon:Restore(core.db.profile.cache.NCDungeon)
-        else
             self:ClearCache()
+        else
+            local success = pcall(function() NCDungeon:Restore(cachedDungeon) end)
+            if not success then
+                NemesisChat:Print("Failed to restore cached dungeon data. Stats are likely inaccurate.")
+                self:ClearCache()
+                self:Reset()
+            end
         end
     end
 end
