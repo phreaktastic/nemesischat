@@ -17,7 +17,9 @@ This update is a big overhaul of the addon, setting things up for future improve
 
 >❗**Note: We might need to reset leaver and low performer data in a future update**❗
 >
-> Right now, we track leavers and low performers using a special ID. This helps us correctly identify players even if they change their name or server. To keep things running smoothly, we only store this ID. We're looking into improving this soon, which might require some changes. Without these changes, we won't be able to report on things like servers, classes, specs, or guilds.
+> ❗**Important:** We may need to reset leaver and low performer data in a future update. This could affect reporting on servers, classes, specs, and guilds.
+
+> Currently, we track leavers and low performers using a special ID, allowing us to identify players even if they change their name or server. We're exploring improvements that may require changes to this system. We'll strive to preserve existing data, but users should be aware of potential future impacts.
 >
 > We've found a way to maintain the leaver and low performer databases while keeping high efficiency. However, users should still be aware that future changes may affect this data. We'll do our best to preserve it, but things can always change.
 
