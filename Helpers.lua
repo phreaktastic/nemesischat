@@ -864,6 +864,7 @@ function NemesisChat:ClearAllData()
     NCRuntime:ClearPlayerStates()
     NCRuntime:ClearPulledUnits()
     NCRuntime:ClearPetOwners()
+    NCRuntime:ClearLastCompletedDungeon()
 
     -- Reset event data
     NCEvent:Initialize()
@@ -888,6 +889,7 @@ function NemesisChat:ClearAllData()
     NemesisChat:CheckGroup()
 
     -- Update the info frame
+    NCInfo.CurrentPlayer = UnitName("player")
     NCInfo:Update()
 
     -- Print confirmation message
