@@ -49,13 +49,13 @@ A big thanks to these people who helped make this addon better:
 
 ### **Information Window Improvements:**
    ---
-   - The info window is now much easier to use and understand.
-   - You can see all stats for all classes, with ones that don't apply grayed out.
-   - Added Back and Forward buttons to make navigation easier.
-   - You can now choose which chat channel to report stats in.
-   - We're planning more improvements for future updates.
-      - The information window is still a work in progress, and we have more ideas for the future.
-      - Your feedback is really important in shaping the addon (and this feature in particular), so **please** share your thoughts, especially about the user interface changes!
+   * The info window is now much easier to use and understand.
+   * You can see all stats for all classes, with ones that don't apply grayed out.
+   * Added Back and Forward buttons to make navigation easier.
+   * You can now choose which chat channel to report stats in.
+   * We're planning more improvements for future updates.
+      * The information window is still a work in progress, and we have more ideas for the future.
+      * Your feedback is really important in shaping the addon (and this feature in particular), so **please** share your thoughts, especially about the user interface changes!
 
 ### **New Features:**
    ---
