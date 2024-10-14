@@ -15,16 +15,20 @@ local IsInRaid = IsInRaid
 -----------------------------------------------------
 
 function NemesisChat:HandleRosterUpdate()
+    -- Get the changes in the group roster
+    local joins, leaves = NemesisChat:GetRosterDelta()
+    local othersCount = NCRuntime:GetGroupRosterCountOthers()
+
+    if #joins == 0 and #leaves == 0  then
+        return
+    end
+
     -- Initialize events and update friends list
     NCEvent:Initialize()
     NemesisChat:PopulateFriends()
     NCRuntime:CacheGroupRoster()
 
-    -- Get the changes in the group roster
-    local joins, leaves = NemesisChat:GetRosterDelta()
-    local othersCount = NCRuntime:GetGroupRosterCountOthers()
-
-    -- Update the internal group roster first
+    -- Update the internal group roster
     self:SilentGroupSync()
     NemesisChat:CheckGroup()
 
@@ -223,7 +227,7 @@ function NemesisChat:CheckGroup()
     -- NemesisChat:Print(("%s, %s group based events."):format(reason, action))
 
     local method = shouldSubscribe and "RegisterEvent" or "UnregisterEvent"
-    for _, event in pairs(core.eventSubscriptions) do
+    for _, event in pairs(core.dynamicEvents) do
         NemesisChat[method](NemesisChat, event)
     end
 end

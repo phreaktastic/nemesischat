@@ -105,7 +105,7 @@ function CombatEventHandler:Fire()
     NCEvent:Initialize()
     NCEvent:SetCategory("COMBATLOG")
 
-    if NCConfig:IsAnnouncingPulls() then
+    if NCConfig:IsReportingPulls_Realtime() then
         local isPull, pullType, pullPlayerName, mobName = CombatEventHandler:IsPull()
         if isPull and pullPlayerName then
             if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then

@@ -23,11 +23,11 @@ local IsInGroup = IsInGroup
 -----------------------------------------------------
 function NemesisChat:InitializeHelpers()
 
-    
 
-    
 
-    
+
+
+
 
     function NemesisChat:PrintNumberOfLeavers()
         NemesisChat:Print("Leavers:", #NemesisChat:GetKeys(core.db.profile.leavers))
@@ -176,7 +176,7 @@ function NemesisChat:InitializeHelpers()
 
         -- Improper event data
         if not NCEvent:IsValidEvent() then
-            if NCConfig:IsDebugging() and NCSpell:GetSource() == GetMyName() then 
+            if NCConfig:IsDebugging() and NCSpell:GetSource() == GetMyName() then
                 -- self:Print("Invalid event.")
                 -- NemesisChat:Print("Cat:", NCEvent:GetCategory(), "Event:", NCEvent:GetEvent(), "Target:", NCEvent:GetTarget())
             end
@@ -185,7 +185,7 @@ function NemesisChat:InitializeHelpers()
 
         -- Player is not in a group, exit
         if not IsInGroup() then
-            if NCConfig:IsDebugging() then 
+            if NCConfig:IsDebugging() then
                 -- self:Print("Player not in group.")
             end
             return true
@@ -205,7 +205,7 @@ function NemesisChat:InitializeHelpers()
     function NemesisChat:GetRandomPartyNemesis()
         local partyNemeses = NemesisChat:GetPartyNemeses()
 
-        if not partyNemeses then 
+        if not partyNemeses then
             return nil
         end
 
@@ -379,7 +379,7 @@ function NemesisChat:InitializeHelpers()
                     local n,s = UnitName('raid'..i)
                     local playerName = n
 
-                    if s then 
+                    if s then
                         playerName = playerName .. "-" .. s
                     end
 
@@ -394,7 +394,7 @@ function NemesisChat:InitializeHelpers()
                     local n,s = UnitName('party'..i)
                     local playerName = n
 
-                    if s then 
+                    if s then
                         playerName = playerName .. "-" .. s
                     end
 
@@ -416,7 +416,7 @@ function NemesisChat:InitializeHelpers()
         local left = {}
 
         -- Get joins
-        for key,val in pairs(newRoster) do 
+        for key,val in pairs(newRoster) do
             if oldRoster[val] == nil and val ~= GetMyName() then
                 tinsert(joined, val)
             end
@@ -434,7 +434,7 @@ function NemesisChat:InitializeHelpers()
 
     -- Check if all players within the group are dead
     function NemesisChat:IsWipe()
-        if not UnitIsDead("player") then 
+        if not UnitIsDead("player") then
             return false
         end
 
@@ -458,7 +458,7 @@ function NemesisChat:InitializeHelpers()
         local pool = core.ai.taunts[NCEvent:GetCategory()][NCEvent:GetEvent()][NCEvent:GetTarget()]
         local key = math.random(#pool or 5)
 
-        if pool == nil then 
+        if pool == nil then
             return ""
         end
 
@@ -582,7 +582,7 @@ function NemesisChat:InitializeHelpers()
 
         -- In an instance
         if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then channel = "INSTANCE_CHAT" end
-        
+
         -- In a raid
         if IsInRaid() then channel = "RAID" end
 
@@ -687,7 +687,7 @@ function NemesisChat:InitializeHelpers()
             local lastHealDelta = math.floor((GetTime() - player.lastHeal) * 100) / 100
 
             if not UnitIsDead(playerName) and player.healthPercent <= 55 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
-                -- If playerName is a nemesis, different message 
+                -- If playerName is a nemesis, different message
                 if NCConfig:GetNemesis(playerName) ~= nil then
                     SendChatMessage("Nemesis Chat: " .. playerName .. " is at " .. player.healthPercent .. "% health, and has not received healing for " .. lastHealDelta .. " seconds! Please do not heal them -- it's okay if they die.", "YELL")
                 else
@@ -711,7 +711,7 @@ function NemesisChat:InitializeHelpers()
                 local n,s = UnitName('party'..i)
                 local playerName = n
 
-                if s then 
+                if s then
                     playerName = playerName .. "-" .. s
                 end
 
@@ -832,16 +832,6 @@ function NemesisChat:InstantiateCore()
     end
 
     NCDungeon:CheckCache()
-end
-
-function NemesisChat:Initialize()
-    NemesisChat:SetEnabledState(IsNCEnabled())
-
-    NemesisChat:InitializeConfig()
-    NemesisChat:InitializeHelpers()
-    NemesisChat:SetMyName()
-
-    NemesisChat:InitIfEnabled()
 end
 
 function NemesisChat:InitIfEnabled()

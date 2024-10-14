@@ -257,7 +257,7 @@ NCSegment = {
         if player == nil then
             return 0
         end
-        
+
         if self.ActionPoints[player] == nil then
             self.ActionPoints[player] = {}
         end
@@ -308,7 +308,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("AvoidableDamage", player, self.AvoidableDamage[player])
-        self:NotifyObservers("AvoidableDamage", player, self:GetAvoidableDamage(player))
+        self:NotifyObservers("AvoidableDamage", player, self:GetStats(player, "AvoidableDamage"))
         self:AddAvoidableDamageCallback(amount, player)
     end,
     AddAvoidableDamageCallback = function(self, amount, player)
@@ -336,7 +336,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("CrowdControl", player, self.CrowdControl[player])
-        self:NotifyObservers("CrowdControl", player, self:GetCrowdControls(player))
+        self:NotifyObservers("CrowdControl", player, self:GetStats(player, "CrowdControl"))
         self:AddCrowdControlCallback(player)
     end,
     AddCrowdControlCallback = function(self, player)
@@ -364,7 +364,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Deaths", player, self.Deaths[player])
-        self:NotifyObservers("Deaths", player, self:GetDeaths(player))
+        self:NotifyObservers("Deaths", player, self:GetStats(player, "Deaths"))
         self:AddDeathCallback(player)
     end,
     AddDeathCallback = function(self, player)
@@ -392,7 +392,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Defensives", player, self.Defensives[player])
-        self:NotifyObservers("Defensives", player, self:GetDefensives(player))
+        self:NotifyObservers("Defensives", player, self:GetStats(player, "Defensives"))
         self:AddDefensiveCallback(player)
     end,
     AddDefensiveCallback = function(self, player)
@@ -420,7 +420,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Dispells", player, self.Dispells[player])
-        self:NotifyObservers("Dispells", player, self:GetDispells(player))
+        self:NotifyObservers("Dispells", player, self:GetStats(player, "Dispells"))
         self:AddDispellCallback(player)
     end,
     AddDispellCallback = function(self, player)
@@ -493,7 +493,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Interrupts", player, self.Interrupts[player])
-        self:NotifyObservers("Interrupts", player, self:GetInterrupts(player))
+        self:NotifyObservers("Interrupts", player, self:GetStats(player, "Interrupts"))
         self:AddInterruptCallback(player)
     end,
     AddInterruptCallback = function(self, player)
@@ -547,7 +547,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("OffHeals", player, self.OffHeals[player])
-        self:NotifyObservers("Offheals", player, self:GetOffHeals(player))
+        self:NotifyObservers("Offheals", player, self:GetStats(player, "Offheals"))
         self:AddOffHealsCallback(amount, player)
     end,
     AddOffHealsCallback = function(self, amount, player)
@@ -575,7 +575,7 @@ NCSegment = {
         end
 
         self.Rankings:UpdateMetric("Pulls", player, self.Pulls[player])
-        self:NotifyObservers("Pulls", player, self:GetPulls(player))
+        self:NotifyObservers("Pulls", player, self:GetStats(player, "Pulls"))
         self:AddPullCallback(player)
     end,
     AddPullCallback = function(self, player)
@@ -794,13 +794,17 @@ NCSegment = {
             end
         end
 
-        self.Rankings = NCRankings:New(self)
-        self.Rankings:Restore(backup.Rankings)
+        if self.Rankings and self.Rankings.Restore then
+            self.Rankings:Restore(core.db.profile.cache.DungeonRankings)
+        else
+            self.Rankings = NCRankings:New(self)
+            self.Rankings:Restore(core.db.profile.cache.DungeonRankings)
+        end
     end,
     GetBackup = function(self)
         -- Don't backup the base segment
         if self == NCSegment then
-            return
+            return nil
         end
 
         local backup = {}

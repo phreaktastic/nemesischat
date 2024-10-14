@@ -92,7 +92,6 @@ NCInfo = {
         -- Only update if the frame was successfully created
         if self.StatsFrame then
             self:Update()
-            self:UpdateDropdownText()  -- Add this line
         end
     end,
 
@@ -160,8 +159,8 @@ NCInfo = {
 
         -- Header Frame
         f.headerFrame = CreateFrame("Frame", nil, f)
-        f.headerFrame:SetPoint("TOPLEFT", f.title, "BOTTOMLEFT", 0, -5)
-        f.headerFrame:SetPoint("TOPRIGHT", f.title, "BOTTOMRIGHT", 0, -5)
+        f.headerFrame:SetPoint("TOPLEFT", f.title, "BOTTOMLEFT", 0, 0)
+        f.headerFrame:SetPoint("TOPRIGHT", f.title, "BOTTOMRIGHT", 0, 0)
         f.headerFrame:SetHeight(24)
 
         -- Header Text
@@ -391,6 +390,11 @@ NCInfo = {
         if not IsNCEnabled() then return end
         if self.IsMinimized then return end
 
+        self:SetWidthsAndTruncatedTexts()
+        self:Update()
+    end,
+
+    SetWidthsAndTruncatedTexts = function(self)
         local f = self.StatsFrame
         local scrollFrame = f.scrollFrame
         scrollFrame.scrollChild:SetWidth(scrollFrame:GetWidth())
@@ -404,8 +408,6 @@ NCInfo = {
         local maxPlayerLength = GetMaxDropdownTextLength(f)
         local playerDisplayText = TruncateName(self.CurrentPlayer, maxPlayerLength)
         UIDropDownMenu_SetText(f.playerDropdown, playerDisplayText)
-
-        self:Update()
     end,
 
     -- Update function
@@ -418,11 +420,7 @@ NCInfo = {
             dungeonData = NCRuntime:GetLastCompletedDungeon()
         end
 
-        if not IsInGroup() and self.CurrentPlayer ~= UnitName("player") then
-            self.CurrentPlayer = UnitName("player")
-        end
-
-        self:UpdateHeader(dungeonData)
+        self:UpdateHeader()
         self:UpdatePlayerInfo(dungeonData)
         self:UpdateCompareCheckbox()
         self:UpdateMetrics(dungeonData)
@@ -430,6 +428,8 @@ NCInfo = {
         self:UpdateDropdownText()
         self:UpdateChannelDropdown()
         self:UpdatePrevNextButtons(dungeonData)
+        self:UpdatePlayerDropdown()
+        self:SetWidthsAndTruncatedTexts()
     end,
 
     UpdateHeader = function(self)
@@ -455,18 +455,22 @@ NCInfo = {
     end,
 
     UpdatePlayerInfo = function(self, dungeonData)
-        local mergedRoster = dungeonData and dungeonData.RosterSnapshot or NCRuntime:GetGroupRoster()
-        local playerInfo = mergedRoster[self.CurrentPlayer] or setmetatable({}, {__mode = "kv"})
+        dungeonData = dungeonData or (NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon())
+        local playerInfo = dungeonData and dungeonData.RosterSnapshot[self.CurrentPlayer] or {}
 
         local leftText = playerInfo.spec or playerInfo.race or nil
         local rightText = playerInfo.class or nil
         local rawClass = playerInfo.rawClass or nil
 
+        if leftText == "Unknown" then
+            leftText = nil
+        end
+
         local infoText = leftText
             and NCColors.ClassColor(rawClass, leftText .. " " .. rightText)
             or NCColors.ClassColor(rawClass, rightText)
 
-        self.StatsFrame.infoFrame.text:SetText(infoText)
+        self.StatsFrame.infoFrame.text:SetText(infoText or "")
         UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, TruncateName(self.CurrentPlayer, 12))
     end,
 
@@ -492,10 +496,10 @@ NCInfo = {
         local contentPadding = 10
 
         -- Calculate minimum height components
-        local titleHeight = f.title:GetHeight() + 8
-        local headerFrameHeight = f.headerFrame:GetHeight() + 5
+        local titleHeight = f.title:GetHeight() + 2
+        local headerFrameHeight = f.headerFrame:GetHeight() + 2
         local dropdownFrameHeight = f.dropdownFrame:GetHeight() + 10  -- Increased spacing
-        local infoFrameHeight = f.infoFrame:GetHeight() + 5
+        local infoFrameHeight = f.infoFrame:GetHeight() + 2
         local compareCheckboxHeight = 0
         if content.compareCheckbox and content.compareCheckbox:IsShown() then
             compareCheckboxHeight = content.compareCheckbox:GetHeight() + 5
@@ -610,24 +614,21 @@ NCInfo = {
             row.columns[1]:SetTextColor(unpack(row.columns[1].desiredColor))
             row.columns[2]:SetTextColor(unpack(row.columns[2].desiredColor))
         end)
+        row:SetPassThroughButtons("RightButton")
     end,
 
     UpdatePrevNextButtons = function(self, dungeonData)
-        if not IsInGroup() then
+        dungeonData = dungeonData or (NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon())
+
+        if not dungeonData then
             self.StatsFrame.prevPlayerButton:Disable()
             self.StatsFrame.nextPlayerButton:Disable()
             return
         end
 
         if not self.playerList or GetTime() - (self.lastPlayerListUpdate or 0) > 1 then
-            local roster = NCRuntime:GetGroupRoster()
-            local snapshot = dungeonData and dungeonData.RosterSnapshot or {}
-            local mergedData = {}
-            for k, v in pairs(roster) do mergedData[k] = v end
-            for k, v in pairs(snapshot) do mergedData[k] = mergedData[k] or v end
-
             self.playerList = {}
-            for name in pairs(mergedData) do
+            for name in pairs(dungeonData.RosterSnapshot) do
                 table.insert(self.playerList, name)
             end
             table.sort(self.playerList)
@@ -657,7 +658,6 @@ NCInfo = {
         local playerDisplayText = TruncateName(self.CurrentPlayer, maxPlayerLength)
         UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, playerDisplayText)
         UIDropDownMenu_SetWidth(self.StatsFrame.playerDropdown, self.DropdownWidth)
-
         UIDropDownMenu_Initialize(self.StatsFrame.playerDropdown, function(dropdown, level, menuList)
             self:InitializePlayerDropdown(dropdown, level, menuList)
         end)
@@ -667,15 +667,15 @@ NCInfo = {
         if not self.StatsFrame then return end
 
         local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
-        local playerCount = dungeonData and NemesisChat:GetLength(dungeonData.RosterSnapshot) or NemesisChat:GetLength(NCRuntime:GetGroupRoster())
+        local playerCount = dungeonData and NemesisChat:GetLength(dungeonData.RosterSnapshot) or 1
 
         local f = self.StatsFrame
         UIDropDownMenu_Initialize(f.playerDropdown, function(dropdown, level, menuList)
             if level == 1 then
                 if playerCount > 5 then
-                    self:CreateRaidGroupedDropdown(dropdown, level)
+                    self:CreateRaidGroupedDropdown(dropdown, level, dungeonData)
                 elseif playerCount > 1 then
-                    self:CreateNormalDropdown(dropdown, level)
+                    self:CreateNormalDropdown(dropdown, level, dungeonData)
                 else
                     self:CreateSoloDropdown(dropdown, level)
                 end
@@ -708,9 +708,11 @@ NCInfo = {
         end
     end,
 
-    CreateNormalDropdown = function(self, dropdown, level)
-        local roster = NCDungeon:IsActive() and NCDungeon.RosterSnapshot or (NCRuntime:GetLastCompletedDungeon() and NCRuntime:GetLastCompletedDungeon().RosterSnapshot or nil) or NCRuntime:GetGroupRoster()
-        for name, player in pairs(roster) do
+    CreateNormalDropdown = function(self, dropdown, level, dungeonData)
+        dungeonData = dungeonData or (NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon())
+        if not dungeonData then return end
+
+        for name, player in pairs(dungeonData.RosterSnapshot) do
             self:AddPlayerToDropdown({name = name, data = player}, dropdown, level)
         end
     end,
@@ -718,13 +720,12 @@ NCInfo = {
     GroupRaidPlayers = function(self)
         local groupedPlayers = {}
         for i = 1, 8 do groupedPlayers[i] = {} end
-        local roster = NCDungeon:IsActive() and NCDungeon.RosterSnapshot or (NCRuntime:GetLastCompletedDungeon() and NCRuntime:GetLastCompletedDungeon().RosterSnapshot or nil) or NCRuntime:GetGroupRoster()
+        local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        if not dungeonData then return groupedPlayers end
 
-        if NemesisChat:GetLength(roster) > 5 then
-            for name, player in pairs(roster) do
-                local subgroup = player.group or select(2, GetRaidRosterInfo(tonumber(string.gsub(player.token, "raid", ""))))
-                table.insert(groupedPlayers[subgroup], {name = name, data = player})
-            end
+        for name, player in pairs(dungeonData.RosterSnapshot) do
+            local subgroup = player.group or 1
+            table.insert(groupedPlayers[subgroup], {name = name, data = player})
         end
 
         return groupedPlayers
@@ -782,9 +783,10 @@ NCInfo = {
         info.checked = (name == self.CurrentPlayer)
         info.func = function(self)
             NCInfo.CurrentPlayer = self.value
-            NCInfo:UpdateDropdownText()
             NCInfo:UpdatePlayerInfo()
             NCInfo:UpdateMetrics()
+            NCInfo:UpdateDropdownText()
+            NCInfo:SetWidthsAndTruncatedTexts()
             CloseDropDownMenus()
         end
 
@@ -902,6 +904,9 @@ NCInfo = {
     ReportMetric = function(self, metric, player)
         if not IsNCEnabled() then return end
 
+        local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        if not dungeonData then return end
+
         local channel = self.SelectedChannel or NemesisChat:GetActualChannel("GROUP")
         local message = ""
 
@@ -951,11 +956,11 @@ NCInfo = {
 
         -- Construct the message
         if player == UnitName("player") then
-            message = string.format("My %s (Dungeon): %s", (self.METRIC_REPLACEMENTS[metric] or metric), NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
+            message = string.format("My %s (%s): %s", (self.METRIC_REPLACEMENTS[metric] or metric), dungeonData.Identifier or "dungeon", NemesisChat:FormatNumber(self:GetDungeonStat(dungeonData, player, metric)))
         else
-            message = string.format("%s for %s (Dungeon): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player, NemesisChat:FormatNumber(NCDungeon:GetStats(player, metric)))
+            message = string.format("%s for %s (%s): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player, dungeonData.Identifier or "dungeon", NemesisChat:FormatNumber(self:GetDungeonStat(dungeonData, player, metric)))
             if core.db.profile.infoClickCompare then
-                local delta = NCDungeon:GetStats(player, metric) - NCDungeon:GetStats(UnitName("player"), metric)
+                local delta = self:GetDungeonStat(dungeonData, player, metric) - self:GetDungeonStat(dungeonData, UnitName("player"), metric)
                 if delta > 0 then
                     message = message .. string.format(" (%s higher than mine)", NemesisChat:FormatNumber(delta))
                 elseif delta < 0 then
@@ -978,6 +983,7 @@ NCInfo = {
         if not self.StatsFrame or not self.StatsFrame.playerDropdown then
             return
         end
+
         local maxLength = GetMaxDropdownTextLength(self.StatsFrame)
         local truncatedName = TruncateName(self.CurrentPlayer, maxLength)
         UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, truncatedName)
@@ -987,66 +993,46 @@ NCInfo = {
     SelectNextPlayer = function(self)
         if not IsNCEnabled() then return end
 
-        local roster = NCRuntime:GetGroupRoster()
-        local snapshot = NCDungeon.RosterSnapshot
-        local mergedData = MapMerge(snapshot, roster)
+        local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        if not dungeonData then return end
+
         local playerList = {}
-        for name in pairs(mergedData) do
+        for name in pairs(dungeonData.RosterSnapshot) do
             table.insert(playerList, name)
         end
         table.sort(playerList)
 
-        local currentIndex = nil
-        for index, name in ipairs(playerList) do
-            if name == self.CurrentPlayer then
-                currentIndex = index
-                break
-            end
-        end
-
+        local currentIndex = tIndexOf(playerList, self.CurrentPlayer)
         if currentIndex then
-            local nextIndex = currentIndex + 1
-            if nextIndex > #playerList then
-                nextIndex = 1
-            end
+            local nextIndex = currentIndex % #playerList + 1
             self.CurrentPlayer = playerList[nextIndex]
-            self:UpdatePlayerInfo()
-            self:UpdateMetrics()
+            self:UpdatePlayerInfo(dungeonData)
+            self:UpdateMetrics(dungeonData)
             self:UpdateDropdownText()
-            UIDropDownMenu_Refresh(self.StatsFrame.playerDropdown)
+            -- UIDropDownMenu_Refresh(self.StatsFrame.playerDropdown)
         end
     end,
 
     SelectPreviousPlayer = function(self)
         if not IsNCEnabled() then return end
 
-        local roster = NCRuntime:GetGroupRoster()
-        local snapshot = NCDungeon.RosterSnapshot
-        local mergedData = MapMerge(snapshot, roster)
+        local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        if not dungeonData then return end
+
         local playerList = {}
-        for name in pairs(mergedData) do
+        for name in pairs(dungeonData.RosterSnapshot) do
             table.insert(playerList, name)
         end
         table.sort(playerList)
 
-        local currentIndex = nil
-        for index, name in ipairs(playerList) do
-            if name == self.CurrentPlayer then
-                currentIndex = index
-                break
-            end
-        end
-
+        local currentIndex = tIndexOf(playerList, self.CurrentPlayer)
         if currentIndex then
-            local prevIndex = currentIndex - 1
-            if prevIndex < 1 then
-                prevIndex = #playerList
-            end
+            local prevIndex = (currentIndex - 2 + #playerList) % #playerList + 1
             self.CurrentPlayer = playerList[prevIndex]
-            self:UpdatePlayerInfo()
-            self:UpdateMetrics()
+            self:UpdatePlayerInfo(dungeonData)
+            self:UpdateMetrics(dungeonData)
             self:UpdateDropdownText()
-            UIDropDownMenu_Refresh(self.StatsFrame.playerDropdown)
+            --UIDropDownMenu_Refresh(self.StatsFrame.playerDropdown)
         end
     end,
 
@@ -1171,6 +1157,7 @@ NCInfo = {
     -- Generate the list of available channels based on current group state
     _GetAvailableChannels = function(self)
         local channels = {}
+        local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
 
         -- Always available channels
         table.insert(channels, { text = "Say", value = "SAY" })
@@ -1184,31 +1171,21 @@ NCInfo = {
         -- Context-sensitive channels
         if IsInGroup(LE_PARTY_CATEGORY_HOME) then
             table.insert(channels, { text = "Party", value = "PARTY" })
-        end
-        if IsInRaid(LE_PARTY_CATEGORY_HOME) then
-            table.insert(channels, { text = "Raid", value = "RAID" })
-        end
-        if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
+            if IsInRaid(LE_PARTY_CATEGORY_HOME) then
+                table.insert(channels, { text = "Raid", value = "RAID" })
+            end
+        elseif IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
             table.insert(channels, { text = "Instance", value = "INSTANCE_CHAT" })
         end
+
         if C_GuildInfo and C_GuildInfo.CanSpeakInOfficerChat and C_GuildInfo.CanSpeakInOfficerChat() then
             table.insert(channels, { text = "Officer", value = "OFFICER" })
         end
 
         -- Whisper options
-        if IsInGroup() then
-            local numGroupMembers = GetNumGroupMembers()
-            local unitPrefix = IsInRaid() and "raid" or "party"
-            local startIndex = IsInRaid() and 1 or 0
-            for i = startIndex, numGroupMembers do
-                local unit = i == 0 and "player" or unitPrefix .. i
-                if UnitExists(unit) then
-                    local name, realm = UnitName(unit)
-                    if realm and realm ~= "" then
-                        name = name .. "-" .. realm
-                    end
-                    table.insert(channels, { text = "Whisper: " .. name, value = "WHISPER_" .. name })
-                end
+        if dungeonData then
+            for name in pairs(dungeonData.RosterSnapshot) do
+                table.insert(channels, { text = "Whisper: " .. name, value = "WHISPER_" .. name })
             end
         else
             -- Add player (self) for completeness

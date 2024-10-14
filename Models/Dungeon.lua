@@ -135,6 +135,11 @@ function NCDungeon:CheckCache()
                 self:ClearCache()
                 self:Reset()
             end
+
+            if not NCDungeon:IsActive() then
+                NCRuntime:SetLastCompletedDungeon(NCDungeon)
+                NCInfo:Update(true)
+            end
         end
     end
 end

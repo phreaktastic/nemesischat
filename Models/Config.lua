@@ -648,6 +648,12 @@ NCConfig = {
     SetNotifyWhenTankApplies = function(self, value)
         self.CoreDB:SetKey("notifyWhenTankApplies", value)
     end,
+    GetNotifyWhenTankAppliesSound = function(self)
+        return self.CoreDB:GetKey("notifyWhenTankAppliesSound")
+    end,
+    SetNotifyWhenTankAppliesSound = function(self, value)
+        self.CoreDB:SetKey("notifyWhenTankAppliesSound", value)
+    end,
     GetNotifyWhenHealerApplies = function(self)
         return self.CoreDB:GetKey("notifyWhenHealerApplies")
     end,
@@ -657,6 +663,12 @@ NCConfig = {
     SetNotifyWhenHealerApplies = function(self, value)
         self.CoreDB:SetKey("notifyWhenHealerApplies", value)
     end,
+    GetNotifyWhenHealerAppliesSound = function(self)
+        return self.CoreDB:GetKey("notifyWhenHealerAppliesSound")
+    end,
+    SetNotifyWhenHealerAppliesSound = function(self, value)
+        self.CoreDB:SetKey("notifyWhenHealerAppliesSound", value)
+    end,
     GetNotifyWhenDPSApplies = function(self)
         return self.CoreDB:GetKey("notifyWhenDPSApplies")
     end,
@@ -665,5 +677,11 @@ NCConfig = {
     end,
     SetNotifyWhenDPSApplies = function(self, value)
         self.CoreDB:SetKey("notifyWhenDPSApplies", value)
+    end,
+    GetNotifyWhenDPSAppliesSound = function(self)
+        return self.CoreDB:GetKey("notifyWhenDPSAppliesSound")
+    end,
+    SetNotifyWhenDPSAppliesSound = function(self, value)
+        self.CoreDB:SetKey("notifyWhenDPSAppliesSound", value)
     end,
 }

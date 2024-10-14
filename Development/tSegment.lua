@@ -102,7 +102,7 @@
 --- @field Reset fun(self: NCSegment, optIdentifier: string|nil, optStart: boolean|nil)
 --- @field ResetCallback fun(self: NCSegment, optIdentifier: string|nil, optStart: boolean|nil)
 --- @field Restore fun(self: NCSegment, backup: NCSegmentBackup)
---- @field GetBackup fun(self: NCSegment): NCSegmentBackup
+--- @field GetBackup fun(self: NCSegment): NCSegmentBackup|nil
 --- @field RegisterObserver fun(self: NCSegment, observer: table)
 --- @field UnregisterObserver fun(self: NCSegment, observer: table)
 --- @field NotifyObservers fun(self: NCSegment, statType: string, player: string, value: number)

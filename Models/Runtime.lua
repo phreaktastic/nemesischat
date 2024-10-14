@@ -13,6 +13,8 @@ local _, core = ...;
 
 --- @class NCRuntime
 core.runtimeDefaults = {
+    --- @type boolean
+    initialized = false,
     --- @type number
     dbCacheExpiration = 600, -- 10 minutes
     --- @type string
@@ -137,6 +139,12 @@ core.runtimeDefaults = {
 core.runtime = DeepCopy(core.runtimeDefaults)
 
 NCRuntime = {
+    IsInitialized = function(self)
+        return core.runtime.initialized
+    end,
+    SetInitialized = function(self, value)
+        core.runtime.initialized = value
+    end,
     GetLastFeast = function(self)
         return core.runtime.lastFeast
     end,
@@ -366,7 +374,7 @@ NCRuntime = {
         NCInfo:UpdatePlayerDropdown()
 
         if playerName ~= GetMyName() and guid then
-            self.playerGuidToRoster[guid] = data
+            core.runtime.playerGuidToRoster[guid] = data
 
             if not data.spec then
                 NemesisChat.InspectQueueManager:QueuePlayerForInspect(guid)
@@ -622,7 +630,7 @@ NCRuntime = {
                 if specID and specID > 0 then
                     -- Spec data is available
                     local id, specName, description, icon, role, classFile, className = GetSpecializationInfoByID(specID)
-                    if specName then
+                    if specName and specName ~= "Unknown" then
                         unit.spec = specName
                     end
                 else

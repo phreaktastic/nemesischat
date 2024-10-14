@@ -35,8 +35,8 @@ NCRankings = {
         Defensives = { TANK = true, HEALER = true, DAMAGER = true },
         Dispells = { TANK = true, HEALER = true, DAMAGER = true },
         DPS = { TANK = false, HEALER = true, DAMAGER = true },
-        Interrupts = { TANK = true, HEALER = false, DAMAGER = true },
-        Offheals = { TANK = true, HEALER = false, DAMAGER = true },
+        Interrupts = { TANK = true, HEALER = true, DAMAGER = true },
+        Offheals = { TANK = false, HEALER = false, DAMAGER = true },
         Pulls = { TANK = false, HEALER = true, DAMAGER = true },
     },
 

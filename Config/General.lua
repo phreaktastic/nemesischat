@@ -9,6 +9,9 @@
 -----------------------------------------------------
 local _, core = ...;
 
+local soundTable, soundTableSortKeys = GetSoundTable()
+local playingSound = 0
+
 core.options.args.generalGroup = {
     order = 1,
     type = "group",
@@ -107,27 +110,95 @@ core.options.args.generalGroup = {
                     get = function() return NCConfig:GetNotifyWhenTankApplies() end,
                     set = function(_, value) NCConfig:ToggleNotifyWhenTankApplies() end,
                 },
-                notifyWhenHealerApplies = {
+                notifyWhenTankAppliesSound = {
                     order = 2,
+                    type = "select",
+                    name = "Tank Sound",
+                    desc = "Select the sound to play when a tank applies to your group.",
+                    values = soundTable,
+                    sorting = soundTableSortKeys,
+                    get = function() return NCConfig:GetNotifyWhenTankAppliesSound() end,
+                    set = function(_, value)
+                        -- Stop the currently playing sound, if any
+                        if playingSound then
+                            StopSound(playingSound)
+                        end
+
+                        -- Short delay to clear the audio buffer
+                        C_Timer.After(0.1, function()
+                            playingSound = select(2, PlaySound(value, "Master"))
+                        end)
+
+                        -- Save the sound to the DB
+                        NCConfig:SetNotifyWhenTankAppliesSound(value)
+                    end,
+                    disabled = function() return not NCConfig:GetNotifyWhenTankApplies() end,
+                },
+                notifyWhenHealerApplies = {
+                    order = 3,
                     type = "toggle",
                     name = "Notify When Healer Applies",
                     desc = "Display a message and play a sound when a healer applies to your group.",
                     get = function() return NCConfig:GetNotifyWhenHealerApplies() end,
                     set = function(_, value) NCConfig:ToggleNotifyWhenHealerApplies() end,
                 },
+                notifyWhenHealerAppliesSound = {
+                    order = 4,
+                    type = "select",
+                    name = "Healer Sound",
+                    desc = "Select the sound to play when a healer applies to your group.",
+                    values = soundTable,
+                    sorting = soundTableSortKeys,
+                    get = function() return NCConfig:GetNotifyWhenHealerAppliesSound() end,
+                    set = function(_, value)
+                        -- Stop the currently playing sound, if any
+                        if playingSound then
+                            StopSound(playingSound)
+                        end
+
+                        -- Play the new sound and store its handle
+                        playingSound = select(2, PlaySound(value, "Master"))
+
+                        -- Save the sound to the DB
+                        NCConfig:SetNotifyWhenHealerAppliesSound(value)
+                    end,
+                    disabled = function() return not NCConfig:GetNotifyWhenHealerApplies() end,
+                },
                 notifyWhenDPSApplies = {
-                    order = 3,
+                    order = 5,
                     type = "toggle",
                     name = "Notify When DPS Applies",
                     desc = "Display a message and play a sound when a DPS applies to your group.",
                     get = function() return NCConfig:GetNotifyWhenDPSApplies() end,
                     set = function(_, value) NCConfig:ToggleNotifyWhenDPSApplies() end,
                 },
+                notifyWhenDPSAppliesSound = {
+                    order = 6,
+                    type = "select",
+                    name = "DPS Sound",
+                    desc = "Select the sound to play when a DPS applies to your group.",
+                    values = soundTable,
+                    sorting = soundTableSortKeys,
+                    get = function() return NCConfig:GetNotifyWhenDPSAppliesSound() end,
+                    set = function(_, value)
+                        -- Stop the currently playing sound, if any
+                        if playingSound then
+                            StopSound(playingSound)
+                        end
+
+                        -- Play the new sound and store its handle
+                        playingSound = select(2, PlaySound(value, "Master"))
+
+                        -- Save the sound to the DB
+                        NCConfig:SetNotifyWhenDPSAppliesSound(value)
+                    end,
+                    disabled = function() return not NCConfig:GetNotifyWhenDPSApplies() end,
+                },
                 disclaimer = {
-                    order = 4,
+                    order = 7,
                     type = "description",
                     fontSize = "medium",
-                    name = "NOTE: This group is experimental. In the future, you'll be able to customize the messages and sounds.",
+                    name = "These features are a work in progress, and will likely grow/mature over time.",
                 }
             },
         },
@@ -193,6 +264,12 @@ core.options.args.generalGroup = {
                     get = function() return NCConfig:IsAllowingBrannMessages() end,
                     set = function(_, value) return NCConfig:SetAllowingBrannMessages(value) end,
                 },
+                delveInfoDescription = {
+                    order = 2,
+                    type = "description",
+                    fontSize = "medium",
+                    name = "NOTE: In order to see any stats in a solo delve, you MUST allow Brann Messages.",
+                }
             }
         },
         mPlusPerformance = {

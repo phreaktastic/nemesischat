@@ -10,11 +10,14 @@
 # Third party libraries
 Embeds.xml
 
+# NC Lookup Tables
+LookupTables\SoundTable.lua
+
 # Core NC initialization
 Init.lua
 Config\Config.lua
 
-#Core NC models
+# Core NC models
 Models\DB.lua
 Models\Config.lua
 Models\Runtime.lua
@@ -33,12 +36,12 @@ Helpers\Group.lua
 Helpers.lua
 
 # NC models
+Models\Event.lua
 Models\CombatLogEvent.lua
 Models\Rankings.lua
 Models\Segment.lua
 Models\Boss.lua
 Models\Dungeon.lua
-Models\Event.lua
 Models\Controller.lua
 Models\Spell.lua
 Models\Combat.lua
@@ -69,8 +72,10 @@ Migrations.lua
 
 # NC core functionality
 Core.lua
+Events\EventTables.lua
 
 # NC Handlers
 Handlers\CombatLog.lua
 Handlers\AddonCommunication.lua
 Handlers\InspectQueueManager.lua
+Handlers\ErrorHandler.lua

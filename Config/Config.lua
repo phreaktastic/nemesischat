@@ -30,8 +30,11 @@ core.defaults = {
         reportLowPerformersOnJoinThreshold = 5,
         rollingMessages = true,
         notifyWhenTankApplies = true,
+        notifyWhenTankAppliesSound = 8959,
         notifyWhenHealerApplies = true,
+        notifyWhenHealerAppliesSound = 8959,
         notifyWhenDpsApplies = true,
+        notifyWhenDpsAppliesSound = 18019,
         reportConfig = {
             channel = "GROUP",
             excludeNemeses = false,
@@ -122,7 +125,7 @@ core.defaults = {
 	},
 }
 
-core.options = { 
+core.options = {
 	name = "Nemesis Chat",
 	handler = NemesisChat,
 	type = "group",
@@ -139,8 +142,12 @@ core.options = {
 
 -- Initialization - called from core
 function NemesisChat:InitializeConfig()
+    if self.configInitialized then return end
+
     AC:RegisterOptionsTable("NemesisChat_options", core.options)
-	core.optionsFrame = ACD:AddToBlizOptions("NemesisChat_options", "NemesisChat")
+	self.optionsFrame = ACD:AddToBlizOptions("NemesisChat_options", "NemesisChat")
+
+    self.configInitialized = true
 end
 
 -- Common functions for all tabs / UI

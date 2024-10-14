@@ -40,8 +40,11 @@ local function CheckAndUpdateDelveStatus()
     -- After leaving a delve, these parameters will all still be true (for a brief moment), there for we need to check the lastDelveTime as well
     if dName == "Delves" and not inDelve and lfgID and instanceType and instanceType == "scenario" and GetTime() - lastDelveTime > 3 then
         inDelve = true
-        NCDungeon:Start(name .. " (Delve)")
-        NemesisChat:Print("Delve started: " .. name)
+
+        C_Timer.After(2, function()
+            NCDungeon:Start(name .. " (Delve)")
+            NemesisChat:Print("Delve started: " .. name)
+        end)
     elseif dName ~= "Delves" and inDelve then
         HandleLeaveDelve()
     end
@@ -92,9 +95,10 @@ end
 
 function NemesisChat:PLAYER_ENTERING_WORLD()
     if not IsNCEnabled() then return end
-    NCRuntime:UpdateInitializationTime()
+    if not NCRuntime:IsInitialized() then
+        self:InitializeCore()
+    end
     NCRuntime:ClearPetOwners()
-    NemesisChat:SilentGroupSync()
     HandleZoneChanges()
     CheckAndUpdateDelveStatus()
 end
@@ -104,19 +108,19 @@ function NemesisChat:PLAYER_LEAVING_WORLD()
     if inFollowerDungeon then
         NCEvent:Initialize()
         NCDungeon:Finish(false)
-        NemesisChat:Print("Follower Dungeon abandoned.")
+        self:Print("Follower Dungeon abandoned.")
         inFollowerDungeon = false
     end
     if inDelve and NCDungeon:IsActive() then
         NCEvent:Initialize()
         NCDungeon:Finish(false)
-        NemesisChat:Print("Delve abandoned.")
+        self:Print("Delve abandoned.")
         inDelve = false
         lastDelveTime = GetTime()
     elseif inDelve and not NCDungeon:IsActive() then
         inDelve = false
         lastDelveTime = GetTime()
-        NemesisChat:Print("Delve completed.")
+        self:Print("Delve completed.")
     end
     NCRuntime:ClearPetOwners()
     HandleLeaveDelve()
@@ -125,10 +129,10 @@ end
 
 function NemesisChat:CHALLENGE_MODE_START()
     if not IsNCEnabled() then return end
-    NemesisChat:CheckGroup()
+    self:CheckGroup()
     NCEvent:Initialize()
     NCDungeon:Reset("M+ Dungeon", true)
-    NemesisChat:HandleEvent()
+    self:HandleEvent()
 end
 
 function NemesisChat:CHALLENGE_MODE_COMPLETED()
@@ -136,8 +140,8 @@ function NemesisChat:CHALLENGE_MODE_COMPLETED()
     local _, _, _, onTime = C_ChallengeMode.GetCompletionInfo()
     NCEvent:Initialize()
     NCDungeon:Finish(onTime)
-    NemesisChat:HandleEvent()
-    NemesisChat:Report("DUNGEON")
+    self:HandleEvent()
+    self:Report("DUNGEON")
     NCRuntime:ClearPetOwners()
 end
 
@@ -150,6 +154,7 @@ end
 
 function NemesisChat:SCENARIO_CRITERIA_UPDATE()
     if not IsNCEnabled() then return end
+    self:Print("SCENARIO_CRITERIA_UPDATE")
     CheckFollowerDungeonStatus()
 end
 
@@ -159,17 +164,17 @@ function NemesisChat:SCENARIO_COMPLETED()
 
     if inFollowerDungeon then
         NCDungeon:Finish(true)
-        NemesisChat:HandleEvent()
-        NemesisChat:Report("DUNGEON")
+        self:HandleEvent()
+        self:Report("DUNGEON")
         inFollowerDungeon = false
-        NemesisChat:Print("Follower Dungeon completed")
+        self:Print("Follower Dungeon completed")
     elseif inDelve then
         NCDungeon:Finish(true)
-        NemesisChat:HandleEvent()
-        NemesisChat:Report("DUNGEON")
+        self:HandleEvent()
+        self:Report("DUNGEON")
         inDelve = false
         lastDelveTime = GetTime()
-        NemesisChat:Print("Delve completed.")
+        self:Print("Delve completed.")
     end
 
     NCRuntime:ClearPetOwners()
@@ -179,15 +184,15 @@ function NemesisChat:ENCOUNTER_START(_, encounterID, encounterName, difficultyID
     if not IsNCEnabled() then return end
     NCEvent:Initialize()
     NCBoss:Reset(encounterName, true)
-    NemesisChat:HandleEvent()
+    self:HandleEvent()
 end
 
 function NemesisChat:ENCOUNTER_END(_, encounterID, encounterName, difficultyID, groupSize, success, fightTime)
     if not IsNCEnabled() then return end
     NCEvent:Initialize()
     NCBoss:Finish(success == 1)
-    NemesisChat:HandleEvent()
-    NemesisChat:Report("BOSS")
+    self:HandleEvent()
+    self:Report("BOSS")
 end
 
 function NemesisChat:GROUP_ROSTER_UPDATE()
@@ -207,7 +212,7 @@ function NemesisChat:PLAYER_REGEN_DISABLED()
     NCEvent:Initialize()
     NCCombat:Reset("Combat Segment " .. GetTime(), true)
     NCRuntime:ClearPlayerStates()
-    NemesisChat:HandleEvent()
+    self:HandleEvent()
     CheckAndUpdateDelveStatus()
 end
 
@@ -215,15 +220,15 @@ function NemesisChat:PLAYER_REGEN_ENABLED()
     if not IsNCEnabled() then return end
     NCEvent:Initialize()
     NCCombat:Finish()
-    NemesisChat:HandleEvent()
-    NemesisChat:Report("COMBAT")
+    self:HandleEvent()
+    self:Report("COMBAT")
 end
 
 function NemesisChat:PLAYER_ROLES_ASSIGNED()
     if not IsNCEnabled() then return end
     NCEvent:Initialize()
     NCRuntime:UpdateGroupRosterRoles()
-    NemesisChat:CheckGroup()
+    self:CheckGroup()
 end
 
 function NemesisChat:CHAT_MSG_ADDON(_, prefix, payload, distribution, sender)
@@ -253,7 +258,7 @@ function NemesisChat:INSPECT_READY(event, guid)
         local specID = GetInspectSpecialization(unit.token)
         if specID and specID > 0 then
             local id, specName, description, icon, role, classFile, className = GetSpecializationInfoByID(specID)
-            if specName then
+            if specName and specName ~= "Unknown" then
                 unit.spec = specName
             end
         end
@@ -263,7 +268,6 @@ end
 function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
     local activeEntryInfo = C_LFGList.GetActiveEntryInfo()
     if not activeEntryInfo then
-        NemesisChat:Print("No active group listing")
         return
     end
 
@@ -280,17 +284,17 @@ function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
 
         if tank and NCConfig:GetNotifyWhenTankApplies() then
             local message = string.format("A %d ilvl tank has applied to your group.", itemLevel)
-            NemesisChat:Print(message)
+            self:Print(message)
             PlaySound(8959, "Master")
             break
         elseif healer and NCConfig:GetNotifyWhenHealerApplies() then
             local message = string.format("A %d ilvl healer has applied to your group.", itemLevel)
-            NemesisChat:Print(message)
+            self:Print(message)
             PlaySound(8959, "Master")
             break
         elseif damage and NCConfig:GetNotifyWhenDPSApplies() then
             local message = string.format("A %d ilvl DPS has applied to your group.", itemLevel)
-            NemesisChat:Print(message)
+            self:Print(message)
             PlaySound(18019, "Master")
             break
         end
