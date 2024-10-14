@@ -69,7 +69,7 @@ A big thanks to these people who helped make this addon better:
    - New LFG features: You'll hear a sound and see a message when a tank, healer, and/or DPS applies to your group. These options are toggleable in the settings menu (General Settings, Core, LFG QoL).
       - These are simple toggles for the time being, but we're planning to make them more customizable in the future.
       - We would still like a lot more information to be made available in this scenario, but we're not sure how to do that yet. Blizzard doesn't seem to make this information available to addons yet.
-   - The "Pulls" feature has graduadated to a full-fledged feature.
+   - The "Pulls" feature has graduated to a full-fledged feature.
       - New channel customization option for announcing pulls.
 
    > All the features you'd expect from Mythic+ dungeons are now available in delves, normal dungeons, and follower dungeons.
