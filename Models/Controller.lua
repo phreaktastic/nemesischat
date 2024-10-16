@@ -60,7 +60,6 @@ function NCController:PreprocessMessages()
         tostring(NCRuntime:HasNemesis()) .. "_bystander:" .. tostring(NCRuntime:HasBystander())
     if self.lastGroupCacheKey == groupCacheKey then
         -- No significant group change, skip preprocessing
-        NemesisChat:Print("Skipping message preprocessing")
         return
     end
     self.lastGroupCacheKey = groupCacheKey
