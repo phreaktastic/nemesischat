@@ -9,6 +9,9 @@
 -----------------------------------------------------
 local _, core = ...;
 
+local soundTable, soundTableSortKeys = GetSoundTable()
+local playingSound = 0
+
 core.options.args.generalGroup = {
     order = 1,
     type = "group",
@@ -83,10 +86,124 @@ core.options.args.generalGroup = {
                     get = function() return NCConfig:GetMinimumTime() end,
                     set = function(_, value) return NCConfig:SetMinimumTime(value) end,
                 },
+                rollingMessagesCheckbox = {
+                    order = 7,
+                    type = "toggle",
+                    name = "Rolling Messages",
+                    desc = "This allows you to cycle through messages, rather than sending a random message.",
+                    get = function() return NCConfig:IsRollingMessages() end,
+                    set = function(_, value) return NCConfig:ToggleRollingMessages() end,
+                },
             }
         },
-        nonCombatMode = {
+        lfgQoL = {
             order = 2,
+            type = "group",
+            name = "LFG QoL",
+            inline = true,
+            args = {
+                notifyWhenTankApplies = {
+                    order = 1,
+                    type = "toggle",
+                    name = "Notify When Tank Applies",
+                    desc = "Display a message and play a sound when a tank applies to your group.",
+                    get = function() return NCConfig:GetNotifyWhenTankApplies() end,
+                    set = function(_, value) NCConfig:ToggleNotifyWhenTankApplies() end,
+                },
+                notifyWhenTankAppliesSound = {
+                    order = 2,
+                    type = "select",
+                    name = "Tank Sound",
+                    desc = "Select the sound to play when a tank applies to your group.",
+                    values = soundTable,
+                    sorting = soundTableSortKeys,
+                    get = function() return NCConfig:GetNotifyWhenTankAppliesSound() end,
+                    set = function(_, value)
+                        -- Stop the currently playing sound, if any
+                        if playingSound then
+                            StopSound(playingSound)
+                        end
+
+                        -- Short delay to clear the audio buffer
+                        C_Timer.After(0.1, function()
+                            playingSound = select(2, PlaySound(value, "Master"))
+                        end)
+
+                        -- Save the sound to the DB
+                        NCConfig:SetNotifyWhenTankAppliesSound(value)
+                    end,
+                    disabled = function() return not NCConfig:GetNotifyWhenTankApplies() end,
+                },
+                notifyWhenHealerApplies = {
+                    order = 3,
+                    type = "toggle",
+                    name = "Notify When Healer Applies",
+                    desc = "Display a message and play a sound when a healer applies to your group.",
+                    get = function() return NCConfig:GetNotifyWhenHealerApplies() end,
+                    set = function(_, value) NCConfig:ToggleNotifyWhenHealerApplies() end,
+                },
+                notifyWhenHealerAppliesSound = {
+                    order = 4,
+                    type = "select",
+                    name = "Healer Sound",
+                    desc = "Select the sound to play when a healer applies to your group.",
+                    values = soundTable,
+                    sorting = soundTableSortKeys,
+                    get = function() return NCConfig:GetNotifyWhenHealerAppliesSound() end,
+                    set = function(_, value)
+                        -- Stop the currently playing sound, if any
+                        if playingSound then
+                            StopSound(playingSound)
+                        end
+
+                        -- Play the new sound and store its handle
+                        playingSound = select(2, PlaySound(value, "Master"))
+
+                        -- Save the sound to the DB
+                        NCConfig:SetNotifyWhenHealerAppliesSound(value)
+                    end,
+                    disabled = function() return not NCConfig:GetNotifyWhenHealerApplies() end,
+                },
+                notifyWhenDPSApplies = {
+                    order = 5,
+                    type = "toggle",
+                    name = "Notify When DPS Applies",
+                    desc = "Display a message and play a sound when a DPS applies to your group.",
+                    get = function() return NCConfig:GetNotifyWhenDPSApplies() end,
+                    set = function(_, value) NCConfig:ToggleNotifyWhenDPSApplies() end,
+                },
+                notifyWhenDPSAppliesSound = {
+                    order = 6,
+                    type = "select",
+                    name = "DPS Sound",
+                    desc = "Select the sound to play when a DPS applies to your group.",
+                    values = soundTable,
+                    sorting = soundTableSortKeys,
+                    get = function() return NCConfig:GetNotifyWhenDPSAppliesSound() end,
+                    set = function(_, value)
+                        -- Stop the currently playing sound, if any
+                        if playingSound then
+                            StopSound(playingSound)
+                        end
+
+                        -- Play the new sound and store its handle
+                        playingSound = select(2, PlaySound(value, "Master"))
+
+                        -- Save the sound to the DB
+                        NCConfig:SetNotifyWhenDPSAppliesSound(value)
+                    end,
+                    disabled = function() return not NCConfig:GetNotifyWhenDPSApplies() end,
+                },
+                disclaimer = {
+                    order = 7,
+                    type = "description",
+                    fontSize = "medium",
+                    name = "These features are a work in progress, and will likely grow/mature over time.",
+                }
+            },
+        },
+        nonCombatMode = {
+            order = 3,
             type = "group",
             name = "Non-Combat Mode",
             inline = true,
@@ -134,7 +251,7 @@ core.options.args.generalGroup = {
             }
         },
         delves = {
-            order = 3,
+            order = 4,
             type = "group",
             name = "Delve Configuration",
             inline = true,
@@ -147,10 +264,16 @@ core.options.args.generalGroup = {
                     get = function() return NCConfig:IsAllowingBrannMessages() end,
                     set = function(_, value) return NCConfig:SetAllowingBrannMessages(value) end,
                 },
+                delveInfoDescription = {
+                    order = 2,
+                    type = "description",
+                    fontSize = "medium",
+                    name = "NOTE: In order to see any stats in a solo delve, you MUST allow Brann Messages.",
+                }
             }
         },
         mPlusPerformance = {
-            order = 4,
+            order = 5,
             type = "group",
             name = "Mythic+ Tracking & Announcing",
             inline = true,
@@ -220,9 +343,9 @@ core.options.args.generalGroup = {
             }
         },
         apis = {
-            order = 5,
+            order = 6,
             type = "group",
-            name = "APIs",
+            name = "Plugins",
             inline = false,
             hidden = function() return core.apiConfigOptions == {} end,
         },

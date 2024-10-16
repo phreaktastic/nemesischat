@@ -1,0 +1,23 @@
+--- @class NCSegmentBackup
+--- @field Active boolean
+--- @field FinishTime number
+--- @field Identifier string|nil
+--- @field StartTime number
+--- @field Success boolean
+--- @field TotalTime number
+--- @field Wipe boolean
+--- @field ActionPoints table<string, {Amount: number, Description: string|nil, Timestamp: number}[]>
+--- @field Affixes table<string, number>
+--- @field AvoidableDamage table<string, number>
+--- @field CrowdControl table<string, number>
+--- @field Deaths table<string, number>
+--- @field Defensives table<string, number>
+--- @field Dispells table<string, number>
+--- @field Heals table<string, number>
+--- @field Interrupts table<string, number>
+--- @field Kills table<string, number>
+--- @field OffHeals table<string, number>
+--- @field Pulls table<string, number>
+--- @field RosterSnapshot table<string, GroupRosterPlayer>
+--- @field DetailsSegment integer
+--- @field backupTime number

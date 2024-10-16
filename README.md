@@ -35,11 +35,11 @@ Nemesis Chat works in a fairly simple manner from a high level. However, the int
 
 ## Step 1: An event fires
 
-The first line in every event: `NCEvent:Initialize()` is called, which initializes ephemeral objects for later reference. This will entirely wipe `NCEvent`, `NCSpell`, and `NCController` for each and every event. Bottom line, these objects cannot be referenced from event to event; rather, they are **only** available for one event fire.
+The first line in every event: `NCEvent:Reset()` is called, which initializes ephemeral objects for later reference. This will entirely wipe `NCEvent`, `NCSpell`, and `NCController` for each and every event. Bottom line, these objects cannot be referenced from event to event; rather, they are **only** available for one event fire.
 
 ## Step 2: Proper objects are hydrated
 
-### All Events: 
+### All Events:
 
 `NCEvent` is initialized with the following:
 
@@ -81,7 +81,7 @@ ncSpell = {
 
 All of the models below inherit from `NCSegment`, which is a model designed for a particular time segment. More information on this particular model can be found below the overview of its children. It is recommended to review the model itself before modifying any children.
 
-### M+ Dungeon Start: 
+### M+ Dungeon Start:
 
 On start, `NCDungeon` will be hydrated with the following properties:
 
@@ -100,7 +100,7 @@ On start, `NCDungeon` will be hydrated with the following properties:
 
 ---
 
-### M+ Dungeon End: 
+### M+ Dungeon End:
 
 On end, `NCDungeon` will be updated / hydrated with the following properties:
 
@@ -120,7 +120,7 @@ On end, `NCDungeon` will be updated / hydrated with the following properties:
 
 ---
 
-### Boss Fight Start: 
+### Boss Fight Start:
 
 On start, `NCBoss` will be hydrated with the following properties:
 
@@ -137,7 +137,7 @@ On start, `NCBoss` will be hydrated with the following properties:
 
 ---
 
-### Boss Fight End: 
+### Boss Fight End:
 
 On end, `NCBoss` will be updated / hydrated with the following properties:
 
@@ -154,7 +154,7 @@ On end, `NCBoss` will be updated / hydrated with the following properties:
 
 ---
 
-### Combat Start: 
+### Combat Start:
 
 On combat start, `NCCombat` will be hydrated with the following properties:
 
@@ -168,7 +168,7 @@ Each time an interrupt fires or avoidable damage is taken (assuming GTFO is inst
 
 ---
 
-### Combat End: 
+### Combat End:
 
 On combat end, `active` is updated to `false`. Data will not be wiped until a new combat start event fires.
 
@@ -204,7 +204,7 @@ The flow of message retrieval is as follows:
 Category -> Event -> Target
 ```
 
-Where: 
+Where:
 
 - `Category` may be `BOSS`, `COMBATLOG`, `GROUP`, or `CHALLENGE`.
 - `Event` may be `SUCCESS`, `FAIL`, `DEATH`, etc.
@@ -261,13 +261,13 @@ NC has undergone multiple rewrites from the ground up. From idea, to POC, to wha
 
 ### Core
 
-The core codebase should be extremely flexible to fork and expand upon. If you need more properties within `core.NCBoss` for example, you may simply edit it within `Init.lua`: `core.runtimeDefaults.ncBoss`. Every time this object is instantiated, it will use `core.runtimeDefaults` to do so. This is the same for every other core object. 
+The core codebase should be extremely flexible to fork and expand upon. If you need more properties within `core.NCBoss` for example, you may simply edit it within `Init.lua`: `core.runtimeDefaults.ncBoss`. Every time this object is instantiated, it will use `core.runtimeDefaults` to do so. This is the same for every other core object.
 
 ### UI / Configuration
 
-The configuration screen is, however, less flexible. It has proven to be a challenge to allow flexibility within the configuration screen, while simultaneously maintaining congruency within the core logic. 
+The configuration screen is, however, less flexible. It has proven to be a challenge to allow flexibility within the configuration screen, while simultaneously maintaining congruency within the core logic.
 
-For example, available events: Feasts are 100% custom logic, in which we simply check if a player within the party cast a spell whose id is found within `core.feastIDs`. That in mind, representing this on versatile-yet-easy UI can be challenging. It is a delicate dance offering configurability *and* an easy-to-use interface. 
+For example, available events: Feasts are 100% custom logic, in which we simply check if a player within the party cast a spell whose id is found within `core.feastIDs`. That in mind, representing this on versatile-yet-easy UI can be challenging. It is a delicate dance offering configurability *and* an easy-to-use interface.
 
 WeakAuras tends to lean into configurability and versatility, but still maintains a fairly easy-to-grasp UI/UX. NemesisChat currently leans opposite: A much easier interface with (for better or worse) less configurability / versatility. There is no opposition to more versatility, however, it should be widely understandable when configuring.
 
@@ -295,7 +295,7 @@ This adds a configuration toggle to Nemesis Chat's `General->APIs` section. Unde
 ```
 :AddCompatibilityCheck({
     configCheck = false,
-    exec = function() 
+    exec = function()
         if Details == nil then
             return false, "Details! is not installed."
         end
@@ -310,7 +310,7 @@ This method call is adding a compatibility check which will be run in core logic
 ```
 :AddCompatibilityCheck({
     configCheck = true,
-    exec = function() 
+    exec = function()
         if not core.db.profile.API["NC_DETAILS" .. NemesisChatAPI:GetAPI("NC_DETAILS").configOptions[1].value] then
             return false, "Details! API is not enabled."
         end
@@ -367,7 +367,7 @@ If you only add replacements, this call is not necessary and should not be used 
 
 # Contributing
 
-If you'd like to contribute, please note that PRs will not be approved unless they are clean. These are the general rules for submitting a PR: 
+If you'd like to contribute, please note that PRs will not be approved unless they are clean. These are the general rules for submitting a PR:
 
 1. **Follow existing patterns or replace them with something better.**
    - If your PR extends NC to support other spellcasts, for example, make sure you hydrate `NCSpell`, and properly leverage the existing objects while respecting the overall flow.
@@ -381,4 +381,3 @@ If you'd like to contribute, please note that PRs will not be approved unless th
    - Code should never pigeon-hole future devs into weird patterns which they must fight against. Everything implemented should empower and enable future developers.
 
    Beyond that, just know that each PR will be reviewed on a case-by-case basis. Your interest is very much welcomed, and I look forward to potentially working with you!
-

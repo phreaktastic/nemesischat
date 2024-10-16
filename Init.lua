@@ -22,15 +22,14 @@ LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
 -- When we don't want a reference (ie, resetting to refaults)
 function DeepCopy(orig)
     local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[DeepCopy(orig_key)] = DeepCopy(orig_value)
+    if orig_type ~= 'table' then return orig end
+    local copy = {}
+    for orig_key, orig_value in pairs(orig) do
+        if type(orig_value) == 'table' then
+            copy[orig_key] = DeepCopy(orig_value)
+        else
+            copy[orig_key] = orig_value
         end
-        setmetatable(copy, DeepCopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
     end
     return copy
 end
@@ -76,7 +75,7 @@ function GetMyName()
 end
 
 function IsNCEnabled()
-    return core.db.profile.enabled
+    return NCConfig:IsEnabled()
 end
 
 function GetRole(player)
@@ -98,7 +97,7 @@ function GetRole(player)
 end
 
 function GetKeysSortedByValue(tbl, sortFunction)
-    local keys = {}
+    local keys = setmetatable({}, {__mode = "kv"})
     for key in pairs(tbl) do
         table.insert(keys, key)
     end
@@ -111,7 +110,7 @@ function GetKeysSortedByValue(tbl, sortFunction)
 end
 
 function Split(str, sep)
-    local result = {}
+    local result = setmetatable({}, {__mode = "kv"})
     local regex = ("([^%s]+)"):format(sep)
 
     for each in str:gmatch(regex) do
@@ -122,7 +121,7 @@ function Split(str, sep)
  end
 
  function ShuffleTable(t)
-    local tbl = {}
+    local tbl = setmetatable({}, {__mode = "kv"})
     for i = 1, #t do
       tbl[i] = t[i]
     end
@@ -134,7 +133,7 @@ function Split(str, sep)
   end
 
 function GetHashmapKeys(hashmap)
-    local keys = {}
+    local keys = setmetatable({}, {__mode = "kv"})
 
     if hashmap == nil then
         return keys
@@ -533,7 +532,7 @@ core.feastIDs = {
 	-- Additions from Kyrgune Below --
 
 	[216333] = 0, -- Potato Stew Feast (BattleGround (Legion))
-	[216347] = 0, -- Feast of Ribs (Battleground (Legion)) 
+	[216347] = 0, -- Feast of Ribs (Battleground (Legion))
 	[58465] = 0, -- Gigantic Feast (WotLK)
 	[58474] = 0, -- Small Feast (WotLK)
 	[185709] = 0, -- Sugar-Crusted Fish Feast (Darkmoon Faire)
@@ -692,67 +691,6 @@ core.markers = {
     },
 }
 
--- Incorporeal Beings count as every creature type. List of all players' crowd control spells that work on them, which will fear, incapacitate, or stun for 8 seconds or more:
-core.incorporealBeingCCSpells = {
-    5782, -- Fear
-    8122, -- Psychic Scream
-    6358, -- Seduction
-    115268, -- Mesmerize
-    115078, -- Paralysis
-    20066, -- Repentance
-    9484, -- Shackle Undead
-    605, -- Mind Control
-    2094, -- Blind
-    1776, -- Gouge
-    6770, -- Sap
-    51514, -- Hex
-    217832, -- Imprison
-    118, -- Polymorph
-    28272, -- Polymorph (pig)
-    28271, -- Polymorph (turtle)
-    61305, -- Polymorph (black cat)
-    61721, -- Polymorph (rabbit)
-    61780, -- Polymorph (turkey)
-    161353, -- Polymorph (bear cub)
-    161354, -- Polymorph (monkey)
-    161355, -- Polymorph (penguin)
-    161372, -- Polymorph (peacock)
-    277787, -- Polymorph (baby direhorn)
-    277792, -- Polymorph (bumblebee)
-    10326, -- Turn Evil
-    1513, -- Scare Beast
-    14326, -- Scare Beast
-    14327, -- Scare Beast
-    14328, -- Scare Beast
-    14329, -- Scare Beast
-    27044, -- Scare Beast
-    49050, -- Scare Beast
-    50519, -- Scare Beast
-    50520, -- Scare Beast
-}
-
-core.eventSubscriptions = {
-    -- Enter / exit combat
-    "PLAYER_REGEN_ENABLED", -- Exit Combat
-    "PLAYER_REGEN_DISABLED", -- Enter Combat
-
-    -- Group
-    "PLAYER_ROLES_ASSIGNED", -- Role change
-    "ENCOUNTER_START", -- Boss start
-    "ENCOUNTER_END", -- Boss end
-    "CHALLENGE_MODE_START", -- M+ start
-    "CHALLENGE_MODE_COMPLETED", -- M+ complete
-
-    -- Unit Actions
-    "UNIT_SPELLCAST_START",
-    "UNIT_SPELLCAST_SUCCEEDED",
-    "UNIT_SPELLCAST_INTERRUPTED",
-
-    -- Self
-    "PLAYER_TARGET_CHANGED",
-    "COMBAT_LOG_EVENT_UNFILTERED",
-}
-
 NC_PULL_EVENT_ATTACK = 0
 NC_PULL_EVENT_AGGRO = 1
 NC_PULL_EVENT_PET = 2
@@ -771,5 +709,33 @@ NCEvent = {}
 NCController = {}
 NCSpell = {}
 
-C_Timer.NewTicker(0.1, function() NemesisChat:CheckGuild() end)
-C_Timer.NewTicker(5, function() NemesisChat:LowPriorityTimer() end)
+C_Timer.NewTicker(0.1, function() if IsNCEnabled() then NemesisChat:CheckGuild() end end)
+-- This was a fun experiment, it might be fun to expose it to users
+-- C_Timer.NewTicker(0.25, function()
+--     if NemesisChat:HasPartyNemeses() and not IsInInstance() then
+--         local nemesisName = NemesisChat:GetRandomPartyNemesis()
+--         local nemesis = NCRuntime:GetGroupRosterPlayer(nemesisName)
+--         SetRaidTarget(nemesis.token, math.random(8))
+--     end
+-- end)
+C_Timer.NewTicker(5, function() if IsNCEnabled() then NemesisChat:LowPriorityTimer() end end)
+C_Timer.NewTicker(60, function()
+    if not NCCombat or not NCCombat.IsActive then
+        return
+    end
+    if not NCCombat:IsActive() then
+        local count = 0
+
+        for key, val in pairs(core.db.global.lastSync) do
+            if GetTime() - val > 1800 then
+                count = count + 1
+
+                core.db.global.lastSync[key] = nil
+            end
+
+            if count > 100 then
+                break
+            end
+        end
+    end
+end)

@@ -1,0 +1,6 @@
+--- @class NCEvent
+--- @field category string
+--- @field event string
+--- @field target "NA"|"SELF"|"NEMESIS"|"BYSTANDER"
+--- @field nemesis string
+--- @field bystander string
