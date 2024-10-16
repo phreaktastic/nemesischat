@@ -15,8 +15,6 @@ function NemesisChat:OnInitialize()
     self:RegisterChatCommand("nemesischat", "SlashCommand")
 
     NCMigration:Run()
-
-    self:InitializeCore()
 end
 
 function NemesisChat:OnEnable()
@@ -58,6 +56,7 @@ function NemesisChat:InitializeCore()
     if NCRuntime:IsInitialized() then return end
 
     core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
+
     NemesisChatAPI:SetAPIConfigOptions()
 
     self:InstantiateCore()

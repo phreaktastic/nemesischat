@@ -12,10 +12,20 @@ local _, core = ...;
 -----------------------------------------------------
 
 NCConfig = {
-    CoreDB = NCDB:New(),
-    ReportDB = NCDB:New("reportConfig"),
-    NemesisDB = NCDB:New("nemeses"),
+    CoreDB = {},
+    ReportDB = {},
+    NemesisDB = {},
+    isInitialized = false,
 
+    Initialize = function(self)
+        if self.isInitialized then return end
+
+        self.CoreDB = NCDB:New(nil)
+        self.ReportDB = NCDB:New("reportConfig")
+        self.NemesisDB = NCDB:New("nemeses")
+
+        self.isInitialized = true
+    end,
     IsEnabled = function(self)
         return self.CoreDB:GetKey("enabled")
     end,

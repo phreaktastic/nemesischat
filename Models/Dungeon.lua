@@ -56,6 +56,8 @@ function NCDungeon:StartCallback()
 
     NCInfo:Update()
     NCDungeon:UpdateCache()
+
+    self:RegisterObserver(NCInfo)
 end
 
 function NCDungeon:FinishCallback(success)
@@ -119,17 +121,28 @@ function NCDungeon:GetTimeLeft()
 end
 
 function NCDungeon:UpdateCache()
-    core.db.profile.cache.NCDungeon = NCDungeon:GetBackup()
-    core.db.profile.cache.DungeonRankings = NCDungeon.Rankings:GetBackup()
+    local backup = self:GetBackup()
+    backup.Level = self:GetLevel()
+    backup.Affixes = self:GetKeystoneAffixes()
+    backup.TimeLimit = self:GetTimeLimit()
+    core.db.profile.cache.NCDungeon = backup
+    core.db.profile.cache.DungeonRankings = self.Rankings:GetBackup()
 end
 
 function NCDungeon:CheckCache()
     local cachedDungeon = core.db.profile.cache.NCDungeon
+
     if cachedDungeon ~= nil and cachedDungeon ~= {} and cachedDungeon.Identifier and cachedDungeon.Identifier ~= "DUNGEON" then
-        if cachedDungeon.backupTime and cachedDungeon.backupTime > GetTime() - 300 then
+        if cachedDungeon.backupTime and cachedDungeon.backupTime < GetTime() - 300 then
             self:ClearCache()
         else
-            local success = pcall(function() NCDungeon:Restore(cachedDungeon) end)
+            local success = pcall(function()
+                NCDungeon:Restore(cachedDungeon)
+                if core.db.profile.cache.DungeonRankings then
+                    NCDungeon.Rankings:Restore(core.db.profile.cache.DungeonRankings)
+                end
+            end)
+
             if not success then
                 NemesisChat:Print("Failed to restore cached dungeon data. Stats are likely inaccurate.")
                 self:ClearCache()
@@ -139,6 +152,9 @@ function NCDungeon:CheckCache()
             if not NCDungeon:IsActive() then
                 NCRuntime:SetLastCompletedDungeon(NCDungeon)
                 NCInfo:Update(true)
+            else
+                NCDungeon:RegisterObserver(NCInfo)
+                NCInfo:Update()
             end
         end
     end
@@ -148,4 +164,14 @@ function NCDungeon:ClearCache()
     core.db.profile.cache.NCDungeon = {}
     core.db.profile.cache.NCDungeonTime = 0
     core.db.profile.cache.DungeonRankings = {}
+end
+
+function NCDungeon:Restore(backup)
+    -- Call the parent (NCSegment) Restore method
+    NCSegment.Restore(self, backup)
+
+    -- Restore NCDungeon-specific properties
+    self.Level = backup.Level or self.Level
+    self.Affixes = backup.Affixes or self.Affixes
+    self.TimeLimit = backup.TimeLimit or self.TimeLimit
 end

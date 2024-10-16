@@ -45,9 +45,9 @@ local GTFO = _G["GTFO"]
 local scanTipName = format("%s_ScanTooltip", addonName)
 local scanTipText = format("%sTextLeft2", scanTipName)
 local scanTip = CreateFrame("GameTooltip", scanTipName, WorldFrame, "GameTooltipTemplate")
-local scanTipTitles = setmetatable({}, {__mode = "kv"})
+local scanTipTitles = setmetatable({}, { __mode = "kv" })
 
-local eventInfo = setmetatable({}, {__mode = "kv"})
+local eventInfo = setmetatable({}, { __mode = "kv" })
 
 local eventPatterns = {
     ["SPELL_INTERRUPT"] = true,
@@ -76,14 +76,16 @@ end
 function CombatEventHandler:Fire()
     wipe(eventInfo)
 
-    eventInfo.time, eventInfo.subEvent, eventInfo.hidecaster, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.sourceRaidFlags, eventInfo.destGUID, eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4 = CombatLogGetCurrentEventInfo()
+    eventInfo.time, eventInfo.subEvent, eventInfo.hidecaster, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.sourceRaidFlags, eventInfo.destGUID, eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4 =
+        CombatLogGetCurrentEventInfo()
 
     if not NCRuntime:GetGroupRosterPlayer(eventInfo.sourceName) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) and not bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
         wipe(eventInfo)
         return
     end
 
-    local subEvent, eventType, sourceName, destName, misc1, misc2, misc4 = eventInfo.subEvent, eventInfo.eventType, eventInfo.sourceName, eventInfo.destName, eventInfo.misc1, eventInfo.misc2, eventInfo.misc4
+    local subEvent, eventType, sourceName, destName, misc1, misc2, misc4 = eventInfo.subEvent, eventInfo.eventType,
+        eventInfo.sourceName, eventInfo.destName, eventInfo.misc1, eventInfo.misc2, eventInfo.misc4
     local damage = CombatEventHandler:GetDamageAmount(subEvent, misc1, misc4)
 
     if bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
@@ -102,7 +104,7 @@ function CombatEventHandler:Fire()
 
     CombatEventHandler:ActionScoring()
 
-    NCEvent:Initialize()
+    NCEvent:Reset()
     NCEvent:SetCategory("COMBATLOG")
 
     if NCConfig:IsReportingPulls_Realtime() then
@@ -136,7 +138,7 @@ function CombatEventHandler:Fire()
 
         -- Damage events are handled in addition to everything else.
         NemesisChat:HandleEvent()
-        NCEvent:Initialize()
+        NCEvent:Reset()
         NCEvent:SetCategory("COMBATLOG")
     end
 
@@ -188,13 +190,16 @@ function CombatEventHandler:IsPull()
         return false
     end
 
-    local _, event, _, sguid, sname, sflags, _, dguid, dname, dflags, _, arg1, _, _, arg4 = eventInfo.time, eventInfo.subEvent, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.destGUID, eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4
+    local _, event, _, sguid, sname, sflags, _, dguid, dname, dflags, _, arg1, _, _, arg4 = eventInfo.time,
+        eventInfo.subEvent, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.destGUID,
+        eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2,
+        eventInfo.misc3, eventInfo.misc4
 
     if not UnitInParty(sname) and not UnitInParty(dname) then
         return false
     end
 
-    if (dname and sname and dname ~= sname and not string_find(event,"_RESURRECT") and not string_find(event,"_CREATE") and (string_find(event,"SWING") or string_find(event,"RANGE") or string_find(event,"SPELL"))) and not tContains(core.affixMobs, sname) and not tContains(core.affixMobs, dname) then
+    if (dname and sname and dname ~= sname and not string_find(event, "_RESURRECT") and not string_find(event, "_CREATE") and (string_find(event, "SWING") or string_find(event, "RANGE") or string_find(event, "SPELL"))) and not tContains(core.affixMobs, sname) and not tContains(core.affixMobs, dname) then
         local function IsInvalidPlayer(player, pulledUnit)
             if not pulledUnit then pulledUnit = dname end
 
@@ -216,8 +221,8 @@ function CombatEventHandler:IsPull()
             damageAmount = arg4
         end
 
-        if(not string_find(event,"_SUMMON")) then
-            if(bit_band(sflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit_band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
+        if (not string_find(event, "_SUMMON")) then
+            if (bit_band(sflags, COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit_band(dflags, COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                 -- A player is attacking a mob
                 local player = NCRuntime:GetGroupRosterPlayer(sname)
 
@@ -233,7 +238,7 @@ function CombatEventHandler:IsPull()
 
                     return true, NC_PULL_EVENT_ATTACK, sname, dname
                 end
-            elseif(bit_band(dflags,COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit_band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
+            elseif (bit_band(dflags, COMBATLOG_OBJECT_TYPE_PLAYER) ~= 0 and bit_band(sflags, COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                 -- A mob is attacking a player
                 local player = NCRuntime:GetGroupRosterPlayer(dname)
 
@@ -248,32 +253,31 @@ function CombatEventHandler:IsPull()
 
                     return true, NC_PULL_EVENT_AGGRO, dname, sname
                 end
-            elseif(bit_band(sflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit_band(dflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
+            elseif (bit_band(sflags, COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit_band(dflags, COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                 -- Player's pet attacks a mob
-                local pullname;
-                local pname = CombatEventHandler:GetPetOwner(sguid);
+                local pname = CombatEventHandler:GetPetOwner(sguid)
+                local pullname = pname ~= "Unknown" and pname or (sname .. " (pet)")
 
-                if (pname == "Unknown") then
-                    pullname = sname.." (pet)"
-                else
-                    pullname = pname
+                local player = NCRuntime:GetGroupRosterPlayer(pname)
+                if IsInvalidPlayer(player) then
+                    return false
                 end
 
                 local validDamage = damageAmount > 0
                 local isEliteEnemy = CombatEventHandler:IsEliteMob(dname)
 
                 if not UnitIsUnconscious(dguid) and validDamage and CombatEventHandler:UnitIsNotPulled(dguid) and isEliteEnemy then
-                    -- Fire off a pet pull event -- player's pet attacked a mob!
-
                     return true, NC_PULL_EVENT_PET, pullname, dname
                 end
-            elseif(bit_band(dflags,COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit_band(sflags,COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
+            elseif (bit_band(dflags, COMBATLOG_OBJECT_CONTROL_PLAYER) ~= 0 and bit_band(sflags, COMBATLOG_OBJECT_TYPE_NPC) ~= 0) then
                 --Mob attacks a player's pet
                 local pullname;
                 local pname = CombatEventHandler:GetPetOwner(dguid);
 
-                if(pname == "Unknown") then pullname = dname.." (pet)";
-                else pullname = pname .. " (pet)";
+                if (pname == "Unknown") then
+                    pullname = dname .. " (pet)";
+                else
+                    pullname = pname .. " (pet)";
                 end
 
                 if CombatEventHandler:UnitIsNotPulled(sguid) then
@@ -298,12 +302,12 @@ end
 function CombatEventHandler:IsEliteMob(name)
     -- Iterate through all nameplates since we need a token to scan the tooltip
     for i = 1, 40 do
-        local unit = "nameplate" .. i  -- Use nameplate tokens (e.g., nameplate1, nameplate2...)
+        local unit = "nameplate" .. i -- Use nameplate tokens (e.g., nameplate1, nameplate2...)
         if UnitName(unit) == name then
             -- Name matches, scan the tooltip for Elite status
             local frame = CreateFrame("GameTooltip", "TooltipScan", nil, "GameTooltipTemplate")
             frame:SetOwner(WorldFrame, "ANCHOR_NONE")
-            frame:SetUnit(unit)  -- Use the nameplate unit token
+            frame:SetUnit(unit) -- Use the nameplate unit token
 
             for i = 1, frame:NumLines() do
                 local text = _G["TooltipScanTextLeft" .. i]:GetText()
@@ -320,28 +324,30 @@ function CombatEventHandler:IsEliteMob(name)
 end
 
 function CombatEventHandler:ActionScoring()
-    local eventInfo = eventInfo or setmetatable({}, {__mode = "kv"})
-    local _, sname, spellId = eventInfo.subEvent, eventInfo.sourceName, eventInfo.misc1
+    local subEvent, sourceGUID, sourceName, sourceFlags, spellId = eventInfo.subEvent, eventInfo.sourceGUID,
+        eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.misc1
 
-    if not IsInGroup() or not UnitInParty(sname) then
-        return
+    if not IsInGroup() then return end
+
+    if bit_band(sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
+        sourceName = CombatEventHandler:GetPetOwner(sourceGUID)
     end
+
+    if not UnitInParty(sourceName) then return end
 
     local flags = LibPlayerSpells:GetSpellInfo(spellId)
-    if not flags then
-        return
-    end
+    if not flags then return end
 
     if checkFlags(flags, CROWD_CTRL) then
-        NCSegment:GlobalAddCrowdControl(sname)
+        NCSegment:GlobalAddCrowdControl(sourceName)
     elseif checkFlags(flags, DISPEL) then
-        NCSegment:GlobalAddDispell(sname)
+        NCSegment:GlobalAddDispell(sourceName)
     elseif checkFlags(flags, SURVIVAL, COOLDOWN) then
-        local playerState = NCRuntime:GetPlayerState(sname)
+        local playerState = NCRuntime:GetPlayerState(sourceName)
         if playerState then
             playerState.lastDefensive = GetTime()
         end
-        NCSegment:GlobalAddDefensive(sname)
+        NCSegment:GlobalAddDefensive(sourceName)
     end
 
     -- NCSegment:GlobalAddActionPoints(1, sname, description)
@@ -349,21 +355,12 @@ end
 
 -- Get the owner of a pet from cache, and if it doesn't exist in cache, set it and return the owner
 function CombatEventHandler:GetPetOwner(petGuid)
-    for i = 1, 48 do
-        scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
-    end
-
-    NCRuntime:CheckPetOwners()
-
     local owner = NCRuntime:GetPetOwner(petGuid)
 
-    if owner ~= nil then
-        return owner
+    if not owner then
+        owner = CombatEventHandler:ScanTooltipForPetOwner(petGuid)
+        NCRuntime:AddPetOwner(petGuid, owner)
     end
-
-    local owner = CombatEventHandler:ScanTooltipForPetOwner(petGuid)
-
-    NCRuntime:AddPetOwner(petGuid, owner)
 
     return owner
 end
@@ -371,21 +368,21 @@ end
 -- Pull the owner of a pet from the tooltip
 function CombatEventHandler:ScanTooltipForPetOwner(guid)
     for i = 1, 48 do
-        scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i",i)]
+        scanTipTitles[#scanTipTitles + 1] = _G[format("UNITNAME_SUMMON_TITLE%i", i)]
     end
 
     local text = _G[scanTipText]
-    if(guid and text) then
-        scanTip:SetOwner( WorldFrame, "ANCHOR_NONE" )
-        scanTip:SetHyperlink(format('unit:%s',guid))
+    if (guid and text) then
+        scanTip:SetOwner(WorldFrame, "ANCHOR_NONE")
+        scanTip:SetHyperlink(format('unit:%s', guid))
         local text2 = text:GetText()
-        if(text2) then
+        if (text2) then
             for i = 1, #scanTipTitles do
                 local check = scanTipTitles[i]:gsub("%%s", "(.+)"):gsub("[%[%]]", "%%%1")
-                local a,b,c = string_find(text2, check)
-                if(c) then
+                local a, b, c = string_find(text2, check)
+                if (c) then
                     local g = UnitGUID(c)
-                    if(g) then
+                    if (g) then
                         return g
                     end
                 end
@@ -406,4 +403,3 @@ function CombatEventHandler:UnitIsNotPulled(guid)
 
     return false
 end
-

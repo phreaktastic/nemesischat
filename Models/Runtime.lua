@@ -47,10 +47,18 @@ core.runtimeDefaults = {
     groupHealer = nil,
     --- @type number
     groupRosterCount = 1,
+    --- @type boolean
+    hasNemesis = false,
+    --- @type boolean
+    hasBystander = false,
+    --- @type table
+    nemeses = {},
+    --- @type table
+    bystanders = {},
     --- @type table<string, GroupRosterPlayer>
     groupRoster = {},
     --- @type table<string, string>
-    playerNameToToken = {}, -- Cache for unit token lookups by player name
+    playerNameToToken = {},  -- Cache for unit token lookups by player name
     --- @type table<string, GroupRosterPlayer>
     playerGuidToRoster = {}, -- Cache for player lookups by GUID
     --- @type table|nil
@@ -76,24 +84,6 @@ core.runtimeDefaults = {
     },
     --- @type table<string, string>
     petOwners = {},
-    --- @type table
-    ncEvent = {
-        category = "",
-        event = "",
-        target = "SELF",
-        nemesis = "",
-        bystander = "",
-    },
-    --- @type table
-    NCController = {
-        channel = "SAY",
-        message = "",
-        target = "",
-        customReplacements = {},
-        customReplacementExamples = {},
-        excludedNemeses = {},
-        excludedBystanders = {},
-    },
     --- @type table
     ncSpell = {
         active = false,
@@ -144,6 +134,18 @@ NCRuntime = {
     end,
     SetInitialized = function(self, value)
         core.runtime.initialized = value
+    end,
+    HasNemesis = function(self)
+        return core.runtime.hasNemesis
+    end,
+    HasBystander = function(self)
+        return core.runtime.hasBystander
+    end,
+    GetNemeses = function(self)
+        return core.runtime.nemeses
+    end,
+    GetBystanders = function(self)
+        return core.runtime.bystanders
     end,
     GetLastFeast = function(self)
         return core.runtime.lastFeast
@@ -289,15 +291,44 @@ NCRuntime = {
         wipe(core.runtime.groupRoster)
         wipe(core.runtime.playerNameToToken)
         wipe(core.runtime.playerGuidToRoster)
+        wipe(core.runtime.pulledUnits)
+        wipe(core.runtime.nemeses)
+        wipe(core.runtime.bystanders)
         core.runtime.groupRosterCount = 0
         core.runtime.groupTank = nil
         core.runtime.groupHealer = nil
         core.runtime.groupLead = nil
+        core.runtime.hasNemesis = false
+        core.runtime.hasBystander = false
 
         -- We're at least one of the members
         self:AddGroupRosterPlayer(GetMyName())
     end,
     RemoveGroupRosterPlayer = function(self, playerName)
+        if core.runtime.groupRoster[playerName] == nil then
+            return nil
+        end
+
+        local player = core.runtime.groupRoster[playerName]
+
+        if player.isNemesis then
+            if tContains(core.runtime.nemeses, playerName) then
+                tDeleteItem(core.runtime.nemeses, playerName)
+            end
+
+            if not NemesisChat:HasPartyNemeses(true) then
+                core.runtime.hasNemesis = false
+            end
+        else
+            if tContains(core.runtime.bystanders, playerName) then
+                tDeleteItem(core.runtime.bystanders, playerName)
+            end
+
+            if not NemesisChat:HasPartyBystanders(true) then
+                core.runtime.hasBystander = false
+            end
+        end
+
         core.runtime.groupRoster[playerName] = nil
         core.runtime.groupRosterCount = core.runtime.groupRosterCount - 1
 
@@ -316,7 +347,8 @@ NCRuntime = {
         end
 
         local isInGuild = playerName ~= GetMyName() and UnitIsInMyGuild(playerName) ~= nil
-        local isNemesis = playerName ~= GetMyName() and (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
+        local isNemesis = playerName ~= GetMyName() and
+            (NCConfig:GetNemesis(playerName) ~= nil or (NCRuntime:GetFriend(playerName) ~= nil and NCConfig:IsFlaggingFriendsAsNemeses()) or (isInGuild and NCConfig:IsFlaggingGuildmatesAsNemeses()))
         local itemLevel = NemesisChat:GetItemLevel(playerName)
 
         local class, rawClass = "Unknown", "UNKNOWN"
@@ -351,6 +383,14 @@ NCRuntime = {
             group = 0,
         }
 
+        if isNemesis then
+            core.runtime.hasNemesis = true
+            tinsert(core.runtime.nemeses, playerName)
+        else
+            core.runtime.hasBystander = true
+            tinsert(core.runtime.bystanders, playerName)
+        end
+
         if data.token then
             local success, isGroupLead = pcall(UnitIsGroupLeader, playerName)
             if success and isGroupLead == true then
@@ -384,7 +424,7 @@ NCRuntime = {
         return data
     end,
     UpdateGroupRosterRoles = function(self)
-        for key,val in pairs(core.runtime.groupRoster) do
+        for key, val in pairs(core.runtime.groupRoster) do
             val.role = UnitGroupRolesAssigned(key)
             val.groupLead = UnitIsGroupLeader(key) ~= nil
 
@@ -438,7 +478,7 @@ NCRuntime = {
         return core.runtime.playerStates[playerName]
     end,
     ClearPlayerStates = function(self)
-        core.runtime.playerStates = {lastCheck = GetTime()}
+        core.runtime.playerStates = { lastCheck = GetTime() }
     end,
     AddPlayerState = function(self, playerName, data)
         core.runtime.playerStates[playerName] = data
@@ -582,7 +622,10 @@ NCRuntime = {
     GetUnitTokenFromName = function(self, playerName)
         if next(core.runtime.playerNameToToken) == nil or not core.runtime.playerNameToToken[playerName] then
             -- Always include the player
-            core.runtime.playerNameToToken[Ambiguate(UnitName("player"), "none")] = "player"
+            local myName = UnitName("player")
+            if myName then
+                core.runtime.playerNameToToken[Ambiguate(myName, "none")] = "player"
+            end
 
             if IsInRaid() then
                 -- In a raid group

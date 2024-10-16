@@ -7,15 +7,15 @@ local _, core = ...;
 
 NCRankings = {
     METRICS = {
-        AvoidableDamage = false,
-        CrowdControl = true,
-        Deaths = false,
-        Defensives = true,
-        Dispells = true,
-        DPS = true,
-        Interrupts = true,
-        Offheals = true,
-        Pulls = false,
+        AvoidableDamage = true, -- true means lower is better
+        CrowdControl = false,
+        Deaths = true, -- true means lower is better
+        Defensives = false,
+        Dispells = false,
+        DPS = false,
+        Interrupts = false,
+        Offheals = false,
+        Pulls = true, -- true means lower is better
     },
 
     template = {
@@ -119,24 +119,14 @@ NCRankings = {
 
         -- Simple bubble sort for the affected player
         local i = playerIndex
-        if self.METRICS[metricKey] then
-            while i > 1 and sorted[i].value > sorted[i-1].value do
-                sorted[i], sorted[i-1] = sorted[i-1], sorted[i]
-                i = i - 1
-            end
-            while i < #sorted and sorted[i].value < sorted[i+1].value do
-                sorted[i], sorted[i+1] = sorted[i+1], sorted[i]
-                i = i + 1
-            end
-        else
-            while i > 1 and sorted[i].value < sorted[i-1].value do
-                sorted[i], sorted[i-1] = sorted[i-1], sorted[i]
-                i = i - 1
-            end
-            while i < #sorted and sorted[i].value > sorted[i+1].value do
-                sorted[i], sorted[i+1] = sorted[i+1], sorted[i]
-                i = i + 1
-            end
+        local lowerIsBetter = self.METRICS[metricKey]
+        while i > 1 and ((lowerIsBetter and sorted[i].value < sorted[i-1].value) or (not lowerIsBetter and sorted[i].value > sorted[i-1].value)) do
+            sorted[i], sorted[i-1] = sorted[i-1], sorted[i]
+            i = i - 1
+        end
+        while i < #sorted and ((lowerIsBetter and sorted[i].value > sorted[i+1].value) or (not lowerIsBetter and sorted[i].value < sorted[i+1].value)) do
+            sorted[i], sorted[i+1] = sorted[i+1], sorted[i]
+            i = i + 1
         end
     end,
 

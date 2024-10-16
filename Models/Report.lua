@@ -64,7 +64,6 @@ function NemesisChat:Report(event, success)
             end,
             topMsg = "Shout out to %s with the lowest deaths for %s, at %s!",
             botMsg = "Most deaths for %s: %s at %s.",
-            inverted = true,
         },
     }
     local shoutOutFormat = function(message, player, segmentName, value) return string.format(message, player, segmentName, NemesisChat:FormatNumber(value)) end
@@ -91,51 +90,55 @@ function NemesisChat:Report(event, success)
             end
 
             local data = typeData[type]
-            local topVal = (bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].Value) and bucket.Rankings.Top[rankingType].Value or 0
-            local topPlayer = (bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].Player) and bucket.Rankings.Top[rankingType].Player or nil
-            local botVal = (bucket.Rankings.Bottom and bucket.Rankings.Bottom[rankingType] and bucket.Rankings.Bottom[rankingType].Value) and bucket.Rankings.Bottom[rankingType].Value or 99999999
-            local botPlayer = (bucket.Rankings.Bottom and bucket.Rankings.Bottom[rankingType] and bucket.Rankings.Bottom[rankingType].Player) and bucket.Rankings.Bottom[rankingType].Player or nil
+            local lowerIsBetter = NCRankings.METRICS[rankingType]
+            local topRanking = bucket.Rankings.Top and bucket.Rankings.Top[rankingType]
+            local bottomRanking = bucket.Rankings.Bottom and bucket.Rankings.Bottom[rankingType]
 
-            if data.inverted then
-                topVal, botVal = botVal, topVal
-                topPlayer, botPlayer = botPlayer, topPlayer
+            local topVal, topPlayer, botVal, botPlayer
+
+            if lowerIsBetter then
+                topVal = topRanking and topRanking.Value or 99999999
+                topPlayer = topRanking and topRanking.Player
+                botVal = bottomRanking and bottomRanking.Value or 0
+                botPlayer = bottomRanking and bottomRanking.Player
+            else
+                topVal = topRanking and topRanking.Value or 0
+                topPlayer = topRanking and topRanking.Player
+                botVal = bottomRanking and bottomRanking.Value or 99999999
+                botPlayer = bottomRanking and bottomRanking.Player
             end
 
-            if topPlayer == nil then
-                topMsg = nil
-            else
+            if topPlayer then
                 topMsg = data.topMsg
             end
 
-            if botPlayer == nil then
-                botMsg = nil
-            else
+            if botPlayer then
                 botMsg = data.botMsg
             end
 
-            if data.preMessageHook ~= nil and topPlayer ~= nil then
+            if data.preMessageHook and topPlayer then
                 topMsg, botMsg = data.preMessageHook(topPlayer, topMsg, botMsg, bucket)
             end
 
-            if topMsg ~= nil then
-                if data.topMsgSpecial and bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].DeltaPercent and bucket.Rankings.Top[rankingType].DeltaPercent >= 25 then
+            if topMsg then
+                if data.topMsgSpecial and topRanking and topRanking.DeltaPercent and topRanking.DeltaPercent >= 25 then
                     topMsg = shoutOutFormat(data.topMsgSpecial, topPlayer, segName, topVal)
                 else
                     topMsg = shoutOutFormat(topMsg, topPlayer, segName, topVal)
                 end
             end
-            
-            if botMsg ~= nil then
+
+            if botMsg then
                 botMsg = callOutFormat(botMsg, botPlayer, segName, botVal)
             end
 
             local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
 
-            if core.db.profile.reportConfig[type]["TOP"] == true and topMsg ~= nil then
+            if core.db.profile.reportConfig[type]["TOP"] and topMsg then
                 SendChatMessage("Nemesis Chat: " .. topMsg, channel)
             end
 
-            if core.db.profile.reportConfig[type]["BOTTOM"] == true and botMsg ~= nil then
+            if core.db.profile.reportConfig[type]["BOTTOM"] and botMsg then
                 SendChatMessage("Nemesis Chat: " .. botMsg, channel)
             end
         end

@@ -314,14 +314,14 @@ function NemesisChatAPI:GetAPIConfigOptions()
                     descStyle = "inline",
                     width = "full",
                     get = function() return core.db.profile.API[name .. "_" .. configOption.value] end,
-                    set = function(_, value) 
+                    set = function(_, value)
                         if value then
                             NemesisChat:Print(api.friendlyName .. " enabled.")
                         else
                             NemesisChat:Print(api.friendlyName .. " disabled.")
                         end
-                        
-                        core.db.profile.API[name .. "_" .. configOption.value] = value 
+
+                        core.db.profile.API[name .. "_" .. configOption.value] = value
                     end,
                     disabled = function() return not success end,
                 }
@@ -353,7 +353,10 @@ function NemesisChatAPI:GetAPIConfigOptions()
                     type = "description",
                     fontSize = "medium",
                     width = "full",
-                    name = api.friendlyName .. " enables |c00ffcc00" .. replacementCount .. "|r text replacement tags and |c00ffcc00" .. subjectCount .. "|r condition subjects.",
+                    name = api.friendlyName ..
+                    " enables |c00ffcc00" ..
+                    replacementCount ..
+                    "|r text replacement tags and |c00ffcc00" .. subjectCount .. "|r condition subjects.",
                 }
 
                 configOptions[name] = {
@@ -390,7 +393,7 @@ function NemesisChatAPI:GetAPIConfigOptions()
 
             if shouldAdd then
                 local replacementHeader = {
-                    header ={
+                    header = {
                         order = 0,
                         type = "description",
                         fontSize = "large",
@@ -460,7 +463,7 @@ function NemesisChatAPI:InitializeReplacements()
                     if not check.configCheck then
                         NemesisChat:Print(api.friendlyName .. " compatibility check FAILED: " .. message)
                     end
-                    
+
                     isCompatible = false
                     break
                 end
@@ -468,13 +471,12 @@ function NemesisChatAPI:InitializeReplacements()
 
             if isCompatible then
                 for _, replacement in pairs(api.replacements) do
-                    NCController:AddCustomReplacement("%[" .. replacement.value .. "%]", replacement.exec)
-                    NCController:AddCustomReplacementExample("%[" .. replacement.value .. "%]", replacement.example)
+                    NCController:AddCustomReplacement("[" .. replacement.value .. "]", replacement.exec)
+                    NCController:AddCustomReplacementExample("[" .. replacement.value .. "]", replacement.example)
                 end
             else
                 api:Disable()
             end
         end
-        
     end
 end

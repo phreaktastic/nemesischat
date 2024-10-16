@@ -18,6 +18,13 @@ local ipairs = ipairs
 
 -- Function to add a player to the queue based on their GUID
 function InspectQueueManager:QueuePlayerForInspect(guid)
+    -- Check if the GUID represents a player
+    local name = GetPlayerInfoByGUID(guid)
+    if not name then
+        -- The GUID is not a player GUID; it's an NPC or other type
+        return
+    end
+
     local player = NCRuntime:GetPlayerFromGuid(guid)
     if not player or not player.token then return end
 
@@ -58,7 +65,7 @@ function InspectQueueManager:ProcessNext()
             C_Timer.After(self.timeout, function() self:CheckForTimeout() end)
         else
             -- Player is not (currently) inspectable, skip to the next player
-            local guid = self.currentInspection.guid
+            local guid = player.guid
 
             C_Timer.After(1.5, function()
                 self:QueuePlayerForInspect(guid)

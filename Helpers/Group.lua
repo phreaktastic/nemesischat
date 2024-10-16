@@ -19,18 +19,19 @@ function NemesisChat:HandleRosterUpdate()
     local joins, leaves = NemesisChat:GetRosterDelta()
     local othersCount = NCRuntime:GetGroupRosterCountOthers()
 
-    if #joins == 0 and #leaves == 0  then
+    if #joins == 0 and #leaves == 0 then
         return
     end
 
     -- Initialize events and update friends list
-    NCEvent:Initialize()
+    NCEvent:Reset()
     NemesisChat:PopulateFriends()
     NCRuntime:CacheGroupRoster()
 
     -- Update the internal group roster
     self:SilentGroupSync()
     NemesisChat:CheckGroup()
+    NCController:PreprocessMessages()
 
     -- After updating the roster, handle events based on changes
     if self:IsGroupDisband(leaves, othersCount) then
@@ -55,7 +56,6 @@ end
 -- Handles the group disband scenario
 function NemesisChat:HandleGroupDisband(leaves)
     NCRuntime:ClearGroupRoster()
-    NCController:PreprocessMessages()
 end
 
 -- Handles the group formation scenario
@@ -84,8 +84,6 @@ function NemesisChat:HandleGroupFormation(joins)
     if not isLeader then
         NemesisChat:PLAYER_JOINS_GROUP(GetMyName(), false)
     end
-
-    NCController:PreprocessMessages()
 end
 
 -- Handles general group changes (joins and leaves)
@@ -122,8 +120,6 @@ function NemesisChat:ProcessJoins(joins)
             end
         end
     end
-
-    NCController:PreprocessMessages()
 end
 
 -- Reports statistics about players who joined
@@ -153,7 +149,10 @@ function NemesisChat:ProcessLeaves(leaves)
     for _, playerName in ipairs(leaves) do
         if playerName and playerName ~= GetMyName() then
             local player = NCRuntime:GetGroupRosterPlayer(playerName)
-            if not player then player = core.db.profile.cache.groupRoster and core.db.profile.cache.groupRoster[playerName] or nil end
+            if not player then
+                player = core.db.profile.cache.groupRoster and
+                    core.db.profile.cache.groupRoster[playerName] or nil
+            end
             if player then
                 if #leaves <= 3 then
                     NemesisChat:PLAYER_LEAVES_GROUP(playerName, player.isNemesis)
@@ -163,8 +162,6 @@ function NemesisChat:ProcessLeaves(leaves)
             end
         end
     end
-
-    NCController:PreprocessMessages()
 end
 
 -- Handles scenarios where a player leaves during an active dungeon
@@ -172,7 +169,7 @@ function NemesisChat:HandleDungeonLeaver(player, playerName)
     local timeLeft = NCDungeon:GetTimeLeft()
 
     if NCDungeon:IsActive() and NCDungeon:GetLevel() > 0 and player.guid and NCRuntime:GetGroupRosterCountOthers() == 4
-       and timeLeft >= 360 and not IsInRaid() and NCDungeon:GetLevel() <= 10 then
+        and timeLeft >= 360 and not IsInRaid() and NCDungeon:GetLevel() <= 10 then
         local minutes = math.floor(timeLeft / 60)
         local seconds = timeLeft - (minutes * 60)
         local timeLeftFormatted = string.format("%02d:%02d", minutes, seconds)

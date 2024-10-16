@@ -102,8 +102,11 @@ NCInfo = {
         self.StatsFrame = f
 
         f:SetPoint("CENTER", UIParent, "CENTER")
-        f:SetSize(200, 300)  -- Initial size
-        f:SetResizeBounds(200, 220)  -- Initial minimum size
+        f:SetSize(200, 300)         -- Initial size
+        f:SetResizeBounds(200, 220) -- Initial minimum size
+
+        NemesisChat:RegisterConfig(f, "NemesisChatStatsFrameDB")
+        NemesisChat:RestorePosition(f)
 
         f:SetMovable(true)
         f:SetResizable(true)
@@ -135,6 +138,7 @@ NCInfo = {
         end)
         f.title:SetScript("OnMouseUp", function()
             f:StopMovingOrSizing()
+            NemesisChat:SavePosition(NCInfo.StatsFrame)
         end)
 
         -- Close Button
@@ -242,7 +246,8 @@ NCInfo = {
         f.channelDropdown = CreateFrame("Frame", "NCInfoFooterChannelDropdown", f.footerFrame, "UIDropDownMenuTemplate")
         f.channelDropdown:SetPoint("LEFT", f.footerFrame, "LEFT", 4, 0)
         UIDropDownMenu_SetWidth(f.channelDropdown, 100)
-        local display = TruncateName("Channel: " .. (self:GetChannelDisplayName(self.SelectedChannel) or "Select Channel"), 24)
+        local display = TruncateName(
+            "Channel: " .. (self:GetChannelDisplayName(self.SelectedChannel) or "Select Channel"), 24)
         UIDropDownMenu_SetText(f.channelDropdown, display)
 
         -- Initialize the channel dropdown
@@ -299,6 +304,7 @@ NCInfo = {
         end)
         f.resizeButton:SetScript("OnMouseUp", function()
             f:StopMovingOrSizing()
+            NemesisChat:SavePosition(NCInfo.StatsFrame)
         end)
 
         -- Scroll Frame
@@ -373,15 +379,15 @@ NCInfo = {
         if not content.compareCheckbox then
             content.compareCheckbox = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
             content.compareCheckbox:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -5)
-            content.compareCheckbox:SetSize(16, 16)  -- Set a smaller size
+            content.compareCheckbox:SetSize(16, 16) -- Set a smaller size
             content.compareCheckbox:SetScript("OnClick", function(self)
                 core.db.profile.infoClickCompare = self:GetChecked()
                 NCInfo:Update()
             end)
             content.compareCheckbox.text = content.compareCheckbox:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-            content.compareCheckbox.text:SetPoint("LEFT", content.compareCheckbox, "RIGHT", 2, 0)  -- Adjusted text position
+            content.compareCheckbox.text:SetPoint("LEFT", content.compareCheckbox, "RIGHT", 2, 0) -- Adjusted text position
             content.compareCheckbox.text:SetText("Compare Metrics")
-            content.compareCheckbox.text:SetFontObject("GameFontNormalSmall")  -- Use a smaller font
+            content.compareCheckbox.text:SetFontObject("GameFontNormalSmall")                     -- Use a smaller font
         end
     end,
 
@@ -455,7 +461,9 @@ NCInfo = {
     end,
 
     UpdatePlayerInfo = function(self, dungeonData)
-        dungeonData = dungeonData or (NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon())
+        if not dungeonData then
+            dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        end
         local playerInfo = dungeonData and dungeonData.RosterSnapshot[self.CurrentPlayer] or {}
 
         local leftText = playerInfo.spec or playerInfo.race or nil
@@ -482,6 +490,9 @@ NCInfo = {
     end,
 
     UpdateMetrics = function(self, dungeonData)
+        if not dungeonData then
+            dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        end
         for _, key in ipairs(self.MetricKeys) do
             local value = self:GetDungeonStat(dungeonData, self.CurrentPlayer, key)
             self:UpdateRow(key, value, dungeonData)
@@ -498,7 +509,7 @@ NCInfo = {
         -- Calculate minimum height components
         local titleHeight = f.title:GetHeight() + 2
         local headerFrameHeight = f.headerFrame:GetHeight() + 2
-        local dropdownFrameHeight = f.dropdownFrame:GetHeight() + 10  -- Increased spacing
+        local dropdownFrameHeight = f.dropdownFrame:GetHeight() + 10 -- Increased spacing
         local infoFrameHeight = f.infoFrame:GetHeight() + 2
         local compareCheckboxHeight = 0
         if content.compareCheckbox and content.compareCheckbox:IsShown() then
@@ -528,11 +539,13 @@ NCInfo = {
                 for i = 1, 2 do
                     row.columns[i] = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
                     row.columns[i]:SetJustifyH(i == 1 and "LEFT" or "RIGHT")
-                    row.columns[i]:SetPoint(i == 1 and "LEFT" or "RIGHT", row, i == 1 and "LEFT" or "RIGHT", i == 1 and 5 or -5, 0)
+                    row.columns[i]:SetPoint(i == 1 and "LEFT" or "RIGHT", row, i == 1 and "LEFT" or "RIGHT",
+                        i == 1 and 5 or -5, 0)
                 end
                 row.columns[1]:SetText(self.METRIC_REPLACEMENTS[key] or key)
                 row:SetScript("OnMouseDown", function() self:ReportMetric(key, self.CurrentPlayer) end)
                 content.rows[key] = row
+                row:SetPassThroughButtons("RightButton")
             end
             row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, yOffset)
             row:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, yOffset)
@@ -544,7 +557,8 @@ NCInfo = {
 
         -- Calculate total minimum height
         local contentHeight = #self.MetricKeys * rowHeight
-        local minHeight = titleHeight + headerFrameHeight + dropdownFrameHeight + infoFrameHeight + compareCheckboxHeight + contentHeight + footerFrameHeight + contentPadding - 80
+        local minHeight = titleHeight + headerFrameHeight + dropdownFrameHeight + infoFrameHeight + compareCheckboxHeight +
+            contentHeight + footerFrameHeight + contentPadding - 80
 
         -- Set a reasonable minimum width
         local minWidth = 200
@@ -561,7 +575,8 @@ NCInfo = {
         end
 
         -- Adjust scroll frame height
-        f.scrollFrame:SetHeight(f:GetHeight() - (titleHeight + headerFrameHeight + dropdownFrameHeight + footerFrameHeight))
+        f.scrollFrame:SetHeight(f:GetHeight() -
+            (titleHeight + headerFrameHeight + dropdownFrameHeight + footerFrameHeight))
     end,
 
     UpdateRow = function(self, statType, value, dungeonData)
@@ -569,9 +584,9 @@ NCInfo = {
         if not row then return end
 
         local positive = NCRankings.METRICS[statType]
-        local greaterColor = positive and {0.5, 0.85, 0.6} or {0.85, 0.6, 0.5}
-        local lesserColor = positive and {0.85, 0.6, 0.5} or {0.5, 0.85, 0.6}
-        local neutralColor = {0.5, 0.6, 0.85}
+        local greaterColor = positive and { 0.5, 0.85, 0.6 } or { 0.85, 0.6, 0.5 }
+        local lesserColor = positive and { 0.85, 0.6, 0.5 } or { 0.5, 0.85, 0.6 }
+        local neutralColor = { 0.5, 0.6, 0.85 }
 
         row.columns[2]:SetText(NemesisChat:FormatNumber(value))
 
@@ -584,7 +599,8 @@ NCInfo = {
                 row.columns[2]:SetTextColor(unpack(greaterColor))
                 row.columns[2].desiredColor = greaterColor
             elseif delta < 0 then
-                row.columns[2]:SetText(NemesisChat:FormatNumber(value) .. " (-" .. NemesisChat:FormatNumber(math.abs(delta)) .. ")")
+                row.columns[2]:SetText(NemesisChat:FormatNumber(value) ..
+                    " (-" .. NemesisChat:FormatNumber(math.abs(delta)) .. ")")
                 row.columns[2]:SetTextColor(unpack(lesserColor))
                 row.columns[2].desiredColor = lesserColor
             else
@@ -598,12 +614,12 @@ NCInfo = {
 
         if IsInGroup() and not NCRankings:IsMetricApplicable(statType, self.CurrentPlayer) then
             row.columns[1]:SetTextColor(0.25, 0.25, 0.25)
-            row.columns[1].desiredColor = {0.25, 0.25, 0.25}
+            row.columns[1].desiredColor = { 0.25, 0.25, 0.25 }
             row.columns[2]:SetTextColor(0.25, 0.25, 0.25)
-            row.columns[2].desiredColor = {0.25, 0.25, 0.25}
+            row.columns[2].desiredColor = { 0.25, 0.25, 0.25 }
         else
             row.columns[1]:SetTextColor(0.5, 0.6, 0.85)
-            row.columns[1].desiredColor = {0.5, 0.6, 0.85}
+            row.columns[1].desiredColor = { 0.5, 0.6, 0.85 }
         end
 
         row:SetScript("OnEnter", function()
@@ -614,11 +630,12 @@ NCInfo = {
             row.columns[1]:SetTextColor(unpack(row.columns[1].desiredColor))
             row.columns[2]:SetTextColor(unpack(row.columns[2].desiredColor))
         end)
-        row:SetPassThroughButtons("RightButton")
     end,
 
     UpdatePrevNextButtons = function(self, dungeonData)
-        dungeonData = dungeonData or (NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon())
+        if not dungeonData then
+            dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        end
 
         if not dungeonData then
             self.StatsFrame.prevPlayerButton:Disable()
@@ -713,7 +730,7 @@ NCInfo = {
         if not dungeonData then return end
 
         for name, player in pairs(dungeonData.RosterSnapshot) do
-            self:AddPlayerToDropdown({name = name, data = player}, dropdown, level)
+            self:AddPlayerToDropdown({ name = name, data = player }, dropdown, level)
         end
     end,
 
@@ -725,7 +742,7 @@ NCInfo = {
 
         for name, player in pairs(dungeonData.RosterSnapshot) do
             local subgroup = player.group or 1
-            table.insert(groupedPlayers[subgroup], {name = name, data = player})
+            table.insert(groupedPlayers[subgroup], { name = name, data = player })
         end
 
         return groupedPlayers
@@ -956,15 +973,21 @@ NCInfo = {
 
         -- Construct the message
         if player == UnitName("player") then
-            message = string.format("My %s (%s): %s", (self.METRIC_REPLACEMENTS[metric] or metric), dungeonData.Identifier or "dungeon", NemesisChat:FormatNumber(self:GetDungeonStat(dungeonData, player, metric)))
+            message = string.format("My %s (%s): %s", (self.METRIC_REPLACEMENTS[metric] or metric),
+                dungeonData.Identifier or "dungeon",
+                NemesisChat:FormatNumber(self:GetDungeonStat(dungeonData, player, metric)))
         else
-            message = string.format("%s for %s (%s): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player, dungeonData.Identifier or "dungeon", NemesisChat:FormatNumber(self:GetDungeonStat(dungeonData, player, metric)))
+            message = string.format("%s for %s (%s): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player,
+                dungeonData.Identifier or "dungeon",
+                NemesisChat:FormatNumber(self:GetDungeonStat(dungeonData, player, metric)))
             if core.db.profile.infoClickCompare then
-                local delta = self:GetDungeonStat(dungeonData, player, metric) - self:GetDungeonStat(dungeonData, UnitName("player"), metric)
+                local delta = self:GetDungeonStat(dungeonData, player, metric) -
+                    self:GetDungeonStat(dungeonData, UnitName("player"), metric)
                 if delta > 0 then
                     message = message .. string.format(" (%s higher than mine)", NemesisChat:FormatNumber(delta))
                 elseif delta < 0 then
-                    message = message .. string.format(" (%s lower than mine)", NemesisChat:FormatNumber(math.abs(delta)))
+                    message = message ..
+                        string.format(" (%s lower than mine)", NemesisChat:FormatNumber(math.abs(delta)))
                 else
                     message = message .. " (same as mine)"
                 end
@@ -1048,7 +1071,7 @@ NCInfo = {
             f.minimizeButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Highlight")
 
             -- Show all elements
-            f:SetHeight(self.ExpandedHeight or 300)  -- Restore previous height or default
+            f:SetHeight(self.ExpandedHeight or 300) -- Restore previous height or default
             f:SetResizable(true)
             f.resizeButton:Show()
             f.footerFrame:Show()
@@ -1099,8 +1122,8 @@ NCInfo = {
         if not IsNCEnabled() or not self.StatsFrame then return end
 
         local f = self.StatsFrame
-        local titleHeight = f.title:GetHeight() + 8  -- Include top padding
-        local headerFrameHeight = f.headerFrame:GetHeight() + 5  -- Include spacing
+        local titleHeight = f.title:GetHeight() + 8             -- Include top padding
+        local headerFrameHeight = f.headerFrame:GetHeight() + 5 -- Include spacing
         local newHeight = titleHeight + headerFrameHeight + 10  -- Add extra padding
 
         f:SetHeight(newHeight)

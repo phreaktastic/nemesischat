@@ -119,6 +119,7 @@ NCSegment = {
     template = {
         Active = false,
         FinishTime = 0,
+        Identifier = "",
         StartTime = 0,
         Success = false,
         TotalTime = 0,
@@ -754,12 +755,12 @@ NCSegment = {
         for key, defaultValue in pairs(self.template) do
             if type(defaultValue) == "table" then
                 if self[key] then
-                    wipe(self[key])  -- Clear existing table
+                    wipe(self[key]) -- Clear existing table
                 else
-                    self[key] = {}   -- Create new table if it doesn't exist
+                    self[key] = {}  -- Create new table if it doesn't exist
                 end
             else
-                self[key] = defaultValue  -- Reset to default value
+                self[key] = defaultValue -- Reset to default value
             end
         end
 
@@ -794,6 +795,10 @@ NCSegment = {
             end
         end
 
+        if self.Level == nil then
+            return
+        end
+
         if self.Rankings and self.Rankings.Restore then
             self.Rankings:Restore(core.db.profile.cache.DungeonRankings)
         else
@@ -810,16 +815,20 @@ NCSegment = {
         local backup = {}
 
         for k, v in pairs(self.template) do
-            if type(v) ~= "function" and not string.find(k, "__") and k ~= "Rankings" then
+            if type(v) ~= "function" and not string.find(k, "__") and k ~= "Rankings" and k ~= "Observers" then
                 backup[k] = self[k]
             end
         end
 
+        backup.Observers = {}
         backup.backupTime = GetTime()
 
         return backup
     end,
     RegisterObserver = function(self, observer)
+        if not observer then return end
+        if tContains(self.Observers, observer) then return end
+
         table.insert(self.Observers, observer)
     end,
     UnregisterObserver = function(self, observer)
@@ -836,4 +845,3 @@ NCSegment = {
         end
     end,
 }
-
