@@ -180,7 +180,6 @@ function NCController:InspectMessageDatabase()
             end
         end
     end
-    NemesisChat:Print("Message database contains " .. count .. " messages")
 end
 
 function NCController:GetChannel()
@@ -325,7 +324,6 @@ function NCController:Send()
     -- Anti-spam, hardcoded minimum of 1 to prevent setting it to 0 in the config file
     local timeSinceLastMessage = GetTime() - NCRuntime:GetLastMessage()
     if timeSinceLastMessage < math_max(1, NCConfig:GetMinimumTime() or 1) and not NCController:IsMinTimeException() then
-        NemesisChat:Print("Message sent too soon. Time since last message:", timeSinceLastMessage)
         NCEvent:Reset()
         return
     end
@@ -333,7 +331,6 @@ function NCController:Send()
     -- Respect non-combat-mode. If we're in combat, and non-combat-mode is enabled, bail.
     -- We have to bypass this if it's a boss start event, as that's driven by going into combat with a boss.
     if NCConfig:IsNonCombatMode() and NCCombat:IsActive() and not NCController:IsNonCombatModeException() then
-        NemesisChat:Print("Non-combat mode is enabled. Message not sent.")
         NCEvent:Reset()
         return
     end
