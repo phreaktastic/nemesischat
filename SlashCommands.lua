@@ -20,7 +20,7 @@ local debugFrame
 
 local function GetAddonMemoryUsage()
     UpdateAddOnMemoryUsage()
-    return GetAddOnMemoryUsage("NemesisChat")  -- Replace with your addon's actual name
+    return GetAddOnMemoryUsage("NemesisChat") -- Replace with your addon's actual name
 end
 
 local function CreateDebugWindow()
@@ -51,7 +51,7 @@ local function CreateDebugWindow()
 
     local errorContent = CreateFrame("Frame", nil, errorScrollFrame)
     errorContent:SetWidth(errorScrollFrame:GetWidth())
-    errorContent:SetHeight(1)  -- Will be resized dynamically
+    errorContent:SetHeight(1) -- Will be resized dynamically
     errorScrollFrame:SetScrollChild(errorContent)
 
     debugFrame.errorContent = errorContent
@@ -84,7 +84,7 @@ local function CreateDebugWindow()
     return debugFrame
 end
 
-local debugFramePool = setmetatable({}, {__mode = "v"})
+local debugFramePool = setmetatable({}, { __mode = "v" })
 
 local function GetOrCreateRow(errorContent)
     local frame = next(debugFramePool)
@@ -148,13 +148,13 @@ end
 
 local function UpdateLayout(errorContent)
     local currentYOffset = 0
-    for _, child in ipairs({errorContent:GetChildren()}) do
+    for _, child in ipairs({ errorContent:GetChildren() }) do
         if child:IsShown() then
             child:SetPoint("TOPLEFT", errorContent, "TOPLEFT", 0, -currentYOffset)
             child:SetPoint("TOPRIGHT", errorContent, "TOPRIGHT", 0, -currentYOffset)
             child:SetWidth(errorContent:GetWidth())
             currentYOffset = currentYOffset + child:GetHeight() + 2
-            
+
             local stackTrace = child.stackTraceFrame
             if stackTrace and stackTrace:IsShown() then
                 stackTrace:SetPoint("TOPLEFT", child, "BOTTOMLEFT", 0, 0)
@@ -176,7 +176,7 @@ local function UpdateDebugWindow()
     errorContent:SetWidth(scrollFrame:GetWidth())
 
     -- Hide all existing frames
-    for _, frame in pairs({errorContent:GetChildren()}) do
+    for _, frame in pairs({ errorContent:GetChildren() }) do
         frame:Hide()
         debugFramePool[frame] = true
     end
@@ -187,7 +187,7 @@ local function UpdateDebugWindow()
     if NemesisChat.SessionErrors then
         local sortedErrors = {}
         for err, data in pairs(NemesisChat.SessionErrors) do
-            table.insert(sortedErrors, {error = err, data = data})
+            table.insert(sortedErrors, { error = err, data = data })
         end
         table.sort(sortedErrors, function(a, b) return a.data.count > b.data.count end)
 
@@ -267,7 +267,8 @@ function NemesisChat:SlashCommand(msg)
         NCInfo.StatsFrame:Hide()
     elseif cmd == "dbinfo" then
         local leaversCount = core.db and core.db.profile and core.db.profile.leavers and #core.db.profile.leavers or 0
-        local lowPerformersCount = core.db and core.db.profile and core.db.profile.lowPerformers and #core.db.profile.lowPerformers or 0
+        local lowPerformersCount = core.db and core.db.profile and core.db.profile.lowPerformers and
+            #core.db.profile.lowPerformers or 0
         self:Print(string.format("Leavers: %d, Low performers: %d", leaversCount, lowPerformersCount))
     elseif cmd == "wipe" then
         local name = args and UnitName(args)
@@ -292,7 +293,7 @@ function NemesisChat:SlashCommand(msg)
 
         frame:SetScript("OnUpdate", function(self, elapsed)
             self.timer = (self.timer or 0) + elapsed
-            if self.timer >= 1 then  -- Update every second
+            if self.timer >= 1 then -- Update every second
                 self.timer = 0
                 UpdateDebugWindow()
             end
@@ -318,6 +319,8 @@ function NemesisChat:SlashCommand(msg)
             UpdateDebugWindow()
             debugFrame:Show()
         end
+    elseif cmd == "blah" then
+        self:Print(NCColors.Emphasize(619))
     else
         if core.db and core.db.profile and core.db.profile.dbg then
             self:Print("Invalid command issued.")

@@ -7,6 +7,11 @@
 -----------------------------------------------------
 local _, core = ...;
 
+NemesisChat.registeredEvents = NemesisChat.registeredEvents or {}
+
+-- Save the original Ace3 RegisterEvent method
+local OriginalRegisterEvent = NemesisChat.RegisterEvent
+
 function NemesisChat:OnInitialize()
     core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
     NemesisChatAPI:SetAPIConfigOptions()
@@ -24,6 +29,7 @@ function NemesisChat:OnEnable()
         self:InitIfEnabled()
     end
 
+    NemesisChat:RegisterStaticEvents()
     NCInfo:OnEnableStateChanged(true)
 end
 
@@ -32,8 +38,18 @@ function NemesisChat:OnDisable()
     NCInfo:OnEnableStateChanged(false)
 end
 
+function NemesisChat:RegisterEvent(event, method, ...)
+    -- Track the event
+    if not self.registeredEvents[event] then
+        self.registeredEvents[event] = true
+    end
+
+    -- Call the original RegisterEvent method from Ace3
+    OriginalRegisterEvent(self, event, method, ...)
+end
+
 function NemesisChat:IsEventRegistered(event)
-    return self.events and self.events[event] ~= nil
+    return self.registeredEvents[event] ~= nil
 end
 
 function NemesisChat:RegisterStaticEvents()
@@ -54,8 +70,6 @@ end
 
 function NemesisChat:InitializeCore()
     if NCRuntime:IsInitialized() then return end
-
-    core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
 
     NemesisChatAPI:SetAPIConfigOptions()
 

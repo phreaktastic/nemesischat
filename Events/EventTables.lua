@@ -10,19 +10,19 @@ local _, core = ...;
 -- We subscribe to these events when we are in a group, and unsubscribe when we are not
 core.dynamicEvents = {
     -- Enter / exit combat
-    "PLAYER_REGEN_ENABLED", -- Exit Combat
+    "PLAYER_REGEN_ENABLED",  -- Exit Combat
     "PLAYER_REGEN_DISABLED", -- Enter Combat
 
     -- Group
-    "PLAYER_ROLES_ASSIGNED", -- Role change
-    "ENCOUNTER_START", -- Boss start
-    "ENCOUNTER_END", -- Boss end
-    "CHALLENGE_MODE_START", -- M+ start
+    "PLAYER_ROLES_ASSIGNED",    -- Role change
+    "ENCOUNTER_START",          -- Boss start
+    "ENCOUNTER_END",            -- Boss end
+    "CHALLENGE_MODE_START",     -- M+ start
     "CHALLENGE_MODE_COMPLETED", -- M+ complete
-    "CHALLENGE_MODE_RESET", -- M+ reset
+    "CHALLENGE_MODE_RESET",     -- M+ reset
     "SCENARIO_CRITERIA_UPDATE", -- Follower dungeon
-    "SCENARIO_COMPLETED", -- Follower dungeon complete
-    "INSPECT_READY", -- Inspect ready
+    "SCENARIO_COMPLETED",       -- Follower dungeon complete
+    "INSPECT_READY",            -- Inspect ready
 
     -- Self
     -- "PLAYER_TARGET_CHANGED",
@@ -39,6 +39,5 @@ core.staticEvents = {
     "ZONE_CHANGED_NEW_AREA",
     "SCENARIO_CRITERIA_UPDATE",
     "SCENARIO_COMPLETED",
-    "LFG_LIST_APPLICANT_UPDATED"
+    "LFG_LIST_APPLICANT_UPDATED",
 }
-

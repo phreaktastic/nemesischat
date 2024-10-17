@@ -33,9 +33,9 @@ local function HandleLeaveDelve()
 end
 
 local function CheckAndUpdateDelveStatus()
-    local name, type, difficultyIndex, difficultyName, maxPlayers,
-    dynamicDifficulty, isDynamic, instanceMapId, lfgID = GetInstanceInfo()
-    local dName, instanceType, isHeroic, isChallengeMode, _, _, toggleDifficultyID = GetDifficultyInfo(difficultyIndex);
+    local name, _, difficultyIndex, _, _,
+    _, _, _, lfgID = GetInstanceInfo()
+    local dName, instanceType = GetDifficultyInfo(difficultyIndex);
 
     -- After leaving a delve, these parameters will all still be true (for a brief moment), therefor we need to check the lastDelveTime as well
     if dName == "Delves" and not inDelve and lfgID and instanceType and instanceType == "scenario" and GetTime() - lastDelveTime > 3 and IsInInstance() then
@@ -54,7 +54,7 @@ local function CheckAndUpdateDelveStatus()
 end
 
 local function GetCurrentLocation()
-    local inInstance, instanceType = IsInInstance()
+    local inInstance = IsInInstance()
     if inInstance then
         return GetInstanceInfo()
     else
@@ -105,7 +105,7 @@ end
 -- Event handling for Blizzard events
 -----------------------------------------------------
 
-function NemesisChat:PLAYER_ENTERING_WORLD()
+function NemesisChat:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
     if not IsNCEnabled() then return end
     if not NCRuntime:IsInitialized() then
         self:InitializeCore()
@@ -113,6 +113,7 @@ function NemesisChat:PLAYER_ENTERING_WORLD()
     NCRuntime:ClearPetOwners()
     HandleZoneChanges()
     CheckAndUpdateDelveStatus()
+    NemesisChat:RegisterStaticEvents()
 end
 
 function NemesisChat:PLAYER_LEAVING_WORLD()
@@ -280,40 +281,78 @@ function NemesisChat:INSPECT_READY(event, guid)
 end
 
 function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
-    local activeEntryInfo = C_LFGList.GetActiveEntryInfo()
-    if not activeEntryInfo then
-        return
-    end
-
-    local data = C_LFGList.GetApplicantInfo(applicantID)
-
-    if not data or not data.isNew or applicantIdCache[applicantID] == true then
-        return
-    end
-
-    applicantIdCache[applicantID] = true
-
-    for i = 1, data.numMembers do
-        local name, class, localizedClass, level, itemLevel, honorLevel, tank, healer, damage, assignedRole = C_LFGList
-            .GetApplicantMemberInfo(applicantID, i)
-
-        if tank and NCConfig:GetNotifyWhenTankApplies() then
-            local message = string.format("A %d ilvl tank has applied to your group.", itemLevel)
-            self:Print(message)
-            PlaySound(NCConfig:GetNotifyWhenTankAppliesSound(), "Master")
-            break
-        elseif healer and NCConfig:GetNotifyWhenHealerApplies() then
-            local message = string.format("A %d ilvl healer has applied to your group.", itemLevel)
-            self:Print(message)
-            PlaySound(NCConfig:GetNotifyWhenHealerAppliesSound(), "Master")
-            break
-        elseif damage and NCConfig:GetNotifyWhenDPSApplies() then
-            local message = string.format("A %d ilvl DPS has applied to your group.", itemLevel)
-            self:Print(message)
-            PlaySound(NCConfig:GetNotifyWhenDPSAppliesSound(), "Master")
-            break
+    local function processApplicant()
+        local applicantInfo = C_LFGList.GetApplicantInfo(applicantID)
+        if not applicantInfo then
+            return
         end
+
+        if not applicantInfo.applicationStatus or applicantInfo.applicationStatus == "none" then
+            return
+        end
+
+        if not applicantInfo.isNew or applicantIdCache[applicantID] == true then
+            return
+        end
+
+        applicantIdCache[applicantID] = true
+
+        local retries = 0
+        local function tryGetApplicantInfo()
+            for i = 1, applicantInfo.numMembers do
+                local name, class, localizedClass, level, itemLevel, honorLevel, tank, healer, damage, assignedRole, relationship, dungeonScore, pvpItemLevel, factionGroup, raceID, specID =
+                    C_LFGList.GetApplicantMemberInfo(applicantID, i)
+
+                if name then
+                    local fullName = applicantInfo.applicationStatus == "applied" and applicantInfo.name or name
+                    local playerName, serverName = strsplit("-", fullName)
+                    serverName = serverName or GetRealmName()
+
+                    if itemLevel and itemLevel > 0 then
+                        local roleMessage, sound
+                        local _, specName, _, icon = GetSpecializationInfoByID(specID)
+                        specName = specName or "Unknown"
+
+                        if tank and NCConfig:GetNotifyWhenTankApplies() then
+                            roleMessage, sound = "tank", NCConfig:GetNotifyWhenTankAppliesSound()
+                        elseif healer and NCConfig:GetNotifyWhenHealerApplies() then
+                            roleMessage, sound = "healer", NCConfig:GetNotifyWhenHealerAppliesSound()
+                        elseif damage and NCConfig:GetNotifyWhenDPSApplies() then
+                            roleMessage, sound = "DPS", NCConfig:GetNotifyWhenDPSAppliesSound()
+                        end
+
+                        itemLevel = math.floor(itemLevel)
+
+                        if not dungeonScore then
+                            dungeonScore = "UNKNOWN"
+                        end
+
+                        if roleMessage then
+                            local roleIcon = icon and "|T" .. icon .. ":16:16:0:0:64:64:5:59:5:59|t" or ""
+                            local message = string.format("A %s %s %s %s (%s) from %s applied.",
+                                NCColors.Emphasize(itemLevel),
+                                NCColors.ClassColor(class, specName),
+                                NCColors.ClassColor(class, localizedClass),
+                                roleIcon,
+                                NCColors.Emphasize(dungeonScore) .. " IO",
+                                NCColors.Emphasize(serverName))
+                            self:Print(message)
+                            PlaySound(sound, "Master")
+                            return
+                        end
+                    end
+                elseif retries < 3 then
+                    retries = retries + 1
+                    C_Timer.After(0.5, tryGetApplicantInfo)
+                    return
+                end
+            end
+        end
+
+        tryGetApplicantInfo()
     end
+
+    C_Timer.After(0.1, processApplicant)
 end
 
 function NemesisChat:COMBAT_LOG_EVENT_UNFILTERED()
