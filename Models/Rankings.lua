@@ -9,7 +9,7 @@ NCRankings = {
     METRICS = {
         AvoidableDamage = true, -- true means lower is better
         CrowdControl = false,
-        Deaths = true, -- true means lower is better
+        Deaths = true,          -- true means lower is better
         Defensives = false,
         Dispells = false,
         DPS = false,
@@ -56,8 +56,8 @@ NCRankings = {
 
         -- Initialize template structures
         for metricKey, _ in pairs(self.METRICS) do
-            o.Top[metricKey] = {Player = nil, Value = 0, Delta = 0, DeltaPercent = 0}
-            o.Bottom[metricKey] = {Player = nil, Value = 99999999, Delta = 0, DeltaPercent = 0}
+            o.Top[metricKey] = { Player = nil, Value = 0, Delta = 0, DeltaPercent = 0 }
+            o.Bottom[metricKey] = { Player = nil, Value = 99999999, Delta = 0, DeltaPercent = 0 }
             o.All[metricKey] = {}
             o.sortedPlayers[metricKey] = {}
         end
@@ -77,8 +77,8 @@ NCRankings = {
             self.cache[metricKey] = nil
             self.lastUpdateTime[metricKey] = nil
 
-            self.Top[metricKey] = {Player = nil, Value = 0, Delta = 0, DeltaPercent = 0}
-            self.Bottom[metricKey] = {Player = nil, Value = 99999999, Delta = 0, DeltaPercent = 0}
+            self.Top[metricKey] = { Player = nil, Value = 0, Delta = 0, DeltaPercent = 0 }
+            self.Bottom[metricKey] = { Player = nil, Value = 99999999, Delta = 0, DeltaPercent = 0 }
         end
 
         self._segment = segment
@@ -113,20 +113,31 @@ NCRankings = {
         end
 
         if not playerIndex then
-            table.insert(sorted, {name = playerName, value = newValue})
+            table.insert(sorted, { name = playerName, value = newValue })
             playerIndex = #sorted
         end
 
-        -- Simple bubble sort for the affected player
-        local i = playerIndex
         local lowerIsBetter = self.METRICS[metricKey]
-        while i > 1 and ((lowerIsBetter and sorted[i].value < sorted[i-1].value) or (not lowerIsBetter and sorted[i].value > sorted[i-1].value)) do
-            sorted[i], sorted[i-1] = sorted[i-1], sorted[i]
-            i = i - 1
+        local i = playerIndex
+        while i > 1 do
+            local shouldSwap = lowerIsBetter and sorted[i].value < sorted[i - 1].value
+                or (not lowerIsBetter and sorted[i].value > sorted[i - 1].value)
+            if shouldSwap then
+                sorted[i], sorted[i - 1] = sorted[i - 1], sorted[i]
+                i = i - 1
+            else
+                break
+            end
         end
-        while i < #sorted and ((lowerIsBetter and sorted[i].value > sorted[i+1].value) or (not lowerIsBetter and sorted[i].value < sorted[i+1].value)) do
-            sorted[i], sorted[i+1] = sorted[i+1], sorted[i]
-            i = i + 1
+        while i < #sorted do
+            local shouldSwap = lowerIsBetter and sorted[i].value > sorted[i + 1].value
+                or (not lowerIsBetter and sorted[i].value < sorted[i + 1].value)
+            if shouldSwap then
+                sorted[i], sorted[i + 1] = sorted[i + 1], sorted[i]
+                i = i + 1
+            else
+                break
+            end
         end
     end,
 
@@ -263,7 +274,7 @@ NCRankings = {
         return self.METRIC_APPLICABILITY[metricKey][playerRole] or false
     end,
 
-    GetBackup =  function(self)
+    GetBackup = function(self)
         local backup = {
             Top = {},
             Bottom = {},

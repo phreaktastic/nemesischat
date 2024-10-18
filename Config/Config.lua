@@ -35,6 +35,7 @@ core.defaults = {
         notifyWhenHealerAppliesSound = 8959,
         notifyWhenDpsApplies = true,
         notifyWhenDpsAppliesSound = 18019,
+        groupMessageOnApplication = false,
         reportConfig = {
             channel = "GROUP",
             excludeNemeses = false,

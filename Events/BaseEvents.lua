@@ -281,44 +281,50 @@ function NemesisChat:INSPECT_READY(event, guid)
 end
 
 function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
+    -- Check if any notification feature is enabled
+    if not (NCConfig:GetNotifyWhenTankApplies() or NCConfig:GetNotifyWhenHealerApplies() or NCConfig:GetNotifyWhenDPSApplies()) then
+        return
+    end
+
     local function processApplicant()
         local applicantInfo = C_LFGList.GetApplicantInfo(applicantID)
-        if not applicantInfo then
-            return
-        end
-
-        if not applicantInfo.applicationStatus or applicantInfo.applicationStatus == "none" then
-            return
-        end
-
-        if not applicantInfo.isNew or applicantIdCache[applicantID] == true then
-            return
-        end
+        if not applicantInfo then return end
+        if not applicantInfo.applicationStatus or applicantInfo.applicationStatus == "none" then return end
+        if not applicantInfo.isNew or applicantIdCache[applicantID] == true then return end
 
         applicantIdCache[applicantID] = true
 
         local retries = 0
         local function tryGetApplicantInfo()
+            local formattedGroupMembers = {}
+            local plainGroupMembers = {}
+            local highestPrioritySound = nil
+            local serverName = nil
+
             for i = 1, applicantInfo.numMembers do
                 local name, class, localizedClass, level, itemLevel, honorLevel, tank, healer, damage, assignedRole, relationship, dungeonScore, pvpItemLevel, factionGroup, raceID, specID =
                     C_LFGList.GetApplicantMemberInfo(applicantID, i)
 
                 if name then
                     local fullName = applicantInfo.applicationStatus == "applied" and applicantInfo.name or name
-                    local playerName, serverName = strsplit("-", fullName)
-                    serverName = serverName or GetRealmName()
+                    local _, realm = strsplit("-", fullName)
+                    serverName = realm or GetRealmName()
 
                     if itemLevel and itemLevel > 0 then
                         local roleMessage, sound
                         local _, specName, _, icon = GetSpecializationInfoByID(specID)
                         specName = specName or "Unknown"
 
-                        if tank and NCConfig:GetNotifyWhenTankApplies() then
-                            roleMessage, sound = "tank", NCConfig:GetNotifyWhenTankAppliesSound()
-                        elseif healer and NCConfig:GetNotifyWhenHealerApplies() then
+                        if healer and NCConfig:GetNotifyWhenHealerApplies() then
                             roleMessage, sound = "healer", NCConfig:GetNotifyWhenHealerAppliesSound()
+                        elseif tank and NCConfig:GetNotifyWhenTankApplies() then
+                            roleMessage, sound = "tank", NCConfig:GetNotifyWhenTankAppliesSound()
                         elseif damage and NCConfig:GetNotifyWhenDPSApplies() then
                             roleMessage, sound = "DPS", NCConfig:GetNotifyWhenDPSAppliesSound()
+                        end
+
+                        if not highestPrioritySound and sound then
+                            highestPrioritySound = sound
                         end
 
                         itemLevel = math.floor(itemLevel)
@@ -329,16 +335,23 @@ function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
 
                         if roleMessage then
                             local roleIcon = icon and "|T" .. icon .. ":16:16:0:0:64:64:5:59:5:59|t" or ""
-                            local message = string.format("A %s %s %s %s (%s) from %s applied.",
+                            local formattedMemberInfo = string.format("%s %s %s %s (%s) - %s",
                                 NCColors.Emphasize(itemLevel),
                                 NCColors.ClassColor(class, specName),
                                 NCColors.ClassColor(class, localizedClass),
                                 roleIcon,
                                 NCColors.Emphasize(dungeonScore) .. " IO",
                                 NCColors.Emphasize(serverName))
-                            self:Print(message)
-                            PlaySound(sound, "Master")
-                            return
+
+                            local plainMemberInfo = string.format("%d %s %s (%s IO) - %s",
+                                itemLevel,
+                                specName,
+                                localizedClass,
+                                dungeonScore,
+                                serverName)
+
+                            table.insert(formattedGroupMembers, formattedMemberInfo)
+                            table.insert(plainGroupMembers, plainMemberInfo)
                         end
                     end
                 elseif retries < 3 then
@@ -346,6 +359,50 @@ function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
                     C_Timer.After(0.5, tryGetApplicantInfo)
                     return
                 end
+            end
+
+            local formattedMessage, plainMessage
+
+            if #plainGroupMembers == 1 then
+                formattedMessage = string.format("New applicant: %s", formattedGroupMembers[1])
+                plainMessage = string.format("New applicant: %s", plainGroupMembers[1])
+            else
+                formattedMessage = string.format("A group of %d has applied:", #formattedGroupMembers)
+                plainMessage = string.format("A group of %d has applied: ", #plainGroupMembers)
+
+                -- For formatted message (printed to player's frame)
+                for i, memberInfo in ipairs(formattedGroupMembers) do
+                    formattedMessage = formattedMessage .. "\n" .. memberInfo
+                end
+
+                -- For plain message (sent to group chat)
+                for i, memberInfo in ipairs(plainGroupMembers) do
+                    plainMessage = plainMessage .. "(" .. memberInfo .. ")"
+                end
+            end
+
+            -- For printing to the player's frames
+            self:Print(formattedMessage)
+
+            -- For sending to group chat
+            if NCConfig:GetGroupMessageOnApplication() and IsInGroup(LE_PARTY_CATEGORY_HOME) then
+                -- Split long messages if necessary
+                local maxLength = 255 -- Max chat message length
+                while #plainMessage > 0 do
+                    local chunk = plainMessage:sub(1, maxLength)
+                    local lastSpace = chunk:find("%s[^%s]*$")
+
+                    if #plainMessage > maxLength and lastSpace then
+                        chunk = plainMessage:sub(1, lastSpace - 1)
+                    end
+
+                    SendChatMessage("NemesisChat: " .. chunk, "PARTY")
+                    plainMessage = plainMessage:sub(#chunk + 1):gsub("^%s*", "")
+                end
+            end
+
+            if highestPrioritySound then
+                PlaySound(highestPrioritySound, "Master")
             end
         end
 

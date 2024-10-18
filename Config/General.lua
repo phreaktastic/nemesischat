@@ -59,7 +59,8 @@ core.options.args.generalGroup = {
                     order = 4,
                     type = "toggle",
                     name = "Use Global Chance",
-                    desc = "Toggle Global Chance. This allows you to ensure that messages will only be sent a percentage of the time. NOTE: This does not apply for reports.",
+                    desc =
+                    "Toggle Global Chance. This allows you to ensure that messages will only be sent a percentage of the time. NOTE: This does not apply for reports.",
                     get = function() return NCConfig:IsUsingGlobalChance() end,
                     set = function(_, value) return NCConfig:SetUsingGlobalChance(value) end,
                 },
@@ -194,8 +195,17 @@ core.options.args.generalGroup = {
                     end,
                     disabled = function() return not NCConfig:GetNotifyWhenDPSApplies() end,
                 },
-                disclaimer = {
+                groupMessageOnApplication = {
                     order = 7,
+                    type = "toggle",
+                    name = "Group Message on Application",
+                    desc = "Also send a group message when a player applies to your group.",
+                    get = function() return NCConfig:GetGroupMessageOnApplication() end,
+                    set = function() NCConfig:ToggleGroupMessageOnApplication() end,
+                    disabled = function() return not (NCConfig:GetNotifyWhenTankApplies() or NCConfig:GetNotifyWhenHealerApplies() or NCConfig:GetNotifyWhenDPSApplies()) end,
+                },
+                disclaimer = {
+                    order = 8,
                     type = "description",
                     fontSize = "medium",
                     name = "These features are a work in progress, and will likely grow/mature over time.",
@@ -246,7 +256,8 @@ core.options.args.generalGroup = {
                     order = 5,
                     type = "description",
                     fontSize = "medium",
-                    name = "NOTE: Non-Combat Mode will still allow some messages to fire, such as messages triggered by mobs or bosses.",
+                    name =
+                    "NOTE: Non-Combat Mode will still allow some messages to fire, such as messages triggered by mobs or bosses.",
                 },
             }
         },
@@ -284,7 +295,8 @@ core.options.args.generalGroup = {
                     name = "Track Leavers",
                     width = "full",
                     descStyle = "inline",
-                    desc = "Track players who leave/disconnect during an unfinished Mythic+ (+20 or higher) dungeon, with more than 6 minutes remaining.",
+                    desc =
+                    "Track players who leave/disconnect during an unfinished Mythic+ (+20 or higher) dungeon, with more than 6 minutes remaining.",
                     get = function() return NCConfig:IsTrackingLeavers() end,
                     set = function(_, value) return NCConfig:SetTrackingLeavers(value) end,
                 },
@@ -307,7 +319,10 @@ core.options.args.generalGroup = {
                     desc = "The number of leaves required to trigger an announcement.",
                     get = function() return NCConfig:GetReportingLeaversOnJoinThreshold() end,
                     set = function(_, value) return NCConfig:SetReportingLeaversOnJoinThreshold(value) end,
-                    disabled = function() return not NCConfig:IsTrackingLeavers() or not NCConfig:IsReportingLeaversOnJoin() end,
+                    disabled = function()
+                        return not NCConfig:IsTrackingLeavers() or
+                            not NCConfig:IsReportingLeaversOnJoin()
+                    end,
                 },
                 trackLowPerformers = {
                     order = 4,
@@ -338,7 +353,10 @@ core.options.args.generalGroup = {
                     desc = "The number of underperformances required to trigger an announcement.",
                     get = function() return NCConfig:GetReportingLowPerformersOnJoinThreshold() end,
                     set = function(_, value) return NCConfig:SetReportingLowPerformersOnJoinThreshold(value) end,
-                    disabled = function() return not NCConfig:IsTrackingLowPerformers() or not NCConfig:IsReportingLowPerformersOnJoin() end,
+                    disabled = function()
+                        return not NCConfig:IsTrackingLowPerformers() or
+                            not NCConfig:IsReportingLowPerformersOnJoin()
+                    end,
                 },
             }
         },
@@ -351,4 +369,3 @@ core.options.args.generalGroup = {
         },
     }
 }
-

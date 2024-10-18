@@ -53,6 +53,12 @@ function NCController:Reset()
     NCController.message = ""
     NCController.target = ""
     NCController.lastGroupCacheKey = ""
+
+    -- Reset all message indices
+    for _, messages in pairs(messageCache) do
+        messages.lastNemesisIndex = #messages.nemesis -- Set to last index so it wraps to 1 on first use
+        messages.lastRegularIndex = #messages.regular
+    end
 end
 
 function NCController:PreprocessMessages()
@@ -169,17 +175,6 @@ function NCController:EventHasMessages(eventKey)
         eventKey = string.format("%s_%s_%s", NCEvent:GetCategory(), NCEvent:GetEvent(), NCEvent:GetTarget())
     end
     return eventLookup[eventKey] == true
-end
-
-function NCController:InspectMessageDatabase()
-    local count = 0
-    for category, events in pairs(core.db.profile.messages) do
-        for event, targets in pairs(events) do
-            for target, messages in pairs(targets) do
-                count = count + #messages
-            end
-        end
-    end
 end
 
 function NCController:GetChannel()
@@ -413,14 +408,16 @@ end
 
 function NCController:GetRollingMessage(relevantMessages)
     local function getNextMessage(messages, lastIndex)
-        for i = 1, #messages do
-            local index = (lastIndex + i) % #messages + 1
-            local message = messages[index]
-            if self:IsValidMessage(message) and self:CheckAllConditions(message) then
-                return message, index
-            end
+        if #messages == 0 then
+            return nil, lastIndex
         end
-        return nil
+        local newIndex = (lastIndex % #messages) + 1
+        local message = messages[newIndex]
+        if self:IsValidMessage(message) and self:CheckAllConditions(message) then
+            return message, newIndex
+        end
+        -- If no valid message found, still update the index
+        return nil, newIndex
     end
 
     local nemesisMessage, nemesisIndex = getNextMessage(relevantMessages.nemesis, relevantMessages.lastNemesisIndex)
@@ -430,12 +427,8 @@ function NCController:GetRollingMessage(relevantMessages)
     end
 
     local regularMessage, regularIndex = getNextMessage(relevantMessages.regular, relevantMessages.lastRegularIndex)
-    if regularMessage then
-        relevantMessages.lastRegularIndex = regularIndex
-        return regularMessage
-    end
-
-    return nil
+    relevantMessages.lastRegularIndex = regularIndex -- Always update the index
+    return regularMessage
 end
 
 function NCController:GetNextValidMessage(messages, lastIndex)

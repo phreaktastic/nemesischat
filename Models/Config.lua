@@ -694,4 +694,13 @@ NCConfig = {
     SetNotifyWhenDPSAppliesSound = function(self, value)
         self.CoreDB:SetKey("notifyWhenDPSAppliesSound", value)
     end,
+    GetGroupMessageOnApplication = function(self)
+        return self.CoreDB:GetKey("groupMessageOnApplication")
+    end,
+    ToggleGroupMessageOnApplication = function(self)
+        self.CoreDB:Toggle("groupMessageOnApplication")
+    end,
+    SetGroupMessageOnApplication = function(self, value)
+        self.CoreDB:SetKey("groupMessageOnApplication", value)
+    end,
 }

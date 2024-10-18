@@ -36,7 +36,6 @@ function NemesisChat:Report(event, success)
         ["AVOIDABLE"] = {
             topMsg = "Shout out to %s with the lowest avoidable damage taken for %s, at %s!",
             botMsg = "Highest avoidable damage taken for %s: %s at %s.",
-            inverted = true,
         },
         ["INTERRUPTS"] = {
             topMsg = "Shout out to %s with the most interrupts for %s, at %s!",
@@ -55,7 +54,8 @@ function NemesisChat:Report(event, success)
                 if lifePercent > 100 then
                     local lifeMultiplier = math.floor(lifePercent / 10) / 10
 
-                    botMsg = "Most deaths for %s: %s at %s, with " .. adFormatted .. " avoidable damage taken (" .. lifeMultiplier .. "x their max health)."
+                    botMsg = "Most deaths for %s: %s at %s, with " ..
+                        adFormatted .. " avoidable damage taken (" .. lifeMultiplier .. "x their max health)."
                 else
                     botMsg = "Most deaths for %s: %s at %s, with " .. adFormatted .. " avoidable damage taken."
                 end
@@ -66,8 +66,14 @@ function NemesisChat:Report(event, success)
             botMsg = "Most deaths for %s: %s at %s.",
         },
     }
-    local shoutOutFormat = function(message, player, segmentName, value) return string.format(message, player, segmentName, NemesisChat:FormatNumber(value)) end
-    local callOutFormat = function(message, player, segmentName, value) return string.format(message, segmentName, player, NemesisChat:FormatNumber(value)) end
+    local shoutOutFormat = function(message, player, segmentName, value)
+        return string.format(message, player,
+            segmentName, NemesisChat:FormatNumber(value))
+    end
+    local callOutFormat = function(message, player, segmentName, value)
+        return string.format(message, segmentName, player,
+            NemesisChat:FormatNumber(value))
+    end
 
     if not tContains(EVENTS, event) then
         return
@@ -90,23 +96,15 @@ function NemesisChat:Report(event, success)
             end
 
             local data = typeData[type]
-            local lowerIsBetter = NCRankings.METRICS[rankingType]
             local topRanking = bucket.Rankings.Top and bucket.Rankings.Top[rankingType]
             local bottomRanking = bucket.Rankings.Bottom and bucket.Rankings.Bottom[rankingType]
 
             local topVal, topPlayer, botVal, botPlayer
 
-            if lowerIsBetter then
-                topVal = topRanking and topRanking.Value or 99999999
-                topPlayer = topRanking and topRanking.Player
-                botVal = bottomRanking and bottomRanking.Value or 0
-                botPlayer = bottomRanking and bottomRanking.Player
-            else
-                topVal = topRanking and topRanking.Value or 0
-                topPlayer = topRanking and topRanking.Player
-                botVal = bottomRanking and bottomRanking.Value or 99999999
-                botPlayer = bottomRanking and bottomRanking.Player
-            end
+            topVal = topRanking and topRanking.Value or 0
+            topPlayer = topRanking and topRanking.Player
+            botVal = bottomRanking and bottomRanking.Value or 0
+            botPlayer = bottomRanking and bottomRanking.Player
 
             if topPlayer then
                 topMsg = data.topMsg
@@ -143,5 +141,4 @@ function NemesisChat:Report(event, success)
             end
         end
     end
-
 end

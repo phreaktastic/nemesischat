@@ -1,5 +1,7 @@
 # 📢 Summary
 
+**Join the Discord! https://discord.gg/mqu3vk6csk**
+
 Version 1.11.x brings a big update to the addon, focusing on making it faster, adding new features, and fixing bugs. Here are the main highlights:
 
 1. Big improvements in speed, using less memory and fixing slowdowns.
@@ -73,8 +75,8 @@ We've made substantial changes to the general flow of the addon, and we've made 
    * Added support for follower dungeons.
    * Added support for normal dungeons.
    * New LFG features: You'll hear a sound and see a message when a tank, healer, and/or DPS applies to your group. These options are toggleable in the settings menu (General Settings, Core, LFG QoL).
-      * These are simple toggles for the time being, but we're planning to make them more customizable in the future.
-      * We would still like a lot more information to be made available in this scenario, but we're not sure how to do that yet. Blizzard doesn't seem to make this information available to addons yet.
+      * Toggle for tank, healer, and DPS.
+      * Customize the sound for each.
    * The "Pulls" feature has graduated to a full-fledged feature.
       * New channel customization option for announcing pulls.
 
@@ -109,3 +111,10 @@ We've made substantial changes to the general flow of the addon, and we've made 
    * Fixed an issue where interrupts weren't being tracked correctly when a player's pet (like a Warlock's demon) did the interrupt.
    * Fixed an issue where the addon was still running in the background when disabled.
    * Lots more bug fixes!
+
+# 👀 **Potential Issues:**
+
+   * We've seen inconsistent behavior with reports. After a lot of testing + fixing, we've finally reached the point where we are unable to reproduce the issue. If you're still having problems, please let us know!
+   * LFG QoL is brand spanking new, and we've not seen any issues yet. If you do, please let us know!
+   * "Rolling Messages" is also brand spanking new! We've tested this more times than we care to admit, and we've not seen any issues yet. If you do, please let us know!
+   * Delves and Follower Dungeons may have some flaws. We tested extensively in varying conditions, and think we have it all covered, but we're still working on it. If you experience issues, please let us know!

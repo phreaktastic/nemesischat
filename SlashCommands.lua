@@ -265,27 +265,6 @@ function NemesisChat:SlashCommand(msg)
     elseif cmd == "hideinfo" then
         NCConfig:SetShowInfoFrame(false)
         NCInfo.StatsFrame:Hide()
-    elseif cmd == "dbinfo" then
-        local leaversCount = core.db and core.db.profile and core.db.profile.leavers and #core.db.profile.leavers or 0
-        local lowPerformersCount = core.db and core.db.profile and core.db.profile.lowPerformers and
-            #core.db.profile.lowPerformers or 0
-        self:Print(string.format("Leavers: %d, Low performers: %d", leaversCount, lowPerformersCount))
-    elseif cmd == "wipe" then
-        local name = args and UnitName(args)
-        local guid = name and UnitGUID(name)
-
-        if not guid then
-            self:Print("Invalid unit or unit not found.")
-            return
-        end
-
-        if core.db and core.db.profile then
-            core.db.profile.lowPerformers[guid] = nil
-            core.db.profile.leavers[guid] = nil
-            self:Print(string.format("Wiped data for %s (%s)", name, guid))
-        else
-            self:Print("Database not initialized.")
-        end
     elseif cmd == "debug" then
         local frame = CreateDebugWindow()
         UpdateDebugWindow()
@@ -319,8 +298,6 @@ function NemesisChat:SlashCommand(msg)
             UpdateDebugWindow()
             debugFrame:Show()
         end
-    elseif cmd == "blah" then
-        self:Print(NCColors.Emphasize(619))
     else
         if core.db and core.db.profile and core.db.profile.dbg then
             self:Print("Invalid command issued.")
