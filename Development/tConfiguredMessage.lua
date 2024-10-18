@@ -1,0 +1,12 @@
+--- @class ConfiguredMessage
+--- @field label string
+--- @field channel string
+--- @field message string
+--- @field chance number @range 0 1
+--- @field conditions table<MessageCondition>
+
+--- @class MessageCondition
+--- @field leftCategory string Only leveraged for display purposes in the UI
+--- @field left string
+--- @field operator string
+--- @field right string

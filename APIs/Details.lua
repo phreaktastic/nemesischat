@@ -13,11 +13,11 @@ local _, core = ...;
 
 DETAILS = _G.Details;
 
-NemesisChatAPI:AddAPI("NC_DETAILS", "Details! API")
+NemesisChatAPI:AddAPI("NC_DETAILS", "Details!")
     :AddConfigOption({
-        label = "Enable Details! API",
+        label = "Enable Details! Plugin",
         value = "ENABLED", -- This will read in config options as NC_DETAILS_ENABLED
-        description = "Enable the Details! API for use in messages.",
+        description = "Enable the Details! Plugin for use in messages.",
         primary = true,
     })
     :AddCompatibilityCheck({

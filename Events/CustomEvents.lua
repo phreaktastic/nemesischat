@@ -12,21 +12,8 @@ local _, core = ...;
 -----------------------------------------------------
 
 function NemesisChat:HandleEvent()
-    -- Exit if we're not in a group, the event is not supported, config isn't setup, etc.
-	if NemesisChat:ShouldExitEventHandler() then
-        return
-    end
-
-    -- Try to pull a configured message first
-    NCController:ConfigMessage()
-
-    -- If AI messages are enabled, use them if a configured message couldn't be found
-    -- if core.db.profile.ai and not NCController:ValidMessage() then
-    --     NCController:AIMessage()
-    -- end
-
-    -- If we still don't have a message, bail
-    if not NCController:ValidMessage() then
+    if not IsNCEnabled() then return end
+    if NemesisChat:ShouldExitEventHandler() then
         return
     end
 
@@ -34,11 +21,12 @@ function NemesisChat:HandleEvent()
 end
 
 function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
+    if not IsNCEnabled() then return end
     if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
-        NCEvent:Initialize()
+        NCEvent:Reset()
         return
     end
-    
+
     if IsInRaid() then
         NCEvent:SetCategory("RAID")
     else
@@ -65,8 +53,9 @@ function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
 end
 
 function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
+    if not IsNCEnabled() then return end
     if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
-        NCEvent:Initialize()
+        NCEvent:Reset()
         return
     end
 
@@ -96,6 +85,7 @@ function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
 end
 
 function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
+    if not IsNCEnabled() then return end
     NCEvent:SetCategory("GUILD")
     NCEvent:SetEvent("LOGIN")
 
@@ -117,6 +107,7 @@ function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
 end
 
 function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
+    if not IsNCEnabled() then return end
     NCEvent:SetCategory("GUILD")
     NCEvent:SetEvent("LOGOUT")
 
@@ -138,73 +129,81 @@ function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
 end
 
 function NemesisChat:START_DUNGEON()
-    -- Stub for non-mythic support
+    if not IsNCEnabled() then return end
+    NCEvent:Reset()
+    NCDungeon:Reset()
+    NCDungeon:Start()
 end
 
 function NemesisChat:END_DUNGEON()
-    -- Stub for non-mythic support
+    if not IsNCEnabled() then return end
+    NCEvent:Reset()
+    NCDungeon:End()
 end
 
+function NemesisChat:GROUP_DISBANDED()
+    if not IsNCEnabled() then return end
+    -- Stub
+end
+
+-----------------------------------------------------
+-- Guild Sync
+-----------------------------------------------------
+local lastFullUpdate = 0
+local updateInterval = 60 -- Full update every 60 seconds
+
 function NemesisChat:CheckGuild()
+    if not IsNCEnabled() then return end
+
     if not IsInGuild() then
+        core.runtime.guild = {}
         return
     end
 
-    local totalGuildMembers, onlineGuildMembers = GetNumGuildMembers()
-
-    -- The guild roster is empty
-    if totalGuildMembers <= 1 then
-        return
+    local function IsNemesis(name)
+        return core.db.profile.nemeses[name]
     end
 
-    if not NemesisChat.guildRosterIndex then
-        NemesisChat.guildRosterIndex = 1
-    end
+    local currentTime = GetTime()
+    local totalMembers, onlineMembers = GetNumGuildMembers()
+    local needFullUpdate = currentTime - lastFullUpdate > updateInterval
 
-    core.db.global.guildRow = {}
-
-    local cursor = NemesisChat.guildRosterIndex
-    local chunk = 10
-    local maxIndex = math.min(totalGuildMembers, NemesisChat.guildRosterIndex + chunk)
-
-    for i = cursor, maxIndex do
-        core.db.global.guildRow.name, _, _, _, _, _, _, _, core.db.global.guildRow.isOnline, _, _, _, _, core.db.global.guildRow.isMobile, _, _, core.db.global.guildRow.guid = GetGuildRosterInfo(i)
-        core.db.global.guildRow.memberOnline = core.db.global.guildRow.isOnline and not core.db.global.guildRow.isMobile
-
-        -- Strip realm name from name
-        core.db.global.guildRow.name = Ambiguate(core.db.global.guildRow.name, "guild")
-
-        core.db.global.guildRow.isNemesis = NCConfig:GetNemesis(core.db.global.guildRow.name) ~= nil
-
-        if core.runtime.guild[core.db.global.guildRow.name] then
-            local changed = core.runtime.guild[core.db.global.guildRow.name].online ~= core.db.global.guildRow.memberOnline
-
-            if changed then
-                core.runtime.guild[core.db.global.guildRow.name].online = core.db.global.guildRow.memberOnline
-            
-                if core.db.global.guildRow.memberOnline then
-                    NemesisChat:GUILD_PLAYER_LOGIN(core.db.global.guildRow.name, core.db.global.guildRow.isNemesis)
-                else
-                    NemesisChat:GUILD_PLAYER_LOGOUT(core.db.global.guildRow.name, core.db.global.guildRow.isNemesis)
+    if needFullUpdate then
+        local guildRoster = {}
+        for i = 1, totalMembers do
+            local name, rank, _, _, _, _, _, _, online = GetGuildRosterInfo(i)
+            if name then
+                guildRoster[name] = { rank = rank, online = online, isNemesis = IsNemesis(name) }
+                if core.runtime.guild[name] then
+                    if core.runtime.guild[name].online ~= online then
+                        _ = online and NemesisChat:GUILD_PLAYER_LOGIN(name, IsNemesis(name)) or
+                            NemesisChat:GUILD_PLAYER_LOGOUT(name, IsNemesis(name))
+                    end
                 end
             end
-        else
-            core.runtime.guild[core.db.global.guildRow.name] = {
-                online = core.db.global.guildRow.memberOnline,
-                isNemesis = core.db.global.guildRow.isNemesis,
-                guid = core.db.global.guildRow.guid
-            }
+        end
+
+        for name, info in pairs(core.runtime.guild) do
+            if not guildRoster[name] then
+                core.runtime.guild[name] = nil
+            end
+        end
+
+        core.runtime.guild = guildRoster
+        lastFullUpdate = currentTime
+    else
+        -- Quick update for online status changes
+        for i = 1, onlineMembers do
+            local name, rank, _, _, _, _, _, _, online = GetGuildRosterInfo(i)
+            if name and core.runtime.guild[name] then
+                if core.runtime.guild[name].online ~= online then
+                    core.runtime.guild[name].online = online
+                    _ = online and NemesisChat:GUILD_PLAYER_LOGIN(name, IsNemesis(name)) or
+                        NemesisChat:GUILD_PLAYER_LOGOUT(name, IsNemesis(name))
+                end
+            end
         end
     end
 
-    -- Update the guild roster in the DB cache, in case a reload occurs
-    core.db.profile.cache.guild = DeepCopy(core.runtime.guild)
-    core.db.profile.cache.guildTime = GetTime()
-
-    -- Reset the guild roster index if it's at the end of the list
-    if maxIndex >= GetNumGuildMembers() then
-        NemesisChat.guildRosterIndex = 1
-    else
-        NemesisChat.guildRosterIndex = maxIndex + chunk
-    end
+    core.db.profile.cache.guild = core.runtime.guild
 end

@@ -46,6 +46,14 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         type = "NUMBER",
     })
     :AddSubject({
+        label = "Damage",
+        value = "EVENT_DAMAGE",
+        category = "Combat",
+        exec = function() return NCSpell:GetDamage() end,
+        operators = core.constants.NUMERIC_OPERATORS,
+        type = "NUMBER",
+    })
+    :AddSubject({
         label = "Dungeon Time",
         value = "DUNGEON_TIME",
         category = "Dungeon / Encounter",
@@ -620,7 +628,10 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Spell Name",
         value = "SPELL",
-        exec = function() if NCEvent:GetEvent() == "INTERRUPT" then return (NCSpell:GetExtraSpellLink() or "Spell") else return (NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or "Spell") end end,
+        exec = function()
+            if NCEvent:GetEvent() == "INTERRUPT" then return (NCSpell:GetExtraSpellLink() or "Spell")
+            else return (NCSpell:GetSpellLink() or NCSpell:GetExtraSpellLink() or NCSpell:GetSpellName() .. " (general)") end
+            end,
         description = "The name of the spell that was cast or interrupted.",
         isNumeric = false,
         example = function()
@@ -856,13 +867,13 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Bystander Race",
         value = "BYSTANDERRACE",
         exec = function()
-            if (NCEvent:GetBystander() == "Brann Bronzebeard") then
+            if NCEvent:GetBystander() == "Brann Bronzebeard" then
                 return "Dwarf"
             end
 
             local race = UnitRace(NCEvent:GetBystander())
 
-            if (not race) then
+            if not race then
                 error("Could not retrieve race for " + NCEvent:GetBystander() + "! This is likely a WoW API issue.")
                 return "Unknown Race"
             end
@@ -908,6 +919,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
             if (NCEvent:GetBystander() == "Brann Bronzebeard") then
                 return "Hunter"
             end
+            -- Token is FAR safer to use here as raids may throw errors
             return UnitClass(NCEvent:GetBystander())
         end,
         description = "The class of the Bystander's character.",
@@ -935,7 +947,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
         label = "Damage",
         value = "DAMAGE",
         exec = function() return NemesisChat:FormatNumber(NCSpell:GetDamage()) or 0 end,
-        description = "The amount of damage dealt by the spell that was cast.",
+        description = "The amount of damage dealt by the spell/swing (if applicable).",
         isNumeric = true,
         example = function() return NemesisChat:FormatNumber(math.random(1, 1000000)) end,
     })

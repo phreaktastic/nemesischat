@@ -302,7 +302,7 @@ local messageChance = 1.0
 local messageConditions = {}
 
 function NemesisChat:GetCategories()
-    local categories = {}
+    local categories = setmetatable({}, {__mode = "kv"})
 
     for key, val in pairs(core.configTree) do
         local count = 0
@@ -344,10 +344,10 @@ end
 
 function NemesisChat:GetEvents()
     if selectedCategory == "" then
-        return {}
+        return setmetatable({}, {__mode = "kv"})
     end
 
-    local events = {}
+    local events = setmetatable({}, {__mode = "kv"})
 
     for key, val in pairs(core.configTree[selectedCategory].events) do
         local count = 0
@@ -390,10 +390,10 @@ end
 
 function NemesisChat:GetTargets()
     if selectedEvent == "" then
-        return {}
+        return setmetatable({}, {__mode = "kv"})
     end
 
-    local targets = {}
+    local targets = setmetatable({}, {__mode = "kv"})
 
     for key, val in pairs(core.configTree[selectedCategory].events[GetEventIndex()].options) do
         local option = core.units[val]
@@ -533,6 +533,8 @@ function NemesisChat:DeleteMessage()
     messageChannel = ""
     messageConditions = ""
     messageLabel = ""
+
+    NCController:PreprocessMessages()
 end
 
 function NemesisChat:DeselectMessage()
@@ -609,14 +611,14 @@ end
 
 function NemesisChat:GetConditions()
     if selectedConfiguredMessage == "" or selectedConfiguredMessage == nil then
-        return {}
+        return setmetatable({}, {__mode = "kv"})
     end
 
     local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)]
-    local conditions = {}
+    local conditions = setmetatable({}, {__mode = "kv"})
 
     if msg == nil or msg.conditions == nil or #msg.conditions == 0 then
-        return {}
+        return setmetatable({}, {__mode = "kv"})
     end
 
     for key, val in pairs(msg.conditions) do
@@ -643,7 +645,7 @@ end
 
 function NemesisChat:GetConditionSubjects()
     if selectedCondition == "" then
-        return {}
+        return setmetatable({}, {__mode = "kv"})
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
@@ -670,10 +672,10 @@ end
 
 function NemesisChat:GetConditionSubjectCategories()
     if selectedCondition == "" then
-        return {}
+        return setmetatable({}, {__mode = "kv"})
     end
 
-    local categories = {}
+    local categories = setmetatable({}, {__mode = "kv"})
 
     for _, val in pairs(core.messageConditions) do
         if val.category ~= nil and not categories[val.category] then
@@ -706,8 +708,6 @@ function NemesisChat:SetConditionSubject(info, value)
         return
     end
 
-    local categories = {}
-
     for _,val in pairs(core.messageConditions) do
         if value == val.category then
             condition.leftCategory = val.category
@@ -723,12 +723,12 @@ end
 
 function NemesisChat:GetConditionOperators()
     if selectedCondition == "" then
-        return {}
+        return setmetatable({}, {__mode = "kv"})
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
     local baseCondition = GetCondition(condition.left)
-    local operators = {}
+    local operators = setmetatable({}, {__mode = "kv"})
 
     for key, val in pairs(baseCondition.operators) do
         operators[val.value] = val.label
@@ -771,12 +771,12 @@ end
 
 function NemesisChat:GetConditionValues()
     if selectedCondition == "" then
-        return {}
+        return setmetatable({}, {__mode = "kv"})
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
     local baseCondition = GetCondition(condition.left)
-    local values = {}
+    local values = setmetatable({}, {__mode = "kv"})
 
     for key, val in pairs(baseCondition.options) do
         values[val.value] = val.label
@@ -837,7 +837,7 @@ function NemesisChat:AddCondition()
     local condition = DeepCopy(core.runtimeDefaults.messageCondition)
 
     if type(messageConditions) ~= "table" then
-        messageConditions = {}
+        messageConditions = setmetatable({}, {__mode = "kv"})
     end
 
     table.insert(messageConditions, condition)
@@ -864,7 +864,7 @@ function NemesisChat:HideSave()
 end
 
 function NemesisChat:GetReplacements()
-    local resp = {}
+    local resp = setmetatable({}, {__mode = "kv"})
     for key in pairs(core.reference.replacements) do resp[key] = key end
     return resp
 end
@@ -955,6 +955,8 @@ function StoreMessage()
         table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], saveMessage)
         NemesisChat:SetConfiguredMessage(nil, #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] .. "")
     end
+
+    NCController:PreprocessMessages()
 end
 
 function BuildStorePath()
