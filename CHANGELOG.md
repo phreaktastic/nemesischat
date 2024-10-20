@@ -40,6 +40,9 @@ A big thanks to these people who helped make this addon better:
 
 # 🩹 Patches
 
+## 1.11.2
+   * Fixed rolling messages to be more persistent and reliable.
+
 ## 1.11.1
    * Fixed an issue relating to a library used with the AddOn, which for some users would throw an error.
       * This isn't the library's fault -- if a user had a different version of the library included (possibly from a different addon), it would cause the error.

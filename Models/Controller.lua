@@ -16,6 +16,8 @@ local GetTime = GetTime
 local _, core = ...;
 local messageCache = {}
 local eventLookup = {}
+local lastNemesisIndices = {}
+local lastRegularIndices = {}
 
 -----------------------------------------------------
 -- Controller logic for handling events
@@ -69,19 +71,17 @@ function NCController:PreprocessMessages()
         return
     end
     self.lastGroupCacheKey = groupCacheKey
-    wipe(messageCache)
-    wipe(eventLookup)
+
+    local tempCache = {}
+
     for category, events in pairs(core.db.profile.messages) do
         for event, targets in pairs(events) do
             for target, messages in pairs(targets) do
-                -- Check if we should skip processing messages for this target
                 if target ~= "NEMESIS" or NCRuntime:HasNemesis() then
                     local eventKey = category .. "_" .. event .. "_" .. target
-                    messageCache[eventKey] = {
+                    tempCache[eventKey] = {
                         nemesis = {},
-                        regular = {},
-                        lastNemesisIndex = 0,
-                        lastRegularIndex = 0
+                        regular = {}
                     }
                     for _, message in ipairs(messages) do
                         local processedMessage = {
@@ -108,16 +108,36 @@ function NCController:PreprocessMessages()
                             end
                         end
                         if target == "NEMESIS" then
-                            table.insert(messageCache[eventKey].nemesis, processedMessage)
+                            table.insert(tempCache[eventKey].nemesis, processedMessage)
                         else
-                            table.insert(messageCache[eventKey].regular, processedMessage)
+                            table.insert(tempCache[eventKey].regular, processedMessage)
                         end
-                        eventLookup[eventKey] = true
+                    end
+
+                    -- Initialize or adjust indices if they're out of bounds
+                    if not lastNemesisIndices[eventKey] then
+                        lastNemesisIndices[eventKey] = 0
+                    elseif #tempCache[eventKey].nemesis > 0 and lastNemesisIndices[eventKey] >= #tempCache[eventKey].nemesis then
+                        lastNemesisIndices[eventKey] = 0
+                    end
+
+                    if not lastRegularIndices[eventKey] then
+                        lastRegularIndices[eventKey] = 0
+                    elseif #tempCache[eventKey].regular > 0 and lastRegularIndices[eventKey] >= #tempCache[eventKey].regular then
+                        lastRegularIndices[eventKey] = 0
                     end
                 end
-                -- If the condition is false, the code inside the 'if' block is skipped, effectively continuing to the next iteration
             end
         end
+    end
+
+    -- Replace the old cache with the new one
+    messageCache = tempCache
+
+    -- Rebuild eventLookup
+    wipe(eventLookup)
+    for eventKey in pairs(messageCache) do
+        eventLookup[eventKey] = true
     end
 end
 
@@ -395,7 +415,7 @@ function NCController:ConfigMessage()
     if not relevantMessages then return end
 
     local selectedMessage = NCConfig:IsRollingMessages()
-        and self:GetRollingMessage(relevantMessages)
+        and self:GetRollingMessage(relevantMessages, eventKey)
         or self:GetRandomMessage(relevantMessages)
 
     if selectedMessage then
@@ -406,29 +426,32 @@ function NCController:ConfigMessage()
     end
 end
 
-function NCController:GetRollingMessage(relevantMessages)
-    local function getNextMessage(messages, lastIndex)
+function NCController:GetRollingMessage(relevantMessages, eventKey)
+    local function getNextMessage(messages, lastIndexTable)
         if #messages == 0 then
-            return nil, lastIndex
+            return nil, lastIndexTable[eventKey]
         end
-        local newIndex = (lastIndex % #messages) + 1
+        local newIndex = (lastIndexTable[eventKey] % #messages) + 1
         local message = messages[newIndex]
         if self:IsValidMessage(message) and self:CheckAllConditions(message) then
             return message, newIndex
         end
-        -- If no valid message found, still update the index
         return nil, newIndex
     end
 
-    local nemesisMessage, nemesisIndex = getNextMessage(relevantMessages.nemesis, relevantMessages.lastNemesisIndex)
+    local nemesisMessage, nemesisIndex = getNextMessage(relevantMessages.nemesis, lastNemesisIndices)
     if nemesisMessage then
-        relevantMessages.lastNemesisIndex = nemesisIndex
+        lastNemesisIndices[eventKey] = nemesisIndex
         return nemesisMessage
     end
 
-    local regularMessage, regularIndex = getNextMessage(relevantMessages.regular, relevantMessages.lastRegularIndex)
-    relevantMessages.lastRegularIndex = regularIndex -- Always update the index
-    return regularMessage
+    local regularMessage, regularIndex = getNextMessage(relevantMessages.regular, lastRegularIndices)
+    if regularMessage then
+        lastRegularIndices[eventKey] = regularIndex
+        return regularMessage
+    end
+
+    return nil
 end
 
 function NCController:GetNextValidMessage(messages, lastIndex)
