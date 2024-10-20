@@ -11,9 +11,7 @@
 local _, core = ...;
 
 function NemesisChat:Report(event, success)
-    if IsNCEnabled() == false then
-        return
-    end
+    if not IsNCEnabled() then return end
 
     local TYPES = {
         ["DAMAGE"] = "DPS",
@@ -21,7 +19,6 @@ function NemesisChat:Report(event, success)
         ["INTERRUPTS"] = "Interrupts",
         ["OFFHEALS"] = "Offheals",
         ["DEATHS"] = "Deaths",
-        ["AFFIXES"] = "Affixes",
     }
     local EVENTS = {
         "COMBAT",
@@ -35,9 +32,8 @@ function NemesisChat:Report(event, success)
             botMsg = "Lowest DPS for %s: %s at %s.",
         },
         ["AVOIDABLE"] = {
-            topMsg = "Highest avoidable damage taken for %s: %s at %s.",
-            botMsg = "Shout out to %s with the lowest avoidable damage taken for %s, at %s!",
-            inverted = true,
+            topMsg = "Shout out to %s with the lowest avoidable damage taken for %s, at %s!",
+            botMsg = "Highest avoidable damage taken for %s: %s at %s.",
         },
         ["INTERRUPTS"] = {
             topMsg = "Shout out to %s with the most interrupts for %s, at %s!",
@@ -56,98 +52,70 @@ function NemesisChat:Report(event, success)
                 if lifePercent > 100 then
                     local lifeMultiplier = math.floor(lifePercent / 10) / 10
 
-                    topMsg = "Highest deaths for %s: %s at %s, with " .. adFormatted .. " avoidable damage taken (" .. lifeMultiplier .. "x their max health)."
+                    botMsg = "Most deaths for %s: %s at %s, with " ..
+                        adFormatted .. " avoidable damage taken (" .. lifeMultiplier .. "x their max health)."
                 else
-                    topMsg = "Highest deaths for %s: %s at %s, with " .. adFormatted .. " avoidable damage taken."
+                    botMsg = "Most deaths for %s: %s at %s, with " .. adFormatted .. " avoidable damage taken."
                 end
 
                 return topMsg, botMsg
             end,
             topMsg = "Shout out to %s with the lowest deaths for %s, at %s!",
             botMsg = "Most deaths for %s: %s at %s.",
-            inverted = true,
-        },
-        ["AFFIXES"] = {
-            topMsg = "Shout out to %s with the most affixes for %s, at %s!",
-            botMsg = "Lowest affixes for %s: %s at %s.",
         },
     }
-    local shoutOutFormat = function(message, player, segmentName, value) return string.format(message, player, segmentName, NemesisChat:FormatNumber(value)) end
-    local callOutFormat = function(message, player, segmentName, value) return string.format(message, segmentName, player, NemesisChat:FormatNumber(value)) end
-    
-    if not tContains(EVENTS, event) then
-        return
+
+    if not tContains(EVENTS, event) then return end
+
+    local bucket = NCCombat
+    local segName = "this combat segment"
+
+    if event == "BOSS" then
+        bucket = NCBoss
+        segName = NCBoss:GetIdentifier()
+    elseif event == "DUNGEON" then
+        bucket = NCDungeon
+        segName = NCDungeon:GetIdentifier()
     end
 
+    local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
+
     for type, rankingType in pairs(TYPES) do
-        local bucket, topMsg, botMsg
         local config = core.db.profile.reportConfig[type][event]
-        local segName = "this combat segment"
-
         if config then
-            if event == "COMBAT" or event == "BOSS" then
-                bucket = NCCombat
-
-                if event == "BOSS" then
-                    segName = NCBoss:GetIdentifier()
-                end
-            elseif event == "DUNGEON" then
-                bucket = NCDungeon
-                segName = NCDungeon:GetIdentifier()
-            end
-
             local data = typeData[type]
-            local topVal = bucket.Rankings.Top[rankingType].Value or 0
-            local topPlayer = bucket.Rankings.Top[rankingType].Player or nil
-            local botVal = bucket.Rankings.Bottom[rankingType].Value or 99999999
-            local botPlayer = bucket.Rankings.Bottom[rankingType].Player or nil
+            local topRanking = bucket.Rankings.Top[rankingType]
+            local bottomRanking = bucket.Rankings.Bottom[rankingType]
 
-            if topPlayer == nil then
-                topMsg = nil
-            else
-                topMsg = data.topMsg
+            if data.preMessageHook then
+                data.topMsg, data.botMsg = data.preMessageHook(topRanking.Player, data.topMsg, data.botMsg, bucket)
             end
 
-            if botPlayer == nil then
-                botMsg = nil
-            else
-                botMsg = data.botMsg
-            end
+            if not (topRanking and topRanking.Value == 0 and bottomRanking and bottomRanking.Value == 0) then
+                if core.db.profile.reportConfig[type]["TOP"] and topRanking and topRanking.Player then
+                    local msg = data.topMsgSpecial and topRanking.DeltaPercent >= 25 and data.topMsgSpecial or
+                        data.topMsg
+                    local formattedMsg = string.format(msg, topRanking.Player, segName,
+                        NemesisChat:FormatNumber(topRanking.Value))
 
-            if data.preMessageHook ~= nil and topPlayer ~= nil then
-                topMsg, botMsg = data.preMessageHook(topPlayer, topMsg, botMsg, bucket)
-            end
-
-            if topMsg ~= nil then
-                if data.inverted == true then
-                    topMsg = callOutFormat(topMsg, topPlayer, segName, topVal)
-                else
-                    if data.topMsgSpecial and bucket.Rankings.Top and bucket.Rankings.Top[rankingType] and bucket.Rankings.Top[rankingType].DeltaPercent and bucket.Rankings.Top[rankingType].DeltaPercent >= 25 then
-                        topMsg = shoutOutFormat(data.topMsgSpecial, topPlayer, segName, topVal)
+                    if IsInGroup() then
+                        SendChatMessage("Nemesis Chat: " .. formattedMsg, channel)
                     else
-                        topMsg = shoutOutFormat(topMsg, topPlayer, segName, topVal)
+                        print("Nemesis Chat: " .. formattedMsg)
+                    end
+                end
+
+                if core.db.profile.reportConfig[type]["BOTTOM"] and bottomRanking and bottomRanking.Player then
+                    local formattedMsg = string.format(data.botMsg, segName, bottomRanking.Player,
+                        NemesisChat:FormatNumber(bottomRanking.Value))
+
+                    if IsInGroup() then
+                        SendChatMessage("Nemesis Chat: " .. formattedMsg, channel)
+                    else
+                        print("Nemesis Chat: " .. formattedMsg)
                     end
                 end
             end
-
-            if botMsg ~= nil then
-                if data.inverted == true then
-                    botMsg = shoutOutFormat(botMsg, botPlayer, segName, botVal)
-                else
-                    botMsg = callOutFormat(botMsg, botPlayer, segName, botVal)
-                end
-            end
-
-            local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
-
-            if core.db.profile.reportConfig[type]["TOP"] == true and topMsg ~= nil then
-                SendChatMessage("Nemesis Chat: " .. topMsg, channel)
-            end
-
-            if core.db.profile.reportConfig[type]["BOTTOM"] == true and botMsg ~= nil then
-                SendChatMessage("Nemesis Chat: " .. botMsg, channel)
-            end
         end
     end
-
 end

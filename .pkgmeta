@@ -1,6 +1,12 @@
 manual-changelog:
-  filename: CHANGELOG.txt
+  filename: CHANGELOG.md
   markup-type: markdown
 
 ignore:
   - NCLogo-transparent-text.png
+  - .gitignore
+  - .git
+  - .gitattributes
+  - .github
+  - Development
+  - Tests

@@ -11,7 +11,7 @@ local _, core = ...;
 -- Boss getters, setters, etc.
 -----------------------------------------------------
 
-NCBoss = NCSegment:New()
+NCBoss = NCSegmentPool:Acquire("BOSS")
 
 function NCBoss:StartCallback()
     NCEvent:SetCategory("BOSS")

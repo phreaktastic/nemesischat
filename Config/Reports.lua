@@ -196,7 +196,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["TOP"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["TOP"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                         bottomDamageToggle = {
                             order = 2,
@@ -207,7 +210,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                     }
                 },
@@ -226,7 +232,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["COMBAT"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["COMBAT"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                         bossDmgToggle = {
                             order = 2,
@@ -237,7 +246,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["BOSS"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOSS"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                         dungeonDmgToggle = {
                             order = 3,
@@ -248,7 +260,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                     }
                 },
@@ -289,9 +304,12 @@ core.options.args.reportsGroup = {
                             desc = "Report the lowest amount of avoidable damage taken",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["TOP"] end,
+                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["TOP"] = value end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                         topAdToggle = {
                             order = 2,
@@ -300,9 +318,12 @@ core.options.args.reportsGroup = {
                             desc = "Report the highest amount of avoidable damage taken",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["TOP"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["TOP"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] end,
+                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] = value end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                     }
                 },
@@ -321,7 +342,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                         bossAdToggle = {
                             order = 5,
@@ -332,7 +356,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                         dungeonAdToggle = {
                             order = 6,
@@ -343,7 +370,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                     }
                 },
@@ -374,12 +404,18 @@ core.options.args.reportsGroup = {
                 deathsToggle = {
                     order = 2,
                     type = "toggle",
-                    name = "Report Top Deaths After M+ Dungeons",
+                    name = "Report Highest Deaths After M+ Dungeons",
                     desc = "Report the highest deaths after M+ completion",
                     descStyle = "inline",
                     width = "full",
-                    get = function() return core.db.profile.reportConfig["DEATHS"]["TOP"] and core.db.profile.reportConfig["DEATHS"]["DUNGEON"] end,
-                    set = function(info, value) core.db.profile.reportConfig["DEATHS"]["TOP"] = value core.db.profile.reportConfig["DEATHS"]["DUNGEON"] = value end,
+                    get = function()
+                        return core.db.profile.reportConfig["DEATHS"]["BOTTOM"] and
+                            core.db.profile.reportConfig["DEATHS"]["DUNGEON"]
+                    end,
+                    set = function(info, value)
+                        core.db.profile.reportConfig["DEATHS"]["BOTTOM"] = value
+                        core.db.profile.reportConfig["DEATHS"]["DUNGEON"] = value
+                    end,
                 },
             }
         },
@@ -466,7 +502,7 @@ core.options.args.reportsGroup = {
         pulls = {
             order = 12,
             type = "group",
-            name = "Pulls (Beta)",
+            name = "Pulls",
             args = {
                 pullsHeader = {
                     order = 0,
@@ -483,240 +519,44 @@ core.options.args.reportsGroup = {
                     order = 2,
                     type = "toggle",
                     name = "Announce Non-Tank Pulls",
-                    desc = "Announce non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls). This will be announced in real-time as a yell.",
+                    desc =
+                    "Announce non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls). This will be announced in real-time.",
                     descStyle = "inline",
                     width = "full",
-                    get = function() return core.db.profile.reportConfig["PULLS"]["REALTIME"] end,
-                    set = function(info, value) core.db.profile.reportConfig["PULLS"]["REALTIME"] = value  end,
+                    get = function() return NCConfig:IsReportingPulls_Realtime() end,
+                    set = function() NCConfig:ToggleReportingPulls_Realtime() end,
                 },
-                pullsPaddingBottom = {
+                pullsChannel = {
                     order = 3,
-                    type = "description",
-                    fontSize = "large",
-                    name = " ",
+                    type = "select",
+                    name = "Announcement Channel",
+                    desc = "Select the channel to report pulls to",
+                    descStyle = "inline",
+                    width = "full",
+                    values = function() return core.channels end,
+                    get = function() return NCConfig:GetReportingPulls_Channel() end,
+                    set = function(info, value) NCConfig:SetReportingPulls_Channel(value) end,
                 },
-                pullsDescription = {
+                pullsToastToggle = {
                     order = 4,
-                    type = "description",
-                    fontSize = "medium",
-                    name = "This feature is in beta. It is not guaranteed to work as expected. Please report any issues or feature requests in Discord. More configuration options to come as this feature matures.",
-                },
-            }
-        },
-        neglectedHeals = {
-            order = 13,
-            type = "group",
-            name = "Neglected Heals (Beta)",
-            args = {
-                nhHeader = {
-                    order = 0,
-                    type = "header",
-                    name = "Neglected Heals Reporting",
-                },
-                nhPaddingTop = {
-                    order = 1,
-                    type = "description",
-                    fontSize = "large",
-                    name = " ",
-                },
-                nhToggle = {
-                    order = 2,
                     type = "toggle",
-                    name = "Announce Neglected Heals",
-                    desc = "Announce (non-healer) players who have been at or below 45% health for 2 seconds or longer without receiving a (non-self) heal. This will be yelled in real-time.",
+                    name = "Toast Non-Tank Pulls",
+                    desc =
+                    "Show a toast notification for non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls).",
                     descStyle = "inline",
                     width = "full",
-                    get = function() return core.db.profile.reportConfig["NEGLECTEDHEALS"]["REALTIME"] end,
-                    set = function(info, value) core.db.profile.reportConfig["NEGLECTEDHEALS"]["REALTIME"] = value  end,
-                },
-                nhPaddingBottom = {
-                    order = 3,
-                    type = "description",
-                    fontSize = "large",
-                    name = " ",
-                },
-                nhDescription = {
-                    order = 4,
-                    type = "description",
-                    fontSize = "medium",
-                    name = "This feature is in beta. It is not guaranteed to work as expected. Please report any issues or feature requests in Discord. More configuration options to come as this feature matures.",
+                    get = function() return NCConfig:IsReportingPulls_Toast() end,
+                    set = function() NCConfig:ToggleReportingPulls_Toast() end,
                 },
             }
         },
-        affixes = {
-            order = 14,
-            type = "group",
-            name = "Affixes (Beta)",
-            args = {
-                affixesHeader = {
-                    order = 0,
-                    type = "header",
-                    name = "Affix Reporting",
-                },
-                affixesPaddingTop = {
-                    order = 1,
-                    type = "description",
-                    fontSize = "large",
-                    name = " ",
-                },
-                realtime = {
-                    order = 2,
-                    type = "group",
-                    name = "Real-Time",
-                    inline = true,
-                    args = {
-                        realtimeDescription = {
-                            order = 0,
-                            type = "description",
-                            fontSize = "medium",
-                            name = "Real-time options will be yelled in realtime. It is highly recommended that you setup chat windows to accommodate this, as it will be noisy.",
-                        },
-                        realtimePadding = {
-                            order = 1,
-                            type = "description",
-                            fontSize = "large",
-                            name = " ",
-                        },
-                        affixBeginCastingToggle = {
-                            order = 2,
-                            type = "toggle",
-                            name = "Affix Mob Begin Casting",
-                            desc = "Announce when an affix enemy begins casting their ability.",
-                            descStyle = "inline",
-                            width = "full",
-                            get = function() return core.db.profile.reportConfig["AFFIXES"]["CASTSTART"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["CASTSTART"] = value end,
-                        },
-                        affixInterruptedToggle = {
-                            order = 3,
-                            type = "toggle",
-                            name = "Affix Mob Interrupted",
-                            desc = "Announce when an affix enemy is interrupted, but is not incapacitated/dead (requiring more interrupts).",
-                            descStyle = "inline",
-                            width = "full",
-                            get = function() return NCConfig:IsReportingAffixes_CastFailed() end,
-                            set = function(info, value) NCConfig:SetReportingAffixes_CastFailed(value) end,
-                        },
-                        affixSuccessfulCastToggle = {
-                            order = 4,
-                            type = "toggle",
-                            name = "Affix Mob Successful Cast",
-                            desc = "Announce when an affix enemy successfully casts their ability.",
-                            descStyle = "inline",
-                            width = "full",
-                            get = function() return core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["CASTSUCCESS"] = value end,
-                        },
-                        affixAuraStacksWarningToggle = {
-                            order = 5,
-                            type = "toggle",
-                            name = "Affix Aura Stacks",
-                            desc = "Announce when an enemy or party member has reached a high amount of stacks of a dangerous affix aura.",
-                            descStyle = "inline",
-                            width = "full",
-                            get = function() return NCConfig:IsReportingAffixes_AuraStacks() end,
-                            set = function(info, value) NCConfig:SetReportingAffixes_AuraStacks(value) end,
-                        },
-                        affixMarkersToggle = {
-                            order = 6,
-                            type = "toggle",
-                            name = "Affix Mob Markers",
-                            desc = "Mark affix mobs with a raid marker, and announce to the party that you are handling the marked mob.",
-                            descStyle = "inline",
-                            width = "full",
-                            get = function() return core.db.profile.reportConfig["AFFIXES"]["MARKERS"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["MARKERS"] = value end,
-                        },
-                        affixMarkerToUse = {
-                            order = 7,
-                            type = "select",
-                            name = "Marker to Use",
-                            desc = "Select the marker to use for marking affix mobs",
-                            descStyle = "inline",
-                            width = "full",
-                            values = function() return NemesisChat:GetMarkerOptionsWithIcons() end,
-                            get = function() return core.db.profile.reportConfig["AFFIXES"]["MARKER"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["MARKER"] = value end,
-                        },
-                    }
-                },
-                what = {
-                    order = 3,
-                    type = "group",
-                    name = "What to Report",
-                    inline = true,
-                    args = {
-                        topAffixesToggle = {
-                            order = 1,
-                            type = "toggle",
-                            name = "Shout-Outs",
-                            desc = "Report the highest amount of affixes handled by a player",
-                            descStyle = "inline",
-                            width = "full",
-                            get = function() return core.db.profile.reportConfig["AFFIXES"]["TOP"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["TOP"] = value end,
-                        },
-                        bottomAffixesToggle = {
-                            order = 2,
-                            type = "toggle",
-                            name = "Call-Outs",
-                            desc = "Report the lowest amount of affixes handled by a player",
-                            descStyle = "inline",
-                            width = "full",
-                            get = function() return core.db.profile.reportConfig["AFFIXES"]["BOTTOM"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["BOTTOM"] = value end,
-                        },
-                    }
-                },
-                when = {
-                    order = 4,
-                    type = "group",
-                    name = "When to Report",
-                    inline = true,
-                    args = {
-                        bossAffixesToggle = {
-                            order = 1,
-                            type = "toggle",
-                            name = "After Bosses",
-                            desc = "Report affixes after bosses",
-                            descStyle = "inline",
-                            width = "full",
-                            get = function() return core.db.profile.reportConfig["AFFIXES"]["BOSS"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["BOSS"] = value end,
-                        },
-                        dungeonAffixesToggle = {
-                            order = 2,
-                            type = "toggle",
-                            name = "After M+ Dungeons",
-                            desc = "Report affixes after M+ completion",
-                            descStyle = "inline",
-                            width = "full",
-                            get = function() return core.db.profile.reportConfig["AFFIXES"]["DUNGEON"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AFFIXES"]["DUNGEON"] = value end,
-                        },
-                    }
-                },
-                affixesPaddingBottom = {
-                    order = 5,
-                    type = "description",
-                    fontSize = "large",
-                    name = " ",
-                },
-                affixesDescription = {
-                    order = 6,
-                    type = "description",
-                    fontSize = "medium",
-                    name = "This feature is in beta. It is not guaranteed to work as expected. Please report any issues or feature requests in Discord. More configuration options to come as this feature matures.",
-                },
-            }
-        }
     },
 }
 
 function NemesisChat:GetMarkerOptionsWithIcons()
-    local options = {}
+    local options = setmetatable({}, { __mode = "kv" })
 
-    for key,val in ipairs(core.markers) do
+    for key, val in ipairs(core.markers) do
         options[key] = val.name
     end
 

@@ -12,8 +12,8 @@ local ACD = LibStub("AceConfigDialog-3.0")
 local messagePreview = ""
 
 core.defaults = {
-	profile = {
-		enabled = true,
+    profile = {
+        enabled = true,
         dbg = false,
         nonCombatMode = true,
         interruptException = true,
@@ -28,6 +28,14 @@ core.defaults = {
         trackLowPerformers = true,
         reportLowPerformersOnJoin = true,
         reportLowPerformersOnJoinThreshold = 5,
+        rollingMessages = true,
+        notifyWhenTankApplies = true,
+        notifyWhenTankAppliesSound = 8959,
+        notifyWhenHealerApplies = true,
+        notifyWhenHealerAppliesSound = 8959,
+        notifyWhenDpsApplies = true,
+        notifyWhenDpsAppliesSound = 18019,
+        groupMessageOnApplication = false,
         reportConfig = {
             channel = "GROUP",
             excludeNemeses = false,
@@ -75,21 +83,12 @@ core.defaults = {
                 ["BOSS"] = false,
                 ["DUNGEON"] = false,
                 ["REALTIME"] = false,
+                ["CHANNEL"] = "SAY",
+                ["TOAST"] = false,
             },
             ["NEGLECTEDHEALS"] = {
                 ["REALTIME"] = false,
             },
-            ["AFFIXES"] = {
-                ["CASTSTART"] = false,
-                ["CASTINTERRUPTED"] = false,
-                ["CASTSUCCESS"] = false,
-                ["MARKERS"] = false,
-                ["TOP"] = false,
-                ["BOTTOM"] = false,
-                ["BOSS"] = false,
-                ["DUNGEON"] = false,
-                ["AURASTACKS"] = false,
-            }
         },
         aiConfig = {
             selected = "taunts",
@@ -112,30 +111,44 @@ core.defaults = {
             groupRoster = {},
             groupRosterTime = 0,
             NCDungeon = {},
+            DungeonRankings = {},
             NCDungeonTime = 0,
         },
-	},
+        NemesisChatStatsFrameDB = {
+            point = "CENTER",
+            relativeTo = "UIParent",
+            relativePoint = "CENTER",
+            xOfs = 0,
+            yOfs = 0,
+            width = 400,
+            height = 400,
+        },
+    },
 }
 
-core.options = { 
-	name = "Nemesis Chat",
-	handler = NemesisChat,
-	type = "group",
+core.options = {
+    name = "Nemesis Chat",
+    handler = NemesisChat,
+    type = "group",
     -- childGroups = "tab",
-	args = {
-        generalGroup = {}, -- General.lua
-        nemesesGroup = {}, -- Nemeses.lua
-        messagesGroup = {}, -- Messages.lua
-        reportsGroup = {}, -- Reports.lua
+    args = {
+        generalGroup = {},   -- General.lua
+        nemesesGroup = {},   -- Nemeses.lua
+        messagesGroup = {},  -- Messages.lua
+        reportsGroup = {},   -- Reports.lua
         referenceGroup = {}, -- Reference.lua
-        aboutGroup = {}, -- About.lua
-	},
+        aboutGroup = {},     -- About.lua
+    },
 }
 
 -- Initialization - called from core
 function NemesisChat:InitializeConfig()
+    if self.configInitialized then return end
+
     AC:RegisterOptionsTable("NemesisChat_options", core.options)
-	core.optionsFrame = ACD:AddToBlizOptions("NemesisChat_options", "NemesisChat")
+    self.optionsFrame = ACD:AddToBlizOptions("NemesisChat_options", "NemesisChat")
+
+    self.configInitialized = true
 end
 
 -- Common functions for all tabs / UI
@@ -193,9 +206,13 @@ function ShowReloadPopup(text)
 end
 
 function ShowTogglePopup(feature)
-    ShowReloadPopup("Toggling " .. feature .. " requires a reload. If you choose not to reload, functionality will absolutely be unexpected and may even cause LUA errors to be thrown. It is highly recommended to reload now, ensuring smooth gameplay without thrown errors.")
+    ShowReloadPopup("Toggling " ..
+        feature ..
+        " requires a reload. If you choose not to reload, functionality will absolutely be unexpected and may even cause LUA errors to be thrown. It is highly recommended to reload now, ensuring smooth gameplay without thrown errors.")
 end
 
 function ShowApiErrorPopup(api)
-    ShowPopup("Cannot enable " .. api .. " API: " .. api .. " could not be found! Please ensure it is enabled and functional.", false, "Error!")
+    ShowPopup(
+        "Cannot enable " .. api .. " API: " .. api .. " could not be found! Please ensure it is enabled and functional.",
+        false, "Error!")
 end

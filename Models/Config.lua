@@ -12,26 +12,40 @@ local _, core = ...;
 -----------------------------------------------------
 
 NCConfig = {
-    CoreDB = NCDB:New(),
-    ReportDB = NCDB:New("reportConfig"),
-    NemesisDB = NCDB:New("nemeses"),
+    CoreDB = {},
+    ReportDB = {},
+    NemesisDB = {},
+    isInitialized = false,
 
+    Initialize = function(self)
+        if self.isInitialized then return end
+
+        self.CoreDB = NCDB:New(nil)
+        self.ReportDB = NCDB:New("reportConfig")
+        self.NemesisDB = NCDB:New("nemeses")
+
+        self.isInitialized = true
+    end,
     IsEnabled = function(self)
         return self.CoreDB:GetKey("enabled")
     end,
     ToggleEnabled = function(self)
         self.CoreDB:Toggle("enabled")
 
+        NemesisChat:CheckGroup()
+
         if self.CoreDB:GetKey("enabled") then
-                    NemesisChat:Enable()
-                    NemesisChat:Print("Enabled.")
-                else
-                    NemesisChat:Disable()
-                    NemesisChat:Print("Disabled.")
-                end
+            NemesisChat:Enable()
+            NemesisChat:Print("Enabled.")
+        else
+            NemesisChat:Disable()
+            NemesisChat:Print("Disabled.")
+        end
     end,
     SetEnabled = function(self, value)
         self.CoreDB:SetKey("enabled", value)
+
+        NemesisChat:CheckGroup()
 
         if value then
             NemesisChat:Enable()
@@ -145,6 +159,15 @@ NCConfig = {
             value = 5
         end
         self.ReportDB:SetKey("reportLowPerformersOnJoinThreshold", value)
+    end,
+    IsRollingMessages = function(self)
+        return self.CoreDB:GetKey("rollingMessages")
+    end,
+    ToggleRollingMessages = function(self)
+        self.CoreDB:Toggle("rollingMessages")
+    end,
+    SetRollingMessages = function(self, value)
+        self.CoreDB:SetKey("rollingMessages", value)
     end,
     IsAIEnabled = function(self)
         return self.CoreDB:GetKey("ai")
@@ -485,6 +508,24 @@ NCConfig = {
     SetReportingPulls_Realtime = function(self, value)
         self.ReportDB:SetPath("PULLS.REALTIME", value)
     end,
+    IsReportingPulls_Toast = function(self)
+        return self.ReportDB:GetPath("PULLS.TOAST")
+    end,
+    ToggleReportingPulls_Toast = function(self)
+        self.ReportDB:TogglePath("PULLS.TOAST")
+    end,
+    SetReportingPulls_Toast = function(self, value)
+        self.ReportDB:SetPath("PULLS.TOAST", value)
+    end,
+    GetReportingPulls_Channel = function(self)
+        return self.ReportDB:GetPath("PULLS.CHANNEL")
+    end,
+    SetReportingPulls_Channel = function(self, value)
+        self.ReportDB:SetPath("PULLS.CHANNEL", value)
+    end,
+    IsReportingNeglectedHeals_Combat = function(self)
+        return self.ReportDB:GetPath("NEGLECTEDHEALS.COMBAT")
+    end,
     IsReportingNeglectedHeals_Realtime = function(self)
         return self.ReportDB:GetPath("NEGLECTEDHEALS.REALTIME")
     end,
@@ -603,28 +644,19 @@ NCConfig = {
         return self.NemesisDB:GetKey(name)
     end,
     AddNemesis = function(self, name)
-        self.NemesisDB:InsertIntoArray(name, name)
+        self.NemesisDB:SetKey(name, name)
     end,
     RemoveNemesis = function(self, name)
-        self.NemesisDB:RemoveFromArray(name, name)
+        self.NemesisDB:DeleteKey(name)
     end,
     GetMessages = function(self)
         return self.CoreDB:GetKey("messages")
     end,
     AddMessage = function(self, message)
-        local messages = self:GetMessages() or {}
-        table.insert(messages, message)
-        self.CoreDB:SetKey("messages", messages)
+        self.CoreDB:InsertIntoArray("messages", message)
     end,
     RemoveMessage = function(self, message)
-        local messages = self:GetMessages() or {}
-        for i, msg in ipairs(messages) do
-            if msg == message then
-                table.remove(messages, i)
-                break
-            end
-        end
-        self.CoreDB:SetKey("messages", messages)
+        self.CoreDB:DeleteFromArray("messages", message)
     end,
     ShouldShowInfoFrame = function(self)
         return self.CoreDB:GetKey("showInfoFrame")
@@ -634,5 +666,59 @@ NCConfig = {
     end,
     SetShowInfoFrame = function(self, value)
         self.CoreDB:SetKey("showInfoFrame", value)
+    end,
+    GetNotifyWhenTankApplies = function(self)
+        return self.CoreDB:GetKey("notifyWhenTankApplies")
+    end,
+    ToggleNotifyWhenTankApplies = function(self)
+        self.CoreDB:Toggle("notifyWhenTankApplies")
+    end,
+    SetNotifyWhenTankApplies = function(self, value)
+        self.CoreDB:SetKey("notifyWhenTankApplies", value)
+    end,
+    GetNotifyWhenTankAppliesSound = function(self)
+        return self.CoreDB:GetKey("notifyWhenTankAppliesSound")
+    end,
+    SetNotifyWhenTankAppliesSound = function(self, value)
+        self.CoreDB:SetKey("notifyWhenTankAppliesSound", value)
+    end,
+    GetNotifyWhenHealerApplies = function(self)
+        return self.CoreDB:GetKey("notifyWhenHealerApplies")
+    end,
+    ToggleNotifyWhenHealerApplies = function(self)
+        self.CoreDB:Toggle("notifyWhenHealerApplies")
+    end,
+    SetNotifyWhenHealerApplies = function(self, value)
+        self.CoreDB:SetKey("notifyWhenHealerApplies", value)
+    end,
+    GetNotifyWhenHealerAppliesSound = function(self)
+        return self.CoreDB:GetKey("notifyWhenHealerAppliesSound")
+    end,
+    SetNotifyWhenHealerAppliesSound = function(self, value)
+        self.CoreDB:SetKey("notifyWhenHealerAppliesSound", value)
+    end,
+    GetNotifyWhenDPSApplies = function(self)
+        return self.CoreDB:GetKey("notifyWhenDPSApplies")
+    end,
+    ToggleNotifyWhenDPSApplies = function(self)
+        self.CoreDB:Toggle("notifyWhenDPSApplies")
+    end,
+    SetNotifyWhenDPSApplies = function(self, value)
+        self.CoreDB:SetKey("notifyWhenDPSApplies", value)
+    end,
+    GetNotifyWhenDPSAppliesSound = function(self)
+        return self.CoreDB:GetKey("notifyWhenDPSAppliesSound")
+    end,
+    SetNotifyWhenDPSAppliesSound = function(self, value)
+        self.CoreDB:SetKey("notifyWhenDPSAppliesSound", value)
+    end,
+    GetGroupMessageOnApplication = function(self)
+        return self.CoreDB:GetKey("groupMessageOnApplication")
+    end,
+    ToggleGroupMessageOnApplication = function(self)
+        self.CoreDB:Toggle("groupMessageOnApplication")
+    end,
+    SetGroupMessageOnApplication = function(self, value)
+        self.CoreDB:SetKey("groupMessageOnApplication", value)
     end,
 }

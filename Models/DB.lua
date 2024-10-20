@@ -12,31 +12,23 @@ local _, core = ...;
 -- storage.
 -----------------------------------------------------
 
--- NOTE: This is a TEMPORARY initialization of the DB so the addon can function.
--- Interactions in-game, such as toggling settings, will work as intended and 
--- will not leverage this line's initialization of the DB.
-core.db = LibStub("AceDB-3.0"):New("NemesisChatDB", core.defaults, true)
-
 NCDB = {
     prefix = "",
     basePath = "profile",
 }
 
 function NCDB:New(prefix, basePath)
-    local db = {}
-
-    setmetatable(db, self)
-    self.__index = self
-
-    db.prefix = prefix
-
-    if basePath then
-        db.basePath = basePath
-    end
+    local db = {
+        prefix = prefix,
+        basePath = basePath or "profile",
+    }
 
     if prefix then
         self:TouchPath(db.prefix)
     end
+
+    setmetatable(db, self)
+    self.__index = self
 
     return db
 end
@@ -143,6 +135,51 @@ function NCDB:InsertIntoArray(key, value)
     table.insert(core.db[self.basePath][self.prefix][key], value)
 end
 
+function NCDB:DeleteFromArray(key, value)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        if core.db[self.basePath][key] == nil then
+            return
+        end
+
+        for i = 1, #core.db[self.basePath][key] do
+            if core.db[self.basePath][key][i] == value then
+                table.remove(core.db[self.basePath][key], i)
+                return
+            end
+        end
+
+        return
+    end
+
+    if core.db[self.basePath][self.prefix][key] == nil then
+        return
+    end
+
+    for i = 1, #core.db[self.basePath][self.prefix][key] do
+        if core.db[self.basePath][self.prefix][key][i] == value then
+            table.remove(core.db[self.basePath][self.prefix][key], i)
+            return
+        end
+    end
+end
+
+function NCDB:InsertIntoMap(key, value)
+    if not key then
+        return
+    end
+
+    if not self.prefix then
+        core.db[self.basePath][key] = value
+        return
+    end
+
+    core.db[self.basePath][self.prefix][key] = value
+end
+
 -- Complex keys, meaning dots to parse and null check
 function NCDB:GetPath(key)
     if not key then
@@ -153,7 +190,7 @@ function NCDB:GetPath(key)
         key = self.prefix .. "." .. key
     end
 
-    local keys = {strsplit(".", key)}
+    local keys = { strsplit(".", key) }
     local value = core.db[self.basePath]
 
     for i = 1, #keys do
@@ -176,7 +213,7 @@ function NCDB:SetPath(key, value)
         key = self.prefix .. "." .. key
     end
 
-    local keys = {strsplit(".", key)}
+    local keys = { strsplit(".", key) }
     local parent = core.db[self.basePath]
 
     for i = 1, #keys - 1 do
@@ -199,7 +236,7 @@ function NCDB:DeletePath(key)
         key = self.prefix .. "." .. key
     end
 
-    local keys = {strsplit(".", key)}
+    local keys = { strsplit(".", key) }
     local parent = core.db[self.basePath]
 
     for i = 1, #keys - 1 do
@@ -222,7 +259,7 @@ function NCDB:TouchPath(key)
         key = self.prefix .. "." .. key
     end
 
-    local keys = {strsplit(".", key)}
+    local keys = { strsplit(".", key) }
     local parent = core.db[self.basePath]
 
     for i = 1, #keys do
@@ -243,7 +280,7 @@ function NCDB:PathInsert(key, value)
         key = self.prefix .. "." .. key
     end
 
-    local keys = {strsplit(".", key)}
+    local keys = { strsplit(".", key) }
     local parent = core.db[self.basePath]
 
     for i = 1, #keys - 1 do
@@ -285,7 +322,7 @@ function NCDB:IsPathEmpty(key)
         key = self.prefix .. "." .. key
     end
 
-    local keys = {strsplit(".", key)}
+    local keys = { strsplit(".", key) }
     local value = core.db[self.basePath]
 
     for i = 1, #keys do
@@ -348,7 +385,7 @@ function NCDB:Toggle(key)
     core.db[self.basePath][self.prefix][key] = not core.db[self.basePath][self.prefix][key]
 end
 
--- Toggle a boolean path 
+-- Toggle a boolean path
 function NCDB:TogglePath(key)
     if not key then
         return

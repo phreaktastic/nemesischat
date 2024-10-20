@@ -1,0 +1,15 @@
+--- @class GroupRosterPlayer
+--- @field guid string
+--- @field isGuildmate boolean
+--- @field isFriend boolean
+--- @field isNemesis boolean
+--- @field role "TANK"|"HEALER"|"DAMAGER"|"NONE"
+--- @field itemLevel number|nil
+--- @field race string
+--- @field class string
+--- @field rawClass string
+--- @field spec string|nil
+--- @field groupLead boolean
+--- @field name string
+--- @field token "party1"|...|"party5"|"player"|"pet"|"raid1"|...|"raid40"
+--- @field group number

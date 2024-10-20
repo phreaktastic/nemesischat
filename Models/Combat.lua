@@ -11,7 +11,7 @@ local _, core = ...;
 -- Event getters, setters, and helper methods
 -----------------------------------------------------
 
-NCCombat = NCSegment:New()
+NCCombat = NCSegmentPool:Acquire("COMBAT")
 
 function NCCombat:StartCallback()
     NCEvent:SetCategory("COMBATLOG")
@@ -30,41 +30,21 @@ function NCCombat:FinishCallback()
     NCEvent:RandomNemesis()
     NCEvent:RandomBystander()
 
-    if NCDungeon:IsActive() then
-        NCCombat:AnnounceAffixAuras()
-    end
-
     core.runtime.pulledUnits = {}
 
     if NCDungeon.Rankings.Calculate then
         NCDungeon.Rankings:Calculate()
     end
 
-    NCInfo:Update()
-
     if NCConfig:ShouldShowInfoFrame() then
         NCInfo.StatsFrame:Show()
-        NCInfo:Update()
+        if NCInfo.IsMinimized then
+            NCInfo:ShowMinimized()
+        else
+            NCInfo:Update()
+        end
     end
 
     NCRuntime:CacheGroupRoster()
     NCDungeon:UpdateCache()
-end
-
-function NCCombat:AnnounceAffixAuras()
-    if not NCConfig:IsReportingAffixes_AuraStacks() then
-        return
-    end
-
-    for _, auraData in pairs(core.affixMobsAuras) do
-        for playerName, playerData in pairs(NCRuntime:GetGroupRoster()) do
-            local _, _, count = AuraUtil.FindAuraByName(auraData.spellName, playerName, "HARMFUL")
-
-            if count ~= nil and tonumber(count) >= auraData.highStacks then
-                SendChatMessage("Nemesis Chat: " .. auraData.name .. " is at " .. count .. "+ stacks -- please wait to pull more mobs!", "PARTY")
-
-                return
-            end
-        end
-    end
 end

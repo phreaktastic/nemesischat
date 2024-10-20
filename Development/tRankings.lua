@@ -1,0 +1,25 @@
+--- @class NCRankings
+--- @field METRICS table<string, boolean>
+--- @field template table
+--- @field cache table
+--- @field sortedPlayers table
+--- @field lastUpdateTime table
+--- @field METRIC_APPLICABILITY table<string, {TANK: boolean, HEALER: boolean, DAMAGER: boolean}>
+--- @field _segment NCSegment
+--- @field Top table<string, {Player: string, Value: number, Delta: number, DeltaPercent: number}>
+--- @field Bottom table<string, {Player: string, Value: number, Delta: number, DeltaPercent: number}>
+--- @field All table<string, table>
+--- @field New fun(self: NCRankings, segment: NCSegment): NCRankings
+--- @field Reset fun(self: NCRankings, segment: NCSegment)
+--- @field UpdateMetric fun(self: NCRankings, metricKey: string, playerName: string, newValue: number)
+--- @field UpdateSortedList fun(self: NCRankings, metricKey: string, playerName: string, oldValue: number, newValue: number)
+--- @field GetTopPlayer fun(self: NCRankings, metricKey: string): string|nil, number|nil
+--- @field GetBottomPlayer fun(self: NCRankings, metricKey: string): string|nil, number|nil
+--- @field Calculate fun(self: NCRankings)
+--- @field RecalculateMetric fun(self: NCRankings, metricKey: string)
+--- @field GetStats fun(self: NCRankings, playerName: string, metric: string): number
+--- @field GetTopPerformer fun(self: NCRankings): string|nil, number
+--- @field GetBottomPerformer fun(self: NCRankings): string|nil, number
+--- @field IsMetricApplicable fun(self: NCRankings, metricKey: string, playerName: string): boolean
+--- @field GetBackup fun(self: NCRankings): NCRankingsBackup
+--- @field Restore fun(self: NCRankings)

@@ -1,0 +1,3 @@
+--- @class NCCombat : NCSegment
+--- @field StartCallback fun(self: NCCombat)
+--- @field FinishCallback fun(self: NCCombat)

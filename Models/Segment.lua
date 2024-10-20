@@ -20,6 +20,26 @@ local _, core = ...;
 -- Core segment logic
 -----------------------------------------------------
 
+NCSegmentPool = {
+    pool = {},
+    maxSize = 3,
+}
+
+function NCSegmentPool:Acquire(identifier)
+    local segment = table.remove(self.pool) or NCSegment:New(identifier)
+    segment:Reset(identifier)
+    return segment
+end
+
+function NCSegmentPool:Release(segment)
+    if #self.pool < self.maxSize then
+        table.insert(self.pool, segment)
+    else
+        segment:Destroy()
+    end
+end
+
+--- @type NCSegment
 NCSegment = {
     -- Is this segment active?
     Active = false,
@@ -32,7 +52,7 @@ NCSegment = {
 
     -- Segment start time
     StartTime = 0,
- 
+
     -- Was this segment a success?
     Success = false,
 
@@ -73,7 +93,7 @@ NCSegment = {
     Kills = {},
 
     -- Off heal tracker for the segment
-    OffHeals = {},
+    Offheals = {},
 
     -- Pulls tracker for the segment
     Pulls = {},
@@ -84,10 +104,42 @@ NCSegment = {
     -- Segment tracker -- array containing all objects which inherited from NCSegment
     Segments = {},
 
+    -- ACTIVE segments, used for processing to alleviate the need for looping
+    ActiveSegments = {},
+
     -- Roster snapshot at the beginning of the segment
     RosterSnapshot = {},
 
+    -- Table of observers, used for notifying observers of stat updates
+    Observers = {},
+
     DetailsSegment = DETAILS_SEGMENTID_CURRENT,
+
+    -- Template for initial state
+    template = {
+        Active = false,
+        FinishTime = 0,
+        Identifier = "",
+        StartTime = 0,
+        Success = false,
+        TotalTime = 0,
+        Wipe = false,
+        ActionPoints = {},
+        Affixes = {},
+        AvoidableDamage = {},
+        CrowdControl = {},
+        Deaths = {},
+        Defensives = {},
+        Dispells = {},
+        Heals = {},
+        Interrupts = {},
+        Kills = {},
+        Offheals = {},
+        Pulls = {},
+        RosterSnapshot = {},
+        Observers = {},
+        DetailsSegment = DETAILS_SEGMENTID_CURRENT,
+    },
 
     StartPreHook = function(self)
         -- Override me
@@ -121,6 +173,7 @@ NCSegment = {
     end,
     SetActive = function(self)
         self.Active = true
+        table.insert(NCSegment.ActiveSegments, self)
         self:SetActiveCallback()
     end,
     SetActiveCallback = function(self)
@@ -128,6 +181,12 @@ NCSegment = {
     end,
     SetInactive = function(self)
         self.Active = false
+        for i, segment in ipairs(NCSegment.ActiveSegments) do
+            if segment == self then
+                table.remove(NCSegment.ActiveSegments, i)
+                break
+            end
+        end
         self:SetInactiveCallback()
     end,
     SetInactiveCallback = function(self)
@@ -155,15 +214,14 @@ NCSegment = {
         return self.TotalTime
     end,
     GetAffixes = function(self, player)
-        if player == nil then
-            return self.Affixes
+        local affixes = self.Affixes or {}
+        self.Affixes = affixes
+        if player then
+            local playerAffixes = affixes[player] or 0
+            affixes[player] = playerAffixes
+            return playerAffixes
         end
-        
-        if self.Affixes[player] == nil then
-            self.Affixes[player] = 0
-        end
-
-        return self.Affixes[player]
+        return affixes
     end,
     AddActionPoints = function(self, amount, player, optDescription)
         if player == nil or amount == nil then
@@ -189,7 +247,7 @@ NCSegment = {
         if player == nil then
             return self.ActionPoints
         end
-        
+
         if self.ActionPoints[player] == nil then
             self.ActionPoints[player] = {}
         end
@@ -200,7 +258,7 @@ NCSegment = {
         if player == nil then
             return 0
         end
-        
+
         if self.ActionPoints[player] == nil then
             self.ActionPoints[player] = {}
         end
@@ -230,15 +288,14 @@ NCSegment = {
         -- Override me
     end,
     GetAvoidableDamage = function(self, player)
-        if player == nil then
-            return self.AvoidableDamage
+        local avoidableDamage = self.AvoidableDamage or {}
+        self.AvoidableDamage = avoidableDamage
+        if player then
+            local playerDamage = avoidableDamage[player] or 0
+            avoidableDamage[player] = playerDamage
+            return playerDamage
         end
-        
-        if self.AvoidableDamage[player] == nil then
-            self.AvoidableDamage[player] = 0
-        end
-
-        return self.AvoidableDamage[player]
+        return avoidableDamage
     end,
     AddAvoidableDamage = function(self, amount, player)
         if player == nil or amount == nil then
@@ -251,21 +308,22 @@ NCSegment = {
             self.AvoidableDamage[player] = self.AvoidableDamage[player] + amount
         end
 
+        self.Rankings:UpdateMetric("AvoidableDamage", player, self.AvoidableDamage[player])
+        self:NotifyObservers("AvoidableDamage", player, self:GetStats(player, "AvoidableDamage"))
         self:AddAvoidableDamageCallback(amount, player)
     end,
     AddAvoidableDamageCallback = function(self, amount, player)
         -- Override me
     end,
     GetCrowdControls = function(self, player)
-        if player == nil then
-            return self.CrowdControl
+        local crowdControl = self.CrowdControl or {}
+        self.CrowdControl = crowdControl
+        if player then
+            local playerCC = crowdControl[player] or 0
+            crowdControl[player] = playerCC
+            return playerCC
         end
-        
-        if self.CrowdControl[player] == nil then
-            self.CrowdControl[player] = 0
-        end
-
-        return self.CrowdControl[player]
+        return crowdControl
     end,
     AddCrowdControl = function(self, player)
         if player == nil then
@@ -278,21 +336,22 @@ NCSegment = {
             self.CrowdControl[player] = self.CrowdControl[player] + 1
         end
 
+        self.Rankings:UpdateMetric("CrowdControl", player, self.CrowdControl[player])
+        self:NotifyObservers("CrowdControl", player, self:GetStats(player, "CrowdControl"))
         self:AddCrowdControlCallback(player)
     end,
     AddCrowdControlCallback = function(self, player)
         -- Override me
     end,
     GetDeaths = function(self, player)
-        if player == nil then
-            return self.Deaths
+        local deaths = self.Deaths or {}
+        self.Deaths = deaths
+        if player then
+            local playerDeaths = deaths[player] or 0
+            deaths[player] = playerDeaths
+            return playerDeaths
         end
-        
-        if self.Deaths[player] == nil then
-            self.Deaths[player] = 0
-        end
-
-        return self.Deaths[player]
+        return deaths
     end,
     AddDeath = function(self, player)
         if player == nil then
@@ -305,21 +364,22 @@ NCSegment = {
             self.Deaths[player] = self.Deaths[player] + 1
         end
 
+        self.Rankings:UpdateMetric("Deaths", player, self.Deaths[player])
+        self:NotifyObservers("Deaths", player, self:GetStats(player, "Deaths"))
         self:AddDeathCallback(player)
     end,
     AddDeathCallback = function(self, player)
         -- Override me
     end,
     GetDefensives = function(self, player)
-        if player == nil then
-            return self.Defensives
+        local defensives = self.Defensives or {}
+        self.Defensives = defensives
+        if player then
+            local playerDefensives = defensives[player] or 0
+            defensives[player] = playerDefensives
+            return playerDefensives
         end
-        
-        if self.Defensives[player] == nil then
-            self.Defensives[player] = 0
-        end
-
-        return self.Defensives[player]
+        return defensives
     end,
     AddDefensive = function(self, player)
         if player == nil then
@@ -332,21 +392,22 @@ NCSegment = {
             self.Defensives[player] = self.Defensives[player] + 1
         end
 
+        self.Rankings:UpdateMetric("Defensives", player, self.Defensives[player])
+        self:NotifyObservers("Defensives", player, self:GetStats(player, "Defensives"))
         self:AddDefensiveCallback(player)
     end,
     AddDefensiveCallback = function(self, player)
         -- Override me
     end,
     GetDispells = function(self, player)
-        if player == nil then
-            return self.Dispells
+        local dispells = self.Dispells or {}
+        self.Dispells = dispells
+        if player then
+            local playerDispells = dispells[player] or 0
+            dispells[player] = playerDispells
+            return playerDispells
         end
-        
-        if self.Dispells[player] == nil then
-            self.Dispells[player] = 0
-        end
-
-        return self.Dispells[player]
+        return dispells
     end,
     AddDispell = function(self, player)
         if player == nil then
@@ -359,6 +420,8 @@ NCSegment = {
             self.Dispells[player] = self.Dispells[player] + 1
         end
 
+        self.Rankings:UpdateMetric("Dispells", player, self.Dispells[player])
+        self:NotifyObservers("Dispells", player, self:GetStats(player, "Dispells"))
         self:AddDispellCallback(player)
     end,
     AddDispellCallback = function(self, player)
@@ -368,7 +431,7 @@ NCSegment = {
         if player == nil then
             return self.Heals
         end
-        
+
         if self.Heals[player] == nil then
             self.Heals[player] = 0
         end
@@ -391,7 +454,7 @@ NCSegment = {
 
         -- If the source is not a healer, and the source is not the target, and the target is in the group (ignoring pets and self heals)
         if rosterPlayer ~= nil and rosterPlayer.role ~= "HEALER" and source ~= target and rosterTarget ~= nil then
-            self:AddOffHeals(amount, source)
+            self:AddOffheals(amount, source)
         end
 
         self:AddHealsCallback(amount, source)
@@ -410,15 +473,14 @@ NCSegment = {
         self.Identifier = identifier
     end,
     GetInterrupts = function(self, player)
-        if player == nil then
-            return self.Interrupts
+        local interrupts = self.Interrupts or {}
+        self.Interrupts = interrupts
+        if player then
+            local playerInterrupts = interrupts[player] or 0
+            interrupts[player] = playerInterrupts
+            return playerInterrupts
         end
-        
-        if self.Interrupts[player] == nil then
-            self.Interrupts[player] = 0
-        end
-
-        return self.Interrupts[player]
+        return interrupts
     end,
     AddInterrupt = function(self, player)
         if player == nil then
@@ -431,21 +493,22 @@ NCSegment = {
             self.Interrupts[player] = self.Interrupts[player] + 1
         end
 
+        self.Rankings:UpdateMetric("Interrupts", player, self.Interrupts[player])
+        self:NotifyObservers("Interrupts", player, self:GetStats(player, "Interrupts"))
         self:AddInterruptCallback(player)
     end,
     AddInterruptCallback = function(self, player)
         -- Override me
     end,
     GetKills = function(self, player)
-        if player == nil then
-            return self.Kills
+        local kills = self.Kills or {}
+        self.Kills = kills
+        if player then
+            local playerKills = kills[player] or 0
+            kills[player] = playerKills
+            return playerKills
         end
-        
-        if self.Kills[player] == nil then
-            self.Kills[player] = 0
-        end
-
-        return self.Kills[player]
+        return kills
     end,
     AddKill = function(self, player)
         if player == nil then
@@ -463,43 +526,43 @@ NCSegment = {
     AddKillCallback = function(self, player)
         -- Override me
     end,
-    GetOffHeals = function(self, player)
-        if player == nil then
-            return self.OffHeals
+    GetOffheals = function(self, player)
+        local offHeals = self.Offheals or {}
+        self.Offheals = offHeals
+        if player then
+            local playerOffheals = offHeals[player] or 0
+            offHeals[player] = playerOffheals
+            return playerOffheals
         end
-        
-        if self.OffHeals[player] == nil then
-            self.OffHeals[player] = 0
-        end
-
-        return self.OffHeals[player]
+        return offHeals
     end,
-    AddOffHeals = function(self, amount, player)
+    AddOffheals = function(self, amount, player)
         if player == nil or amount == nil then
             return
         end
 
-        if self.OffHeals[player] == nil then
-            self.OffHeals[player] = amount
+        if self.Offheals[player] == nil then
+            self.Offheals[player] = amount
         else
-            self.OffHeals[player] = self.OffHeals[player] + amount
+            self.Offheals[player] = self.Offheals[player] + amount
         end
 
-        self:AddOffHealsCallback(amount, player)
+        self.Rankings:UpdateMetric("Offheals", player, self.Offheals[player])
+        self:NotifyObservers("Offheals", player, self:GetStats(player, "Offheals"))
+        self:AddOffhealsCallback(amount, player)
     end,
-    AddOffHealsCallback = function(self, amount, player)
+    AddOffhealsCallback = function(self, amount, player)
         -- Override me
     end,
     GetPulls = function(self, player)
-        if player == nil then
-            return self.Pulls
+        local pulls = self.Pulls or {}
+        self.Pulls = pulls
+        if player then
+            local playerPulls = pulls[player] or 0
+            pulls[player] = playerPulls
+            return playerPulls
         end
-        
-        if self.Pulls[player] == nil then
-            self.Pulls[player] = 0
-        end
-
-        return self.Pulls[player]
+        return pulls
     end,
     AddPull = function(self, player)
         if player == nil then
@@ -512,6 +575,8 @@ NCSegment = {
             self.Pulls[player] = self.Pulls[player] + 1
         end
 
+        self.Rankings:UpdateMetric("Pulls", player, self.Pulls[player])
+        self:NotifyObservers("Pulls", player, self:GetStats(player, "Pulls"))
         self:AddPullCallback(player)
     end,
     AddPullCallback = function(self, player)
@@ -521,7 +586,7 @@ NCSegment = {
         if not playerName then
             playerName = UnitName("player")
         end
-        
+
         if metric == "DPS" then
             return self:GetDps(playerName)
         elseif metric == "Affixes" then
@@ -539,7 +604,7 @@ NCSegment = {
         elseif metric == "Interrupts" then
             return self:GetInterrupts(playerName)
         elseif metric == "Offheals" then
-            return self:GetOffHeals(playerName)
+            return self:GetOffheals(playerName)
         elseif metric == "Pulls" then
             return self:GetPulls(playerName)
         end
@@ -550,7 +615,7 @@ NCSegment = {
         if Details == nil or NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or NCDetailsAPI == nil or NCDetailsAPI.GetDPS == nil then
             return 0
         end
-        
+
         return NCDetailsAPI:GetDPS(playerName, self:GetDetailsSegment())
     end,
     GetDetailsSegment = function(self)
@@ -566,148 +631,116 @@ NCSegment = {
         return self.Rankings:GetHighestPerformer()
     end,
     GlobalAddActionPoints = function(self, amount, player, optDescription)
-        if player == nil or amount == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
-            if segment:IsActive() then
-                segment:AddActionPoints(amount, player, optDescription)
-            end
+        if not player or not amount then return end
+        for _, segment in ipairs(self.ActiveSegments) do
+            segment:AddActionPoints(amount, player, optDescription)
         end
     end,
     GlobalAddAffix = function(self, player, optCount)
-        if player == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
-            if segment:IsActive() then
-                segment:AddAffix(player, optCount)
-            end
+        if not player then return end
+        for _, segment in ipairs(self.ActiveSegments) do
+            segment:AddAffix(player, optCount)
         end
     end,
     GlobalAddAvoidableDamage = function(self, amount, player)
-        if player == nil or amount == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
-            if segment:IsActive() then
-                segment:AddAvoidableDamage(amount, player)
-            end
-            
+        if not player or not amount then return end
+        for _, segment in ipairs(self.ActiveSegments) do
+            segment:AddAvoidableDamage(amount, player)
         end
     end,
     GlobalAddCrowdControl = function(self, player)
-        if player == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
-            if segment:IsActive() then
-                segment:AddCrowdControl(player)
-            end
+        if not player then return end
+        for _, segment in ipairs(self.ActiveSegments) do
+            segment:AddCrowdControl(player)
         end
     end,
     GlobalAddDeath = function(self, player)
-        if player == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
-            if segment:IsActive() then
-                segment:AddDeath(player)
-            end
+        if not player then return end
+        for _, segment in ipairs(self.ActiveSegments) do
+            segment:AddDeath(player)
         end
     end,
     GlobalAddDefensive = function(self, player)
-        if player == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
+        if not player then return end
+        for _, segment in ipairs(self.ActiveSegments) do
             segment:AddDefensive(player)
         end
     end,
     GlobalAddDispell = function(self, player)
-        if player == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
+        if not player then return end
+        for _, segment in ipairs(self.ActiveSegments) do
             segment:AddDispell(player)
         end
     end,
     GlobalAddHeals = function(self, amount, source, target)
-        if source == nil or amount == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
-            if segment:IsActive() then
-                segment:AddHeals(amount, source, target)
-            end
+        if not source or not amount then return end
+        for _, segment in ipairs(self.ActiveSegments) do
+            segment:AddHeals(amount, source, target)
         end
     end,
     GlobalAddInterrupt = function(self, player)
-        if player == nil then
-            return
-        end
+        if not player then return end
 
-        for _, segment in pairs(NCSegment.Segments) do
-            if segment:IsActive() then
-                segment:AddInterrupt(player)
-            end
+        for _, segment in ipairs(self.ActiveSegments) do
+            segment:AddInterrupt(player)
         end
     end,
     GlobalAddKill = function(self, player)
-        if player == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
-            if segment:IsActive() then
-                segment:AddKill(player)
-            end
+        if not player then return end
+        for _, segment in ipairs(self.ActiveSegments) do
+            segment:AddKill(player)
         end
     end,
     GlobalAddPull = function(self, player)
-        if player == nil then
-            return
-        end
-
-        for _, segment in pairs(NCSegment.Segments) do
-            if segment:IsActive() then
-                segment:AddPull(player)
-            end
+        if not player then return end
+        for _, segment in ipairs(self.ActiveSegments) do
+            segment:AddPull(player)
         end
     end,
     GlobalReset = function(self)
-        for _, segment in pairs(NCSegment.Segments) do
-            segment:Reset()
+        if not self.Segments then
+            self.Segments = {}
+        end
+        for _, segment in pairs(self.Segments) do
+            if segment and type(segment.Reset) == "function" then
+                segment:Reset()
+            end
         end
     end,
+    GetSegment = function(self, identifier)
+        if not self.Segments then
+            return nil
+        end
+        for _, segment in pairs(self.Segments) do
+            if segment:GetIdentifier() == identifier then
+                return segment
+            end
+        end
+        return nil
+    end,
+    SnapshotCurrentRoster = function(self)
+        self.RosterSnapshot = DeepCopy(NCRuntime:GetGroupRoster())
+    end,
     New = function(self, identifier)
-        local o = {
-            Identifier = identifier,
-            Segments = nil,
-            Affixes = {},
-            AvoidableDamage = {},
-            Deaths = {},
-            Heals = {},
-            Interrupts = {},
-            OffHeals = {},
-            Pulls = {},
-        }
-        
+        local o = {}
+
+        -- Initialize using the template
+        for key, defaultValue in pairs(self.template) do
+            if type(defaultValue) == "table" then
+                o[key] = {}
+            else
+                o[key] = defaultValue
+            end
+        end
+
+        o.Segments = nil
+        o.Identifier = identifier
+        o.Rankings = NCRankings:New(o)
+
         setmetatable(o, self)
         self.__index = self
 
-        o.Rankings = NCRankings:New(o)
-
-        NCSegment.Segments[#NCSegment.Segments + 1] = o
-
+        table.insert(self.Segments, o)
         return o
     end,
     Destroy = function(self)
@@ -715,7 +748,7 @@ NCSegment = {
         if self == NCSegment then
             return
         end
-        
+
         for i, segment in pairs(NCSegment.Segments) do
             if segment == self then
                 table.remove(NCSegment.Segments, i)
@@ -725,25 +758,31 @@ NCSegment = {
         self = nil
     end,
     Reset = function(self, optIdentifier, optStart)
-        -- Don't reset the base segment
-        if self == NCSegment then
-            return
-        end
+        if self == NCSegment then return end
 
         local identifier = optIdentifier or self:GetIdentifier() or ""
-        
-        -- Don't touch anything that's not inherited
-        for k, v in pairs(NCSegment) do
-            -- We don't care about maintaining tables, just reset to {}
-            if type(v) == "table" and k ~= "Rankings" and not string.find(k, "__") then
-                self[k] = {}
-            elseif type(v) ~= "function" and k ~= "Rankings" and not string.find(k, "__") then
-                self[k] = v
+
+        -- Reset properties using the template
+        for key, defaultValue in pairs(self.template) do
+            if type(defaultValue) == "table" then
+                if self[key] then
+                    wipe(self[key]) -- Clear existing table
+                else
+                    self[key] = {}  -- Create new table if it doesn't exist
+                end
+            else
+                self[key] = defaultValue -- Reset to default value
             end
         end
 
         self.Identifier = identifier
-        self.Rankings = NCRankings:New(self)
+
+        -- Reset Rankings without destroying its structure
+        if self.Rankings then
+            self.Rankings:Reset(self)
+        else
+            self.Rankings = NCRankings:New(self)
+        end
 
         self:ResetCallback(optIdentifier, optStart)
 
@@ -766,6 +805,71 @@ NCSegment = {
                 self[k] = v
             end
         end
+
+        if self.Rankings and self.Rankings.Restore then
+            self.Rankings:Restore()
+        else
+            self.Rankings = NCRankings:New(self)
+            self.Rankings:Restore()
+        end
+
+        if self.Active then
+            local inActiveTable = false
+            for i, segment in ipairs(NCSegment.ActiveSegments) do
+                if segment.Identifier == self.Identifier then
+                    table.remove(NCSegment.ActiveSegments, i)
+                    table.insert(NCSegment.ActiveSegments, self)
+                    inActiveTable = true
+                    break
+                end
+            end
+
+            if not inActiveTable then
+                table.insert(NCSegment.ActiveSegments, self)
+            end
+        end
+
+        self:RestoreCallback(backup)
+    end,
+    RestoreCallback = function(self, backup)
+        -- Override me
+    end,
+    GetBackup = function(self)
+        -- Don't backup the base segment
+        if self == NCSegment then
+            return nil
+        end
+
+        local backup = {}
+
+        for k, v in pairs(self.template) do
+            if type(v) ~= "function" and not string.find(k, "__") and k ~= "Rankings" and k ~= "Observers" then
+                backup[k] = self[k]
+            end
+        end
+
+        backup.Observers = {}
+        backup.backupTime = GetTime()
+
+        return backup
+    end,
+    RegisterObserver = function(self, observer)
+        if not observer then return end
+        if tContains(self.Observers, observer) then return end
+
+        table.insert(self.Observers, observer)
+    end,
+    UnregisterObserver = function(self, observer)
+        for i, obs in ipairs(self.Observers) do
+            if obs == observer then
+                table.remove(self.Observers, i)
+                break
+            end
+        end
+    end,
+    NotifyObservers = function(self, statType, player, value)
+        for _, observer in ipairs(self.Observers) do
+            observer:OnStatUpdate(statType, player, value)
+        end
     end,
 }
-
