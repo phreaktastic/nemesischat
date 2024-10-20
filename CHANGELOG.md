@@ -40,7 +40,10 @@ A big thanks to these people who helped make this addon better:
 
 # 🩹 Patches
 
-No patches yet.
+## 1.11.1
+   * Fixed an issue relating to a library used with the AddOn, which for some users would through an error.
+      * This isn't the library's fault -- if a user had a different version of the library included (possibly from a different addon), it would cause the error.
+      * This is now fixed, and the addon should work as expected.
 
 # ✨ Version 1.11.0
 
