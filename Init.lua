@@ -169,10 +169,6 @@ core.units = {
         value = "BYSTANDER"
     },
     {
-        label = "Affix Mob",
-        value = "AFFIX_MOB"
-    },
-    {
         label = "Any Mob",
         value = "ANY_MOB",
     },
@@ -195,7 +191,6 @@ core.constants.BOOLEAN_OPTIONS = {
 core.constants.NA = { 1 }
 core.constants.STANDARD = { 2, 3, 4, }
 core.constants.OTHERS = { 3, 4, }
-core.constants.AFFIXMOBS = { 5 }
 core.constants.ENEMIES = { 5, 6, 7 }
 core.constants.ALLUNITS = { 2, 3, 4, 5, 6, 7 }
 core.constants.IS = {
@@ -264,22 +259,6 @@ core.constants.UNIT_OPERATORS = {
     {
         label = "is dead",
         value = "IS_DEAD",
-    },
-    {
-        label = "is an affix mob",
-        value = "IS_AFFIX_MOB",
-    },
-    {
-        label = "is NOT an affix mob",
-        value = "NOT_AFFIX_MOB",
-    },
-    {
-        label = "is an affix caster",
-        value = "IS_AFFIX_CASTER",
-    },
-    {
-        label = "is NOT an affix caster",
-        value = "NOT_AFFIX_CASTER",
     },
     {
         label = "is group lead",
@@ -570,7 +549,7 @@ for _, val in pairs(core.roles) do
     core.rolesLookup[val.value] = val.label
 end
 
--- Raid markers to use for affix mobs
+-- Raid markers
 core.markers = {
     {
         index = 1,

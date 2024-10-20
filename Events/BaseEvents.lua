@@ -19,6 +19,7 @@ local C_ScenarioInfo = C_ScenarioInfo
 local inDelve = false
 local lastDelveTime = 0
 local inFollowerDungeon = false
+local inNormalDungeon = false
 local applicantIdCache = setmetatable({}, { __mode = "kv" })
 
 local function HandleLeaveDelve()
@@ -95,10 +96,33 @@ local function CheckFollowerDungeonStatus()
     end
 end
 
+local function CheckNormalDungeonStatus()
+    local name, _, difficultyIndex = GetInstanceInfo()
+    local dName, instanceType = GetDifficultyInfo(difficultyIndex);
+
+    if IsInInstance() and (dName == "Normal" or dName == "Heroic") and not inNormalDungeon and instanceType and instanceType == "party" then
+        inNormalDungeon = true
+        NCDungeon:Start(name)
+        NemesisChat:HandleEvent()
+        NCInfo:UpdatePlayerDropdown()
+        NemesisChat:Print("Dungeon started: " .. name)
+    elseif not IsInInstance() and not (dName == "Normal" or dName == "Heroic") and inNormalDungeon then
+        inNormalDungeon = false
+        if NCDungeon:IsActive() then
+            NCDungeon:Finish(true)
+            NemesisChat:HandleEvent()
+            NemesisChat:Report("DUNGEON")
+            NCInfo:UpdatePlayerDropdown()
+            NemesisChat:Print("Dungeon completed")
+        end
+    end
+end
+
 local function HandleZoneChanges()
     local currentLocation = GetCurrentLocation()
     NemesisChat.CurrentPlayerLocation = currentLocation
     CheckFollowerDungeonStatus()
+    CheckNormalDungeonStatus()
 end
 
 -----------------------------------------------------
@@ -111,9 +135,14 @@ function NemesisChat:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
         self:InitializeCore()
     end
     NCRuntime:ClearPetOwners()
-    HandleZoneChanges()
-    CheckAndUpdateDelveStatus()
     NemesisChat:RegisterStaticEvents()
+
+    if isInitialLogin or isReloadingUi then
+        self:CheckGroup()
+    else
+        HandleZoneChanges()
+        CheckAndUpdateDelveStatus()
+    end
 end
 
 function NemesisChat:PLAYER_LEAVING_WORLD()
@@ -136,7 +165,6 @@ function NemesisChat:PLAYER_LEAVING_WORLD()
         self:Print("Delve completed.")
     end
     NCRuntime:ClearPetOwners()
-    HandleLeaveDelve()
     CheckFollowerDungeonStatus()
 end
 
@@ -280,6 +308,7 @@ function NemesisChat:INSPECT_READY(event, guid)
     end
 end
 
+-- WIP. Needs a handler.
 function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
     -- Check if any notification feature is enabled
     if not (NCConfig:GetNotifyWhenTankApplies() or NCConfig:GetNotifyWhenHealerApplies() or NCConfig:GetNotifyWhenDPSApplies()) then

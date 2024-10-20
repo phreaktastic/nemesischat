@@ -11,15 +11,13 @@
 local _, core = ...;
 
 function NemesisChat:Report(event, success)
-    if IsNCEnabled() == false then
-        return
-    end
+    if not IsNCEnabled() then return end
 
     local TYPES = {
         ["DAMAGE"] = "DPS",
         ["AVOIDABLE"] = "AvoidableDamage",
         ["INTERRUPTS"] = "Interrupts",
-        ["OFFHEALS"] = "OffHeals",
+        ["OFFHEALS"] = "Offheals",
         ["DEATHS"] = "Deaths",
     }
     local EVENTS = {
@@ -66,78 +64,57 @@ function NemesisChat:Report(event, success)
             botMsg = "Most deaths for %s: %s at %s.",
         },
     }
-    local shoutOutFormat = function(message, player, segmentName, value)
-        return string.format(message, player,
-            segmentName, NemesisChat:FormatNumber(value))
-    end
-    local callOutFormat = function(message, player, segmentName, value)
-        return string.format(message, segmentName, player,
-            NemesisChat:FormatNumber(value))
+
+    if not tContains(EVENTS, event) then return end
+
+    local bucket = NCCombat
+    local segName = "this combat segment"
+
+    if event == "BOSS" then
+        bucket = NCBoss
+        segName = NCBoss:GetIdentifier()
+    elseif event == "DUNGEON" then
+        bucket = NCDungeon
+        segName = NCDungeon:GetIdentifier()
     end
 
-    if not tContains(EVENTS, event) then
-        return
-    end
+    local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
 
     for type, rankingType in pairs(TYPES) do
-        local bucket, topMsg, botMsg
         local config = core.db.profile.reportConfig[type][event]
-        local segName = "this combat segment"
-
         if config then
-            bucket = NCCombat
-
-            if event == "BOSS" then
-                bucket = NCBoss
-                segName = NCBoss:GetIdentifier()
-            elseif event == "DUNGEON" then
-                bucket = NCDungeon
-                segName = NCDungeon:GetIdentifier()
-            end
-
             local data = typeData[type]
-            local topRanking = bucket.Rankings.Top and bucket.Rankings.Top[rankingType]
-            local bottomRanking = bucket.Rankings.Bottom and bucket.Rankings.Bottom[rankingType]
+            local topRanking = bucket.Rankings.Top[rankingType]
+            local bottomRanking = bucket.Rankings.Bottom[rankingType]
 
-            local topVal, topPlayer, botVal, botPlayer
-
-            topVal = topRanking and topRanking.Value or 0
-            topPlayer = topRanking and topRanking.Player
-            botVal = bottomRanking and bottomRanking.Value or 0
-            botPlayer = bottomRanking and bottomRanking.Player
-
-            if topPlayer then
-                topMsg = data.topMsg
+            if data.preMessageHook then
+                data.topMsg, data.botMsg = data.preMessageHook(topRanking.Player, data.topMsg, data.botMsg, bucket)
             end
 
-            if botPlayer then
-                botMsg = data.botMsg
-            end
+            if not (topRanking and topRanking.Value == 0 and bottomRanking and bottomRanking.Value == 0) then
+                if core.db.profile.reportConfig[type]["TOP"] and topRanking and topRanking.Player then
+                    local msg = data.topMsgSpecial and topRanking.DeltaPercent >= 25 and data.topMsgSpecial or
+                        data.topMsg
+                    local formattedMsg = string.format(msg, topRanking.Player, segName,
+                        NemesisChat:FormatNumber(topRanking.Value))
 
-            if data.preMessageHook and topPlayer then
-                topMsg, botMsg = data.preMessageHook(topPlayer, topMsg, botMsg, bucket)
-            end
-
-            if topMsg then
-                if data.topMsgSpecial and topRanking and topRanking.DeltaPercent and topRanking.DeltaPercent >= 25 then
-                    topMsg = shoutOutFormat(data.topMsgSpecial, topPlayer, segName, topVal)
-                else
-                    topMsg = shoutOutFormat(topMsg, topPlayer, segName, topVal)
+                    if IsInGroup() then
+                        SendChatMessage("Nemesis Chat: " .. formattedMsg, channel)
+                    else
+                        print("Nemesis Chat: " .. formattedMsg)
+                    end
                 end
-            end
 
-            if botMsg then
-                botMsg = callOutFormat(botMsg, botPlayer, segName, botVal)
-            end
+                if core.db.profile.reportConfig[type]["BOTTOM"] and bottomRanking and bottomRanking.Player then
+                    local formattedMsg = string.format(data.botMsg, segName, bottomRanking.Player,
+                        NemesisChat:FormatNumber(bottomRanking.Value))
 
-            local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
-
-            if core.db.profile.reportConfig[type]["TOP"] and topMsg then
-                SendChatMessage("Nemesis Chat: " .. topMsg, channel)
-            end
-
-            if core.db.profile.reportConfig[type]["BOTTOM"] and botMsg then
-                SendChatMessage("Nemesis Chat: " .. botMsg, channel)
+                    if IsInGroup() then
+                        SendChatMessage("Nemesis Chat: " .. formattedMsg, channel)
+                    else
+                        print("Nemesis Chat: " .. formattedMsg)
+                    end
+                end
             end
         end
     end

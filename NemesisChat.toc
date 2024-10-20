@@ -38,7 +38,6 @@ Helpers.lua
 
 # NC models
 Models\Event.lua
-Models\CombatLogEvent.lua
 Models\Rankings.lua
 Models\Segment.lua
 Models\Boss.lua

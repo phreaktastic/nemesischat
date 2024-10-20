@@ -15,6 +15,7 @@ local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
 local COMBATLOG_OBJECT_TYPE_PLAYER = COMBATLOG_OBJECT_TYPE_PLAYER
 local COMBATLOG_OBJECT_TYPE_NPC = COMBATLOG_OBJECT_TYPE_NPC
 local COMBATLOG_OBJECT_TYPE_PET = COMBATLOG_OBJECT_TYPE_PET
+local COMBATLOG_OBJECT_TYPE_GUARDIAN = COMBATLOG_OBJECT_TYPE_GUARDIAN
 local COMBATLOG_OBJECT_CONTROL_PLAYER = COMBATLOG_OBJECT_CONTROL_PLAYER
 local GetTime = GetTime
 local UnitName = UnitName
@@ -35,10 +36,13 @@ local NC_PULL_EVENT_ATTACK = NC_PULL_EVENT_ATTACK
 local NC_PULL_EVENT_AGGRO = NC_PULL_EVENT_AGGRO
 local NC_PULL_EVENT_PET = NC_PULL_EVENT_PET
 
-local CROWD_CTRL = LibPlayerSpells.constants.CROWD_CTRL
-local DISPEL = LibPlayerSpells.constants.DISPEL
-local SURVIVAL = LibPlayerSpells.constants.SURVIVAL
-local COOLDOWN = LibPlayerSpells.constants.COOLDOWN
+local CROWD_CTRL = { LibPlayerSpells.constants.CROWD_CTRL }
+local KNOCKBACK = { LibPlayerSpells.constants.KNOCKBACK }
+local SNAIR = { LibPlayerSpells.constants.SNAIR }
+local DISPEL = { LibPlayerSpells.constants.DISPEL }
+local SURVIVAL = { LibPlayerSpells.constants.SURVIVAL }
+local COOLDOWN = { LibPlayerSpells.constants.COOLDOWN }
+local SURVIVAL_COOLDOWN = { LibPlayerSpells.constants.SURVIVAL, LibPlayerSpells.constants.COOLDOWN }
 
 local GTFO = _G["GTFO"]
 
@@ -54,22 +58,27 @@ local eventPatterns = {
     ["SPELL_CAST_SUCCESS"] = true,
     ["SPELL_CAST_START"] = true,
     ["SPELL_HEAL"] = true,
+    ["SPELL_PERIODIC_HEAL"] = true,
+    ["SPELL_PERIODIC_DAMAGE"] = true,
+    ["SPELL_DAMAGE"] = true,
+    ["SWING_DAMAGE"] = true,
+    ["RANGE_DAMAGE"] = true,
     ["PARTY_KILL"] = true,
     ["UNIT_DIED"] = true,
 }
 
-local function checkFlags(flags, ...)
-    for i = 1, select('#', ...) do
-        if bit_band(flags, select(i, ...)) == 0 then
+local ignoredCCSpells = {
+    111400, -- Burning Rush
+    7870,   -- Lesser Invisibility from Succubus
+}
+
+local function checkFlags(flags, flagList)
+    for _, flag in ipairs(flagList) do
+        if bit_band(flags, flag) == 0 then
             return false
         end
     end
     return true
-end
-
-function core:COMBAT_LOG_EVENT_UNFILTERED()
-    if not IsNCEnabled() then return end
-    core.CombatEventHandler:Fire()
 end
 
 -- Combat Log event hydration
@@ -79,7 +88,7 @@ function CombatEventHandler:Fire()
     eventInfo.time, eventInfo.subEvent, eventInfo.hidecaster, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.sourceRaidFlags, eventInfo.destGUID, eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4 =
         CombatLogGetCurrentEventInfo()
 
-    if not NCRuntime:GetGroupRosterPlayer(eventInfo.sourceName) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) and not bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
+    if (not eventInfo.sourceName and not eventInfo.destName) or not NCRuntime:GetGroupRosterPlayer(eventInfo.sourceName) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) and bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) == 0 and bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) == 0 then
         wipe(eventInfo)
         return
     end
@@ -88,14 +97,14 @@ function CombatEventHandler:Fire()
         eventInfo.sourceName, eventInfo.destName, eventInfo.misc1, eventInfo.misc2, eventInfo.misc4
     local damage = CombatEventHandler:GetDamageAmount(subEvent, misc1, misc4)
 
-    if bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
+    if bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 or bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) ~= 0 then
         local petOwner = CombatEventHandler:GetPetOwner(eventInfo.sourceGUID)
 
         if petOwner then
-            eventInfo.sourceName = petOwner
+            eventInfo.sourceName = NCRuntime:GetPlayerNameFromGuid(petOwner)
             sourceName = eventInfo.sourceName
 
-            if not NCRuntime:GetGroupRosterPlayer(petOwner) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) then
+            if not NCRuntime:GetGroupRosterPlayer(sourceName) and not NCRuntime:GetGroupRosterPlayer(eventInfo.destName) then
                 wipe(eventInfo)
                 return
             end
@@ -107,7 +116,7 @@ function CombatEventHandler:Fire()
     NCEvent:Reset()
     NCEvent:SetCategory("COMBATLOG")
 
-    if NCConfig:IsReportingPulls_Realtime() then
+    if not IsInRaid() then
         local isPull, pullType, pullPlayerName, mobName = CombatEventHandler:IsPull()
         if isPull and pullPlayerName then
             if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
@@ -150,7 +159,7 @@ function CombatEventHandler:Fire()
             -- Handle Blessing of Freedom logic here
         elseif subEvent == "SPELL_CAST_START" then
             NCEvent:SpellStart(sourceName, destName, misc1, misc2)
-        elseif subEvent == "SPELL_HEAL" then
+        elseif subEvent == "SPELL_HEAL" or subEvent == "SPELL_PERIODIC_HEAL" then
             NCEvent:Heal(sourceName, destName, misc1, misc2, misc4)
         elseif subEvent == "PARTY_KILL" then
             NCEvent:Kill(sourceName, destName)
@@ -178,9 +187,9 @@ function CombatEventHandler:GetDamageAmount(event, arg1, arg4)
         return arg1 or 0
     elseif event == "RANGE_DAMAGE" or event == "SPELL_DAMAGE" or event == "SPELL_PERIODIC_DAMAGE" then
         return arg4 or 0
-    else
-        return 0
     end
+
+    return 0
 end
 
 -- Originally taken from https://github.com/logicplace/who-pulled/blob/master/WhoPulled/WhoPulled.lua, with heavy modifications
@@ -199,7 +208,7 @@ function CombatEventHandler:IsPull()
         return false
     end
 
-    if (dname and sname and dname ~= sname and not string_find(event, "_RESURRECT") and not string_find(event, "_CREATE") and (string_find(event, "SWING") or string_find(event, "RANGE") or string_find(event, "SPELL"))) and not tContains(core.affixMobs, sname) and not tContains(core.affixMobs, dname) then
+    if (dname and sname and dname ~= sname and not string_find(event, "_RESURRECT") and not string_find(event, "_CREATE") and (string_find(event, "SWING") or string_find(event, "RANGE") or string_find(event, "SPELL"))) then
         local function IsInvalidPlayer(player, pulledUnit)
             if not pulledUnit then pulledUnit = dname end
 
@@ -297,6 +306,8 @@ function CombatEventHandler:IsPull()
             return false
         end
     end
+
+    return false
 end
 
 function CombatEventHandler:IsEliteMob(name)
@@ -327,27 +338,31 @@ function CombatEventHandler:ActionScoring()
     local subEvent, sourceGUID, sourceName, sourceFlags, spellId = eventInfo.subEvent, eventInfo.sourceGUID,
         eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.misc1
 
-    if not IsInGroup() then return end
+    if not IsInGroup() or not sourceName then return end
 
-    if bit_band(sourceFlags, COMBATLOG_OBJECT_TYPE_PET) ~= 0 then
-        sourceName = CombatEventHandler:GetPetOwner(sourceGUID)
+    if not UnitInParty(sourceName) then
+        return
     end
 
-    if not UnitInParty(sourceName) then return end
-
     local flags = LibPlayerSpells:GetSpellInfo(spellId)
-    if not flags then return end
+    if not flags then
+        return
+    end
 
-    if checkFlags(flags, CROWD_CTRL) then
+    if not tContains(ignoredCCSpells, spellId) and (checkFlags(flags, CROWD_CTRL) or checkFlags(flags, SNAIR) or checkFlags(flags, KNOCKBACK)) then
         NCSegment:GlobalAddCrowdControl(sourceName)
-    elseif checkFlags(flags, DISPEL) then
+    end
+
+    if checkFlags(flags, DISPEL) then
         NCSegment:GlobalAddDispell(sourceName)
-    elseif checkFlags(flags, SURVIVAL, COOLDOWN) then
+    end
+
+    if checkFlags(flags, SURVIVAL_COOLDOWN) then
+        NCSegment:GlobalAddDefensive(sourceName)
         local playerState = NCRuntime:GetPlayerState(sourceName)
         if playerState then
             playerState.lastDefensive = GetTime()
         end
-        NCSegment:GlobalAddDefensive(sourceName)
     end
 
     -- NCSegment:GlobalAddActionPoints(1, sname, description)

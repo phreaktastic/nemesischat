@@ -308,12 +308,6 @@ function NCEvent:SetTargetFromSource(source)
             if not self:EventHasMessages() then
                 NCEvent:SetTarget("ANY_MOB")
             end
-        elseif core.affixMobsLookup[source] ~= nil then
-            NCEvent:SetTarget("AFFIX")
-
-            if not self:EventHasMessages() then
-                NCEvent:SetTarget("ANY_MOB")
-            end
         else
             NCEvent:SetTarget("ANY_MOB")
         end

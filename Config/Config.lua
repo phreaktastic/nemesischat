@@ -88,17 +88,6 @@ core.defaults = {
             ["NEGLECTEDHEALS"] = {
                 ["REALTIME"] = false,
             },
-            ["AFFIXES"] = {
-                ["CASTSTART"] = false,
-                ["CASTINTERRUPTED"] = false,
-                ["CASTSUCCESS"] = false,
-                ["MARKERS"] = false,
-                ["TOP"] = false,
-                ["BOTTOM"] = false,
-                ["BOSS"] = false,
-                ["DUNGEON"] = false,
-                ["AURASTACKS"] = false,
-            }
         },
         aiConfig = {
             selected = "taunts",

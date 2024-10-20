@@ -246,6 +246,15 @@ local function UpdateDebugWindow()
     UpdateLayout(errorContent)
 end
 
+local function checkFlags(flags, flagList)
+    for _, flag in ipairs(flagList) do
+        if bit.band(flags, flag) == 0 then
+            return false
+        end
+    end
+    return true
+end
+
 -----------------------------------------------------
 -- Slash commands for in-game ease of use
 -----------------------------------------------------
@@ -297,6 +306,21 @@ function NemesisChat:SlashCommand(msg)
         if debugFrame then
             UpdateDebugWindow()
             debugFrame:Show()
+        end
+    elseif cmd == "defensive" then
+        local spellId = tonumber(args)
+        NemesisChat:Print("Checking spell ID:", spellId)
+        local flags, providers, modifiers, ccCategory, source, dispelCategory = LibPlayerSpells:GetSpellInfo(spellId)
+        NemesisChat:Print("Flags:", flags, "Providers:", providers, "Modifiers:", modifiers, "CC Category:", ccCategory,
+            "Source:", source, "Dispel Category:", dispelCategory)
+        if flags then
+            NemesisChat:Print("Flags:", flags)
+            NemesisChat:Print("Cooldown:", checkFlags(flags, { LibPlayerSpells.constants.COOLDOWN }))
+            NemesisChat:Print("Defensive:", checkFlags(flags, { LibPlayerSpells.constants.SURVIVAL }))
+            NemesisChat:Print("Both:",
+                checkFlags(flags, { LibPlayerSpells.constants.COOLDOWN, LibPlayerSpells.constants.SURVIVAL }))
+        else
+            NemesisChat:Print("Spell ID not found.")
         end
     else
         if core.db and core.db.profile and core.db.profile.dbg then

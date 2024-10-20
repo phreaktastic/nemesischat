@@ -16,7 +16,7 @@
 --- @field Heals table<string, number>
 --- @field Interrupts table<string, number>
 --- @field Kills table<string, number>
---- @field OffHeals table<string, number>
+--- @field Offheals table<string, number>
 --- @field Pulls table<string, number>
 --- @field RosterSnapshot table<string, GroupRosterPlayer>
 --- @field DetailsSegment integer

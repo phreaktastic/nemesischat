@@ -341,6 +341,8 @@ NCRuntime = {
 
         self:CacheGroupRoster()
     end,
+    ---@param playerName string
+    ---@return GroupRosterPlayer
     AddGroupRosterPlayer = function(self, playerName)
         if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
             return nil
@@ -413,10 +415,10 @@ NCRuntime = {
 
         NCInfo:UpdatePlayerDropdown()
 
-        if playerName ~= GetMyName() and guid then
+        if guid then
             core.runtime.playerGuidToRoster[guid] = data
 
-            if not data.spec then
+            if not data.spec and playerName ~= GetMyName() then
                 NemesisChat.InspectQueueManager:QueuePlayerForInspect(guid)
             end
         end
@@ -590,7 +592,7 @@ NCRuntime = {
             Defensives = dungeonData:GetDefensives(),
             Dispells = dungeonData:GetDispells(),
             Interrupts = dungeonData:GetInterrupts(),
-            Offheals = dungeonData:GetOffHeals(),
+            Offheals = dungeonData:GetOffheals(),
             Pulls = dungeonData:GetPulls(),
             DPS = {}
         }
@@ -684,6 +686,13 @@ NCRuntime = {
     end,
     GetPlayerFromGuid = function(self, guid)
         return core.runtime.playerGuidToRoster[guid]
+    end,
+    GetPlayerNameFromGuid = function(self, guid)
+        local player = core.runtime.playerGuidToRoster[guid]
+        if player then
+            return player.name
+        end
+        return nil
     end,
     ClearPlayerGuidToRoster = function(self)
         wipe(core.runtime.playerGuidToRoster)

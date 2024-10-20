@@ -4,7 +4,6 @@
 -- Namespaces
 local _, core = ...;
 
-
 NCRankings = {
     METRICS = {
         AvoidableDamage = true, -- true means lower is better
@@ -16,12 +15,6 @@ NCRankings = {
         Interrupts = false,
         Offheals = false,
         Pulls = true, -- true means lower is better
-    },
-
-    template = {
-        Top = {},
-        Bottom = {},
-        All = {},
     },
 
     cache = {},
@@ -52,6 +45,7 @@ NCRankings = {
             sortedPlayers = {},
             lastUpdateTime = {},
             _segment = segment,
+            METRIC_APPLICABILITY = nil,
         }
 
         -- Initialize template structures
@@ -88,57 +82,29 @@ NCRankings = {
         if not self.All[metricKey] then
             self.All[metricKey] = {}
         end
-        local metric = self.All[metricKey]
-        local oldValue = metric[playerName]
-        metric[playerName] = newValue
-
-        self:UpdateSortedList(metricKey, playerName, oldValue, newValue)
-        self.cache[metricKey] = nil
-        self.lastUpdateTime[metricKey] = GetTime()
+        self.All[metricKey][playerName] = newValue
+        self:UpdateSortedList(metricKey)
+        self:RecalculateMetric(metricKey)
     end,
 
-    UpdateSortedList = function(self, metricKey, playerName, oldValue, newValue)
-        if not self.sortedPlayers[metricKey] then
-            self.sortedPlayers[metricKey] = {}
-        end
-        local sorted = self.sortedPlayers[metricKey]
-        local playerIndex = nil
+    UpdateSortedList = function(self, metricKey)
+        local sorted = {}
+        local isLowerBetter = self.METRICS[metricKey]
 
-        for i, player in ipairs(sorted) do
-            if player.name == playerName then
-                playerIndex = i
-                player.value = newValue
-                break
-            end
+        for playerName, playerData in pairs(self._segment.RosterSnapshot) do
+            local value = self.All[metricKey][playerName] or 0
+            table.insert(sorted, { name = playerName, value = value })
         end
 
-        if not playerIndex then
-            table.insert(sorted, { name = playerName, value = newValue })
-            playerIndex = #sorted
-        end
-
-        local lowerIsBetter = self.METRICS[metricKey]
-        local i = playerIndex
-        while i > 1 do
-            local shouldSwap = lowerIsBetter and sorted[i].value < sorted[i - 1].value
-                or (not lowerIsBetter and sorted[i].value > sorted[i - 1].value)
-            if shouldSwap then
-                sorted[i], sorted[i - 1] = sorted[i - 1], sorted[i]
-                i = i - 1
+        table.sort(sorted, function(a, b)
+            if isLowerBetter then
+                return a.value < b.value
             else
-                break
+                return a.value > b.value
             end
-        end
-        while i < #sorted do
-            local shouldSwap = lowerIsBetter and sorted[i].value > sorted[i + 1].value
-                or (not lowerIsBetter and sorted[i].value < sorted[i + 1].value)
-            if shouldSwap then
-                sorted[i], sorted[i + 1] = sorted[i + 1], sorted[i]
-                i = i + 1
-            else
-                break
-            end
-        end
+        end)
+
+        self.sortedPlayers[metricKey] = sorted
     end,
 
     GetTopPlayer = function(self, metricKey)
@@ -159,95 +125,40 @@ NCRankings = {
 
     Calculate = function(self)
         for metricKey, _ in pairs(self.METRICS) do
+            self:UpdateSortedList(metricKey)
             self:RecalculateMetric(metricKey)
         end
     end,
 
     RecalculateMetric = function(self, metricKey)
-        local topPlayer, topValue = self:GetTopPlayer(metricKey)
-        local bottomPlayer, bottomValue = self:GetBottomPlayer(metricKey)
+        local sorted = self.sortedPlayers[metricKey]
+        if #sorted < 2 then return end
 
-        if topPlayer then
-            self.Top[metricKey].Player = topPlayer
-            self.Top[metricKey].Value = topValue
-        end
+        local isLowerBetter = self.METRICS[metricKey]
+        local bestPlayer = sorted[1]
+        local worstPlayer = sorted[#sorted]
+        local secondBest = sorted[2]
+        local secondWorst = sorted[#sorted - 1]
 
-        if bottomPlayer then
-            self.Bottom[metricKey].Player = bottomPlayer
-            self.Bottom[metricKey].Value = bottomValue
-        end
+        self.Top[metricKey] = {
+            Player = bestPlayer.name,
+            Value = bestPlayer.value,
+            Delta = math.abs(bestPlayer.value - secondBest.value),
+            DeltaPercent = bestPlayer.value ~= 0 and
+                math.abs((bestPlayer.value - secondBest.value) / bestPlayer.value * 100) or 0
+        }
 
-        if topPlayer and bottomPlayer and #self.sortedPlayers[metricKey] > 1 then
-            local sorted = self.sortedPlayers[metricKey]
-            local secondTop = sorted[2].value
-            local secondBottom = sorted[#sorted - 1].value
-
-            local topDelta = topValue - secondTop
-            local bottomDelta = secondBottom - bottomValue
-
-            self.Top[metricKey].Delta = topDelta
-            self.Bottom[metricKey].Delta = bottomDelta
-
-            if topValue > 0 then
-                self.Top[metricKey].DeltaPercent = math.floor((topDelta / topValue) * 10000) / 100
-            else
-                self.Top[metricKey].DeltaPercent = 0
-            end
-
-            if bottomValue > 0 then
-                self.Bottom[metricKey].DeltaPercent = math.floor((bottomDelta / bottomValue) * 10000) / 100
-            else
-                self.Bottom[metricKey].DeltaPercent = 0
-            end
-        end
+        self.Bottom[metricKey] = {
+            Player = worstPlayer.name,
+            Value = worstPlayer.value,
+            Delta = math.abs(worstPlayer.value - secondWorst.value),
+            DeltaPercent = worstPlayer.value ~= 0 and
+                math.abs((worstPlayer.value - secondWorst.value) / worstPlayer.value * 100) or 0
+        }
     end,
 
     GetStats = function(self, playerName, metric)
         return self._segment:GetStats(playerName, metric)
-    end,
-
-    GetTopPerformer = function(self)
-        local topScore = 0
-        local topPerformer = nil
-
-        for playerName, _ in pairs(self._segment.RosterSnapshot) do
-            local score = 0
-            for metricKey, isPositive in pairs(self.METRICS) do
-                if isPositive and self.Top[metricKey].Player == playerName then
-                    score = score + self.Top[metricKey].DeltaPercent
-                elseif not isPositive and self.Bottom[metricKey].Player == playerName then
-                    score = score + self.Bottom[metricKey].DeltaPercent
-                end
-            end
-            if score > topScore then
-                topScore = score
-                topPerformer = playerName
-            end
-        end
-
-        return topPerformer, topScore
-    end,
-
-    GetBottomPerformer = function(self)
-        local bottomScore = 0
-        local bottomPerformer = nil
-
-        for playerName, _ in pairs(self._segment.RosterSnapshot) do
-            local score = 0
-            for metricKey, isPositive in pairs(self.METRICS) do
-                if isPositive and self.Bottom[metricKey].Player == playerName then
-                    score = score + self.Bottom[metricKey].DeltaPercent
-                elseif not isPositive and self.Top[metricKey].Player == playerName then
-                    score = score + self.Top[metricKey].DeltaPercent
-                end
-            end
-            if score > bottomScore then
-                bottomScore = score
-                bottomPerformer = playerName
-            end
-        end
-
-        return bottomPerformer, bottomScore
     end,
 
     IsMetricApplicable = function(self, metricKey, playerName)

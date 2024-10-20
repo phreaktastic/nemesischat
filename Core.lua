@@ -20,6 +20,7 @@ function NemesisChat:OnInitialize()
     self:RegisterChatCommand("nemesischat", "SlashCommand")
 
     NCMigration:Run()
+    NemesisChat:RegisterStaticEvents()
 end
 
 function NemesisChat:OnEnable()

@@ -126,7 +126,7 @@ end
 function NemesisChat:ReportPlayerStatistics(playerName, leaves, lowPerforms)
     local channel = NemesisChat:GetActualChannel("GROUP")
 
-    if leaves > (NCConfig:GetReportingLeaversOnJoinThreshold() or 0) and NCConfig:IsReportingLeaversOnJoin() then
+    if leaves >= (NCConfig:GetReportingLeaversOnJoinThreshold() or 0) and NCConfig:IsReportingLeaversOnJoin() then
         local message = string.format(
             "Nemesis Chat: %s has bailed on at least %d groups.",
             playerName, leaves
@@ -135,7 +135,7 @@ function NemesisChat:ReportPlayerStatistics(playerName, leaves, lowPerforms)
         SendChatMessage(message, channel)
     end
 
-    if lowPerforms > (NCConfig:GetReportingLowPerformersOnJoinThreshold() or 0) and NCConfig:IsReportingLowPerformersOnJoin() then
+    if lowPerforms >= (NCConfig:GetReportingLowPerformersOnJoinThreshold() or 0) and NCConfig:IsReportingLowPerformersOnJoin() then
         local message = string.format(
             "Nemesis Chat: %s has dramatically underperformed at least %d times.",
             playerName, lowPerforms
@@ -154,7 +154,7 @@ function NemesisChat:ProcessLeaves(leaves)
                     core.db.profile.cache.groupRoster[playerName] or nil
             end
             if player then
-                if #leaves <= 3 then
+                if #leaves < 3 then
                     NemesisChat:PLAYER_LEAVES_GROUP(playerName, player.isNemesis)
                 end
 
@@ -174,7 +174,7 @@ function NemesisChat:HandleDungeonLeaver(player, playerName)
         local seconds = timeLeft - (minutes * 60)
         local timeLeftFormatted = string.format("%02d:%02d", minutes, seconds)
 
-        local leaverGuid, leaverName = self:FindOfflineLeaver(player.guid, playerName)
+        local leaverGuid, leaverName = self:FindOfflineLeaver(player, playerName)
 
         if leaverGuid and leaverName then
             if NCConfig:IsTrackingLeavers() then
@@ -191,12 +191,21 @@ function NemesisChat:HandleDungeonLeaver(player, playerName)
 end
 
 -- Finds an offline player in the group to report as the leaver
-function NemesisChat:FindOfflineLeaver(excludeGuid, defaultName)
-    for name, info in pairs(NCRuntime:GetGroupRoster()) do
-        if info and info.guid ~= excludeGuid and not UnitIsConnected(name) then
+function NemesisChat:FindOfflineLeaver(player, playerName)
+    -- Check the roster for an offline player to report as the leaver
+    -- This ensures that if a player leaves due to a DC, that player isn't reported as a leaver but the offline player is
+    for name, info in pairs(core.db.profile.cache.groupRoster) do
+        if info and info.guid ~= player.guid and not UnitIsConnected(name) then
             return info.guid, name
         end
     end
+
+    -- There's not an offline player to report as the leaver -- return the player who left
+    if player and player.guid then
+        return player.guid, playerName
+    end
+
+    -- They're not in the cache, we're screwed
     return nil, nil
 end
 

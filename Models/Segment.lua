@@ -93,7 +93,7 @@ NCSegment = {
     Kills = {},
 
     -- Off heal tracker for the segment
-    OffHeals = {},
+    Offheals = {},
 
     -- Pulls tracker for the segment
     Pulls = {},
@@ -134,7 +134,7 @@ NCSegment = {
         Heals = {},
         Interrupts = {},
         Kills = {},
-        OffHeals = {},
+        Offheals = {},
         Pulls = {},
         RosterSnapshot = {},
         Observers = {},
@@ -454,7 +454,7 @@ NCSegment = {
 
         -- If the source is not a healer, and the source is not the target, and the target is in the group (ignoring pets and self heals)
         if rosterPlayer ~= nil and rosterPlayer.role ~= "HEALER" and source ~= target and rosterTarget ~= nil then
-            self:AddOffHeals(amount, source)
+            self:AddOffheals(amount, source)
         end
 
         self:AddHealsCallback(amount, source)
@@ -526,32 +526,32 @@ NCSegment = {
     AddKillCallback = function(self, player)
         -- Override me
     end,
-    GetOffHeals = function(self, player)
-        local offHeals = self.OffHeals or {}
-        self.OffHeals = offHeals
+    GetOffheals = function(self, player)
+        local offHeals = self.Offheals or {}
+        self.Offheals = offHeals
         if player then
-            local playerOffHeals = offHeals[player] or 0
-            offHeals[player] = playerOffHeals
-            return playerOffHeals
+            local playerOffheals = offHeals[player] or 0
+            offHeals[player] = playerOffheals
+            return playerOffheals
         end
         return offHeals
     end,
-    AddOffHeals = function(self, amount, player)
+    AddOffheals = function(self, amount, player)
         if player == nil or amount == nil then
             return
         end
 
-        if self.OffHeals[player] == nil then
-            self.OffHeals[player] = amount
+        if self.Offheals[player] == nil then
+            self.Offheals[player] = amount
         else
-            self.OffHeals[player] = self.OffHeals[player] + amount
+            self.Offheals[player] = self.Offheals[player] + amount
         end
 
-        self.Rankings:UpdateMetric("OffHeals", player, self.OffHeals[player])
+        self.Rankings:UpdateMetric("Offheals", player, self.Offheals[player])
         self:NotifyObservers("Offheals", player, self:GetStats(player, "Offheals"))
-        self:AddOffHealsCallback(amount, player)
+        self:AddOffhealsCallback(amount, player)
     end,
-    AddOffHealsCallback = function(self, amount, player)
+    AddOffhealsCallback = function(self, amount, player)
         -- Override me
     end,
     GetPulls = function(self, player)
@@ -604,7 +604,7 @@ NCSegment = {
         elseif metric == "Interrupts" then
             return self:GetInterrupts(playerName)
         elseif metric == "Offheals" then
-            return self:GetOffHeals(playerName)
+            return self:GetOffheals(playerName)
         elseif metric == "Pulls" then
             return self:GetPulls(playerName)
         end
@@ -707,6 +707,17 @@ NCSegment = {
             end
         end
     end,
+    GetSegment = function(self, identifier)
+        if not self.Segments then
+            return nil
+        end
+        for _, segment in pairs(self.Segments) do
+            if segment:GetIdentifier() == identifier then
+                return segment
+            end
+        end
+        return nil
+    end,
     SnapshotCurrentRoster = function(self)
         self.RosterSnapshot = DeepCopy(NCRuntime:GetGroupRoster())
     end,
@@ -795,16 +806,33 @@ NCSegment = {
             end
         end
 
-        if self.Level == nil then
-            return
-        end
-
         if self.Rankings and self.Rankings.Restore then
-            self.Rankings:Restore(core.db.profile.cache.DungeonRankings)
+            self.Rankings:Restore()
         else
             self.Rankings = NCRankings:New(self)
-            self.Rankings:Restore(core.db.profile.cache.DungeonRankings)
+            self.Rankings:Restore()
         end
+
+        if self.Active then
+            local inActiveTable = false
+            for i, segment in ipairs(NCSegment.ActiveSegments) do
+                if segment.Identifier == self.Identifier then
+                    table.remove(NCSegment.ActiveSegments, i)
+                    table.insert(NCSegment.ActiveSegments, self)
+                    inActiveTable = true
+                    break
+                end
+            end
+
+            if not inActiveTable then
+                table.insert(NCSegment.ActiveSegments, self)
+            end
+        end
+
+        self:RestoreCallback(backup)
+    end,
+    RestoreCallback = function(self, backup)
+        -- Override me
     end,
     GetBackup = function(self)
         -- Don't backup the base segment

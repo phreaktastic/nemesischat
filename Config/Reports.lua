@@ -196,7 +196,8 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["TOP"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["TOP"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                not Details end,
                         },
                         bottomDamageToggle = {
                             order = 2,
@@ -207,7 +208,8 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                not Details end,
                         },
                     }
                 },
@@ -226,7 +228,8 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["COMBAT"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["COMBAT"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                not Details end,
                         },
                         bossDmgToggle = {
                             order = 2,
@@ -237,7 +240,8 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["BOSS"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOSS"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                not Details end,
                         },
                         dungeonDmgToggle = {
                             order = 3,
@@ -248,7 +252,8 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or not Details end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                not Details end,
                         },
                     }
                 },
@@ -289,9 +294,10 @@ core.options.args.reportsGroup = {
                             desc = "Report the lowest amount of avoidable damage taken",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["TOP"] end,
+                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["TOP"] = value end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                not GTFO end,
                         },
                         topAdToggle = {
                             order = 2,
@@ -300,9 +306,10 @@ core.options.args.reportsGroup = {
                             desc = "Report the highest amount of avoidable damage taken",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["TOP"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["TOP"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] end,
+                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] = value end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                not GTFO end,
                         },
                     }
                 },
@@ -321,7 +328,8 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                not GTFO end,
                         },
                         bossAdToggle = {
                             order = 5,
@@ -332,7 +340,8 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                not GTFO end,
                         },
                         dungeonAdToggle = {
                             order = 6,
@@ -343,7 +352,8 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or not GTFO end,
+                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                not GTFO end,
                         },
                     }
                 },
@@ -374,12 +384,16 @@ core.options.args.reportsGroup = {
                 deathsToggle = {
                     order = 2,
                     type = "toggle",
-                    name = "Report Top Deaths After M+ Dungeons",
+                    name = "Report Highest Deaths After M+ Dungeons",
                     desc = "Report the highest deaths after M+ completion",
                     descStyle = "inline",
                     width = "full",
-                    get = function() return core.db.profile.reportConfig["DEATHS"]["TOP"] and core.db.profile.reportConfig["DEATHS"]["DUNGEON"] end,
-                    set = function(info, value) core.db.profile.reportConfig["DEATHS"]["TOP"] = value core.db.profile.reportConfig["DEATHS"]["DUNGEON"] = value end,
+                    get = function() return core.db.profile.reportConfig["DEATHS"]["BOTTOM"] and
+                        core.db.profile.reportConfig["DEATHS"]["DUNGEON"] end,
+                    set = function(info, value)
+                        core.db.profile.reportConfig["DEATHS"]["BOTTOM"] = value
+                        core.db.profile.reportConfig["DEATHS"]["DUNGEON"] = value
+                    end,
                 },
             }
         },
@@ -483,11 +497,12 @@ core.options.args.reportsGroup = {
                     order = 2,
                     type = "toggle",
                     name = "Announce Non-Tank Pulls",
-                    desc = "Announce non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls). This will be announced in real-time as a yell.",
+                    desc =
+                    "Announce non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls). This will be announced in real-time as a yell.",
                     descStyle = "inline",
                     width = "full",
                     get = function() return core.db.profile.reportConfig["PULLS"]["REALTIME"] end,
-                    set = function(info, value) core.db.profile.reportConfig["PULLS"]["REALTIME"] = value  end,
+                    set = function(info, value) core.db.profile.reportConfig["PULLS"]["REALTIME"] = value end,
                 },
                 pullsChannel = {
                     order = 3,
@@ -506,9 +521,9 @@ core.options.args.reportsGroup = {
 }
 
 function NemesisChat:GetMarkerOptionsWithIcons()
-    local options = setmetatable({}, {__mode = "kv"})
+    local options = setmetatable({}, { __mode = "kv" })
 
-    for key,val in ipairs(core.markers) do
+    for key, val in ipairs(core.markers) do
         options[key] = val.name
     end
 

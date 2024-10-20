@@ -16,7 +16,7 @@
 --- @field Heals table<string, number>
 --- @field Interrupts table<string, number>
 --- @field Kills table<string, number>
---- @field OffHeals table<string, number>
+--- @field Offheals table<string, number>
 --- @field Pulls table<string, number>
 --- @field Rankings table
 --- @field Segments table<NCSegment>
@@ -72,9 +72,9 @@
 --- @field GetKills fun(self: NCSegment, player: string|nil): table<string, number>|number
 --- @field AddKill fun(self: NCSegment, player: string)
 --- @field AddKillCallback fun(self: NCSegment, player: string)
---- @field GetOffHeals fun(self: NCSegment, player: string|nil): table<string, number>|number
---- @field AddOffHeals fun(self: NCSegment, amount: number, player: string)
---- @field AddOffHealsCallback fun(self: NCSegment, amount: number, player: string)
+--- @field GetOffheals fun(self: NCSegment, player: string|nil): table<string, number>|number
+--- @field AddOffheals fun(self: NCSegment, amount: number, player: string)
+--- @field AddOffhealsCallback fun(self: NCSegment, amount: number, player: string)
 --- @field GetPulls fun(self: NCSegment, player: string|nil): table<string, number>|number
 --- @field AddPull fun(self: NCSegment, player: string)
 --- @field AddPullCallback fun(self: NCSegment, player: string)
@@ -102,6 +102,7 @@
 --- @field Reset fun(self: NCSegment, optIdentifier: string|nil, optStart: boolean|nil)
 --- @field ResetCallback fun(self: NCSegment, optIdentifier: string|nil, optStart: boolean|nil)
 --- @field Restore fun(self: NCSegment, backup: NCSegmentBackup)
+--- @field RestoreCallback fun(self: NCSegment, backup: NCSegmentBackup)
 --- @field GetBackup fun(self: NCSegment): NCSegmentBackup|nil
 --- @field RegisterObserver fun(self: NCSegment, observer: table)
 --- @field UnregisterObserver fun(self: NCSegment, observer: table)
