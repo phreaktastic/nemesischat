@@ -44,12 +44,9 @@ No patches yet.
 
 # ✨ Version 1.11.0
 
-> **Note**
-> This update started as a small change to the information window but turned into a big overhaul of the whole addon. It's a big update, and we're excited to share it with you!
->
-> We really appreciate all the feedback and ideas from the community, and we're excited to keep making the addon better. Please keep sharing your thoughts and suggestions, and we'll do our best to include them in future updates.
->
-> **Thanks for your support!**
+This update started as a small change to the information window but turned into a big overhaul of the whole addon. It's a big update, and we're excited to share it with you! The AddOn is now much faster, with less memory usage, and more stable. We've also added new features, fixed bugs, and updated the addon to work buttery-smooth with The War Within expansion 😎
+
+We really appreciate all the feedback and ideas from the community, and we're excited to keep making the addon better. Please keep sharing your thoughts and suggestions, and we'll do our best to include them in future updates.
 
 ## **Partial Settings Wipe:**
 
@@ -79,20 +76,34 @@ We've made substantial changes to the general flow of the addon, and we've made 
       * Customize the sound for each.
    * The "Pulls" feature has graduated to a full-fledged feature.
       * New channel customization option for announcing pulls.
+      * Pulls are **always** tracked, regardless of the settings.
 
-   > All the features you'd expect from Mythic+ dungeons are now available in delves, normal dungeons, and follower dungeons. For the time being, there are not new triggers specifically for these dungeons. We plan to add the triggers, but we were so eager  to get this update out that we decided to focus on the features you'd expect from Mythic+ dungeons.
+   > All the features you'd expect from Mythic+ dungeons are now available in delves, normal dungeons, and follower dungeons. For the time being, there are no new triggers specifically for these dungeons. We plan to add the triggers, but we were so eager to get this update out that we decided to focus on the features you'd expect from Mythic+ dungeons first.
 
 ## **Speed Improvements:**
 
    * Made big improvements to how fast the addon runs.
-   * Fixed issues that were causing problems with tracking Avoidable Damage and damage events.
    * Greatly reduced how much memory the addon uses, fixing slowdowns that happened over time.
    * All messages are preprocessed and stored in memory, so the addon doesn't have to do as much work. This may seem like a small change, but it can make a big difference in how fast the addon runs.
+   * The underlying logic of the AddOn requires far less CPU and memory than before, which means it runs faster and more reliably.
+   * Rankings calculations (used in reports) are now calculated both in realtime and on-demand. For anyone who experienced hitches after combat ended, this will help a lot.
+   * With the frontloading effort, each event can be processed in a fraction of the time it used to take.
 
 ## **Code and Stability Improvements:**
 
    * Cleaned up the code to make it easier to maintain and improve in the future.
    * Made the addon more stable and reliable overall.
+   * Front-loaded the addon, which means it loads faster and uses less memory.
+   * Dramatically simplified the overall flow:
+      * Prior to this update, the addon had a lot of different parts that were all connected in a complex way.
+      * This resulted in many things calling each other, which would sometimes cause the exact same data to be retrieved and/or stored multiple times.
+   * Reports now use a new, simplified system which is more reliable.
+   * Rankings has been overhauled entirely, and it's now much more reliable and speedy.
+   * Event handling has been simplified and improved.
+      * Several events could compete with eachother, and this caused problems.
+      * A great example would be taking damage -- that event could come from avoidable damage, unavoidable damage, or damage from a debuff.
+      * The damage could even have been from oneself, like Burning Rush.
+      * All of these events used to compete with eachother, but now will be handled exactly as you'd expect.
 
 ## **Bug Fixes:**
 
@@ -110,6 +121,9 @@ We've made substantial changes to the general flow of the addon, and we've made 
       * Avoidable damage events no longer prevent other events from being processed.
    * Fixed an issue where interrupts weren't being tracked correctly when a player's pet (like a Warlock's demon) did the interrupt.
    * Fixed an issue where the addon was still running in the background when disabled.
+   * Fixed issues with instability in the tracking of metrics.
+      * Defensives were the major victim of this, but it affected other metrics as well.
+      * We've fixed the issue and tested every metric to make sure they're working correctly.
    * Lots more bug fixes!
 
 # 👀 **Potential Issues:**

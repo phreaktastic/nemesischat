@@ -84,6 +84,7 @@ core.defaults = {
                 ["DUNGEON"] = false,
                 ["REALTIME"] = false,
                 ["CHANNEL"] = "SAY",
+                ["TOAST"] = false,
             },
             ["NEGLECTEDHEALS"] = {
                 ["REALTIME"] = false,

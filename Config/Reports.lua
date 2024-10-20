@@ -196,8 +196,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["TOP"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["TOP"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
-                                not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                         bottomDamageToggle = {
                             order = 2,
@@ -208,8 +210,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
-                                not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                     }
                 },
@@ -228,8 +232,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["COMBAT"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["COMBAT"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
-                                not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                         bossDmgToggle = {
                             order = 2,
@@ -240,8 +246,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["BOSS"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOSS"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
-                                not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                         dungeonDmgToggle = {
                             order = 3,
@@ -252,8 +260,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] end,
                             set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
-                                not Details end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
+                                    not Details
+                            end,
                         },
                     }
                 },
@@ -296,8 +306,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["TOP"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["TOP"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
-                                not GTFO end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                         topAdToggle = {
                             order = 2,
@@ -308,8 +320,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
-                                not GTFO end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                     }
                 },
@@ -328,8 +342,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
-                                not GTFO end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                         bossAdToggle = {
                             order = 5,
@@ -340,8 +356,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
-                                not GTFO end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                         dungeonAdToggle = {
                             order = 6,
@@ -352,8 +370,10 @@ core.options.args.reportsGroup = {
                             width = "full",
                             get = function() return core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] end,
                             set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] = value end,
-                            disabled = function() return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
-                                not GTFO end,
+                            disabled = function()
+                                return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
+                                    not GTFO
+                            end,
                         },
                     }
                 },
@@ -388,8 +408,10 @@ core.options.args.reportsGroup = {
                     desc = "Report the highest deaths after M+ completion",
                     descStyle = "inline",
                     width = "full",
-                    get = function() return core.db.profile.reportConfig["DEATHS"]["BOTTOM"] and
-                        core.db.profile.reportConfig["DEATHS"]["DUNGEON"] end,
+                    get = function()
+                        return core.db.profile.reportConfig["DEATHS"]["BOTTOM"] and
+                            core.db.profile.reportConfig["DEATHS"]["DUNGEON"]
+                    end,
                     set = function(info, value)
                         core.db.profile.reportConfig["DEATHS"]["BOTTOM"] = value
                         core.db.profile.reportConfig["DEATHS"]["DUNGEON"] = value
@@ -498,22 +520,33 @@ core.options.args.reportsGroup = {
                     type = "toggle",
                     name = "Announce Non-Tank Pulls",
                     desc =
-                    "Announce non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls). This will be announced in real-time as a yell.",
+                    "Announce non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls). This will be announced in real-time.",
                     descStyle = "inline",
                     width = "full",
-                    get = function() return core.db.profile.reportConfig["PULLS"]["REALTIME"] end,
-                    set = function(info, value) core.db.profile.reportConfig["PULLS"]["REALTIME"] = value end,
+                    get = function() return NCConfig:IsReportingPulls_Realtime() end,
+                    set = function() NCConfig:ToggleReportingPulls_Realtime() end,
                 },
                 pullsChannel = {
                     order = 3,
                     type = "select",
-                    name = "Pull Channel",
+                    name = "Announcement Channel",
                     desc = "Select the channel to report pulls to",
                     descStyle = "inline",
                     width = "full",
                     values = function() return core.channels end,
-                    get = function() return core.db.profile.reportConfig["PULLS"]["CHANNEL"] end,
-                    set = function(info, value) core.db.profile.reportConfig["PULLS"]["CHANNEL"] = value end,
+                    get = function() return NCConfig:GetReportingPulls_Channel() end,
+                    set = function(info, value) NCConfig:SetReportingPulls_Channel(value) end,
+                },
+                pullsToastToggle = {
+                    order = 4,
+                    type = "toggle",
+                    name = "Toast Non-Tank Pulls",
+                    desc =
+                    "Show a toast notification for non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls).",
+                    descStyle = "inline",
+                    width = "full",
+                    get = function() return NCConfig:IsReportingPulls_Toast() end,
+                    set = function() NCConfig:ToggleReportingPulls_Toast() end,
                 },
             }
         },

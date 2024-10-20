@@ -122,11 +122,15 @@ function CombatEventHandler:Fire()
             if NCRuntime:GetLastUnsafePullToastDelta() > 1.5 then
                 -- Nesting this in to prevent spam
                 if NCConfig:IsReportingPulls_Realtime() then
-                    SendChatMessage("Nemesis Chat: " .. UnitName(pullPlayerName) .. " pulled " .. mobName, "YELL")
+                    local channel = NemesisChat:GetActualChannel(NCConfig:GetReportingPulls_Channel() or
+                        "YELL")
+                    SendChatMessage("Nemesis Chat: " .. UnitName(pullPlayerName) .. " pulled " .. mobName, channel)
                 end
 
-                NemesisChat:SpawnToast("Pull", pullPlayerName, mobName)
-                NCRuntime:UpdateLastUnsafePullToast()
+                if NCConfig:IsReportingPulls_Toast() then
+                    NemesisChat:SpawnToast("Pull", pullPlayerName, mobName)
+                    NCRuntime:UpdateLastUnsafePullToast()
+                end
             end
 
             NCRuntime:SetLastUnsafePull(UnitName(pullPlayerName), mobName)

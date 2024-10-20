@@ -508,6 +508,24 @@ NCConfig = {
     SetReportingPulls_Realtime = function(self, value)
         self.ReportDB:SetPath("PULLS.REALTIME", value)
     end,
+    IsReportingPulls_Toast = function(self)
+        return self.ReportDB:GetPath("PULLS.TOAST")
+    end,
+    ToggleReportingPulls_Toast = function(self)
+        self.ReportDB:TogglePath("PULLS.TOAST")
+    end,
+    SetReportingPulls_Toast = function(self, value)
+        self.ReportDB:SetPath("PULLS.TOAST", value)
+    end,
+    GetReportingPulls_Channel = function(self)
+        return self.ReportDB:GetPath("PULLS.CHANNEL")
+    end,
+    SetReportingPulls_Channel = function(self, value)
+        self.ReportDB:SetPath("PULLS.CHANNEL", value)
+    end,
+    IsReportingNeglectedHeals_Combat = function(self)
+        return self.ReportDB:GetPath("NEGLECTEDHEALS.COMBAT")
+    end,
     IsReportingNeglectedHeals_Realtime = function(self)
         return self.ReportDB:GetPath("NEGLECTEDHEALS.REALTIME")
     end,
