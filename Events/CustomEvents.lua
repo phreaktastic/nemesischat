@@ -12,16 +12,13 @@ local _, core = ...;
 -----------------------------------------------------
 
 function NemesisChat:HandleEvent()
-    if not IsNCEnabled() then return end
-    if NemesisChat:ShouldExitEventHandler() then
-        return
-    end
+    if not IsNCEnabled() or not NCConfig:IsMessageSystemEnabled() or NemesisChat:ShouldExitEventHandler() then return end
 
     NCController:Handle()
 end
 
 function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
-    if not IsNCEnabled() then return end
+    if not IsNCEnabled() or not NCConfig:IsMessageSystemEnabled() then return end
     if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
         NCEvent:Reset()
         return
@@ -53,7 +50,7 @@ function NemesisChat:PLAYER_JOINS_GROUP(playerName, isNemesis)
 end
 
 function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
-    if not IsNCEnabled() then return end
+    if not IsNCEnabled() or not NCConfig:IsMessageSystemEnabled() then return end
     if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
         NCEvent:Reset()
         return
@@ -85,7 +82,7 @@ function NemesisChat:PLAYER_LEAVES_GROUP(playerName, isNemesis)
 end
 
 function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
-    if not IsNCEnabled() then return end
+    if not IsNCEnabled() or not NCConfig:IsMessageSystemEnabled() then return end
     NCEvent:SetCategory("GUILD")
     NCEvent:SetEvent("LOGIN")
 
@@ -107,7 +104,7 @@ function NemesisChat:GUILD_PLAYER_LOGIN(playerName, isNemesis)
 end
 
 function NemesisChat:GUILD_PLAYER_LOGOUT(playerName, isNemesis)
-    if not IsNCEnabled() then return end
+    if not IsNCEnabled() or not NCConfig:IsMessageSystemEnabled() then return end
     NCEvent:SetCategory("GUILD")
     NCEvent:SetEvent("LOGOUT")
 
@@ -131,8 +128,7 @@ end
 function NemesisChat:START_DUNGEON()
     if not IsNCEnabled() then return end
     NCEvent:Reset()
-    NCDungeon:Reset()
-    NCDungeon:Start()
+    NCDungeon:Reset(nil, true)
 end
 
 function NemesisChat:END_DUNGEON()

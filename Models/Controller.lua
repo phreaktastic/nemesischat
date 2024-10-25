@@ -18,6 +18,7 @@ local messageCache = {}
 local eventLookup = {}
 local lastNemesisIndices = {}
 local lastRegularIndices = {}
+local groupRoster = core.runtime.groupRoster
 
 -----------------------------------------------------
 -- Controller logic for handling events
@@ -64,6 +65,8 @@ function NCController:Reset()
 end
 
 function NCController:PreprocessMessages()
+    if not self.isInitialized then return end
+
     local groupCacheKey = "nemesis:" ..
         tostring(NCRuntime:HasNemesis()) .. "_bystander:" .. tostring(NCRuntime:HasBystander())
     if self.lastGroupCacheKey == groupCacheKey then
@@ -278,57 +281,90 @@ function NCController:ReplaceStrings()
     NCController:SetMessage(NCController:GetReplacedString(NCController:GetMessage()))
 end
 
-function NCController:GetReplacedString(input, useExamples)
+function NCController:GetExampleString(input)
     if not input or input == "" then
         return ""
     end
 
-    if NCEvent and NCEvent.GetBystander and NCEvent:GetBystander() == nil and not useExamples then
+    -- Early exit if no placeholders found - using correct pattern
+    if not input:find("%[([A-Z_]+)%]") then
+        return input
+    end
+
+    local msg = input
+    local customReplacementExamples = self.customReplacementExamples or {}
+
+    -- Single pass since we don't need validation for examples
+    for placeholder in msg:gmatch("%[([A-Z_]+)%]") do
+        local key = "[" .. placeholder .. "]"
+        local exampleFunc = customReplacementExamples[key]
+
+        if exampleFunc then
+            local success, val = pcall(exampleFunc)
+            if success and (type(val) == "string" or type(val) == "number") then
+                -- Escape the pattern properly for gsub
+                local escapedKey = key:gsub("([%[%]])", "%%%1")
+                msg = msg:gsub(escapedKey, tostring(val))
+            end
+        end
+    end
+
+    return msg
+end
+
+function NCController:GetReplacedString(input)
+    if not input or input == "" then
+        return ""
+    end
+
+    if not input:find("%[([A-Z_]+)%]") then
+        return input
+    end
+
+    if NCEvent and NCEvent.GetBystander and NCEvent:GetBystander() == nil then
         NCEvent:RandomBystander()
     end
 
     local msg = input
-    local placeholders = self.placeholders
+    local customReplacements = self.customReplacements or {}
 
-    -- If placeholders are not available, extract them from the input
-    if not placeholders then
-        placeholders = {}
-        for placeholder in msg:gmatch("%[([A-Z_]+)%]") do
-            placeholders[placeholder] = true
+    -- First pass - handle condition-specific replacements
+    for placeholder in msg:gmatch("%[([A-Z_]+_CONDITION)%]") do
+        local key = "[" .. placeholder .. "]"
+        local replacementFunc = customReplacements[key]
+
+        if replacementFunc then
+            local success, val = pcall(replacementFunc)
+            if success and (type(val) == "string" or type(val) == "number") then
+                local escapedKey = key:gsub("([%[%]])", "%%%1")
+                msg = msg:gsub(escapedKey, tostring(val))
+            else
+                NemesisChat:HandleError("Failed to get condition replacement value for " .. key)
+                return nil
+            end
         end
     end
 
-    local customReplacements = self.customReplacements or {}
-    local customReplacementExamples = self.customReplacementExamples or {}
+    -- Clean up any remaining conditions
+    msg = msg:gsub("%[([A-Z_]+)_CONDITION%]", "[%1]")
 
-    -- Process each placeholder
-    for placeholder in pairs(placeholders) do
+    -- Second pass - handle all remaining replacements
+    for placeholder in msg:gmatch("%[([A-Z_]+)%]") do
         local key = "[" .. placeholder .. "]"
         local replacementFunc = customReplacements[key]
-        local val
 
-        if useExamples and customReplacementExamples[key] then
-            val = customReplacementExamples[key]()
-        elseif replacementFunc then
-            val = replacementFunc()
-        else
-            val = nil -- No replacement function available
+        if not replacementFunc then
+            NemesisChat:HandleError("Missing replacement function for " .. key)
+            return nil
         end
 
-        if val ~= nil then
-            if type(val) == "string" or type(val) == "number" then
-                local success, err = pcall(function()
-                    msg = msg:gsub("%[" .. placeholder .. "%]", tostring(val))
-                end)
-                if not success then
-                    NemesisChat:HandleError("Replacement for " .. key .. " failed: " .. tostring(err))
-                end
-            else
-                NemesisChat:HandleError("Replacement for " .. key .. " is not a string or number: " .. type(val))
-            end
+        local success, val = pcall(replacementFunc)
+        if success and (type(val) == "string" or type(val) == "number") then
+            local escapedKey = key:gsub("([%[%]])", "%%%1")
+            msg = msg:gsub(escapedKey, tostring(val))
         else
-            -- Will ponder this
-            msg = msg:gsub("%[" .. placeholder .. "%]", "UNKNOWN")
+            NemesisChat:HandleError("Failed to get replacement value for " .. key)
+            return nil
         end
     end
 
@@ -379,6 +415,10 @@ function NCController:IsNonCombatModeException()
     end
 
     if NCEvent:GetTarget() == "BOSS" or NCEvent:GetTarget() == "ANY_MOB" then
+        return true
+    end
+
+    if NCEvent:GetEvent() == "AVOIDABLE_DAMAGE" and NCConfig:IsAvoidableDamageException() then
         return true
     end
 
@@ -588,7 +628,7 @@ function NCController:ValidMessage()
 end
 
 local function getPlayerData(val1)
-    local playerData = NCRuntime:GetGroupRosterPlayer(val1)
+    local playerData = groupRoster[val1]
     return playerData or {}
 end
 
@@ -651,12 +691,24 @@ NCController.ConditionOperators = {
 
         return not getPlayerData(val1).isGuildmate
     end,
-    ["IS_UNDERPERFORMER"] = function(val1, val2)
-        return NCDungeon:GetUnderperformer() == val1
-    end,
-    ["IS_OVERPERFORMER"] = function(val1, val2)
-        return NCDungeon:GetOverperformer() == val1
-    end,
+
+    --------------------------------------------------------
+    --------------------------------------------------------
+    --- These are stubbed, and will be implemented later ---
+    --------------------------------------------------------
+    --- With the refactor of the Rankings model, these   ---
+    --- were removed. They will be re-added later.       ---
+    --------------------------------------------------------
+    --------------------------------------------------------
+    ["IS_UNDERPERFORMER"] = function(val1, val2) -----------
+        return false                             -----------
+    end,                                         -----------
+    ["IS_OVERPERFORMER"] = function(val1, val2)  -----------
+        return false                             -----------
+    end,                                         -----------
+    --------------------------------------------------------
+    --------------------------------------------------------
+
     ["IS_ALIVE"] = function(val1, val2)
         return UnitIsDeadOrGhost(val1) == false
     end,

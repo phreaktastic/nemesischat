@@ -31,6 +31,7 @@ core.dynamicEvents = {
 
 -- We always subscribe to these events
 core.staticEvents = {
+    "ADDON_LOADED",
     "GROUP_ROSTER_UPDATE",
     "PLAYER_ENTERING_WORLD",
     "PLAYER_LEAVING_WORLD",
@@ -40,4 +41,6 @@ core.staticEvents = {
     "SCENARIO_CRITERIA_UPDATE",
     "SCENARIO_COMPLETED",
     "LFG_LIST_APPLICANT_UPDATED",
+    "LFG_LIST_ACTIVE_ENTRY_UPDATE",
+    "LFG_COMPLETION_REWARD",
 }

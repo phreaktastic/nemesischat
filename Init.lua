@@ -147,6 +147,10 @@ function GetHashmapKeys(hashmap)
     return keys
 end
 
+function GetWeakTable()
+    return setmetatable({}, { __mode = "kv" })
+end
+
 -----------------------------------------------------
 -- Core options
 -----------------------------------------------------
@@ -192,7 +196,7 @@ core.constants.NA = { 1 }
 core.constants.STANDARD = { 2, 3, 4, }
 core.constants.OTHERS = { 3, 4, }
 core.constants.ENEMIES = { 5, 6, 7 }
-core.constants.ALLUNITS = { 2, 3, 4, 5, 6, 7 }
+core.constants.ALLUNITS = { 2, 3, 4, 5, 6 }
 core.constants.IS = {
     {
         label = "is",
@@ -244,14 +248,14 @@ core.constants.UNIT_OPERATORS = {
         label = "NOT a guildmate",
         value = "NOT_GUILDMATE",
     },
-    {
-        label = "is underperformer",
-        value = "IS_UNDERPERFORMER",
-    },
-    {
-        label = "is overperformer",
-        value = "IS_OVERPERFORMER",
-    },
+    -- {
+    --     label = "is underperformer",
+    --     value = "IS_UNDERPERFORMER",
+    -- },
+    -- {
+    --     label = "is overperformer",
+    --     value = "IS_OVERPERFORMER",
+    -- },
     {
         label = "is alive",
         value = "IS_ALIVE",

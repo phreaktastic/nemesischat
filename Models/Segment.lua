@@ -145,15 +145,18 @@ NCSegment = {
         -- Override me
     end,
     Start = function(self)
-        self:Reset()
         self:StartPreHook()
-        self.StartTime = GetTime()
-        self:SetActive()
+        self:Reset()
+        self:SetStartParameters()
         self:StartCallback()
         self.RosterSnapshot = DeepCopy(NCRuntime:GetGroupRoster())
     end,
     StartCallback = function(self)
         -- Override me
+    end,
+    SetStartParameters = function(self)
+        self.StartTime = GetTime()
+        self:SetActive()
     end,
     Finish = function(self, success)
         self.FinishTime = GetTime()
@@ -787,7 +790,7 @@ NCSegment = {
         self:ResetCallback(optIdentifier, optStart)
 
         if optStart == true then
-            self:Start()
+            self:SetStartParameters()
         end
     end,
     ResetCallback = function(self, optIdentifier, optStart)

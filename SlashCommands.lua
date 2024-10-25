@@ -279,13 +279,13 @@ function NemesisChat:SlashCommand(msg)
         UpdateDebugWindow()
         frame:Show()
 
-        frame:SetScript("OnUpdate", function(self, elapsed)
-            self.timer = (self.timer or 0) + elapsed
-            if self.timer >= 1 then -- Update every second
-                self.timer = 0
-                UpdateDebugWindow()
-            end
-        end)
+        -- frame:SetScript("OnUpdate", function(self, elapsed)
+        --     self.timer = (self.timer or 0) + elapsed
+        --     if self.timer >= 1 then -- Update every second
+        --         self.timer = 0
+        --         UpdateDebugWindow()
+        --     end
+        -- end)
     elseif cmd == "fixnemeses" then
         local nemeses = NCConfig:GetNemeses()
         if nemeses then

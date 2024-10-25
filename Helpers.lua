@@ -173,18 +173,11 @@ function NemesisChat:InitializeHelpers()
 
         -- Improper event data
         if not NCEvent:IsValidEvent() then
-            if NCConfig:IsDebugging() and NCSpell:GetSource() == GetMyName() then
-                -- self:Print("Invalid event.")
-                -- NemesisChat:Print("Cat:", NCEvent:GetCategory(), "Event:", NCEvent:GetEvent(), "Target:", NCEvent:GetTarget())
-            end
             return true
         end
 
         -- Player is not in a group, exit
         if not IsInGroup() then
-            if NCConfig:IsDebugging() then
-                -- self:Print("Player not in group.")
-            end
             return true
         end
 
@@ -868,12 +861,13 @@ end
 function NemesisChat:InitIfEnabled()
     if not IsNCEnabled() then return end
 
-    NemesisChat:InitializeTimers()
-    NemesisChat:PopulateFriends()
-    NemesisChat:RegisterPrefixes()
-    NemesisChat:RegisterToasts()
-    NemesisChat:SilentGroupSync()
+    self:InitializeTimers()
+    self:PopulateFriends()
+    self:RegisterPrefixes()
+    self:RegisterToasts()
+    self:SilentGroupSync()
     NCRuntime:UpdateInitializationTime()
+    core.LFGHandler:Initialize()
 
     C_Timer.After(1, function()
         NCInfo:Initialize()
@@ -885,8 +879,6 @@ function NemesisChat:ClearAllData()
     if NCDungeon then
         NCDungeon:ClearCache()
         NCDungeon:Reset()
-        NCDungeon:SetIdentifier(nil)
-        NCDungeon.RosterSnapshot = {}
     end
 
     -- Clear other segment data
@@ -917,6 +909,7 @@ function NemesisChat:ClearAllData()
 
     -- Reinitialize core components
     NemesisChat:InstantiateCore()
+    core.LFGHandler:Initialize()
 
     -- Resync group data
     NemesisChat:SilentGroupSync()

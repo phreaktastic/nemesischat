@@ -316,9 +316,7 @@ NCRuntime = {
                 tDeleteItem(core.runtime.nemeses, playerName)
             end
 
-            if not NemesisChat:HasPartyNemeses(true) then
-                core.runtime.hasNemesis = false
-            end
+            core.runtime.hasNemesis = NemesisChat:HasPartyNemeses(true)
         else
             if tContains(core.runtime.bystanders, playerName) then
                 tDeleteItem(core.runtime.bystanders, playerName)
@@ -398,6 +396,24 @@ NCRuntime = {
             if success and isGroupLead == true then
                 data.groupLead = true
                 core.runtime.groupLead = playerName
+            end
+            if IsInRaid() then
+                local unit = data.token -- e.g., 'raid5'
+                -- Extract the index number from the unit token
+                local index = tonumber(string.match(unit, "^raid(%d+)$"))
+                if index then
+                    -- Pass the index to GetRaidRosterInfo
+                    data.group = select(3, GetRaidRosterInfo(index))
+                else
+                    -- If the token is not in the expected 'raidN' format, find the index by name
+                    for i = 1, GetNumGroupMembers() do
+                        local name = GetRaidRosterInfo(i)
+                        if name == playerName then
+                            data.group = select(3, GetRaidRosterInfo(i))
+                            break
+                        end
+                    end
+                end
             end
         end
 

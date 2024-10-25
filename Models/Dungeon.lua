@@ -18,60 +18,16 @@ NCDungeon.Affixes = {}
 NCDungeon.TimeLimit = 0
 
 function NCDungeon:StartCallback()
-    NCEvent:SetCategory("CHALLENGE")
-    NCEvent:SetEvent("START")
-    NCEvent:SetTarget("NA")
-    NCEvent:RandomNemesis()
-    NCEvent:RandomBystander()
-    NCDungeon:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
-
-    local keystoneLevel, affixIDs, name, timeLimit
-
-    if C_ChallengeMode.IsChallengeModeActive() then
-        keystoneLevel, affixIDs = C_ChallengeMode.GetActiveKeystoneInfo()
-        name, _, timeLimit = C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID())
-    else
-        keystoneLevel = 0
-        affixIDs = {}
-        name = "Unknown"
-        timeLimit = 0
-
-        local dName, type, difficultyIndex, difficultyName, maxPlayers,
-        dynamicDifficulty, isDynamic, instanceMapId, lfgID = GetInstanceInfo()
-
-        if dName and difficultyName then
-            name = dName .. " " .. difficultyName
-        end
-    end
-
-    NCDungeon:ClearCache()
-    NCRuntime:ClearPetOwners()
-    NCRuntime:ClearLastCompletedDungeon()
-
-    NCDungeon:SetIdentifier(name)
-    NCDungeon:SetLevel(keystoneLevel)
-    NCDungeon:SetKeystoneAffixes(affixIDs)
-    NCDungeon:SetTimeLimit(timeLimit)
-    NCDungeon:SnapshotCurrentRoster()
-
-    NCInfo:Update()
-    NCDungeon:UpdateCache()
-
-    self:RegisterObserver(NCInfo)
+    local dungeonHandler = core.DungeonHandler
+    self:SetLevel(dungeonHandler.keystoneLevel)
+    self:SetKeystoneAffixes(dungeonHandler.keystoneAffixes)
+    self:SetTimeLimit(dungeonHandler.dungeonTimeLimit)
+    self:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
+    self:UpdateCache()
 end
 
 function NCDungeon:FinishCallback(success)
-    NCEvent:SetCategory("CHALLENGE")
-    NCEvent:SetEvent(success and "SUCCESS" or "FAIL")
-    NCEvent:SetTarget("NA")
-    NCEvent:RandomNemesis()
-    NCEvent:RandomBystander()
-
-    NCDungeon:UpdateCache()
-    NCRuntime:ClearPetOwners()
-
-    NCRuntime:SetLastCompletedDungeon(self)
-    NCInfo:Update(true)
+    self:UpdateCache()
 end
 
 function NCDungeon:ResetCallback()
@@ -81,43 +37,41 @@ function NCDungeon:ResetCallback()
 end
 
 function NCDungeon:GetLevel()
-    return (NCDungeon.Level or 0)
+    return (self.Level or 0)
 end
 
 function NCDungeon:SetLevel(level)
-    NCDungeon.Level = (level or 0)
+    self.Level = (level or 0)
 end
 
 function NCDungeon:SetKeystoneAffixes(affixes)
-    NCDungeon.Affixes = affixes
+    self.Affixes = affixes or {}
 end
 
 function NCDungeon:GetKeystoneAffixes()
-    return NCDungeon.Affixes
+    return self.Affixes
 end
 
 function NCDungeon:GetTimeLimit()
-    return NCDungeon.TimeLimit
+    return self.TimeLimit
 end
 
 function NCDungeon:GetTimeLimitString()
-    local timeLimit = NCDungeon:GetTimeLimit()
+    local timeLimit = self:GetTimeLimit()
     local minutes = math.floor(timeLimit / 60)
     local seconds = timeLimit - (minutes * 60)
-
     return string.format("%02d:%02d", minutes, seconds)
 end
 
 function NCDungeon:SetTimeLimit(timeLimit)
-    NCDungeon.TimeLimit = timeLimit
+    self.TimeLimit = timeLimit or 0
 end
 
 function NCDungeon:GetTimeLeft()
-    if not NCDungeon:IsActive() then
+    if not self:IsActive() then
         return 0
     end
-
-    return (NCDungeon:GetStartTime() + NCDungeon:GetTimeLimit()) - GetTime()
+    return (self:GetStartTime() + self:GetTimeLimit()) - GetTime()
 end
 
 function NCDungeon:UpdateCache()

@@ -59,6 +59,47 @@ function NCMigration:SetLessThanVersion(maxVersion)
     return self
 end
 
+function NCMigration:AddPathTransform(oldPath, newPath)
+    if not self.pathTransforms then
+        self.pathTransforms = {}
+    end
+
+    table.insert(self.pathTransforms, {
+        oldPath = oldPath,
+        newPath = newPath
+    })
+
+    return self
+end
+
+function NCMigration:AddBulkTransform(transforms)
+    if not self.pathTransforms then
+        self.pathTransforms = {}
+    end
+
+    for oldPath, newPath in pairs(transforms) do
+        table.insert(self.pathTransforms, {
+            oldPath = oldPath,
+            newPath = newPath
+        })
+    end
+
+    return self
+end
+
+function NCMigration:AddStructuralChange(path, defaultValue)
+    if not self.structuralChanges then
+        self.structuralChanges = {}
+    end
+
+    table.insert(self.structuralChanges, {
+        path = path,
+        default = defaultValue
+    })
+
+    return self
+end
+
 function NCMigration:Run()
     if core.db.profile.migrations == nil then
         core.db.profile.migrations = {}
@@ -69,21 +110,47 @@ function NCMigration:Run()
 
     for _, migration in pairs(NCMigration.migrations) do
         if not core.db.profile.migrations[migration.identifier] and NCSemver:Less(migration.lessThanVersion) then
+            -- Handle path transformations
+            if migration.pathTransforms then
+                for _, transform in pairs(migration.pathTransforms) do
+                    local oldValue = nil
+
+                    -- Handle old path in core.db.profile format
+                    if string.find(transform.oldPath, "core.db.profile") ~= nil then
+                        local cleanPath = string.gsub(transform.oldPath, "core.db.profile.", "")
+                        oldValue = self:GetNestedValue(core.db.profile, cleanPath)
+                    else
+                        oldValue = self:GetNestedValue(core.db.profile, transform.oldPath)
+                    end
+
+                    if oldValue ~= nil then
+                        self:SetNestedValue(core.db.profile, transform.newPath, oldValue)
+                    end
+                end
+            end
+
+            -- Handle structural changes
+            if migration.structuralChanges then
+                for _, change in pairs(migration.structuralChanges) do
+                    if self:GetNestedValue(core.db.profile, change.path) == nil then
+                        self:SetNestedValue(core.db.profile, change.path, change.default)
+                    end
+                end
+            end
+
+            -- Original erasure logic
             if migration.pathsToErase then
                 for _, path in pairs(migration.pathsToErase) do
                     if string.find(path, "core.db.profile") ~= nil then
                         path = string.gsub(path, "core.db.profile.", "")
                     end
-                    
+
                     local pathChunks = Split(path, ".")
                     local table = core.db.profile
 
                     for i = 1, #pathChunks - 1 do
                         table = table[pathChunks[i]]
-
-                        if table == nil then
-                            break
-                        end
+                        if table == nil then break end
                     end
 
                     table[pathChunks[#pathChunks]] = nil
@@ -95,7 +162,6 @@ function NCMigration:Run()
             end
 
             core.db.profile.migrations[migration.identifier] = true
-
             count = count + 1
         end
     end
@@ -105,4 +171,34 @@ function NCMigration:Run()
     end
 
     NemesisChat:Print("Migrations complete. Checked:", total, "Ran:", count)
+end
+
+-- Helper methods for nested table operations
+function NCMigration:GetNestedValue(tbl, path)
+    local pathParts = Split(path, ".")
+    local current = tbl
+
+    for _, part in ipairs(pathParts) do
+        if current[part] == nil then
+            return nil
+        end
+        current = current[part]
+    end
+
+    return current
+end
+
+function NCMigration:SetNestedValue(tbl, path, value)
+    local pathParts = Split(path, ".")
+    local current = tbl
+
+    for i = 1, #pathParts - 1 do
+        local part = pathParts[i]
+        if current[part] == nil then
+            current[part] = {}
+        end
+        current = current[part]
+    end
+
+    current[pathParts[#pathParts]] = value
 end

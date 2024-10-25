@@ -4,6 +4,8 @@
 -- Namespaces
 local _, core = ...;
 
+local groupRoster = core.runtime.groupRoster
+
 NCRankings = {
     METRICS = {
         AvoidableDamage = true, -- true means lower is better
@@ -168,7 +170,7 @@ NCRankings = {
             playerRole = self._segment.RosterSnapshot[playerName].role
         else
             -- Fallback to current roster
-            local rosterPlayer = NCRuntime:GetGroupRosterPlayer(playerName)
+            local rosterPlayer = groupRoster[playerName]
             playerRole = rosterPlayer and rosterPlayer.role or UnitGroupRolesAssigned(playerName)
         end
 

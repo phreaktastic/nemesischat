@@ -9,15 +9,15 @@
 -----------------------------------------------------
 local _, core = ...;
 
-core.options.args.reportsGroup = {
+core.options.args.messagesGroup.args.segmentMessages = {
     order = 3,
     type = "group",
-    name = "Reports",
+    name = "Segment Summaries",
     args = {
         generalHeader = {
             order = 0,
             type = "header",
-            name = "General Report Settings",
+            name = "Segment Summary Settings",
         },
         generalPaddingTop = {
             order = 1,
@@ -28,13 +28,13 @@ core.options.args.reportsGroup = {
         reportChannel = {
             order = 2,
             type = "select",
-            name = "Report Channel",
-            desc = "Select the channel to report to",
+            name = "Summary Channel",
+            desc = "Select the chat channel to report summaries to",
             descStyle = "inline",
             width = "full",
             values = function() return core.channels end,
-            get = function() return core.db.profile.reportConfig.channel end,
-            set = function(info, value) core.db.profile.reportConfig.channel = value end,
+            get = function() return NCConfig:GetReportChannel() end,
+            set = function(info, value) NCConfig:SetReportChannel(value) end,
         },
         reportChannelPaddingBottom = {
             order = 3,
@@ -50,6 +50,7 @@ core.options.args.reportsGroup = {
             descStyle = "inline",
             width = "full",
             disabled = true,
+            hidden = true,
             get = function() return core.db.profile.reportConfig.excludeNemeses end,
             set = function(info, value) core.db.profile.reportConfig.excludeNemeses = value end,
         },
@@ -61,6 +62,7 @@ core.options.args.reportsGroup = {
             descStyle = "inline",
             width = "full",
             disabled = true,
+            hidden = true,
             get = function() return core.db.profile.reportConfig.reportLowPerformersOnWipe end,
             set = function(info, value) core.db.profile.reportConfig.reportLowPerformersOnWipe = value end,
         },
@@ -72,6 +74,7 @@ core.options.args.reportsGroup = {
             descStyle = "inline",
             width = "full",
             disabled = true,
+            hidden = true,
             get = function() return core.db.profile.reportConfig.reportLowPerformersOnDungeonFail end,
             set = function(info, value) core.db.profile.reportConfig.reportLowPerformersOnDungeonFail = value end,
         },
@@ -104,8 +107,8 @@ core.options.args.reportsGroup = {
                             desc = "Report the highest amount of interrupts",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["INTERRUPTS"]["TOP"] end,
-                            set = function(info, value) core.db.profile.reportConfig["INTERRUPTS"]["TOP"] = value end,
+                            get = function() return NCConfig:IsReportingInterrupts_Top() end,
+                            set = function(info, value) NCConfig:SetReportingInterrupts_Top(value) end,
                         },
                         bottomInterruptsToggle = {
                             order = 2,
@@ -114,8 +117,8 @@ core.options.args.reportsGroup = {
                             desc = "Report the lowest amount of interrupts",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["INTERRUPTS"]["BOTTOM"] end,
-                            set = function(info, value) core.db.profile.reportConfig["INTERRUPTS"]["BOTTOM"] = value end,
+                            get = function() return NCConfig:IsReportingInterrupts_Bottom() end,
+                            set = function() NCConfig:ToggleReportingInterrupts_Bottom() end,
                         },
                     }
                 },
@@ -132,8 +135,8 @@ core.options.args.reportsGroup = {
                             desc = "Report interrupts after all combat segments",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["INTERRUPTS"]["COMBAT"] end,
-                            set = function(info, value) core.db.profile.reportConfig["INTERRUPTS"]["COMBAT"] = value end,
+                            get = function() return NCConfig:IsReportingInterrupts_Combat() end,
+                            set = function() NCConfig:ToggleReportingInterrupts_Combat() end,
                         },
                         bossInterruptsToggle = {
                             order = 2,
@@ -142,18 +145,18 @@ core.options.args.reportsGroup = {
                             desc = "Report interrupts after bosses",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["INTERRUPTS"]["BOSS"] end,
-                            set = function(info, value) core.db.profile.reportConfig["INTERRUPTS"]["BOSS"] = value end,
+                            get = function() return NCConfig:IsReportingInterrupts_Boss() end,
+                            set = function() NCConfig:ToggleReportingInterrupts_Boss() end,
                         },
                         dungeonInterruptsToggle = {
                             order = 3,
                             type = "toggle",
-                            name = "After M+ dungeons",
-                            desc = "Report interrupts after M+ completion",
+                            name = "After dungeons",
+                            desc = "Report interrupts after dungeon completion",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["INTERRUPTS"]["DUNGEON"] end,
-                            set = function(info, value) core.db.profile.reportConfig["INTERRUPTS"]["DUNGEON"] = value end,
+                            get = function() return NCConfig:IsReportingInterrupts_Dungeon() end,
+                            set = function() NCConfig:ToggleReportingInterrupts_Dungeon() end,
                         },
                     }
                 },
@@ -194,8 +197,8 @@ core.options.args.reportsGroup = {
                             desc = "Report the highest damage dealt",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["DAMAGE"]["TOP"] end,
-                            set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["TOP"] = value end,
+                            get = function() return NCConfig:IsReportingDamage_Top() end,
+                            set = function() NCConfig:ToggleReportingDamage_Top() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
                                     not Details
@@ -208,8 +211,8 @@ core.options.args.reportsGroup = {
                             desc = "Report the lowest damage dealt",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] end,
-                            set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOTTOM"] = value end,
+                            get = function() return NCConfig:IsReportingDamage_Bottom() end,
+                            set = function() NCConfig:ToggleReportingDamage_Bottom() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
                                     not Details
@@ -230,8 +233,8 @@ core.options.args.reportsGroup = {
                             desc = "Report damage after all combat segments",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["DAMAGE"]["COMBAT"] end,
-                            set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["COMBAT"] = value end,
+                            get = function() return NCConfig:IsReportingDamage_Combat() end,
+                            set = function() NCConfig:ToggleReportingDamage_Combat() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
                                     not Details
@@ -244,8 +247,8 @@ core.options.args.reportsGroup = {
                             desc = "Report damage after bosses",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["DAMAGE"]["BOSS"] end,
-                            set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["BOSS"] = value end,
+                            get = function() return NCConfig:IsReportingDamage_Boss() end,
+                            set = function() NCConfig:ToggleReportingDamage_Boss() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
                                     not Details
@@ -254,12 +257,12 @@ core.options.args.reportsGroup = {
                         dungeonDmgToggle = {
                             order = 3,
                             type = "toggle",
-                            name = "After M+ Dungeons",
-                            desc = "Report damage after M+ completion",
+                            name = "After Dungeons",
+                            desc = "Report damage after dungeon completion",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] end,
-                            set = function(info, value) core.db.profile.reportConfig["DAMAGE"]["DUNGEON"] = value end,
+                            get = function() return NCConfig:IsReportingDamage_Dungeon() end,
+                            set = function() NCConfig:ToggleReportingDamage_Dungeon() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() == false or
                                     not Details
@@ -304,8 +307,8 @@ core.options.args.reportsGroup = {
                             desc = "Report the lowest amount of avoidable damage taken",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["TOP"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["TOP"] = value end,
+                            get = function() return NCConfig:IsReportingAvoidable_Top() end,
+                            set = function(info, value) NCConfig:ToggleReportingAvoidable_Top() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
                                     not GTFO
@@ -318,8 +321,8 @@ core.options.args.reportsGroup = {
                             desc = "Report the highest amount of avoidable damage taken",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOTTOM"] = value end,
+                            get = function() return NCConfig:IsReportingAvoidable_Bottom() end,
+                            set = function(info, value) NCConfig:ToggleReportingAvoidable_Bottom() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
                                     not GTFO
@@ -340,8 +343,8 @@ core.options.args.reportsGroup = {
                             desc = "Report avoidable damage after all combat segments",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["COMBAT"] = value end,
+                            get = function() return NCConfig:IsReportingAvoidable_Combat() end,
+                            set = function(info, value) NCConfig:ToggleReportingAvoidable_Combat() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
                                     not GTFO
@@ -354,8 +357,8 @@ core.options.args.reportsGroup = {
                             desc = "Report avoidable damage after bosses",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["BOSS"] = value end,
+                            get = function() return NCConfig:IsReportingAvoidable_Boss() end,
+                            set = function(info, value) NCConfig:ToggleReportingAvoidable_Boss() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
                                     not GTFO
@@ -364,12 +367,12 @@ core.options.args.reportsGroup = {
                         dungeonAdToggle = {
                             order = 6,
                             type = "toggle",
-                            name = "After M+ Dungeons",
-                            desc = "Report avoidable damage after M+ completion",
+                            name = "After Dungeons",
+                            desc = "Report avoidable damage after dungeon completion",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] end,
-                            set = function(info, value) core.db.profile.reportConfig["AVOIDABLE"]["DUNGEON"] = value end,
+                            get = function() return NCConfig:IsReportingAvoidable_Dungeon() end,
+                            set = function(info, value) NCConfig:ToggleReportingAvoidable_Dungeon() end,
                             disabled = function()
                                 return NemesisChatAPI:GetAPI("NC_GTFO"):IsEnabled() == false or
                                     not GTFO
@@ -393,7 +396,7 @@ core.options.args.reportsGroup = {
                 deathsHeader = {
                     order = 0,
                     type = "header",
-                    name = "Deaths Reporting",
+                    name = "Deaths",
                 },
                 deathsPaddingTop = {
                     order = 1,
@@ -404,18 +407,12 @@ core.options.args.reportsGroup = {
                 deathsToggle = {
                     order = 2,
                     type = "toggle",
-                    name = "Report Highest Deaths After M+ Dungeons",
-                    desc = "Report the highest deaths after M+ completion",
+                    name = "Report Highest Deaths After Dungeons",
+                    desc = "Report the highest deaths after completion",
                     descStyle = "inline",
                     width = "full",
-                    get = function()
-                        return core.db.profile.reportConfig["DEATHS"]["BOTTOM"] and
-                            core.db.profile.reportConfig["DEATHS"]["DUNGEON"]
-                    end,
-                    set = function(info, value)
-                        core.db.profile.reportConfig["DEATHS"]["BOTTOM"] = value
-                        core.db.profile.reportConfig["DEATHS"]["DUNGEON"] = value
-                    end,
+                    get = function() NCConfig:IsReportingDeaths_Bottom() end,
+                    set = function(info, value) NCConfig:ToggleReportingDeaths_Bottom() end,
                 },
             }
         },
@@ -445,21 +442,21 @@ core.options.args.reportsGroup = {
                             order = 1,
                             type = "toggle",
                             name = "Shout-Outs",
-                            desc = "Report the highest amount of off-heals",
+                            desc = "Report the player with highest amount of off-heals",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["OFFHEALS"]["TOP"] end,
-                            set = function(info, value) core.db.profile.reportConfig["OFFHEALS"]["TOP"] = value end,
+                            get = function() return NCConfig:IsReportingOffheals_Top() end,
+                            set = function(info, value) NCConfig:ToggleReportingOffheals_Top() end,
                         },
                         combatOhToggle = {
                             order = 2,
                             type = "toggle",
                             name = "Call-Outs",
-                            desc = "Report off-heals after all combat segments",
+                            desc = "Report the player with lowest amount of off-heals",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["OFFHEALS"]["COMBAT"] end,
-                            set = function(info, value) core.db.profile.reportConfig["OFFHEALS"]["COMBAT"] = value end,
+                            get = function() return NCConfig:IsReportingOffheals_Bottom() end,
+                            set = function(info, value) NCConfig:ToggleReportingOffheals_Bottom() end,
                         },
                     }
                 },
@@ -476,18 +473,18 @@ core.options.args.reportsGroup = {
                             desc = "Report off-heals after bosses",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["OFFHEALS"]["BOSS"] end,
-                            set = function(info, value) core.db.profile.reportConfig["OFFHEALS"]["BOSS"] = value end,
+                            get = function() return NCConfig:IsReportingOffheals_Boss() end,
+                            set = function(info, value) NCConfig:ToggleReportingOffheals_Boss() end,
                         },
                         dungeonOhToggle = {
                             order = 2,
                             type = "toggle",
-                            name = "After M+ Dungeons",
-                            desc = "Report off-heals after M+ completion",
+                            name = "After Dungeons",
+                            desc = "Report off-heals after dungeon completion",
                             descStyle = "inline",
                             width = "full",
-                            get = function() return core.db.profile.reportConfig["OFFHEALS"]["DUNGEON"] end,
-                            set = function(info, value) core.db.profile.reportConfig["OFFHEALS"]["DUNGEON"] = value end,
+                            get = function() return NCConfig:IsReportingOffheals_Dungeon() end,
+                            set = function(info, value) NCConfig:ToggleReportingOffheals_Dungeon() end,
                         },
                     }
                 },

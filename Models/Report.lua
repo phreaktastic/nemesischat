@@ -1,17 +1,10 @@
 -----------------------------------------------------
 -- REPORT
 -----------------------------------------------------
--- This file is a POC / WIP. It is not pretty, but a
--- legitimate report framework will eventually take
--- its place!
-
------------------------------------------------------
--- Namespaces
------------------------------------------------------
 local _, core = ...;
 
 function NemesisChat:Report(event, success)
-    if not IsNCEnabled() then return end
+    if not IsNCEnabled() or not NCConfig:IsMessageSystemEnabled() then return end
 
     local TYPES = {
         ["DAMAGE"] = "DPS",
@@ -21,9 +14,9 @@ function NemesisChat:Report(event, success)
         ["DEATHS"] = "Deaths",
     }
     local EVENTS = {
-        "COMBAT",
-        "BOSS",
-        "DUNGEON",
+        ["COMBAT"] = true,
+        ["BOSS"] = true,
+        ["DUNGEON"] = true,
     }
     local typeData = {
         ["DAMAGE"] = {
@@ -51,7 +44,6 @@ function NemesisChat:Report(event, success)
 
                 if lifePercent > 100 then
                     local lifeMultiplier = math.floor(lifePercent / 10) / 10
-
                     botMsg = "Most deaths for %s: %s at %s, with " ..
                         adFormatted .. " avoidable damage taken (" .. lifeMultiplier .. "x their max health)."
                 else
@@ -65,7 +57,7 @@ function NemesisChat:Report(event, success)
         },
     }
 
-    if not tContains(EVENTS, event) then return end
+    if not EVENTS[event] then return end
 
     local bucket = NCCombat
     local segName = "this combat segment"
@@ -81,8 +73,47 @@ function NemesisChat:Report(event, success)
     local channel = NemesisChat:GetActualChannel(NCConfig:GetReportChannel())
 
     for type, rankingType in pairs(TYPES) do
-        local config = core.db.profile.reportConfig[type][event]
-        if config then
+        -- Check if reporting is enabled for this type and event
+        local isEnabled = false
+        if event == "COMBAT" then
+            if type == "DAMAGE" then
+                isEnabled = NCConfig:IsReportingDamage_Combat()
+            elseif type == "AVOIDABLE" then
+                isEnabled = NCConfig:IsReportingAvoidable_Combat()
+            elseif type == "INTERRUPTS" then
+                isEnabled = NCConfig:IsReportingInterrupts_Combat()
+            elseif type == "OFFHEALS" then
+                isEnabled = NCConfig:IsReportingOffheals_Combat()
+            elseif type == "DEATHS" then
+                isEnabled = NCConfig:IsReportingDeaths_Combat()
+            end
+        elseif event == "BOSS" then
+            if type == "DAMAGE" then
+                isEnabled = NCConfig:IsReportingDamage_Boss()
+            elseif type == "AVOIDABLE" then
+                isEnabled = NCConfig:IsReportingAvoidable_Boss()
+            elseif type == "INTERRUPTS" then
+                isEnabled = NCConfig:IsReportingInterrupts_Boss()
+            elseif type == "OFFHEALS" then
+                isEnabled = NCConfig:IsReportingOffheals_Boss()
+            elseif type == "DEATHS" then
+                isEnabled = NCConfig:IsReportingDeaths_Boss()
+            end
+        elseif event == "DUNGEON" then
+            if type == "DAMAGE" then
+                isEnabled = NCConfig:IsReportingDamage_Dungeon()
+            elseif type == "AVOIDABLE" then
+                isEnabled = NCConfig:IsReportingAvoidable_Dungeon()
+            elseif type == "INTERRUPTS" then
+                isEnabled = NCConfig:IsReportingInterrupts_Dungeon()
+            elseif type == "OFFHEALS" then
+                isEnabled = NCConfig:IsReportingOffheals_Dungeon()
+            elseif type == "DEATHS" then
+                isEnabled = NCConfig:IsReportingDeaths_Dungeon()
+            end
+        end
+
+        if isEnabled then
             local data = typeData[type]
             local topRanking = bucket.Rankings.Top[rankingType]
             local bottomRanking = bucket.Rankings.Bottom[rankingType]
@@ -92,7 +123,21 @@ function NemesisChat:Report(event, success)
             end
 
             if not (topRanking and topRanking.Value == 0 and bottomRanking and bottomRanking.Value == 0) then
-                if core.db.profile.reportConfig[type]["TOP"] and topRanking and topRanking.Player then
+                -- Check if top reporting is enabled for this type
+                local isTopEnabled = false
+                if type == "DAMAGE" then
+                    isTopEnabled = NCConfig:IsReportingDamage_Top()
+                elseif type == "AVOIDABLE" then
+                    isTopEnabled = NCConfig:IsReportingAvoidable_Top()
+                elseif type == "INTERRUPTS" then
+                    isTopEnabled = NCConfig:IsReportingInterrupts_Top()
+                elseif type == "OFFHEALS" then
+                    isTopEnabled = NCConfig:IsReportingOffheals_Top()
+                elseif type == "DEATHS" then
+                    isTopEnabled = NCConfig:IsReportingDeaths_Top()
+                end
+
+                if isTopEnabled and topRanking and topRanking.Player then
                     local msg = data.topMsgSpecial and topRanking.DeltaPercent >= 25 and data.topMsgSpecial or
                         data.topMsg
                     local formattedMsg = string.format(msg, topRanking.Player, segName,
@@ -105,7 +150,21 @@ function NemesisChat:Report(event, success)
                     end
                 end
 
-                if core.db.profile.reportConfig[type]["BOTTOM"] and bottomRanking and bottomRanking.Player then
+                -- Check if bottom reporting is enabled for this type
+                local isBottomEnabled = false
+                if type == "DAMAGE" then
+                    isBottomEnabled = NCConfig:IsReportingDamage_Bottom()
+                elseif type == "AVOIDABLE" then
+                    isBottomEnabled = NCConfig:IsReportingAvoidable_Bottom()
+                elseif type == "INTERRUPTS" then
+                    isBottomEnabled = NCConfig:IsReportingInterrupts_Bottom()
+                elseif type == "OFFHEALS" then
+                    isBottomEnabled = NCConfig:IsReportingOffheals_Bottom()
+                elseif type == "DEATHS" then
+                    isBottomEnabled = NCConfig:IsReportingDeaths_Bottom()
+                end
+
+                if isBottomEnabled and bottomRanking and bottomRanking.Player then
                     local formattedMsg = string.format(data.botMsg, segName, bottomRanking.Player,
                         NemesisChat:FormatNumber(bottomRanking.Value))
 

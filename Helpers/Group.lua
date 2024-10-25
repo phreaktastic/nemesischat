@@ -7,6 +7,8 @@
 -----------------------------------------------------
 local _, core = ...;
 
+local groupRoster = core.runtime.groupRoster
+
 local UnitIsGroupLeader = UnitIsGroupLeader
 local IsInRaid = IsInRaid
 
@@ -41,6 +43,8 @@ function NemesisChat:HandleRosterUpdate()
     else
         self:HandleGeneralGroupChanges(joins, leaves)
     end
+
+    NCInfo:Update()
 end
 
 -- Determines if the group has been disbanded
@@ -72,7 +76,7 @@ function NemesisChat:HandleGroupFormation(joins)
 
     for _, member in pairs(members) do
         if member and member ~= GetMyName() then
-            local player = NCRuntime:GetGroupRosterPlayer(member)
+            local player = groupRoster[member]
             if player and isLeader then
                 if #joins < 3 then
                     NemesisChat:PLAYER_JOINS_GROUP(member, player.isNemesis)
@@ -103,7 +107,7 @@ end
 function NemesisChat:ProcessJoins(joins)
     for _, playerName in ipairs(joins) do
         if playerName and playerName ~= GetMyName() then
-            local player = NCRuntime:GetGroupRosterPlayer(playerName)
+            local player = groupRoster[playerName]
             if not player then
                 player = NCRuntime:AddGroupRosterPlayer(playerName)
             end
@@ -148,7 +152,7 @@ end
 function NemesisChat:ProcessLeaves(leaves)
     for _, playerName in ipairs(leaves) do
         if playerName and playerName ~= GetMyName() then
-            local player = NCRuntime:GetGroupRosterPlayer(playerName)
+            local player = groupRoster[playerName]
             if not player then
                 player = core.db.profile.cache.groupRoster and
                     core.db.profile.cache.groupRoster[playerName] or nil

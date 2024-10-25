@@ -26,6 +26,7 @@
 --- @field DetailsSegment integer
 --- @field StartPreHook fun(self: NCSegment)
 --- @field Start fun(self: NCSegment)
+--- @field SetStartParameters fun(self: NCSegment)
 --- @field StartCallback fun(self: NCSegment)
 --- @field Finish fun(self: NCSegment, success: boolean)
 --- @field SetActive fun(self: NCSegment)

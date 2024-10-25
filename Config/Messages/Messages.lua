@@ -9,21 +9,45 @@
 -----------------------------------------------------
 local _, core = ...;
 
-core.options.args.messagesGroup = {
-    order = 2,
+local messagePreview = ""
+
+core.options.args.messagesGroup.args.eventMessages = {
+    order = 1,
     type = "group",
-    name = "Triggered Messages",
+    name = "Event Messages",
     args = {
         messagesHeader = {
             order = 0,
             type = "header",
             name = "Triggered Messages",
         },
-        messagesDesc = {
+        headerAndToggleGroup = {
             order = 1,
-            type = "description",
-            fontSize = "large",
-            name = "General",
+            type = "group",
+            inline = true,
+            name = "Message Configuration",
+            args = {
+                messagesDesc = {
+                    order = 1,
+                    type = "description",
+                    fontSize = "large",
+                    name = "General",
+                },
+                messagesPaddingUpper = {
+                    order = 2,
+                    type = "description",
+                    fontSize = "large",
+                    name = " ",
+                },
+                messagesEnabledToggle = {
+                    order = 3,
+                    type = "toggle",
+                    name = "Enable Triggered Messages",
+                    desc = "Enable or disable the sending of triggered messages.",
+                    get = function() return NCConfig:IsMessageSystemEnabled() end,
+                    set = function() NCConfig:ToggleMessageSystemEnabled() end,
+                },
+            }
         },
         messagesPaddingUpper = {
             order = 2,
@@ -160,7 +184,10 @@ core.options.args.messagesGroup = {
         messagesPreview = {
             order = 15,
             type = "description",
-            name = function() NemesisChat:UpdateMessagePreview() return messagePreview end,
+            name = function()
+                NemesisChat:UpdateMessagePreview()
+                return messagePreview
+            end,
             hidden = "IsMessageHidden",
             disabled = "IsMessageHidden",
         },
@@ -256,7 +283,8 @@ core.options.args.messagesGroup = {
             order = 25,
             type = "input",
             name = "Value",
-            desc = "Replacements (such as |c00ffcc00[NEMESIS]|r) are allowed here. Please refer to the Reference tab for a list of available replacements.",
+            desc =
+            "Replacements (such as |c00ffcc00[NEMESIS]|r) are allowed here. Please refer to the Reference tab for a list of available replacements.",
             width = 0.83,
             get = "GetConditionValue",
             set = "SetConditionValue",
@@ -302,7 +330,7 @@ local messageChance = 1.0
 local messageConditions = {}
 
 function NemesisChat:GetCategories()
-    local categories = setmetatable({}, {__mode = "kv"})
+    local categories = setmetatable({}, { __mode = "kv" })
 
     for key, val in pairs(core.configTree) do
         local count = 0
@@ -319,7 +347,6 @@ function NemesisChat:GetCategories()
         else
             categories[key] = val.label
         end
-        
     end
 
     return categories
@@ -344,10 +371,10 @@ end
 
 function NemesisChat:GetEvents()
     if selectedCategory == "" then
-        return setmetatable({}, {__mode = "kv"})
+        return setmetatable({}, { __mode = "kv" })
     end
 
-    local events = setmetatable({}, {__mode = "kv"})
+    local events = setmetatable({}, { __mode = "kv" })
 
     for key, val in pairs(core.configTree[selectedCategory].events) do
         local count = 0
@@ -390,10 +417,10 @@ end
 
 function NemesisChat:GetTargets()
     if selectedEvent == "" then
-        return setmetatable({}, {__mode = "kv"})
+        return setmetatable({}, { __mode = "kv" })
     end
 
-    local targets = setmetatable({}, {__mode = "kv"})
+    local targets = setmetatable({}, { __mode = "kv" })
 
     for key, val in pairs(core.configTree[selectedCategory].events[GetEventIndex()].options) do
         local option = core.units[val]
@@ -440,7 +467,7 @@ end
 function NemesisChat:GetConfiguredMessages()
     local msgs = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget]
     local available = {}
-    
+
     for key, val in pairs(msgs or {}) do
         available[key .. ""] = val.label or val.message
     end
@@ -472,7 +499,9 @@ function NemesisChat:SetConfiguredMessage(info, value)
 end
 
 function NemesisChat:ConfiguredMessagesDisabled()
-    return core.db.profile.messages[selectedCategory] == nil or core.db.profile.messages[selectedCategory][selectedEvent] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil
+    return core.db.profile.messages[selectedCategory] == nil or
+        core.db.profile.messages[selectedCategory][selectedEvent] == nil or
+        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil
 end
 
 function NemesisChat:GetMessage()
@@ -524,14 +553,15 @@ function NemesisChat:DeleteMessage()
         return
     end
 
-    table.remove(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], tonumber(selectedConfiguredMessage))
+    table.remove(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget],
+        tonumber(selectedConfiguredMessage))
 
     selectedConfiguredMessage = ""
     selectedCondition = ""
     message = ""
-    messageChance = ""
+    messageChance = 1.0
     messageChannel = ""
-    messageConditions = ""
+    messageConditions = {}
     messageLabel = ""
 
     NCController:PreprocessMessages()
@@ -549,7 +579,8 @@ function NemesisChat:DuplicateMessage()
         return
     end
 
-    local msg = DeepCopy(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)])
+    local msg = DeepCopy(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget]
+        [tonumber(selectedConfiguredMessage)])
 
     msg.label = msg.label .. " (Copy)"
 
@@ -584,7 +615,8 @@ end
 
 function NemesisChat:DiscardChanges()
     if selectedConfiguredMessage ~= "" then
-        local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)]
+        local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget]
+            [tonumber(selectedConfiguredMessage)]
 
         if msg == nil then
             selectedConfiguredMessage = ""
@@ -601,9 +633,9 @@ function NemesisChat:DiscardChanges()
     else
         message = ""
         messageChannel = ""
-        messageChance = ""
+        messageChance = 1.0
         messageLabel = ""
-        messageConditions = ""
+        messageConditions = {}
 
         selectedCondition = ""
     end
@@ -611,14 +643,15 @@ end
 
 function NemesisChat:GetConditions()
     if selectedConfiguredMessage == "" or selectedConfiguredMessage == nil then
-        return setmetatable({}, {__mode = "kv"})
+        return setmetatable({}, { __mode = "kv" })
     end
 
-    local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)]
-    local conditions = setmetatable({}, {__mode = "kv"})
+    local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget]
+        [tonumber(selectedConfiguredMessage)]
+    local conditions = setmetatable({}, { __mode = "kv" })
 
     if msg == nil or msg.conditions == nil or #msg.conditions == 0 then
-        return setmetatable({}, {__mode = "kv"})
+        return setmetatable({}, { __mode = "kv" })
     end
 
     for key, val in pairs(msg.conditions) do
@@ -626,7 +659,7 @@ function NemesisChat:GetConditions()
         local displayText = leftFormatted .. " " .. (GetOperatorFormatted(val.operator) or "?")
 
         if GetIsNcOperator(val) == false then
-            displayText = displayText  .. " " .. GetConditionRight(val.left, val.right)
+            displayText = displayText .. " " .. GetConditionRight(val.left, val.right)
         end
 
         conditions[key .. ""] = displayText
@@ -645,7 +678,7 @@ end
 
 function NemesisChat:GetConditionSubjects()
     if selectedCondition == "" then
-        return setmetatable({}, {__mode = "kv"})
+        return setmetatable({}, { __mode = "kv" })
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
@@ -672,10 +705,10 @@ end
 
 function NemesisChat:GetConditionSubjectCategories()
     if selectedCondition == "" then
-        return setmetatable({}, {__mode = "kv"})
+        return setmetatable({}, { __mode = "kv" })
     end
 
-    local categories = setmetatable({}, {__mode = "kv"})
+    local categories = setmetatable({}, { __mode = "kv" })
 
     for _, val in pairs(core.messageConditions) do
         if val.category ~= nil and not categories[val.category] then
@@ -708,7 +741,7 @@ function NemesisChat:SetConditionSubject(info, value)
         return
     end
 
-    for _,val in pairs(core.messageConditions) do
+    for _, val in pairs(core.messageConditions) do
         if value == val.category then
             condition.leftCategory = val.category
             return
@@ -723,12 +756,12 @@ end
 
 function NemesisChat:GetConditionOperators()
     if selectedCondition == "" then
-        return setmetatable({}, {__mode = "kv"})
+        return setmetatable({}, { __mode = "kv" })
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
     local baseCondition = GetCondition(condition.left)
-    local operators = setmetatable({}, {__mode = "kv"})
+    local operators = setmetatable({}, { __mode = "kv" })
 
     for key, val in pairs(baseCondition.operators) do
         operators[val.value] = val.label
@@ -743,7 +776,7 @@ function NemesisChat:GetConditionOperator()
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
-    
+
     return condition.operator
 end
 
@@ -771,12 +804,12 @@ end
 
 function NemesisChat:GetConditionValues()
     if selectedCondition == "" then
-        return setmetatable({}, {__mode = "kv"})
+        return setmetatable({}, { __mode = "kv" })
     end
 
     local condition = messageConditions[tonumber(selectedCondition)]
     local baseCondition = GetCondition(condition.left)
-    local values = setmetatable({}, {__mode = "kv"})
+    local values = setmetatable({}, { __mode = "kv" })
 
     for key, val in pairs(baseCondition.options) do
         values[val.value] = val.label
@@ -837,7 +870,7 @@ function NemesisChat:AddCondition()
     local condition = DeepCopy(core.runtimeDefaults.messageCondition)
 
     if type(messageConditions) ~= "table" then
-        messageConditions = setmetatable({}, {__mode = "kv"})
+        messageConditions = setmetatable({}, { __mode = "kv" })
     end
 
     table.insert(messageConditions, condition)
@@ -864,21 +897,9 @@ function NemesisChat:HideSave()
 end
 
 function NemesisChat:GetReplacements()
-    local resp = setmetatable({}, {__mode = "kv"})
+    local resp = setmetatable({}, { __mode = "kv" })
     for key in pairs(core.reference.replacements) do resp[key] = key end
     return resp
-end
-
-function NemesisChat:GetRefReplacement()
-    return selectedRefReplacement
-end
-
-function NemesisChat:SetRefReplacement(info, value)
-    selectedRefReplacement = value
-end
-
-function NemesisChat:GetRefReplacementText()
-    return core.reference.replacements[selectedRefReplacement]
 end
 
 function NemesisChat:UpdateMessagePreview()
@@ -904,7 +925,7 @@ function NemesisChat:UpdateMessagePreview()
         end
     end
 
-    local chatMsg = NCController:GetReplacedString(message, true)
+    local chatMsg = NCController:GetExampleString(message)
 
     messagePreview = color .. UnitName("player") .. spacer .. chatMsg .. "|r"
 
@@ -920,7 +941,8 @@ function HasConditions()
         return false
     end
 
-    return (#core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions or 0) > 0
+    return (#core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions or 0) >
+        0
 end
 
 function GetEventIndex()
@@ -949,11 +971,13 @@ function StoreMessage()
     saveMessage.conditions = messageConditions
 
     if selectedConfiguredMessage ~= "" then
-        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] = saveMessage
+        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] =
+            saveMessage
     else
         saveMessage.conditions = {}
         table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], saveMessage)
-        NemesisChat:SetConfiguredMessage(nil, #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] .. "")
+        NemesisChat:SetConfiguredMessage(nil,
+            #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] .. "")
     end
 
     NCController:PreprocessMessages()
@@ -1040,4 +1064,3 @@ end
 function IsValidReplacement(value)
     return core.numericReplacements[value] == 1
 end
-

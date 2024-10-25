@@ -7,6 +7,8 @@
 -----------------------------------------------------
 local _, core = ...;
 
+local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
+
 -----------------------------------------------------
 -- API model for interfacing with other addons
 -----------------------------------------------------
@@ -354,9 +356,9 @@ function NemesisChatAPI:GetAPIConfigOptions()
                     fontSize = "medium",
                     width = "full",
                     name = api.friendlyName ..
-                    " enables |c00ffcc00" ..
-                    replacementCount ..
-                    "|r text replacement tags and |c00ffcc00" .. subjectCount .. "|r condition subjects.",
+                        " enables |c00ffcc00" ..
+                        replacementCount ..
+                        "|r text replacement tags and |c00ffcc00" .. subjectCount .. "|r condition subjects.",
                 }
 
                 configOptions[name] = {
@@ -435,16 +437,18 @@ function NemesisChatAPI:SetAPIConfigOptions()
     local options, references, subjects, numericReplacements = NemesisChatAPI:GetAPIConfigOptions()
 
     core.apiConfigOptions = DeepCopy(options)
-    core.options.args.generalGroup.args.apis.args = DeepCopy(options)
+    core.options.args.apis.args = DeepCopy(options)
 
-    references.coreReplacements = DeepCopy(core.options.args.referenceGroup.args.textReplacements.args.coreReplacements)
-    core.options.args.referenceGroup.args.textReplacements.args = DeepCopy(references)
+    references.coreReplacements = DeepCopy(core.options.args.messagesGroup.args.referenceGroup.args.textReplacements
+        .args.coreReplacements)
+    core.options.args.messagesGroup.args.referenceGroup.args.textReplacements.args = DeepCopy(references)
 
     for i, subject in pairs(subjects) do
         table.insert(core.messageConditions, DeepCopy(subject))
     end
 
     core.numericReplacements = MapMerge(core.numericReplacementsCore, numericReplacements)
+    AceConfigRegistry:NotifyChange("NemesisChat_options")
 end
 
 function NemesisChatAPI:InitializeReplacements()

@@ -689,7 +689,8 @@ NCInfo = {
         local f = self.StatsFrame
         UIDropDownMenu_Initialize(f.playerDropdown, function(dropdown, level, menuList)
             if level == 1 then
-                if playerCount > 5 then
+                -- Only use raid groups if we actually have group data
+                if playerCount > 5 and dungeonData and next(dungeonData.RosterSnapshot) and dungeonData.RosterSnapshot[next(dungeonData.RosterSnapshot)].group then
                     self:CreateRaidGroupedDropdown(dropdown, level, dungeonData)
                 elseif playerCount > 1 then
                     self:CreateNormalDropdown(dropdown, level, dungeonData)
@@ -741,7 +742,10 @@ NCInfo = {
         if not dungeonData then return groupedPlayers end
 
         for name, player in pairs(dungeonData.RosterSnapshot) do
-            local subgroup = player.group or 1
+            -- Default to group 1 if no group is assigned
+            local subgroup = tonumber(player.group) or 1
+            -- Ensure subgroup is within valid range
+            subgroup = math.min(math.max(subgroup, 1), 8)
             table.insert(groupedPlayers[subgroup], { name = name, data = player })
         end
 
