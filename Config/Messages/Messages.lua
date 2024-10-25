@@ -17,30 +17,18 @@ core.options.args.messagesGroup.args.eventMessages = {
     name = "Event Messages",
     args = {
         messagesHeader = {
-            order = 0,
+            order = 1,
             type = "header",
             name = "Triggered Messages",
         },
         headerAndToggleGroup = {
-            order = 1,
+            order = 2,
             type = "group",
             inline = true,
             name = "Message Configuration",
             args = {
-                messagesDesc = {
-                    order = 1,
-                    type = "description",
-                    fontSize = "large",
-                    name = "General",
-                },
-                messagesPaddingUpper = {
-                    order = 2,
-                    type = "description",
-                    fontSize = "large",
-                    name = " ",
-                },
                 messagesEnabledToggle = {
-                    order = 3,
+                    order = 1,
                     type = "toggle",
                     name = "Enable Triggered Messages",
                     desc = "Enable or disable the sending of triggered messages.",
@@ -50,13 +38,13 @@ core.options.args.messagesGroup.args.eventMessages = {
             }
         },
         messagesPaddingUpper = {
-            order = 2,
+            order = 3,
             type = "description",
             fontSize = "large",
             name = " ",
         },
         messagesCategories = {
-            order = 3,
+            order = 4,
             type = "select",
             name = "Category",
             width = "full",
@@ -65,7 +53,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             set = "SetCategory"
         },
         messagesEvents = {
-            order = 4,
+            order = 5,
             type = "select",
             name = "Event",
             width = "full",
@@ -76,7 +64,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "IsEventsHidden",
         },
         messagesTargets = {
-            order = 5,
+            order = 6,
             type = "select",
             name = "Event Triggerer / Source",
             width = "full",
@@ -87,13 +75,13 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "IsTargetsHidden",
         },
         messagesConfigPaddingUpper = {
-            order = 6,
+            order = 7,
             type = "description",
             fontSize = "large",
             name = " ",
         },
         messagesDelete = {
-            order = 7,
+            order = 8,
             type = "execute",
             func = "DeleteMessage",
             name = "Delete",
@@ -101,7 +89,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             hidden = "NoMessageSelected"
         },
         messagesDeselect = {
-            order = 8,
+            order = 9,
             type = "execute",
             func = "DeselectMessage",
             name = "Deselect",
@@ -109,7 +97,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             hidden = "NoMessageSelected"
         },
         messagesDuplicate = {
-            order = 8.5,
+            order = 9.5,
             type = "execute",
             func = "DuplicateMessage",
             name = "Duplicate",
@@ -117,7 +105,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             hidden = "NoMessageSelected"
         },
         messagesConfigured = {
-            order = 9,
+            order = 10,
             type = "select",
             name = "Configured Messages",
             width = "full",
@@ -128,7 +116,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "ConfiguredMessagesDisabled",
         },
         messagesLabel = {
-            order = 10,
+            order = 11,
             type = "input",
             name = "Message Label",
             width = "full",
@@ -138,7 +126,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "IsMessageHidden",
         },
         messagesMessage = {
-            order = 11,
+            order = 12,
             type = "input",
             name = "Message",
             multiline = true,
@@ -149,7 +137,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "IsMessageHidden",
         },
         messagesChannel = {
-            order = 12,
+            order = 13,
             type = "select",
             name = "Chat Channel",
             width = "full",
@@ -160,7 +148,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "IsMessageHidden",
         },
         messagesChance = {
-            order = 13,
+            order = 14,
             type = "range",
             name = "Chance",
             desc = "The chance that this individual message will be sent. 0.0 (0%) to 1.0 (100%).",
@@ -174,7 +162,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "IsMessageHidden",
         },
         messagesPreviewHeader = {
-            order = 14,
+            order = 15,
             type = "description",
             fontSize = "medium",
             name = "\n|c00ffcc00Message Preview:|r\n",
@@ -182,7 +170,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "IsMessageHidden",
         },
         messagesPreview = {
-            order = 15,
+            order = 16,
             type = "description",
             name = function()
                 NemesisChat:UpdateMessagePreview()
@@ -192,28 +180,28 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "IsMessageHidden",
         },
         conditionsPaddingUpper = {
-            order = 16,
+            order = 17,
             type = "description",
             fontSize = "large",
             name = " ",
             hidden = "NoMessageSelected",
         },
         conditionsDesc = {
-            order = 17,
+            order = 18,
             type = "description",
             fontSize = "large",
             name = "Conditions",
             hidden = "NoMessageSelected",
         },
         conditionsPaddingLower = {
-            order = 18,
+            order = 19,
             type = "description",
             fontSize = "large",
             name = " ",
             hidden = "NoMessageSelected",
         },
         conditionsAdd = {
-            order = 19,
+            order = 20,
             type = "execute",
             func = "AddCondition",
             name = "Add",
@@ -221,7 +209,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             hidden = "NoMessageSelected"
         },
         conditionsDelete = {
-            order = 20,
+            order = 21,
             type = "execute",
             func = "DeleteCondition",
             name = "Delete",
@@ -229,7 +217,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             hidden = "NoConditionSelected"
         },
         conditions = {
-            order = 21,
+            order = 22,
             type = "select",
             name = "Condition",
             width = "full",
@@ -240,14 +228,14 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "NoMessageSelected",
         },
         conditionsPaddingButtons = {
-            order = 22,
+            order = 23,
             type = "description",
             fontSize = "medium",
             name = " ",
             hidden = "NoMessageSelected",
         },
         conditionSubject = {
-            order = 23,
+            order = 24,
             type = "select",
             name = "Subject",
             width = 0.90,
@@ -258,7 +246,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "NoConditionSelected",
         },
         conditionOperator = {
-            order = 24,
+            order = 25,
             type = "select",
             name = "Operator",
             width = 0.7,
@@ -269,7 +257,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = "NoConditionSelected",
         },
         conditionValueSelect = {
-            order = 25,
+            order = 26,
             type = "select",
             name = "Value",
             width = 0.83,
@@ -280,7 +268,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = function() return NemesisChat:ConditionIsInput() or IsNcOperator() end,
         },
         conditionValueInput = {
-            order = 25,
+            order = 26,
             type = "input",
             name = "Value",
             desc =
@@ -292,14 +280,14 @@ core.options.args.messagesGroup.args.eventMessages = {
             disabled = function() return NemesisChat:ConditionIsSelect() or IsNcOperator() end,
         },
         conditionsPaddingSaveDiscard = {
-            order = 26,
+            order = 27,
             type = "description",
             fontSize = "large",
             name = " ",
             hidden = "NoMessageSelected",
         },
         messagesSave = {
-            order = 27,
+            order = 28,
             type = "execute",
             func = "SaveMessage",
             name = "Save",
@@ -307,7 +295,7 @@ core.options.args.messagesGroup.args.eventMessages = {
             hidden = "HideSave"
         },
         messagesDiscard = {
-            order = 28,
+            order = 29,
             type = "execute",
             func = "DiscardChanges",
             name = "Discard",

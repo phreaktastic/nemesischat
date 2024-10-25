@@ -13,6 +13,7 @@ core.options.args.messagesGroup.args.segmentMessages = {
     order = 3,
     type = "group",
     name = "Segment Summaries",
+    childGroups = "tree",
     args = {
         generalHeader = {
             order = 0,

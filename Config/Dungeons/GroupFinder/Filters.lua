@@ -11,6 +11,23 @@ core.options.args.dungeonGroup.args.lfgTools.args.filterSettings = {
     type = "group",
     name = "Applicant Filters",
     args = {
+        notifications = {
+            order = 0,
+            type = "group",
+            name = "Filter Notifications",
+            inline = true,
+            args = {
+                popupForDeclining = {
+                    order = 1,
+                    type = "toggle",
+                    name = "Show Decline Popup",
+                    desc = "Display a popup when an applicant is filtered, allowing you to decline their application.",
+                    width = "full",
+                    get = function() return NCConfig:IsPopupOnIgnoredApplicants() end,
+                    set = function() NCConfig:TogglePopupOnIgnoredApplicants() end,
+                }
+            }
+        },
         realms = {
             order = 1,
             type = "group",
@@ -69,7 +86,6 @@ core.options.args.dungeonGroup.args.lfgTools.args.filterSettings = {
                     name = "Allowed Classes",
                     desc = "Select classes to allow. If none are selected, all classes are allowed.",
                     values = classTable,
-                    width = "full",
                     get = function(_, key)
                         local list = NCConfig:GetAllowedClasses()
                         return list and tContains(list, key) or false
@@ -90,7 +106,6 @@ core.options.args.dungeonGroup.args.lfgTools.args.filterSettings = {
                     name = "Ignored Classes",
                     desc = "Select classes to ignore. These classes will be filtered out.",
                     values = classTable,
-                    width = "full",
                     get = function(_, key)
                         local list = NCConfig:GetIgnoredClasses()
                         return list and tContains(list, key) or false
@@ -125,7 +140,6 @@ core.options.args.dungeonGroup.args.lfgTools.args.filterSettings = {
                     name = "Allowed Specs",
                     desc = "Select specs to allow. If none are selected, all specs are allowed.",
                     values = specTable,
-                    width = "full",
                     get = function(_, key)
                         local list = NCConfig:GetAllowedSpecs()
                         return list and tContains(list, key) or false
@@ -146,7 +160,6 @@ core.options.args.dungeonGroup.args.lfgTools.args.filterSettings = {
                     name = "Ignored Specs",
                     desc = "Select specs to ignore. These specs will be filtered out.",
                     values = specTable,
-                    width = "full",
                     get = function(_, key)
                         local list = NCConfig:GetIgnoredSpecs()
                         return list and tContains(list, key) or false
@@ -163,22 +176,5 @@ core.options.args.dungeonGroup.args.lfgTools.args.filterSettings = {
                 },
             }
         },
-        notifications = {
-            order = 4,
-            type = "group",
-            name = "Filter Notifications",
-            inline = true,
-            args = {
-                popupForDeclining = {
-                    order = 1,
-                    type = "toggle",
-                    name = "Show Decline Popup",
-                    desc = "Display a popup when an applicant is filtered, allowing you to decline their application.",
-                    width = "full",
-                    get = function() return NCConfig:IsPopupOnIgnoredApplicants() end,
-                    set = function() NCConfig:TogglePopupOnIgnoredApplicants() end,
-                }
-            }
-        }
     }
 }
