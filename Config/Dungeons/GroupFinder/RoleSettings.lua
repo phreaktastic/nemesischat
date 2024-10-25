@@ -2,10 +2,39 @@
 -- Group Finder Role Settings Configuration
 -----------------------------------------------------
 local _, core = ...;
+local L = _G.NCL
+local AceGUI = LibStub("AceGUI-3.0")
 
 local soundTable, soundTableSortKeys = GetSoundTable()
 local minItemLevelMin = 0
 local minItemLevelMax = 650
+local Type = _G.NCL.SoundDropdown.Type
+if not AceGUI:GetWidgetVersion(Type) then
+    LibStub("AceGUI-3.0"):RegisterWidgetType(
+        Type,
+        _G.NCL.SoundDropdown.Constructor,
+        _G.NCL.SoundDropdown.Version
+    )
+end
+
+-- Create the dropdown menu with preview buttons
+local function CreateSoundDropdown(role, order)
+    return {
+        order = order,
+        type = "select",
+        dialogControl = "NCSoundDropdown", -- Specify our custom control
+        name = "Notification Sound",
+        desc = "Sound to play when a " .. role .. " applies",
+        values = soundTable,
+        sorting = soundTableSortKeys,
+        width = "full",
+        get = function() return NCConfig:GetRoleSound(role) end,
+        set = function(_, value)
+            NCConfig:SetRoleSound(role, value)
+        end,
+        disabled = function() return not NCConfig:IsRoleEnabled(role) end
+    }
+end
 
 core.options.args.dungeonGroup.args.lfgTools.args.roleSettings = {
     order = 2,
@@ -25,22 +54,20 @@ core.options.args.dungeonGroup.args.lfgTools.args.roleSettings = {
                     desc = "Enable notifications for tank applicants",
                     width = "full",
                     get = function() return NCConfig:IsRoleEnabled("tank") end,
-                    set = function(_, value) NCConfig:ToggleRoleEnabled("tank") end,
+                    set = function() NCConfig:ToggleRoleEnabled("tank") end,
                 },
-                notification = {
+                chat = {
                     order = 2,
-                    type = "select",
-                    name = "Notification Sound",
-                    desc = "Sound to play when a tank applies",
-                    values = soundTable,
-                    sorting = soundTableSortKeys,
+                    type = "toggle",
+                    name = "Tank Chat Announcements",
+                    desc = "Enable chat announcements for tank applicants",
                     width = "full",
-                    get = function() return NCConfig:GetRoleSound("tank") end,
-                    set = function(_, value) NCConfig:SetRoleSound("tank", value) end,
-                    disabled = function() return not NCConfig:IsRoleEnabled("tank") end,
+                    get = function() return NCConfig:IsRoleChatEnabled("tank") end,
+                    set = function() NCConfig:ToggleRoleChatEnabled("tank") end,
                 },
+                notification = CreateSoundDropdown("tank", 3),
                 requirements = {
-                    order = 3,
+                    order = 4,
                     type = "group",
                     name = "Tank Requirements",
                     inline = true,
@@ -86,22 +113,20 @@ core.options.args.dungeonGroup.args.lfgTools.args.roleSettings = {
                     desc = "Enable notifications for healer applicants",
                     width = "full",
                     get = function() return NCConfig:IsRoleEnabled("healer") end,
-                    set = function(_, value) NCConfig:ToggleRoleEnabled("healer") end,
+                    set = function() NCConfig:ToggleRoleEnabled("healer") end,
                 },
-                notification = {
+                chat = {
                     order = 2,
-                    type = "select",
-                    name = "Notification Sound",
-                    desc = "Sound to play when a healer applies",
-                    values = soundTable,
-                    sorting = soundTableSortKeys,
+                    type = "toggle",
+                    name = "Healer Chat Announcements",
+                    desc = "Enable chat announcements for healer applicants",
                     width = "full",
-                    get = function() return NCConfig:GetRoleSound("healer") end,
-                    set = function(_, value) NCConfig:SetRoleSound("healer", value) end,
-                    disabled = function() return not NCConfig:IsRoleEnabled("healer") end,
+                    get = function() return NCConfig:IsRoleChatEnabled("healer") end,
+                    set = function() NCConfig:ToggleRoleChatEnabled("healer") end,
                 },
+                notification = CreateSoundDropdown("healer", 3),
                 requirements = {
-                    order = 3,
+                    order = 4,
                     type = "group",
                     name = "Healer Requirements",
                     inline = true,
@@ -147,22 +172,20 @@ core.options.args.dungeonGroup.args.lfgTools.args.roleSettings = {
                     desc = "Enable notifications for DPS applicants",
                     width = "full",
                     get = function() return NCConfig:IsRoleEnabled("dps") end,
-                    set = function(_, value) NCConfig:ToggleRoleEnabled("dps") end,
+                    set = function() NCConfig:ToggleRoleEnabled("dps") end,
                 },
-                notification = {
+                chat = {
                     order = 2,
-                    type = "select",
-                    name = "Notification Sound",
-                    desc = "Sound to play when a DPS applies",
-                    values = soundTable,
-                    sorting = soundTableSortKeys,
+                    type = "toggle",
+                    name = "DPS Chat Announcements",
+                    desc = "Enable chat announcements for DPS applicants",
                     width = "full",
-                    get = function() return NCConfig:GetRoleSound("dps") end,
-                    set = function(_, value) NCConfig:SetRoleSound("dps", value) end,
-                    disabled = function() return not NCConfig:IsRoleEnabled("dps") end,
+                    get = function() return NCConfig:IsRoleChatEnabled("dps") end,
+                    set = function() NCConfig:ToggleRoleChatEnabled("dps") end,
                 },
+                notification = CreateSoundDropdown("dps", 3),
                 requirements = {
-                    order = 3,
+                    order = 4,
                     type = "group",
                     name = "DPS Requirements",
                     inline = true,

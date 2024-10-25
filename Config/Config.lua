@@ -7,218 +7,97 @@ local AC = LibStub("AceConfig-3.0")
 local ACD = LibStub("AceConfigDialog-3.0")
 local AceGUI = LibStub("AceGUI-3.0")
 
--- Centralize all defaults
-core.defaults = {
-    profile = {
-        -- Core Settings
-        enabled = true,
-        debug = false,
+-- Spacing constants
+local VERTICAL_GAP = 20 -- Base gap between elements
+local SECTION_GAP = 50  -- Larger gap between sections
+local GROUP_GAP = 30    -- Gap between grouped elements
 
-        -- Message System
-        messageSystem = {
-            enabled = true,
+-- Spacing enhancements
+local function EnhanceOptionsSpacing(options)
+    if type(options) ~= "table" then return options end
 
-            -- Combat Settings
-            nonCombatMode = true,
-            interruptException = true,
-            deathException = true,
-            avoidableDamageException = true,
+    local function processGroup(group)
+        if type(group) ~= "table" then return end
 
-            -- Game Integration
-            allowBrannMessages = true,
-            flagFriendsAsNemeses = false,
-            flagGuildmatesAsNemeses = false,
+        -- First pass: collect and sort elements by order
+        local elements = {}
+        for name, opt in pairs(group) do
+            if type(opt) == "table" then
+                elements[#elements + 1] = { name = name, opt = opt, order = opt.order or 100 }
+            end
+        end
+        table.sort(elements, function(a, b) return (a.order or 100) < (b.order or 100) end)
 
-            globalSettings = {
-                useGlobalChance = false,
-                globalChance = 0.5,
-                minimumTime = 1,
-                rollingMessages = true,
-                defaultChannel = "GROUP",
-                excludeNemeses = false,
+        -- Second pass: adjust spacing
+        local lastOrder = 0
+        for i, element in ipairs(elements) do
+            local opt = element.opt
 
-                -- UI State Settings
-                currentMessage = "",
-                currentCategory = "",
-                currentEvent = "",
-                currentTarget = "",
+            -- Base enhancements
+            if not opt.width then
+                -- opt.width = "full"
+            end
 
-                -- Preview Settings
-                previewSpell = nil,
-                lastPreviewUpdate = 0
-            },
-            categories = {
-                combat = {
-                    enabled = true,
-                    types = {
-                        damage = {
-                            enabled = true,
-                            reportTop = false,
-                            reportBottom = false,
-                            triggers = {
-                                afterCombat = false,
-                                afterBoss = false,
-                                afterDungeon = false
-                            }
-                        },
-                        interrupts = {
-                            enabled = true,
-                            reportTop = false,
-                            reportBottom = false,
-                            triggers = {
-                                afterCombat = false,
-                                afterBoss = false,
-                                afterDungeon = false
-                            }
-                        },
-                        avoidable = {
-                            enabled = true,
-                            reportTop = false,
-                            reportBottom = false,
-                            triggers = {
-                                afterCombat = false,
-                                afterBoss = false,
-                                afterDungeon = false
-                            }
-                        },
-                        deaths = {
-                            enabled = true,
-                            reportTop = false,
-                            reportBottom = false,
-                            triggers = {
-                                afterCombat = false,
-                                afterBoss = false,
-                                afterDungeon = false
-                            }
-                        },
-                        offHeals = {
-                            enabled = true,
-                            reportTop = false,
-                            reportBottom = false,
-                            triggers = {
-                                afterCombat = false,
-                                afterBoss = false,
-                                afterDungeon = false
-                            }
-                        }
-                    }
-                },
-                dungeon = {
-                    enabled = true,
-                    types = {
-                        pulls = {
-                            enabled = true,
-                            realtime = false,
-                            channel = "SAY",
-                            showToast = false
-                        },
-                        completion = {
-                            enabled = true,
-                            reportStats = true,
-                            reportLowPerformers = false
-                        },
-                        failure = {
-                            enabled = true,
-                            reportStats = true,
-                            reportLowPerformers = true
-                        }
-                    }
-                },
-                player = {
-                    enabled = true,
-                    types = {
-                        join = {
-                            enabled = true,
-                            reportLeaverHistory = true,
-                            leaverThreshold = 5,
-                            reportPerformanceHistory = true,
-                            performanceThreshold = 5
-                        },
-                        leave = {
-                            enabled = true,
-                            trackHistory = true
-                        }
-                    }
-                }
-            }
-        },
+            if opt.type == "description" then
+                if not opt.fontSize then
+                    opt.fontSize = "medium"
+                end
+                if not opt.descStyle then
+                    opt.descStyle = "inline"
+                end
+            end
 
-        -- LFG Settings
-        lfg = {
-            applicants = {
-                global = {
-                    minItemLevel = 0,
-                    minDungeonScore = 0,
-                    popupOnIgnoredApplicants = false,
-                    allowedRealms = {},
-                    ignoredRealms = {},
-                    allowedClasses = {},
-                    ignoredClasses = {},
-                    allowedSpecs = {},
-                    ignoredSpecs = {},
-                },
-                roles = {
-                    tank = {
-                        enabled = true,
-                        sound = 8959,
-                        chat = true,
-                        minItemLevel = 0,
-                        minDungeonScore = 0,
-                    },
-                    healer = {
-                        enabled = true,
-                        sound = 8959,
-                        chat = true,
-                        minItemLevel = 0,
-                        minDungeonScore = 0,
-                    },
-                    dps = {
-                        enabled = true,
-                        sound = 18019,
-                        chat = true,
-                        minItemLevel = 0,
-                        minDungeonScore = 0,
-                    }
-                }
-            }
-        },
+            -- Adjust order for spacing
+            local baseOrder = i * 10
 
-        -- Storage
-        messages = {},
-        nemeses = {},
-        api = {},
-        leavers = {},
-        lowPerformers = {},
+            -- Add extra spacing after headers and certain elements
+            if opt.type == "header" then
+                baseOrder = baseOrder + GROUP_GAP
+            elseif opt.type == "description" and opt.fontSize == "large" then
+                baseOrder = baseOrder + SECTION_GAP
+            else
+                baseOrder = baseOrder + VERTICAL_GAP
+            end
 
-        -- UI Settings
-        statsFrame = {
-            point = "CENTER",
-            relativeTo = "UIParent",
-            relativePoint = "CENTER",
-            xOfs = 0,
-            yOfs = 0,
-            width = 400,
-            height = 400,
-        },
+            opt.order = baseOrder
+            lastOrder = baseOrder
 
-        -- Cache
-        cache = {
-            guild = {},
-            guildTime = 0,
-            friends = {},
-            friendsTime = 0,
-            groupRoster = {},
-            groupRosterTime = 0,
-            ncDungeon = {},
-            dungeonRankings = {},
-            ncDungeonTime = 0,
-        },
-    },
-}
+            -- Process nested groups
+            if opt.type == "group" then
+                if not opt.childGroups then
+                    opt.childGroups = "tab"
+                end
+
+                if opt.args then
+                    processGroup(opt.args)
+                end
+            end
+        end
+    end
+
+    if options.args then
+        processGroup(options.args)
+    end
+
+    return options
+end
+
+-- Hook AceConfig registration
+local originalRegister = AC.RegisterOptionsTable
+AC.RegisterOptionsTable = function(self, appName, options, ...)
+    if type(options) == "function" then
+        local oldFunc = options
+        options = function(...)
+            return EnhanceOptionsSpacing(oldFunc(...))
+        end
+    else
+        options = EnhanceOptionsSpacing(options)
+    end
+
+    return originalRegister(self, appName, options, ...)
+end
 
 -- Main options table structure
-local _, core = ...;
-
 core.options = {
     name = "Nemesis Chat",
     handler = NemesisChat,
@@ -318,41 +197,9 @@ core.options = {
     }
 }
 
--- Shared UI components
-local function CustomSpacingLayout(content, children)
-    local height = 0
-    for i, child in ipairs(children) do
-        local spacing = 60
-        child.frame:ClearAllPoints()
-
-        if i == 1 then
-            child.frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -10)
-            child.frame:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-        else
-            child.frame:SetPoint("TOPLEFT", children[i - 1].frame, "BOTTOMLEFT", 0, -spacing)
-            child.frame:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-
-            child.frame:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                tile = true,
-                tileSize = 16,
-                edgeSize = 16,
-                insets = { left = 4, right = 4, top = 4, bottom = 4 }
-            })
-        end
-
-        height = height + child.frame:GetHeight() + spacing
-    end
-    content:SetHeight(height)
-end
-
 -- Initialize configuration
 function NemesisChat:InitializeConfig()
     if self.configInitialized then return end
-
-    -- Register custom layout
-    AceGUI:RegisterLayout("NCSpacing", CustomSpacingLayout)
 
     -- Register options table
     AC:RegisterOptionsTable("NemesisChat_options", core.options)

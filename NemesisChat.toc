@@ -5,10 +5,13 @@
 ## Notes: The event-driven, targeted message framework.
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB
-## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibToast, LibCompress, LibSerialize
+## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibToast, LibCompress, LibSerialize, LibSharedMedia, LibUIDropDownMenu-4.0
 
 # Third party libraries
 Embeds.xml
+
+# Core Localization
+Locales\enUS.lua
 
 # NC Lookup Tables
 LookupTables\SoundTable.lua
@@ -16,8 +19,12 @@ LookupTables\ClassTable.lua
 LookupTables\SpecTable.lua
 LookupTables\IconTable.lua
 
+# Custom Widgets
+Widgets\SoundDropdown.lua
+
 # Core NC initialization
 Init.lua
+Config\Core\Defaults.lua
 Config\Config.lua
 
 # Core NC models
@@ -35,6 +42,8 @@ Config\Messages\Reports.lua
 Config\Dungeons\GroupFinder\GlobalSettings.lua
 Config\Dungeons\GroupFinder\RoleSettings.lua
 Config\Dungeons\GroupFinder\Filters.lua
+Config\Dungeons\Delves.lua
+Config\Dungeons\MythicPlus.lua
 Config\UI\Nemeses.lua
 Config\UI\Reference.lua
 

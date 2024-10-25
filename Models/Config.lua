@@ -294,6 +294,10 @@ NCConfig = {
         self.MessageSystemDB:SetPath("categories.dungeon.types.pulls.realtime", value)
     end,
 
+    ToggleReportingPulls_Realtime = function(self)
+        self.MessageSystemDB:TogglePath("categories.dungeon.types.pulls.realtime")
+    end,
+
     GetReportingPulls_Channel = function(self)
         return self.MessageSystemDB:GetPath("categories.dungeon.types.pulls.channel")
     end,

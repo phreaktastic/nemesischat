@@ -496,57 +496,6 @@ core.options.args.messagesGroup.args.segmentMessages = {
                 },
             }
         },
-        pulls = {
-            order = 12,
-            type = "group",
-            name = "Pulls",
-            args = {
-                pullsHeader = {
-                    order = 0,
-                    type = "header",
-                    name = "Pull Announcement",
-                },
-                pullsPaddingTop = {
-                    order = 1,
-                    type = "description",
-                    fontSize = "large",
-                    name = " ",
-                },
-                pullsToggle = {
-                    order = 2,
-                    type = "toggle",
-                    name = "Announce Non-Tank Pulls",
-                    desc =
-                    "Announce non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls). This will be announced in real-time.",
-                    descStyle = "inline",
-                    width = "full",
-                    get = function() return NCConfig:IsReportingPulls_Realtime() end,
-                    set = function() NCConfig:ToggleReportingPulls_Realtime() end,
-                },
-                pullsChannel = {
-                    order = 3,
-                    type = "select",
-                    name = "Announcement Channel",
-                    desc = "Select the channel to report pulls to",
-                    descStyle = "inline",
-                    width = "full",
-                    values = function() return core.channels end,
-                    get = function() return NCConfig:GetReportingPulls_Channel() end,
-                    set = function(info, value) NCConfig:SetReportingPulls_Channel(value) end,
-                },
-                pullsToastToggle = {
-                    order = 4,
-                    type = "toggle",
-                    name = "Toast Non-Tank Pulls",
-                    desc =
-                    "Show a toast notification for non-tank pulls which seem to be accidental or hazardous in nature (butt pulls and damage pulls).",
-                    descStyle = "inline",
-                    width = "full",
-                    get = function() return NCConfig:IsReportingPulls_Toast() end,
-                    set = function() NCConfig:ToggleReportingPulls_Toast() end,
-                },
-            }
-        },
     },
 }
 
