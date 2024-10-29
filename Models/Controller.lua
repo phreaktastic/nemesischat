@@ -77,7 +77,7 @@ function NCController:PreprocessMessages()
 
     local tempCache = {}
 
-    for category, events in pairs(core.db.profile.messages) do
+    for category, events in pairs(NCConfig:GetMessages()) do
         for event, targets in pairs(events) do
             for target, messages in pairs(targets) do
                 if target ~= "NEMESIS" or NCRuntime:HasNemesis() then
@@ -541,22 +541,6 @@ function NCController:IsValidMessage(message)
         return false
     end
     return true
-end
-
--- Get a pool of conditional messages pertaining to the current scenarios
-function NCController:GetConditionalMessages(pool)
-    local conditionalMessages = {}
-    local unconditionalMessages = {}
-
-    for _, message in ipairs(pool) do
-        if message.conditions and #message.conditions > 0 then
-            table.insert(conditionalMessages, message)
-        else
-            table.insert(unconditionalMessages, message)
-        end
-    end
-
-    return #conditionalMessages > 0 and conditionalMessages or unconditionalMessages
 end
 
 function NCController:CheckAllConditions(message)

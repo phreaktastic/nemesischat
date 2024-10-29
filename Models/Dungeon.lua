@@ -79,12 +79,12 @@ function NCDungeon:UpdateCache()
     backup.Level = self:GetLevel()
     backup.Affixes = self:GetKeystoneAffixes()
     backup.TimeLimit = self:GetTimeLimit()
-    core.db.profile.cache.NCDungeon = backup
-    core.db.profile.cache.DungeonRankings = self.Rankings:GetBackup()
+    NCConfig:SetPath("cache.NCDungeon", backup)
+    NCConfig:SetPath("cache.DungeonRankings", self.Rankings:GetBackup())
 end
 
 function NCDungeon:CheckCache()
-    local cachedDungeon = core.db.profile.cache.NCDungeon
+    local cachedDungeon = NCConfig:GetPath("cache.NCDungeon")
 
     if cachedDungeon ~= nil and cachedDungeon ~= {} and cachedDungeon.Identifier and cachedDungeon.Identifier ~= "DUNGEON" then
         if cachedDungeon.backupTime and cachedDungeon.backupTime < GetTime() - 300 then
@@ -112,9 +112,9 @@ function NCDungeon:CheckCache()
 end
 
 function NCDungeon:ClearCache()
-    core.db.profile.cache.NCDungeon = {}
-    core.db.profile.cache.NCDungeonTime = 0
-    core.db.profile.cache.DungeonRankings = {}
+    NCConfig:SetPath("cache.NCDungeon", {})
+    NCConfig:SetPath("cache.NCDungeonTime", 0)
+    NCConfig:SetPath("cache.DungeonRankings", {})
 end
 
 function NCDungeon:RestoreCallback(backup)

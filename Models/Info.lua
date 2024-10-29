@@ -381,7 +381,7 @@ NCInfo = {
             content.compareCheckbox:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -5)
             content.compareCheckbox:SetSize(16, 16) -- Set a smaller size
             content.compareCheckbox:SetScript("OnClick", function(self)
-                core.db.profile.infoClickCompare = self:GetChecked()
+                NCConfig:Set("infoClickCompare", self:GetChecked())
                 NCInfo:Update()
             end)
             content.compareCheckbox.text = content.compareCheckbox:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -485,7 +485,7 @@ NCInfo = {
     UpdateCompareCheckbox = function(self)
         local checkbox = self.StatsFrame.scrollFrame.scrollChild.compareCheckbox
         if checkbox then
-            checkbox:SetChecked(core.db.profile.infoClickCompare)
+            checkbox:SetChecked(NCConfig:Get("infoClickCompare"))
         end
     end,
 
@@ -590,7 +590,7 @@ NCInfo = {
 
         row.columns[2]:SetText(NemesisChat:FormatNumber(value))
 
-        if core.db.profile.infoClickCompare and self.CurrentPlayer ~= UnitName("player") then
+        if NCConfig:Get("infoClickCompare") and self.CurrentPlayer ~= UnitName("player") then
             local myStat = self:GetDungeonStat(dungeonData, UnitName("player"), statType)
             local delta = value - myStat
 
@@ -984,7 +984,7 @@ NCInfo = {
             message = string.format("%s for %s (%s): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player,
                 dungeonData.Identifier or "dungeon",
                 NemesisChat:FormatNumber(self:GetDungeonStat(dungeonData, player, metric)))
-            if core.db.profile.infoClickCompare then
+            if NCConfig:Get("infoClickCompare") then
                 local delta = self:GetDungeonStat(dungeonData, player, metric) -
                     self:GetDungeonStat(dungeonData, UnitName("player"), metric)
                 if delta > 0 then

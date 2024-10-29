@@ -1,0 +1,254 @@
+local lfs = require("lfs")
+
+package.path = package.path .. ";Development/Checks/?.lua;Development/Checks/Core/?.lua"
+
+-- Utility Functions
+local function readFile(path)
+    local file = io.open(path, "r")
+    if not file then return nil end
+    local content = file:read("*all")
+    file:close()
+    return content
+end
+
+local function splitString(input, delimiter)
+    local result = {}
+    for match in (input .. delimiter):gmatch("(.-)" .. delimiter) do
+        table.insert(result, match)
+    end
+    return result
+end
+
+local function trim(s)
+    return s:match("^%s*(.-)%s*$")
+end
+
+local function cleanLine(line, options)
+    options = options or {
+        removeComments = true,
+        removeDoubleQuotes = true,
+        removeSingleQuotes = true
+    }
+
+    local clean_line = line
+    if options.removeComments then
+        clean_line = clean_line:gsub("%-%-.*", "")
+    end
+    if options.removeDoubleQuotes then
+        clean_line = clean_line:gsub([["(.-)"]], "")
+    end
+    if options.removeSingleQuotes then
+        clean_line = clean_line:gsub([['(.-)']], "")
+    end
+    return clean_line
+end
+
+-- Check Discovery and Loading
+local function discoverChecks(checksDir, skippedChecks)
+    local checks = {}
+    skippedChecks = skippedChecks or {}
+
+    -- Convert skipped checks to a lookup table
+    local skipLookup = {}
+    for _, name in ipairs(skippedChecks) do
+        skipLookup[name] = true
+    end
+
+    -- Get the directory of the current script
+    local script_dir = debug.getinfo(1).source:match("@?(.*/)") or ""
+    checksDir = script_dir .. checksDir
+
+    for file in lfs.dir(checksDir) do
+        -- Skip . and .. directories, Core directory, and any files that don't end in Check.lua
+        if file ~= "." and file ~= ".." and file ~= "Core" and file:match("Check%.lua$") then
+            local checkName = file:match("(.+)%.lua$")
+            if not skipLookup[checkName] then
+                -- Load the file directly instead of using require
+                local checkPath = checksDir .. "/" .. file
+                local f, err = loadfile(checkPath)
+                if f then
+                    local success, check = pcall(f)
+                    if success and check then
+                        if type(check.new) == "function" then
+                            local instance = check.new()
+                            if instance.check and instance.getErrorMessage then
+                                table.insert(checks, instance)
+                            else
+                                print(string.format("Warning: %s missing required methods", checkName))
+                            end
+                        else
+                            print(string.format("Warning: %s missing .new() constructor", checkName))
+                        end
+                    else
+                        print(string.format("Warning: Failed to execute %s: %s", checkName, check))
+                    end
+                else
+                    print(string.format("Warning: Failed to load %s: %s", checkName, err))
+                end
+            else
+                print(string.format("Skipping check: %s", checkName))
+            end
+        end
+    end
+
+    return checks
+end
+
+-- Check Management
+local summary = {}
+
+local function initSummary(checks)
+    for _, check in ipairs(checks) do
+        summary[check.name] = {
+            warnings = 0,
+            files = 0,
+            name = check.name,
+            severity = check.severity
+        }
+    end
+end
+
+local function shouldExcludeLine(check, full_path, line_number)
+    if not check.exclusions then return false end
+
+    local relative_path = full_path:gsub("^%./", ""):gsub("\\", "/")
+
+    for _, exclusion in ipairs(check.exclusions) do
+        local exclude_file, exclude_lines = exclusion:match("([^:]+):(.+)")
+        if exclude_file and exclude_lines then
+            if relative_path:match(exclude_file .. "$") then
+                for line in exclude_lines:gmatch("([^,]+)") do
+                    if tonumber(trim(line)) == line_number then
+                        return true
+                    end
+                end
+            end
+        elseif relative_path:match(exclusion .. "$") then
+            return true
+        end
+    end
+    return false
+end
+
+local function runFileChecks(directory, checks, global_exclusion_pattern, verbose)
+    for file in lfs.dir(directory) do
+        if file ~= "." and file ~= ".." then
+            local full_path = directory .. "/" .. file
+            local attr = lfs.attributes(full_path)
+
+            if attr.mode == "directory" then
+                runFileChecks(full_path, checks, global_exclusion_pattern, verbose)
+            elseif file:match("%.lua$") and not full_path:match(global_exclusion_pattern) then
+                local content = readFile(full_path)
+                if content then
+                    if global_exclusion_pattern and content:find(global_exclusion_pattern) then
+                        return
+                    end
+
+                    for _, check in ipairs(checks) do
+                        if (not check.exclusion_pattern or check.exclusion_pattern == "" or
+                            (not content:find(check.exclusion_pattern) and not full_path:match(check.exclusion_pattern))) then
+
+                            local cleaned_content = {}
+                            for line_number, line in ipairs(splitString(content, "\n")) do
+                                cleaned_content[line_number] = cleanLine(line, check.cleanOptions)
+                            end
+                            local cleaned_text = table.concat(cleaned_content, "\n")
+
+                            local summaryRow = summary[check.name]
+                            local found, lineNumbers, context = check:check(full_path, cleaned_text, function(line_number)
+                                return shouldExcludeLine(check, full_path, line_number)
+                            end)
+
+                            if found and lineNumbers and type(lineNumbers) == "table" then
+                                local filtered_lines = {}
+                                local filtered_context = {}
+                                for i, line_number in ipairs(lineNumbers) do
+                                    if not shouldExcludeLine(check, full_path, line_number) then
+                                        table.insert(filtered_lines, line_number)
+                                        if context then
+                                            table.insert(filtered_context, context[i])
+                                        end
+                                    end
+                                end
+
+                                if #filtered_lines > 0 and summaryRow then
+                                    if check.severity == "ERROR" or verbose then
+                                        print(check:getErrorMessage(full_path, filtered_lines, filtered_context))
+                                    end
+                                    summaryRow.warnings = summaryRow.warnings + #filtered_lines
+                                    summaryRow.files = summaryRow.files + 1
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function printSummary()
+    for _, check_summary in pairs(summary) do
+        print("\n\n############################")
+        print(check_summary.name)
+        print("############################")
+        print(string.format("%d file%s with %d %s%s",
+            check_summary.files,
+            (check_summary.files ~= 1 and "s" or ""),
+            check_summary.warnings,
+            check_summary.severity:lower(),
+            (check_summary.warnings and check_summary.warnings ~= 1 and "s" or "")
+        ))
+    end
+end
+
+-- Parse Arguments
+local function parseArgs()
+    local args = {
+        verbose = false,
+        skip = {},
+        directory = "."
+    }
+
+    local i = 1
+    while i <= #arg do
+        if arg[i] == "--verbose" then
+            args.verbose = true
+        elseif arg[i] == "--skip" then
+            i = i + 1
+            while i <= #arg and not arg[i]:match("^%-%-") do
+                table.insert(args.skip, arg[i])
+                i = i + 1
+            end
+            i = i - 1
+        elseif arg[i] == "--dir" then
+            i = i + 1
+            if i <= #arg then
+                args.directory = arg[i]
+            end
+        end
+        i = i + 1
+    end
+
+    return args
+end
+
+-- Main Execution
+local function main()
+    local args = parseArgs()
+    local checks = discoverChecks("Development/Checks", args.skip)
+
+    if #checks == 0 then
+        print("No valid checks were found!")
+        return
+    end
+
+    local global_exclusion_pattern = "Libs/.*%.lua$"
+
+    initSummary(checks)
+    runFileChecks(args.directory, checks, global_exclusion_pattern, args.verbose)
+    printSummary()
+end
+
+main()

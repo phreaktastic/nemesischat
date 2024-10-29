@@ -52,8 +52,8 @@ core.options.args.messagesGroup.args.segmentMessages = {
             width = "full",
             disabled = true,
             hidden = true,
-            get = function() return core.db.profile.reportConfig.excludeNemeses end,
-            set = function(info, value) core.db.profile.reportConfig.excludeNemeses = value end,
+            get = function() return NCConfig:IsExcludingNemeses() end,
+            set = function(info, value) NCConfig:SetExcludingNemeses(value) end,
         },
         reportLowPerformersOnWipeToggle = {
             order = 5,
@@ -64,8 +64,8 @@ core.options.args.messagesGroup.args.segmentMessages = {
             width = "full",
             disabled = true,
             hidden = true,
-            get = function() return core.db.profile.reportConfig.reportLowPerformersOnWipe end,
-            set = function(info, value) core.db.profile.reportConfig.reportLowPerformersOnWipe = value end,
+            get = function() return NCConfig:IsReportingLowPerformersOnWipe() end,
+            set = function(info, value) NCConfig:ToggleReportingLowPerformersOnWipe(value) end,
         },
         reportLowPerformersOnDungeonFailToggle = {
             order = 6,
@@ -76,8 +76,8 @@ core.options.args.messagesGroup.args.segmentMessages = {
             width = "full",
             disabled = true,
             hidden = true,
-            get = function() return core.db.profile.reportConfig.reportLowPerformersOnDungeonFail end,
-            set = function(info, value) core.db.profile.reportConfig.reportLowPerformersOnDungeonFail = value end,
+            get = function() return NCConfig:IsReportingLowPerformersOnDungeonFail() end,
+            set = function(info, value) NCConfig:ToggleReportingLowPerformersOnDungeonFail(value) end,
         },
         interrupts = {
             order = 7,
@@ -109,7 +109,7 @@ core.options.args.messagesGroup.args.segmentMessages = {
                             descStyle = "inline",
                             width = "full",
                             get = function() return NCConfig:IsReportingInterrupts_Top() end,
-                            set = function(info, value) NCConfig:SetReportingInterrupts_Top(value) end,
+                            set = function() NCConfig:ToggleReportingInterrupts_Top() end,
                         },
                         bottomInterruptsToggle = {
                             order = 2,

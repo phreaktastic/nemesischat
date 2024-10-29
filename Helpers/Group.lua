@@ -154,8 +154,7 @@ function NemesisChat:ProcessLeaves(leaves)
         if playerName and playerName ~= GetMyName() then
             local player = groupRoster[playerName]
             if not player then
-                player = core.db.profile.cache.groupRoster and
-                    core.db.profile.cache.groupRoster[playerName] or nil
+                player = NCConfig:GetCacheValue("groupRoster." .. playerName) or nil
             end
             if player then
                 if #leaves < 3 then
@@ -198,7 +197,7 @@ end
 function NemesisChat:FindOfflineLeaver(player, playerName)
     -- Check the roster for an offline player to report as the leaver
     -- This ensures that if a player leaves due to a DC, that player isn't reported as a leaver but the offline player is
-    for name, info in pairs(core.db.profile.cache.groupRoster) do
+    for name, info in pairs(NCConfig:GetCacheValue("groupRoster")) do
         if info and info.guid ~= player.guid and not UnitIsConnected(name) then
             return info.guid, name
         end

@@ -640,11 +640,11 @@ C_Timer.NewTicker(60, function()
     if not NCCombat:IsActive() then
         local count = 0
 
-        for key, val in pairs(core.db.global.lastSync) do
+        for key, val in pairs(NCConfig:GetPath("global.lastSync")) do
             if GetTime() - val > 1800 then
                 count = count + 1
 
-                core.db.global.lastSync[key] = nil
+                NCConfig:SetPath("global.lastSync." .. key, nil)
             end
 
             if count > 100 then

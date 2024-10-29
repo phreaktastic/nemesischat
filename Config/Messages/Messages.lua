@@ -325,8 +325,10 @@ function NemesisChat:GetCategories()
 
         for eKey, eVal in pairs(val.events) do
             for tKey, tVal in pairs(core.units) do
-                if core.db.profile.messages[key] and core.db.profile.messages[key][eVal.value] and core.db.profile.messages[key][eVal.value][tVal.value] ~= nil then
-                    count = count + #core.db.profile.messages[key][eVal.value][tVal.value]
+                local path = key .. "." .. eVal.value .. "." .. tVal.value
+                local messages = NCConfig:GetMessagesByPath(path)
+                if messages then
+                    count = count + #messages
                 end
             end
         end
@@ -368,11 +370,12 @@ function NemesisChat:GetEvents()
         local count = 0
 
         for tKey, tVal in pairs(core.units) do
-            if core.db.profile.messages[selectedCategory] and core.db.profile.messages[selectedCategory][val.value] and core.db.profile.messages[selectedCategory][val.value][tVal.value] ~= nil then
-                count = count + #core.db.profile.messages[selectedCategory][val.value][tVal.value]
+            local path = selectedCategory .. "." .. val.value .. "." .. tVal.value
+            local messages = NCConfig:GetMessagesByPath(path)
+            if messages then
+                count = count + #messages
             end
         end
-
 
         if count > 0 then
             events[val.value] = val.label .. " (|c00ffcc00" .. count .. "|r)"
@@ -412,11 +415,9 @@ function NemesisChat:GetTargets()
 
     for key, val in pairs(core.configTree[selectedCategory].events[GetEventIndex()].options) do
         local option = core.units[val]
-        local count = 0
-
-        if core.db.profile.messages[selectedCategory] and core.db.profile.messages[selectedCategory][selectedEvent] and core.db.profile.messages[selectedCategory][selectedEvent][option.value] ~= nil then
-            count = count + #core.db.profile.messages[selectedCategory][selectedEvent][option.value]
-        end
+        local path = selectedCategory .. "." .. selectedEvent .. "." .. option.value
+        local messages = NCConfig:GetMessagesByPath(path)
+        local count = messages and #messages or 0
 
         if count > 0 then
             targets[option.value] = option.label .. " (|c00ffcc00" .. count .. "|r)"
@@ -453,10 +454,11 @@ function NemesisChat:IsTargetsHidden()
 end
 
 function NemesisChat:GetConfiguredMessages()
-    local msgs = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget]
+    local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+    local msgs = NCConfig:GetMessagesByPath(path) or {}
     local available = {}
 
-    for key, val in pairs(msgs or {}) do
+    for key, val in pairs(msgs) do
         available[key .. ""] = val.label or val.message
     end
 
@@ -470,7 +472,9 @@ end
 function NemesisChat:SetConfiguredMessage(info, value)
     selectedConfiguredMessage = value
 
-    local msg = DeepCopy(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(value)])
+    local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+    local messages = NCConfig:GetMessagesByPath(path)
+    local msg = messages and messages[tonumber(value)]
 
     if msg == nil then
         selectedConfiguredMessage = ""
@@ -487,9 +491,8 @@ function NemesisChat:SetConfiguredMessage(info, value)
 end
 
 function NemesisChat:ConfiguredMessagesDisabled()
-    return core.db.profile.messages[selectedCategory] == nil or
-        core.db.profile.messages[selectedCategory][selectedEvent] == nil or
-        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil
+    local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+    return not NCConfig:GetMessagesByPath(path)
 end
 
 function NemesisChat:GetMessage()
@@ -537,12 +540,13 @@ function NemesisChat:SetChannel(info, value)
 end
 
 function NemesisChat:DeleteMessage()
-    if core.db.profile.messages[selectedCategory] == nil or core.db.profile.messages[selectedCategory][selectedEvent] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] == nil then
-        return
-    end
+    local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+    local messages = NCConfig:GetMessagesByPath(path)
 
-    table.remove(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget],
-        tonumber(selectedConfiguredMessage))
+    if not messages then return end
+
+    table.remove(messages, tonumber(selectedConfiguredMessage))
+    NCConfig:SetMessagesByPath(path, messages)
 
     selectedConfiguredMessage = ""
     selectedCondition = ""
@@ -563,18 +567,18 @@ function NemesisChat:DeselectMessage()
 end
 
 function NemesisChat:DuplicateMessage()
-    if core.db.profile.messages[selectedCategory] == nil or core.db.profile.messages[selectedCategory][selectedEvent] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] == nil then
+    local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+    if not NCConfig:GetMessagesByPath(path) then
         return
     end
 
-    local msg = DeepCopy(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget]
-        [tonumber(selectedConfiguredMessage)])
+    local msg = DeepCopy(NCConfig:GetMessagesByPath(path)[tonumber(selectedConfiguredMessage)])
 
     msg.label = msg.label .. " (Copy)"
 
-    table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], msg)
+    NCConfig:AddMessageByPath(path, msg)
 
-    selectedConfiguredMessage = #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] .. ""
+    selectedConfiguredMessage = #NCConfig:GetMessagesByPath(path) .. ""
 end
 
 function NemesisChat:GetMessageLabel()
@@ -603,8 +607,9 @@ end
 
 function NemesisChat:DiscardChanges()
     if selectedConfiguredMessage ~= "" then
-        local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget]
-            [tonumber(selectedConfiguredMessage)]
+        local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+        local messages = NCConfig:GetMessagesByPath(path)
+        local msg = messages and messages[tonumber(selectedConfiguredMessage)]
 
         if msg == nil then
             selectedConfiguredMessage = ""
@@ -634,8 +639,9 @@ function NemesisChat:GetConditions()
         return setmetatable({}, { __mode = "kv" })
     end
 
-    local msg = core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget]
-        [tonumber(selectedConfiguredMessage)]
+    local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+    local messages = NCConfig:GetMessagesByPath(path)
+    local msg = messages and messages[tonumber(selectedConfiguredMessage)]
     local conditions = setmetatable({}, { __mode = "kv" })
 
     if msg == nil or msg.conditions == nil or #msg.conditions == 0 then
@@ -905,7 +911,11 @@ function NemesisChat:UpdateMessagePreview()
     if messageChannel == "EMOTE" then spacer = " " end
 
     if HasConditions() then
-        for key, val in pairs(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions) do
+        local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+        local messages = NCConfig:GetMessagesByPath(path)
+        local msg = messages and messages[tonumber(selectedConfiguredMessage)]
+
+        for key, val in pairs(msg.conditions) do
             if (val.left == "SPELL_ID" or val.left == "SPELL_NAME") and val.operator == "IS" then
                 NCRuntime.previewSpell = val.right
                 break
@@ -925,12 +935,14 @@ function HasConditions()
         return false
     end
 
-    if core.db.profile.messages[selectedCategory] == nil or core.db.profile.messages[selectedCategory][selectedEvent] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil or core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] == nil then
+    local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+    local messages = NCConfig:GetMessagesByPath(path)
+
+    if not messages or messages[tonumber(selectedConfiguredMessage)] == nil then
         return false
     end
 
-    return (#core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)].conditions or 0) >
-        0
+    return (#messages[tonumber(selectedConfiguredMessage)].conditions or 0) > 0
 end
 
 function GetEventIndex()
@@ -948,41 +960,27 @@ function StoreMessage()
         return
     end
 
-    BuildStorePath()
+    local path = selectedCategory .. "." .. selectedEvent .. "." .. selectedTarget
+    local messages = NCConfig:GetMessagesByPath(path) or {}
 
-    local saveMessage = {}
-
-    saveMessage.label = messageLabel
-    saveMessage.channel = messageChannel
-    saveMessage.message = message
-    saveMessage.chance = messageChance
-    saveMessage.conditions = messageConditions
+    local saveMessage = {
+        label = messageLabel,
+        channel = messageChannel,
+        message = message,
+        chance = messageChance,
+        conditions = messageConditions
+    }
 
     if selectedConfiguredMessage ~= "" then
-        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget][tonumber(selectedConfiguredMessage)] =
-            saveMessage
+        messages[tonumber(selectedConfiguredMessage)] = saveMessage
+        NCConfig:SetMessagesByPath(path, messages)
     else
         saveMessage.conditions = {}
-        table.insert(core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget], saveMessage)
-        NemesisChat:SetConfiguredMessage(nil,
-            #core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] .. "")
+        NCConfig:AddMessageByPath(path, saveMessage)
+        selectedConfiguredMessage = #messages .. ""
     end
 
     NCController:PreprocessMessages()
-end
-
-function BuildStorePath()
-    if core.db.profile.messages[selectedCategory] == nil then
-        core.db.profile.messages[selectedCategory] = {}
-    end
-
-    if core.db.profile.messages[selectedCategory][selectedEvent] == nil then
-        core.db.profile.messages[selectedCategory][selectedEvent] = {}
-    end
-
-    if core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] == nil then
-        core.db.profile.messages[selectedCategory][selectedEvent][selectedTarget] = {}
-    end
 end
 
 function IsNcOperator()

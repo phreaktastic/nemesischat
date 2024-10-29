@@ -91,26 +91,24 @@ function NemesisChat:GetAddNemesis(info)
 end
 
 function NemesisChat:RemoveNemesis(info, value)
-    if core.db.profile.dbg then
+    if NCConfig:IsDebugging() then
         self:Print("Removing ", selectedNemesisName)
     end
 
-    core.db.profile.nemeses[selectedNemesisName] = nil
+    NCConfig:RemoveNemesis(selectedNemesisName)
     selectedNemesisName = ""
     NemesisChat:RefreshNemesesGroup()
 end
 
 function NemesisChat:RenameNemesis(nemesisName)
-    core.db.profile.nemeses[selectedNemesisName] = nil
-
-    core.db.profile.nemeses[nemesisName] = nemesisName
+    NCConfig:RenameNemesis(selectedNemesisName, nemesisName)
     selectedNemesisName = nemesisName
     NemesisChat:RefreshNemesesGroup()
 end
 
 function NemesisChat:AddNemesis(name)
-    if not core.db.profile.nemeses[name] then
-        core.db.profile.nemeses[name] = name
+    if not NCConfig:GetNemesis(name) then
+        NCConfig:AddNemesis(name)
         self:Print("Added " .. name .. " as a Nemesis.")
         return name -- Return the new Nemesis name
     else

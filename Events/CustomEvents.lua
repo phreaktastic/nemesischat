@@ -157,7 +157,7 @@ function NemesisChat:CheckGuild()
     end
 
     local function IsNemesis(name)
-        return core.db.profile.nemeses[name]
+        return NCConfig:GetNemesis(name)
     end
 
     local currentTime = GetTime()
@@ -201,5 +201,5 @@ function NemesisChat:CheckGuild()
         end
     end
 
-    core.db.profile.cache.guild = core.runtime.guild
+    NCConfig:SetPath("cache.guild", core.runtime.guild)
 end

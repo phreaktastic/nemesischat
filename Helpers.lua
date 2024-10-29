@@ -23,27 +23,27 @@ local IsInGroup = IsInGroup
 -----------------------------------------------------
 function NemesisChat:InitializeHelpers()
     function NemesisChat:PrintNumberOfLeavers()
-        NemesisChat:Print("Leavers:", #NemesisChat:GetKeys(core.db.profile.leavers))
+        NemesisChat:Print("Leavers:", NCConfig:GetLeaversCount())
     end
 
     function NemesisChat:PrintNumberOfLowPerformers()
-        NemesisChat:Print("Low Performers:", #NemesisChat:GetKeys(core.db.profile.lowPerformers))
+        NemesisChat:Print("Low Performers:", NCConfig:GetLowPerformersCount())
     end
 
     function NemesisChat:PrintSyncKeys()
         NemesisChat:Print("LEAVER KEYS")
+        local leavers = NCConfig:GetLeavers()
+        NemesisChat:Print_r(NemesisChat:GetKeys(leavers))
 
-        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.leavers))
-
-        for key, val in pairs(core.db.profile.leavers) do
+        for key, val in pairs(leavers) do
             NemesisChat:Print(key, ":", #val)
         end
 
         NemesisChat:Print("LOW PERFORMER KEYS")
+        local lowPerformers = NCConfig:GetLowPerformers()
+        NemesisChat:Print_r(NemesisChat:GetKeys(lowPerformers))
 
-        NemesisChat:Print_r(NemesisChat:GetKeys(core.db.profile.lowPerformers))
-
-        for key, val in pairs(core.db.profile.lowPerformers) do
+        for key, val in pairs(lowPerformers) do
             NemesisChat:Print(key, ":", #val)
         end
     end
@@ -63,94 +63,71 @@ function NemesisChat:InitializeHelpers()
     end
 
     function NemesisChat:AddLeaver(guid)
-        if core.db.profile.leavers == nil then
-            core.db.profile.leavers = {}
+        local leavers = NCConfig:GetLeavers() or {}
+        if not leavers[guid] then
+            leavers[guid] = {}
         end
 
-        if core.db.profile.leavers[guid] == nil then
-            core.db.profile.leavers[guid] = {}
-        end
-
-        tinsert(core.db.profile.leavers[guid], math.ceil(GetTime() / 10) * 10)
+        NCConfig:AddLeaver(guid)
 
         NemesisChat:EncodeLeavers()
     end
 
     function NemesisChat:EncodeLeavers()
-        if not core.db.profile.leavers or core.db.profile.leavers == {} then
-            core.db.profile.leaversEncoded = nil
+        if not NCConfig:GetLeavers() or NCConfig:GetLeaversCount() == 0 then
+            NCConfig:SetLeaversEncoded(nil)
             return
         end
 
-        core.db.profile.leaversSerialized = LibSerialize:Serialize(core.db.profile.leavers)
-        core.db.profile.leaversCompressed = LibDeflate:CompressDeflate(core.db.profile.leaversSerialized)
-        core.db.profile.leaversEncoded = LibDeflate:EncodeForWoWAddonChannel(core.db.profile.leaversCompressed)
+        NCConfig:SetLeaversSerialized(LibSerialize:Serialize(NCConfig:GetLeavers()))
+        NCConfig:SetLeaversCompressed(LibDeflate:CompressDeflate(NCConfig:GetLeaversSerialized()))
+        NCConfig:SetLeaversEncoded(LibDeflate:EncodeForWoWAddonChannel(NCConfig:GetLeaversCompressed()))
 
-        core.db.profile.leaversSerialized = nil
-        core.db.profile.leaversCompressed = nil
+        NCConfig:SetLeaversSerialized(nil)
+        NCConfig:SetLeaversCompressed(nil)
     end
 
     function NemesisChat:AddLowPerformer(guid)
-        if core.db.profile.lowPerformers == nil then
-            core.db.profile.lowPerformers = {}
+        local lowPerformers = NCConfig:GetLowPerformers() or {}
+        if not lowPerformers[guid] then
+            lowPerformers[guid] = {}
         end
 
-        if core.db.profile.lowPerformers[guid] == nil then
-            core.db.profile.lowPerformers[guid] = {}
-        end
-
-        tinsert(core.db.profile.lowPerformers[guid], math.ceil(GetTime() / 10) * 10)
-
+        table.insert(lowPerformers[guid], math.ceil(GetTime() / 10) * 10)
+        NCConfig:SetLowPerformers(lowPerformers)
         NemesisChat:EncodeLowPerformers()
     end
 
     function NemesisChat:EncodeLowPerformers()
-        if not core.db.profile.lowPerformers or core.db.profile.lowPerformers == {} then
-            core.db.profile.lowPerformersEncoded = nil
+        if not NCConfig:GetLowPerformers() or NCConfig:GetLowPerformersCount() == 0 then
+            NCConfig:SetLowPerformersEncoded(nil)
             return
         end
 
-        core.db.profile.lowPerformersSerialized = LibSerialize:Serialize(core.db.profile.lowPerformers)
-        core.db.profile.lowPerformersCompressed = LibDeflate:CompressDeflate(core.db.profile.lowPerformersSerialized)
-        core.db.profile.lowPerformersEncoded = LibDeflate:EncodeForWoWAddonChannel(core.db.profile
-            .lowPerformersCompressed)
+        NCConfig:SetLowPerformersSerialized(LibSerialize:Serialize(NCConfig:GetLowPerformers()))
+        NCConfig:SetLowPerformersCompressed(LibDeflate:CompressDeflate(NCConfig:GetLowPerformersSerialized()))
+        NCConfig:SetLowPerformersEncoded(LibDeflate:EncodeForWoWAddonChannel(NCConfig:GetLowPerformersCompressed()))
 
-        core.db.profile.lowPerformersSerialized = nil
-        core.db.profile.lowPerformersCompressed = nil
+        NCConfig:SetLowPerformersSerialized(nil)
+        NCConfig:SetLowPerformersCompressed(nil)
     end
 
     function NemesisChat:EncodeAddonMessageData()
-        if not core.db.profile.leaversEncoded then
+        if not NemesisChat:GetLeaversEncoded() then
             NemesisChat:EncodeLeavers()
         end
 
-        if not core.db.profile.lowPerformersEncoded then
+        if not NemesisChat:GetLowPerformersEncoded() then
             NemesisChat:EncodeLowPerformers()
         end
     end
 
     function NemesisChat:LeaveCount(guid)
-        if core.db.profile.leavers == nil then
-            return 0
-        end
-
-        if core.db.profile.leavers[guid] == nil then
-            return 0
-        end
-
-        return #core.db.profile.leavers[guid]
+        return NCConfig:GetLeaverCount(guid)
     end
 
     function NemesisChat:LowPerformerCount(guid)
-        if core.db.profile.lowPerformers == nil then
-            return 0
-        end
-
-        if core.db.profile.lowPerformers[guid] == nil then
-            return 0
-        end
-
-        return #core.db.profile.lowPerformers[guid]
+        return NCConfig:GetLowPerformerCount(guid)
     end
 
     function NemesisChat:InitializeTimers()
@@ -694,7 +671,7 @@ function NemesisChat:InitializeHelpers()
         if NemesisChat:IsHealerAlive() and NemesisChat:GetHealer() ~= playerName then
             local lastHealDelta = math.floor((GetTime() - player.lastHeal) * 100) / 100
 
-            if not UnitIsDead(playerName) and player.healthPercent <= 55 and lastHealDelta >= 2 and NCConfig:IsReportingNeglectedHeals_Realtime() then
+            if not UnitIsDead(playerName) and player.healthPercent <= 55 and lastHealDelta >= 2 and ReplaceMeIsReportingNeglectedHeals() then
                 -- If playerName is a nemesis, different message
                 if NCConfig:GetNemesis(playerName) ~= nil then
                     SendChatMessage(
@@ -843,16 +820,16 @@ function NemesisChat:InstantiateCore()
 
     NCEvent:Initialize()
 
-    if core.db.profile.cache.guild then
-        core.runtime.guild = DeepCopy(core.db.profile.cache.guild)
+    if NCConfig:GetPath("cache.guild") then
+        core.runtime.guild = DeepCopy(NCConfig:GetPath("cache.guild") or GetWeakTable())
     end
 
-    if core.db.profile.cache.friends then
-        core.runtime.friends = DeepCopy(core.db.profile.cache.friends)
+    if NCConfig:GetPath("cache.friends") then
+        core.runtime.friends = DeepCopy(NCConfig:GetPath("cache.friends") or GetWeakTable())
     end
 
-    if core.db.profile.cache.groupRoster and GetTime() - core.db.profile.cache.groupRosterTime <= core.runtime.dbCacheExpiration then
-        core.runtime.groupRoster = DeepCopy(core.db.profile.cache.groupRoster)
+    if NCConfig:GetPath("cache.groupRoster") and GetTime() - NCConfig:GetPath("cache.groupRosterTime") <= core.runtime.dbCacheExpiration then
+        core.runtime.groupRoster = DeepCopy(NCConfig:GetPath("cache.groupRoster") or GetWeakTable())
     end
 
     NCDungeon:CheckCache()
@@ -905,7 +882,7 @@ function NemesisChat:ClearAllData()
     if NCDungeon.Rankings then NCDungeon.Rankings:Reset(NCDungeon) end
 
     -- Clear any stored caches
-    wipe(core.db.profile.cache)
+    wipe(NCConfig:GetPath("cache"))
 
     -- Reinitialize core components
     NemesisChat:InstantiateCore()

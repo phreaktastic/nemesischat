@@ -212,7 +212,7 @@ NCRankings = {
     end,
 
     Restore = function(self)
-        local backup = core.db.profile.cache.DungeonRankings
+        local backup = NCConfig:GetPath("cache.DungeonRankings")
 
         for metricKey, _ in pairs(self.METRICS) do
             self.Top[metricKey] = backup.Top[metricKey]

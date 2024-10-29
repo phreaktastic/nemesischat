@@ -461,8 +461,8 @@ NCRuntime = {
         end
     end,
     CacheGroupRoster = function(self)
-        core.db.profile.cache.groupRoster = DeepCopy(core.runtime.groupRoster)
-        core.db.profile.cache.groupRosterTime = GetTime()
+        NCConfig:SetPath("cache.groupRoster", DeepCopy(core.runtime.groupRoster))
+        NCConfig:SetPath("cache.groupRosterTime", GetTime())
     end,
     GetGuildRoster = function(self)
         return core.runtime.guild
@@ -567,8 +567,8 @@ NCRuntime = {
         return core.runtime.friends[playerName] ~= nil
     end,
     CacheFriends = function(self)
-        core.db.profile.cache.friends = DeepCopy(core.runtime.friends)
-        core.db.profile.cache.friendsTime = GetTime()
+        NCConfig:SetPath("cache.friends", DeepCopy(core.runtime.friends))
+        NCConfig:SetPath("cache.friendsTime", GetTime())
     end,
     GetPetOwners = function(self)
         return core.runtime.petOwners
@@ -694,8 +694,6 @@ NCRuntime = {
                     if specName and specName ~= "Unknown" then
                         unit.spec = specName
                     end
-                else
-                    -- Wait for INSPECT_READY event
                 end
             end
         end

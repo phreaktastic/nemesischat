@@ -19,19 +19,19 @@ function NemesisChat:InstantiateSpell()
     end
 
     function NCSpell:IsActive()
-        return NCSpell.active
+        return self.active
     end
 
     function NCSpell:SetActive()
-        NCSpell.active = true
+        self.active = true
     end
 
     function NCSpell:SetInactive()
-        NCSpell.active = false
+        self.active = false
     end
 
     function NCSpell:GetSource()
-        if NCSpell.source == nil then
+        if self.source == nil then
             return ""
         end
 
@@ -39,110 +39,110 @@ function NemesisChat:InstantiateSpell()
     end
 
     function NCSpell:SetSource(source)
-        NCSpell.source = source
+        self.source = source
     end
 
     function NCSpell:GetTarget()
-        if NCSpell.target == nil then
+        if self.target == nil then
             return ""
         end
-        
-        return NCSpell.target
+
+        return self.target
     end
 
     function NCSpell:SetTarget(target)
-        NCSpell.target = target
+        self.target = target
     end
 
     function NCSpell:GetSpellId()
-        if NCSpell.spellId == nil then
+        if self.spellId == nil then
             return 0
         end
-        
-        return NCSpell.spellId
+
+        return self.spellId
     end
 
     function NCSpell:SetSpellId(id)
-        NCSpell.spellId = id
+        self.spellId = id
     end
 
     function NCSpell:GetSpellName()
-        if NCSpell.spellName == nil then
+        if self.spellName == nil then
             return ""
         end
-        
-        return NCSpell.spellName
+
+        return self.spellName
     end
 
     function NCSpell:SetSpellName(name)
-        NCSpell.spellName = name
+        self.spellName = name
     end
 
     function NCSpell:GetExtraSpellId()
-        if NCSpell.extraSpellId == nil then
+        if self.extraSpellId == nil then
             return 0
         end
-        
-        return NCSpell.extraSpellId
+
+        return self.extraSpellId
     end
 
     function NCSpell:SetExtraSpellId(id)
-        NCSpell.extraSpellId = id
+        self.extraSpellId = id
     end
 
     function NCSpell:GetSpellLink()
-        return C_Spell.GetSpellLink(NCSpell.spellId)
+        return C_Spell.GetSpellLink(self.spellId)
     end
 
     function NCSpell:GetExtraSpellLink()
-        return C_Spell.GetSpellLink(NCSpell.extraSpellId)
+        return C_Spell.GetSpellLink(self.extraSpellId)
     end
 
     function NCSpell:IsValidSpell()
-        return NCSpell:GetSource() ~= "" and NCSpell.active == true
+        return self.source ~= "" and self.active == true
     end
 
     function NCSpell:GetDamage()
-        if NCSpell.damage == nil then
+        if self.damage == nil then
             return 0
         end
-        
-        return NCSpell.damage
+
+        return self.damage
     end
 
     function NCSpell:SetDamage(damage)
-        NCSpell.damage = damage
+        self.damage = damage
     end
 
     -- Helper for setting Interrupt event properties
     function NCSpell:Interrupt(source, target, spellId, spellName, extraSpellId)
-        NCSpell:SetSource(source)
-        NCSpell:SetTarget(target)
-        NCSpell:SetSpellId(spellId)
-        NCSpell:SetSpellName(spellName)
-        NCSpell:SetExtraSpellId(extraSpellId)
-        NCSpell:SetActive()
+        self:SetSource(source)
+        self:SetTarget(target)
+        self:SetSpellId(spellId)
+        self:SetSpellName(spellName)
+        self:SetExtraSpellId(extraSpellId)
+        self:SetActive()
     end
 
     -- Helper for setting Feast event properties
     function NCSpell:Feast(source, spellId)
-        NCSpell:SetSource(source)
-        NCSpell:SetSpellId(spellId)
-        NCSpell:SetActive()
+        self:SetSource(source)
+        self:SetSpellId(spellId)
+        self:SetActive()
     end
 
     -- Helper for non-feast spells
     function NCSpell:Spell(source, dest, spellId, spellName)
-        NCSpell:SetSource(source)
-        NCSpell:SetTarget(dest)
-        NCSpell:SetSpellId(spellId)
-        NCSpell:SetSpellName(spellName)
-        NCSpell:SetActive()
+        self:SetSource(source)
+        self:SetTarget(dest)
+        self:SetSpellId(spellId)
+        self:SetSpellName(spellName)
+        self:SetActive()
     end
 
     -- Helper for damaging spells/swings
     function NCSpell:Damage(source, dest, spellId, spellName, damage)
-        NCSpell:Spell(source, dest, spellId, spellName)
-        NCSpell:SetDamage(damage)
+        self:Spell(source, dest, spellId, spellName)
+        self:SetDamage(damage)
     end
 end

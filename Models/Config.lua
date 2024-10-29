@@ -47,15 +47,15 @@ NCConfig = {
         self:SetEnabled(not self:IsEnabled())
     end,
 
-    IsDebug = function(self)
+    IsDebugging = function(self)
         return self.CoreDB:GetKey("debug")
     end,
 
-    SetDebug = function(self, value)
+    SetDebugging = function(self, value)
         self.CoreDB:SetKey("debug", value)
     end,
 
-    ToggleDebug = function(self)
+    ToggleDebugging = function(self)
         self.CoreDB:Toggle("debug")
     end,
 
@@ -310,6 +310,10 @@ NCConfig = {
         return self.MessageSystemDB:GetPath("categories.dungeon.types.pulls.showToast")
     end,
 
+    ToggleReportingPulls_Toast = function(self)
+        self.MessageSystemDB:TogglePath("categories.dungeon.types.pulls.showToast")
+    end,
+
     SetReportingPulls_Toast = function(self, value)
         self.MessageSystemDB:SetPath("categories.dungeon.types.pulls.showToast", value)
     end,
@@ -419,6 +423,10 @@ NCConfig = {
 
     IsRollingMessages = function(self)
         return self.MessageSystemDB:GetPath("globalSettings.rollingMessages")
+    end,
+
+    ToggleRollingMessages = function(self)
+        self.MessageSystemDB:TogglePath("globalSettings.rollingMessages")
     end,
 
     SetRollingMessages = function(self, value)
@@ -788,6 +796,11 @@ NCConfig = {
         self.NemesisDB:DeleteKey(name)
     end,
 
+    RenameNemesis = function(self, oldName, newName)
+        self.NemesisDB:SetKey(newName, newName)
+        self.NemesisDB:DeleteKey(oldName)
+    end,
+
     -----------------------------------------------------
     -- Stats Frame
     -----------------------------------------------------
@@ -844,8 +857,20 @@ NCConfig = {
         return self.CoreDB:GetKey("messages")
     end,
 
+    GetMessagesByPath = function(self, path)
+        return self.CoreDB:GetPath("messages." .. path)
+    end,
+
+    SetMessagesByPath = function(self, path, value)
+        self.CoreDB:SetPath("messages." .. path, value)
+    end,
+
     AddMessage = function(self, message)
         self.CoreDB:InsertIntoArray("messages", message)
+    end,
+
+    AddMessageByPath = function(self, path, message)
+        self.CoreDB:PathInsert("messages." .. path, message)
     end,
 
     RemoveMessage = function(self, message)
@@ -855,6 +880,8 @@ NCConfig = {
     -----------------------------------------------------
     -- Cache Helper Methods
     -----------------------------------------------------
+    ---@param key string Accepts a simple key or a path
+    ---@return any
     GetCacheValue = function(self, key)
         return self.CoreDB:GetPath("cache." .. key)
     end,
@@ -875,8 +902,8 @@ NCConfig = {
     -- Data Migration Methods
     -----------------------------------------------------
     NeedsMigration = function(self)
-        return not core.db.profile.schemaVersion or
-            core.db.profile.schemaVersion < NCMigration.currentVersion
+        return not self:GetPath("profile.schemaVersion") or
+            self:GetPath("profile.schemaVersion") < NCMigration.currentVersion
     end,
 
     -----------------------------------------------------
@@ -911,11 +938,7 @@ NCConfig = {
     -- Message Selection Methods
     -----------------------------------------------------
     GetNemesesLength = function(self)
-        local nemeses = self:GetNemeses()
-        if not nemeses then return 0 end
-        local count = 0
-        for _ in pairs(nemeses) do count = count + 1 end
-        return count
+        return self.NemesisDB:GetLength() or 0
     end,
 
     GetCurrentMessage = function(self)
@@ -969,7 +992,117 @@ NCConfig = {
 
     SetCurrentTarget = function(self, target)
         self.MessageSystemDB:SetPath("globalSettings.currentTarget", target)
-    end
+    end,
+
+    -----------------------------------------------------
+    -- Leaver/Low Performer Methods
+    -----------------------------------------------------
+    GetLeavers = function(self)
+        return self.CoreDB:GetKey("leavers")
+    end,
+
+    GetLeaversCount = function(self)
+        return self.CoreDB:GetLength("leavers")
+    end,
+
+    AddLeaver = function(self, guid)
+        self.CoreDB:PathInsert("leavers." .. guid, math.ceil(GetTime() / 10) * 10)
+    end,
+
+    GetLeaverCount = function(self, guid)
+        return self.CoreDB:GetPathLength("leavers." .. guid)
+    end,
+
+    SetLeavers = function(self, value)
+        self.CoreDB:SetKey("leavers", value)
+    end,
+
+    GetLowPerformers = function(self)
+        return self.CoreDB:GetKey("lowPerformers")
+    end,
+
+    GetLowPerformersCount = function(self)
+        return self.CoreDB:GetLength("lowPerformers")
+    end,
+
+    AddLowPerformer = function(self, guid)
+        self.CoreDB:PathInsert("lowPerformers." .. guid, math.ceil(GetTime() / 10) * 10)
+    end,
+
+    GetLowPerformerCount = function(self, guid)
+        return self.CoreDB:GetPathLength("lowPerformers." .. guid)
+    end,
+
+    SetLowPerformers = function(self, value)
+        self.CoreDB:SetKey("lowPerformers", value)
+    end,
+
+    GetLeaversEncoded = function(self)
+        return self.CoreDB:GetKey("leaversEncoded")
+    end,
+
+    SetLeaversEncoded = function(self, value)
+        self.CoreDB:SetKey("leaversEncoded", value)
+    end,
+
+    GetLeaversSerialized = function(self)
+        return self.CoreDB:GetKey("leaversSerialized")
+    end,
+
+    SetLeaversSerialized = function(self, value)
+        self.CoreDB:SetKey("leaversSerialized", value)
+    end,
+
+    GetLeaversCompressed = function(self)
+        return self.CoreDB:GetKey("leaversCompressed")
+    end,
+
+    SetLeaversCompressed = function(self, value)
+        self.CoreDB:SetKey("leaversCompressed", value)
+    end,
+
+    GetLowPerformersEncoded = function(self)
+        return self.CoreDB:GetKey("lowPerformersEncoded")
+    end,
+
+    SetLowPerformersEncoded = function(self, value)
+        self.CoreDB:SetKey("lowPerformersEncoded", value)
+    end,
+
+    GetLowPerformersSerialized = function(self)
+        return self.CoreDB:GetKey("lowPerformersSerialized")
+    end,
+
+    SetLowPerformersSerialized = function(self, value)
+        self.CoreDB:SetKey("lowPerformersSerialized", value)
+    end,
+
+    GetLowPerformersCompressed = function(self)
+        return self.CoreDB:GetKey("lowPerformersCompressed")
+    end,
+
+    SetLowPerformersCompressed = function(self, value)
+        self.CoreDB:SetKey("lowPerformersCompressed", value)
+    end,
+
+    -----------------------------------------------------
+    --- General Helper Methods
+    -----------------------------------------------------
+    Get = function(self, key)
+        return self.CoreDB:GetKey(key)
+    end,
+
+    GetPath = function(self, path)
+        return self.CoreDB:GetPath(path)
+    end,
+
+    Set = function(self, key, value)
+        self.CoreDB:SetKey(key, value)
+    end,
+
+    SetPath = function(self, path, value)
+        self.CoreDB:SetPath(path, value)
+    end,
 }
 
 return NCConfig

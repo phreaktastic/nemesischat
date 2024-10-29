@@ -56,7 +56,7 @@ core.options.args.messagesGroup.args.messageSettings = {
                             desc = "Apply a global probability to all message triggers",
                             width = "full",
                             get = function() return NCConfig:IsGlobalChanceEnabled() end,
-                            set = function(_, value) return NCConfig:SetUsingGlobalChance(value) end,
+                            set = function(_, value) return NCConfig:SetGlobalChanceEnabled(value) end,
                         },
                         globalChance = {
                             order = 2,
