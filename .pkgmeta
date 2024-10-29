@@ -10,3 +10,6 @@ ignore:
   - .github
   - Development
   - Tests
+  - *.md
+  - *.txt
+  - validate

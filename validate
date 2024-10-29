@@ -1,47 +1,8 @@
 local lfs = require("lfs")
 
-package.path = package.path .. ";Development/Checks/?.lua;Development/Checks/Core/?.lua"
+package.path = package.path .. ";?.lua;Development/Checks/?.lua;Development/Checks/Core/?.lua"
 
--- Utility Functions
-local function readFile(path)
-    local file = io.open(path, "r")
-    if not file then return nil end
-    local content = file:read("*all")
-    file:close()
-    return content
-end
-
-local function splitString(input, delimiter)
-    local result = {}
-    for match in (input .. delimiter):gmatch("(.-)" .. delimiter) do
-        table.insert(result, match)
-    end
-    return result
-end
-
-local function trim(s)
-    return s:match("^%s*(.-)%s*$")
-end
-
-local function cleanLine(line, options)
-    options = options or {
-        removeComments = true,
-        removeDoubleQuotes = true,
-        removeSingleQuotes = true
-    }
-
-    local clean_line = line
-    if options.removeComments then
-        clean_line = clean_line:gsub("%-%-.*", "")
-    end
-    if options.removeDoubleQuotes then
-        clean_line = clean_line:gsub([["(.-)"]], "")
-    end
-    if options.removeSingleQuotes then
-        clean_line = clean_line:gsub([['(.-)']], "")
-    end
-    return clean_line
-end
+local Utils = require("Utils")
 
 -- Check Discovery and Loading
 local function discoverChecks(checksDir, skippedChecks)
@@ -118,7 +79,7 @@ local function shouldExcludeLine(check, full_path, line_number)
         if exclude_file and exclude_lines then
             if relative_path:match(exclude_file .. "$") then
                 for line in exclude_lines:gmatch("([^,]+)") do
-                    if tonumber(trim(line)) == line_number then
+                    if tonumber(Utils.trim(line)) == line_number then
                         return true
                     end
                 end
@@ -139,7 +100,7 @@ local function runFileChecks(directory, checks, global_exclusion_pattern, verbos
             if attr.mode == "directory" then
                 runFileChecks(full_path, checks, global_exclusion_pattern, verbose)
             elseif file:match("%.lua$") and not full_path:match(global_exclusion_pattern) then
-                local content = readFile(full_path)
+                local content = Utils.readFile(full_path)
                 if content then
                     if global_exclusion_pattern and content:find(global_exclusion_pattern) then
                         return
@@ -150,8 +111,8 @@ local function runFileChecks(directory, checks, global_exclusion_pattern, verbos
                             (not content:find(check.exclusion_pattern) and not full_path:match(check.exclusion_pattern))) then
 
                             local cleaned_content = {}
-                            for line_number, line in ipairs(splitString(content, "\n")) do
-                                cleaned_content[line_number] = cleanLine(line, check.cleanOptions)
+                            for line_number, line in ipairs(Utils.splitString(content, "\n")) do
+                                cleaned_content[line_number] = Utils.cleanLine(line, check.cleanOptions)
                             end
                             local cleaned_text = table.concat(cleaned_content, "\n")
 
@@ -208,17 +169,29 @@ local function parseArgs()
     local args = {
         verbose = false,
         skip = {},
-        directory = "."
+        directory = ".",
+        single_check = nil
     }
 
     local i = 1
+    -- Check if first argument is a potential check file
+    if arg[1] and not arg[1]:match("^%-%-") then
+        args.single_check = arg[1]
+        i = 2
+    end
+
     while i <= #arg do
         if arg[i] == "--verbose" then
             args.verbose = true
         elseif arg[i] == "--skip" then
             i = i + 1
             while i <= #arg and not arg[i]:match("^%-%-") do
-                table.insert(args.skip, arg[i])
+                local script_dir = debug.getinfo(1).source:match("@?(.*/)") or ""
+                local checksDir = script_dir .. "Development/Checks"
+                local resolvedName = Utils.resolveCheckName(checksDir, arg[i])
+                if resolvedName then
+                    table.insert(args.skip, resolvedName)
+                end
                 i = i + 1
             end
             i = i - 1
@@ -237,7 +210,50 @@ end
 -- Main Execution
 local function main()
     local args = parseArgs()
-    local checks = discoverChecks("Development/Checks", args.skip)
+
+    -- Handle single check file
+    if args.single_check then
+        local script_dir = debug.getinfo(1).source:match("@?(.*/)") or ""
+        local checksDir = script_dir .. "Development/Checks"
+        local resolvedName = Utils.resolveCheckName(checksDir, args.single_check)
+
+        if not resolvedName then
+            return
+        end
+
+        local check_path = checksDir .. "/" .. resolvedName .. ".lua"
+
+        -- Check if file exists
+        local f = io.open(check_path, "r")
+        if not f then
+            print("Check file not found: " .. args.single_check, check_path)
+            return
+        end
+        f:close()
+
+        -- Load single check
+        local f, err = loadfile(check_path)
+        if f then
+            local success, check = pcall(f)
+            if success and check and type(check.new) == "function" then
+                local instance = check.new()
+                if instance.check and instance.getErrorMessage then
+                    checks = {instance}
+                else
+                    print("Invalid check file: missing required methods")
+                    return
+                end
+            else
+                print("Failed to load check: " .. (err or "unknown error"))
+                return
+            end
+        else
+            print("Failed to load file: " .. err)
+            return
+        end
+    else
+        checks = discoverChecks("Development/Checks", args.skip)
+    end
 
     if #checks == 0 then
         print("No valid checks were found!")

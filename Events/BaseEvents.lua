@@ -7,32 +7,7 @@
 -----------------------------------------------------
 local _, core = ...;
 
-local IsInInstance = IsInInstance
-local GetInstanceInfo = GetInstanceInfo
-local GetZoneText = GetZoneText
-local C_ChallengeMode = C_ChallengeMode
 local GetTime = GetTime
-local C_LFGInfo = C_LFGInfo
-local C_ScenarioInfo = C_ScenarioInfo
-
--- Local vars for base events
-local inFollowerDungeon = false
-local inNormalDungeon = false
-local applicantIdCache = setmetatable({}, { __mode = "kv" })
-
-local function GetCurrentLocation()
-    local inInstance = IsInInstance()
-    if inInstance then
-        return GetInstanceInfo()
-    else
-        return GetZoneText()
-    end
-end
-
-local function HandleZoneChanges()
-    local currentLocation = GetCurrentLocation()
-    NemesisChat.CurrentPlayerLocation = currentLocation
-end
 
 -----------------------------------------------------
 -- Event handling for Blizzard events
