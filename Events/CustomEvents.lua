@@ -142,6 +142,10 @@ function NemesisChat:GROUP_DISBANDED()
     -- Stub
 end
 
+core.EventSystem:RegisterEvent("DATABASE_INITIALIZED", function()
+    NCMigration:Run()
+end, 100,{ fireOnce = true, sticky = false })
+
 -----------------------------------------------------
 -- Guild Sync
 -----------------------------------------------------

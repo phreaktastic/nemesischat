@@ -161,6 +161,14 @@ do
 		self:Clear()
 		self.frame:ClearAllPoints()
 		self.frame:Hide()
+
+		-- Reset any custom properties or handlers
+		if self.previewButton then
+			self.previewButton:Hide()
+			self.previewButton:EnableMouse(false)
+			self.previewButton:SetScript("OnClick", nil)
+			self.previewButton = nil
+		end
 	end
 
 	-- exported

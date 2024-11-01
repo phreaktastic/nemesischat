@@ -69,7 +69,7 @@ core.runtimeDefaults = {
     --- @type table<string, PlayerState>
     playerStates = {},
 
-    --- @type table<string, number>
+    --- @type table<string, boolean>
     friends = {
         -- A simple cache for any online friends, with their character names as the key. Allows for
         -- different interactions with friends, such as whispering them when they join a group.
@@ -123,6 +123,8 @@ core.runtimeDefaults = {
     },
     --- @type number|nil
     initializationTime = nil,
+    --- @type boolean
+    acceptedLFG = false,
 }
 
 --- @class NCRuntime
@@ -710,5 +712,14 @@ NCRuntime = {
     end,
     ClearPlayerGuidToRoster = function(self)
         wipe(core.runtime.playerGuidToRoster)
+    end,
+    AcceptLFG = function(self)
+        core.runtime.acceptedLFG = true
+    end,
+    IsAcceptedLFG = function(self)
+        return core.runtime.acceptedLFG
+    end,
+    ClearAcceptedLFG = function(self)
+        core.runtime.acceptedLFG = false
     end,
 }

@@ -121,20 +121,20 @@ NCMigration:New("20241024_message_restructure")
     })
     :SetExec(function()
         -- Ensure default values for new fields if they don't exist
-        if not NCConfig:GetPath("profile.messageSystem.globalSettings.currentMessage") then
-            NCConfig:SetPath("profile.messageSystem.globalSettings.currentMessage", "")
+        if not core.db.profile.messageSystem.globalSettings.currentMessage then
+            core.db.profile.messageSystem.globalSettings.currentMessage = ""
         end
-        if not NCConfig:GetPath("profile.messageSystem.globalSettings.currentCategory") then
-            NCConfig:SetPath("profile.messageSystem.globalSettings.currentCategory", "")
+        if not core.db.profile.messageSystem.globalSettings.currentCategory then
+            core.db.profile.messageSystem.globalSettings.currentCategory = ""
         end
-        if not NCConfig:GetPath("profile.messageSystem.globalSettings.currentEvent") then
-            NCConfig:SetPath("profile.messageSystem.globalSettings.currentEvent", "")
+        if not core.db.profile.messageSystem.globalSettings.currentEvent then
+            core.db.profile.messageSystem.globalSettings.currentEvent = ""
         end
-        if not NCConfig:GetPath("profile.messageSystem.globalSettings.currentTarget") then
-            NCConfig:SetPath("profile.messageSystem.globalSettings.currentTarget", "")
+        if not core.db.profile.messageSystem.globalSettings.currentTarget then
+            core.db.profile.messageSystem.globalSettings.currentTarget = ""
         end
-        if not NCConfig:GetPath("profile.messageSystem.globalSettings.excludeNemeses") then
-            NCConfig:SetPath("profile.messageSystem.globalSettings.excludeNemeses", false)
+        if not core.db.profile.messageSystem.globalSettings.excludeNemeses then
+            core.db.profile.messageSystem.globalSettings.excludeNemeses = false
         end
     end)
 

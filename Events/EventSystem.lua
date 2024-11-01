@@ -11,7 +11,7 @@ EventSystem = {
     currentFrame = 0,
     config = {
         globalDelay = 0.1,    -- Default delay between firing queued events
-        maxEventsPerFrame = 5 -- Configurable: number of events to process per frame
+        maxEventsPerFrame = 1 -- Configurable: number of events to process per frame
     }
 }
 
@@ -20,6 +20,7 @@ core.EventSystem = EventSystem
 -- Register an event with optional parameters: fireOnce, sticky, timed, staggered (with custom staggerDelay)
 function EventSystem:RegisterEvent(eventName, callback, priority, options)
     if not self.events[eventName] then
+        options = options or {}
         self.events[eventName] = {
             subscribers = {},
             fireOnce = options.fireOnce or false,
@@ -127,15 +128,6 @@ end
 EventFrame:SetScript("OnUpdate", function(self, elapsed)
     EventSystem:ProcessFrameQueue()
 end)
-
--- Example usage
-EventSystem:RegisterEvent("PLAYER_SPAWN", function(name) print("Player spawned:", name) end, 1,
-    { fireOnce = true, sticky = true })
-EventSystem:RegisterEvent("BOSS_DEFEATED", function() print("Boss defeated!") end, 2,
-    { timed = true, timedDuration = 60, staggered = true, staggerDelay = 0.05 })
-
--- Publishing an event
-EventSystem:Publish("PLAYER_SPAWN", "JohnDoe")
 
 -- Start processing the queue
 EventSystem:ProcessQueue()

@@ -1,11 +1,10 @@
-## Interface: 110000
+## Interface: 110500
 ## Version: 1.12.0
 ## Title: |cff00ccffNemesis Chat|r
-## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp
+## IconTexture: Interface\Addons\NemesisChat\Media\Nemesis.blp
 ## Notes: The event-driven, targeted message framework.
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB
-## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibToast, LibCompress, LibSerialize, LibSharedMedia, LibUIDropDownMenu-4.0
 
 # Third party libraries
 Embeds.xml
@@ -13,18 +12,23 @@ Embeds.xml
 # Core Localization
 Locales\enUS.lua
 
+# Core Event System
+Events\EventSystem.lua
+
 # NC Lookup Tables
 LookupTables\SoundTable.lua
 LookupTables\ClassTable.lua
 LookupTables\SpecTable.lua
 LookupTables\IconTable.lua
+Config\Core\Defaults.lua
 
 # Custom Widgets
 Widgets\SoundDropdown.lua
+Widgets\PlayerDropdownAdditions.lua
+Widgets\PlayerFrameAdditions.lua
 
 # Core NC initialization
 Init.lua
-Config\Core\Defaults.lua
 Config\Config.lua
 
 # Core NC models
@@ -48,9 +52,18 @@ Config\UI\Nemeses.lua
 Config\UI\Reference.lua
 
 # NC helper functions
-Helpers\Frame.lua
-Helpers\Group.lua
-Helpers.lua
+Helpers\CoreHelpers.lua
+Helpers\DataHelpers.lua
+Helpers\SerializationHelpers.lua
+Helpers\EventHelpers.lua
+Helpers\TimerHelpers.lua
+Helpers\UIHelpers.lua
+Helpers\FrameHelpers.lua
+Helpers\GroupHelpers.lua
+Helpers\PlayerHelpers.lua
+Helpers\CombatHelpers.lua
+Helpers\FriendHelpers.lua
+Helpers\NemesisHelpers.lua
 
 # NC models
 Models\Event.lua

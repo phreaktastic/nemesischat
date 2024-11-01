@@ -19,7 +19,6 @@ function NemesisChat:OnInitialize()
     self:RegisterChatCommand("nc", "SlashCommand")
     self:RegisterChatCommand("nemesischat", "SlashCommand")
 
-    NCMigration:Run()
     NemesisChat:RegisterStaticEvents()
 end
 
@@ -77,7 +76,6 @@ function NemesisChat:InitializeCore()
     self:InstantiateCore()
     self:SetEnabledState(IsNCEnabled())
     self:InitializeConfig()
-    self:InitializeHelpers()
     self:SetMyName()
     self:RegisterStaticEvents()
 

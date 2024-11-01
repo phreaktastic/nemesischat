@@ -14,7 +14,7 @@ core.version = C_AddOns.GetAddOnMetadata(addonName, 'Version')
 -----------------------------------------------------
 NemesisChat = LibStub("AceAddon-3.0"):NewAddon("NemesisChat", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0",
     "AceTimer-3.0", "LibToast-1.0")
-LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
+LibPlayerSpells = LibStub("LibPlayerSpells-1.0")
 
 -----------------------------------------------------
 -- Global functions
@@ -327,7 +327,12 @@ core.events = {
             label = "Leave",
             value = "LEAVE",
             options = core.constants.OTHERS
-        }
+        },
+        {
+            label = "LFG Group Found",
+            value = "ACCEPTED_LFG",
+            options = core.constants.NA
+        },
     },
     guild = {
         {
@@ -619,11 +624,6 @@ if not DETAILS_SEGMENTID_OVERALL then
     DETAILS_SEGMENTID_CURRENT = 0
 end
 
--- NCEvent = {}
--- NCController = {}
--- NCSpell = {}
-
-C_Timer.NewTicker(0.1, function() if IsNCEnabled() then NemesisChat:CheckGuild() end end)
 -- This was a fun experiment, it might be fun to expose it to users
 -- C_Timer.NewTicker(0.25, function()
 --     if NemesisChat:HasPartyNemeses() and not IsInInstance() then
@@ -632,24 +632,3 @@ C_Timer.NewTicker(0.1, function() if IsNCEnabled() then NemesisChat:CheckGuild()
 --         SetRaidTarget(nemesis.token, math.random(8))
 --     end
 -- end)
-C_Timer.NewTicker(5, function() if IsNCEnabled() then NemesisChat:LowPriorityTimer() end end)
-C_Timer.NewTicker(60, function()
-    if not NCCombat or not NCCombat.IsActive then
-        return
-    end
-    if not NCCombat:IsActive() then
-        local count = 0
-
-        for key, val in pairs(NCConfig:GetPath("global.lastSync")) do
-            if GetTime() - val > 1800 then
-                count = count + 1
-
-                NCConfig:SetPath("global.lastSync." .. key, nil)
-            end
-
-            if count > 100 then
-                break
-            end
-        end
-    end
-end)

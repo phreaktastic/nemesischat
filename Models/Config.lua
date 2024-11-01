@@ -20,6 +20,8 @@ NCConfig = {
         self.NemesisDB = NCDB:New("nemeses")
         self.ApiDB = NCDB:New("api")
 
+        core.EventSystem:Publish("DATABASE_INITIALIZED")
+
         self.isInitialized = true
     end,
 
@@ -184,6 +186,27 @@ NCConfig = {
         return self.MessageSystemDB:GetPath("categories.combat.types.offHeals.reportBottom")
     end,
 
+    IsReportingCrowdControl_Combat = function(self)
+        return self.MessageSystemDB:GetPath("categories.combat.types.crowdcontrol.triggers.afterCombat")
+    end,
+
+    -- Crowd Control Reporting
+    IsReportingCrowdControl_Boss = function(self)
+        return self.MessageSystemDB:GetPath("categories.combat.types.crowdcontrol.triggers.afterBoss")
+    end,
+
+    IsReportingCrowdControl_Dungeon = function(self)
+        return self.MessageSystemDB:GetPath("categories.combat.types.crowdcontrol.triggers.afterDungeon")
+    end,
+
+    IsReportingCrowdControl_Top = function(self)
+        return self.MessageSystemDB:GetPath("categories.combat.types.crowdcontrol.reportTop")
+    end,
+
+    IsReportingCrowdControl_Bottom = function(self)
+        return self.MessageSystemDB:GetPath("categories.combat.types.crowdcontrol.reportBottom")
+    end,
+
     -- Toggle methods for all types
     ToggleReportingDamage_Combat = function(self)
         self.MessageSystemDB:TogglePath("categories.combat.types.damage.triggers.afterCombat")
@@ -283,6 +306,26 @@ NCConfig = {
 
     ToggleReportingOffheals_Bottom = function(self)
         self.MessageSystemDB:TogglePath("categories.combat.types.offHeals.reportBottom")
+    end,
+
+    ToggleReportingCrowdControl_Combat = function(self)
+        self.MessageSystemDB:TogglePath("categories.combat.types.crowdcontrol.triggers.afterCombat")
+    end,
+
+    ToggleReportingCrowdControl_Boss = function(self)
+        self.MessageSystemDB:TogglePath("categories.combat.types.crowdcontrol.triggers.afterBoss")
+    end,
+
+    ToggleReportingCrowdControl_Dungeon = function(self)
+        self.MessageSystemDB:TogglePath("categories.combat.types.crowdcontrol.triggers.afterDungeon")
+    end,
+
+    ToggleReportingCrowdControl_Top = function(self)
+        self.MessageSystemDB:TogglePath("categories.combat.types.crowdcontrol.reportTop")
+    end,
+
+    ToggleReportingCrowdControl_Bottom = function(self)
+        self.MessageSystemDB:TogglePath("categories.combat.types.crowdcontrol.reportBottom")
     end,
 
     -- Pull reporting found in Reports.lua
@@ -796,6 +839,16 @@ NCConfig = {
         self.NemesisDB:DeleteKey(name)
     end,
 
+    ToggleNemesis = function(self, name)
+        if self:GetNemesis(name) then
+            self:RemoveNemesis(name)
+        else
+            self:AddNemesis(name)
+        end
+
+        core.EventSystem:Publish("NEMESIS_TOGGLED")
+    end,
+
     RenameNemesis = function(self, oldName, newName)
         self.NemesisDB:SetKey(newName, newName)
         self.NemesisDB:DeleteKey(oldName)
@@ -904,6 +957,18 @@ NCConfig = {
     NeedsMigration = function(self)
         return not self:GetPath("profile.schemaVersion") or
             self:GetPath("profile.schemaVersion") < NCMigration.currentVersion
+    end,
+
+    GetMigrations = function(self)
+        return self.CoreDB:GetKey("migrations")
+    end,
+
+    SetMigrations = function(self, value)
+        self.CoreDB:SetKey("migrations", value)
+    end,
+
+    AddMigration = function(self, migration)
+        self.CoreDB:PathInsert("migrations", migration)
     end,
 
     -----------------------------------------------------
@@ -1086,6 +1151,23 @@ NCConfig = {
     end,
 
     -----------------------------------------------------
+    -- UI Modifications
+    -----------------------------------------------------
+    IsContextMenuEnabled = function(self)
+        return self.CoreDB:GetPath("ui.contextMenuEnabled")
+    end,
+
+    SetContextMenuEnabled = function(self, value)
+        self.CoreDB:SetPath("ui.contextMenuEnabled", value)
+        self:PublishContextMenuToggled()
+    end,
+
+    ToggleContextMenuEnabled = function(self)
+        self.CoreDB:TogglePath("ui.contextMenuEnabled")
+        self:PublishContextMenuToggled()
+    end,
+
+    -----------------------------------------------------
     --- General Helper Methods
     -----------------------------------------------------
     Get = function(self, key)
@@ -1102,6 +1184,10 @@ NCConfig = {
 
     SetPath = function(self, path, value)
         self.CoreDB:SetPath(path, value)
+    end,
+
+    PublishContextMenuToggled = function(self)
+        core.EventSystem:Publish("NC_CONTEXT_MENU_TOGGLED", self.CoreDB:GetPath("ui.contextMenuEnabled"))
     end,
 }
 

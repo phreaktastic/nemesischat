@@ -246,7 +246,7 @@ local function FormatMemberInfo(name, class, localizedClass, specName, itemLevel
         plain = format("%d %s %s%s - %s",
             itemLevel,
             specName,
-            class,
+            localizedClass,
             dungeonScore and format(" (%s IO)", dungeonScore) or "",
             serverName)
     }
@@ -389,6 +389,13 @@ local function CreateApplicantEntry(parent, index)
     return entry
 end
 
+local function CleanupApplicantCache()
+    -- Clear the applicant cache every 5 minutes
+    C_Timer.NewTicker(300, function()
+        Cache.applicantIds = setmetatable({}, { __mode = "k" })
+    end)
+end
+
 -- Core functionality
 function LFGHandler:Initialize()
     if not NCConfig then
@@ -406,9 +413,14 @@ function LFGHandler:Initialize()
     Cache.ignoredQueue = Cache.ignoredQueue or {}
     Cache.notificationSettings = 0
     Cache.chatMessageSettings = 0
+    Cache.lastUpdate = 0
+    Cache.lastPermissionCheck = 0
 
     -- Update notification settings
     self:UpdateConfigCache()
+
+    -- Initialize the cache cleanup
+    CleanupApplicantCache()
 
     -- Initial permission check
     HasDeclinePermission()
@@ -428,6 +440,10 @@ function LFGHandler:UpdateConfigCache()
             local flag = Config.FEATURES["NOTIFY_" .. string.upper(role)]
             if flag then
                 notifySettings = bor(notifySettings, flag)
+                -- Also set chat settings if chat messages are enabled for this role
+                if NCConfig:IsRoleChatEnabled(role) then
+                    chatSettings = bor(chatSettings, flag)
+                end
             end
         end
     end
@@ -437,12 +453,13 @@ function LFGHandler:UpdateConfigCache()
 end
 
 function LFGHandler:OnApplicantUpdated(applicantID)
-    if not NCConfig or not applicantID or Cache.notificationSettings == 0 then return end
+    if not NCConfig or not applicantID or (Cache.notificationSettings == 0 and Cache.chatMessageSettings == 0 and
+        not NCConfig:IsPopupOnIgnoredApplicants()) then return end
 
     local applicantInfo = C_LFGList.GetApplicantInfo(applicantID)
-    if not applicantInfo or not applicantInfo.applicationStatus then return end
+    if not applicantInfo or not applicantInfo.numMembers then return end
 
-    -- Skip if we've already processed this applicant
+    -- Skip if we've already processed this applicant in the last 5 minutes
     if Cache.applicantIds[applicantID] then return end
     Cache.applicantIds[applicantID] = true
 
@@ -455,7 +472,8 @@ function LFGHandler:OnApplicantUpdated(applicantID)
         local memberInfo = self:ProcessApplicantMember(applicantID, i)
         if memberInfo then
             if memberInfo.reason then
-                if NCConfig and NCConfig:IsPopupOnIgnoredApplicants() then
+                -- Only add to ignoredMembers if we have decline permission
+                if HasDeclinePermission() and NCConfig and NCConfig:IsPopupOnIgnoredApplicants() then
                     tinsert(ignoredMembers, memberInfo)
                 end
             else
@@ -473,7 +491,7 @@ function LFGHandler:OnApplicantUpdated(applicantID)
     end
 
     -- Handle ignored applicants
-    if #ignoredMembers > 0 then
+    if HasDeclinePermission() and #ignoredMembers > 0 then
         for _, member in ipairs(ignoredMembers) do
             tinsert(Cache.ignoredQueue, member)
         end
@@ -488,7 +506,13 @@ function LFGHandler:ProcessApplicantMember(applicantID, memberIndex)
         C_LFGList.GetApplicantMemberInfo(applicantID, memberIndex)
 
     -- Skip if we don't have complete member info
-    if not name or not class or not itemLevel or itemLevel <= 0 then return nil end
+    if not class or not itemLevel or itemLevel <= 0 then
+        Cache.applicantIds[applicantID] = nil
+        C_Timer.After(0.1, function()
+            self:OnApplicantUpdated(applicantID)
+        end)
+        return nil
+    end
 
     -- Ensure valid itemLevel and dungeonScore
     itemLevel = floor(itemLevel)
@@ -590,7 +614,7 @@ function LFGHandler:SendNotification(groupMembers, sound)
         and format("New applicant: %s", plainEntries[1])
         or format("A group of %d has applied: %s",
             #groupMembers,
-            table.concat(plainEntries, " | "))
+            table.concat(plainEntries, ", "))
 
     -- Print to addon chat
     NemesisChat:Print(formattedMessage)

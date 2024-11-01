@@ -97,6 +97,16 @@ core.defaults = {
                                 afterBoss = false,
                                 afterDungeon = false
                             }
+                        },
+                        crowdcontrol = {
+                            enabled = true,
+                            reportTop = false,
+                            reportBottom = false,
+                            triggers = {
+                                afterCombat = false,
+                                afterBoss = false,
+                                afterDungeon = false
+                            }
                         }
                     }
                 },
@@ -180,12 +190,18 @@ core.defaults = {
             }
         },
 
+        -- UI Modifications
+        ui = {
+            contextMenuEnabled = false,
+        },
+
         -- Storage
         messages = {},
         nemeses = {},
         api = {},
         leavers = {},
         lowPerformers = {},
+        migrations = {},
 
         -- UI Settings
         statsFrame = {
@@ -209,6 +225,15 @@ core.defaults = {
             ncDungeon = {},
             dungeonRankings = {},
             ncDungeonTime = 0,
+        },
+
+        nemesisIcons = {
+            enabled = true,
+            frames = {
+                party = { enabled = true, iconIndex = 1, size = 16, point = "CENTER", xOffset = 0, yOffset = 0 },
+                nameplate = { enabled = true, iconIndex = 1, size = 16, point = "CENTER", xOffset = 0, yOffset = 0 },
+                target = { enabled = true, iconIndex = 1, size = 16, point = "CENTER", xOffset = 0, yOffset = 0 },
+            }
         },
     },
 }

@@ -23,24 +23,18 @@ DungeonHandler.dungeonStates = setmetatable({
     mythicplus = false,
     follower = false,
     delve = false,
+    timewalking = false,
     lastDelveTime = 0,
     currentDelveMapID = nil,
     currentDifficulty = nil
 }, { __mode = "k" })
 
--- Cache difficulty names for faster comparison
-local DIFFICULTY_NAMES = {
-    [1] = "Normal",
-    [2] = "Heroic",
-    [23] = "Mythic",
-    [8] = "Mythic Keystone",
-}
-
 local DIFFICULTY_MAP = {
-    [1] = { name = "Normal", state = "normal" },
-    [2] = { name = "Heroic", state = "heroic" },
-    [23] = { name = "Mythic", state = "mythic" },
-    [8] = { name = "Mythic+", state = "mythicplus" },
+    [DifficultyUtil.ID.DungeonNormal] = { name = "Normal", state = "normal" },
+    [DifficultyUtil.ID.DungeonHeroic] = { name = "Heroic", state = "heroic" },
+    [DifficultyUtil.ID.DungeonMythic] = { name = "Mythic", state = "mythic" },
+    [DifficultyUtil.ID.DungeonChallenge] = { name = "Mythic+", state = "mythicplus" },
+    [DifficultyUtil.ID.DungeonTimewalker] = { name = "Timewalking", state = "timewalking" },
 }
 
 function DungeonHandler:Fire()
@@ -52,8 +46,14 @@ function DungeonHandler:CheckDungeonStatus()
     local inInstance, instanceType = IsInInstance()
 
     if inInstance then
-        -- Handle delves independently of difficulty mapping
-        if C_DelvesUI and C_DelvesUI.HasActiveDelve() then
+        -- Check follower first since it's more specific
+        if C_LFGInfo.IsInLFGFollowerDungeon() then
+            self:CheckFollowerDungeon()
+        -- LFG dungeons are handled by the standard dungeon check
+        elseif IsInLFGDungeon() then
+            self:StartStandardDungeon(dungeonInfo)
+        -- Then check delves
+        elseif C_DelvesUI and C_DelvesUI.HasActiveDelve() then
             self:CheckDelveStart(dungeonInfo)
         else
             self:StartStandardDungeon(dungeonInfo)
@@ -85,7 +85,7 @@ end
 
 function DungeonHandler:IsInStandardDungeon()
     return self.dungeonStates.normal or self.dungeonStates.heroic or self.dungeonStates.mythic or
-        self.dungeonStates.mythicplus
+        self.dungeonStates.mythicplus or self.dungeonStates.lfg
 end
 
 function DungeonHandler:ClearStandardDungeonStates()
@@ -93,19 +93,23 @@ function DungeonHandler:ClearStandardDungeonStates()
     self.dungeonStates.heroic = false
     self.dungeonStates.mythic = false
     self.dungeonStates.mythicplus = false
+    self.dungeonStates.lfg = false
     self.dungeonStates.currentDifficulty = nil
 end
 
 function DungeonHandler:CheckFollowerDungeon()
     local isInFollowerDungeon = C_LFGInfo.IsInLFGFollowerDungeon()
+
     if isInFollowerDungeon and not self.dungeonStates.follower then
         local scenarioInfo = C_ScenarioInfo.GetScenarioInfo()
-        if scenarioInfo then
+        if scenarioInfo and not scenarioInfo.completed then
             self:StartDungeon(scenarioInfo.name .. " (Follower)", "FOLLOWER")
         end
     elseif not isInFollowerDungeon and self.dungeonStates.follower then
         local scenarioInfo = C_ScenarioInfo.GetScenarioInfo()
-        self:EndDungeon("FOLLOWER", scenarioInfo and scenarioInfo.completed or false)
+        if not scenarioInfo or scenarioInfo.completed then
+            self:EndDungeon("FOLLOWER", scenarioInfo and scenarioInfo.completed or false)
+        end
     end
 end
 
@@ -193,7 +197,7 @@ end
 
 function DungeonHandler:OnPlayerLeavingWorld()
     if self:IsInAnyDungeon() then
-        local category = core.NCEvent:GetCategory()
+        local category = NCEvent:GetCategory()
         self:EndDungeon(category, false)
     end
 end
@@ -217,7 +221,10 @@ end
 
 function DungeonHandler:OnScenarioCompleted()
     if self.dungeonStates.follower then
-        self:EndDungeon("FOLLOWER", true)
+        local scenarioInfo = C_ScenarioInfo.GetScenarioInfo()
+        if scenarioInfo and scenarioInfo.completed then
+            self:EndDungeon("FOLLOWER", true)
+        end
     end
 end
 
@@ -262,6 +269,7 @@ function DungeonHandler:StartDungeon(name, category)
 
     NCRuntime:ClearPetOwners()
     NCRuntime:ClearLastCompletedDungeon()
+    NCInfo:UpdatePlayerDropdown()
     NCInfo:Update()
 end
 
@@ -320,7 +328,7 @@ function DungeonHandler:EndDungeon(category, isSuccess)
     self:ResetDungeonInfo()
     NCRuntime:ClearPetOwners()
     NCRuntime:SetLastCompletedDungeon(NCDungeon)
-    NCInfo:Update(true)
+    NCInfo:Update()
 end
 
 function DungeonHandler:ResetDungeonInfo()
@@ -330,6 +338,12 @@ function DungeonHandler:ResetDungeonInfo()
 end
 
 function DungeonHandler:IsInAnyDungeon()
+    if IsInLFGDungeon() then
+        return true
+    end
+    if C_LFGInfo.IsInLFGFollowerDungeon() then
+        return true
+    end
     if C_DelvesUI and C_DelvesUI.HasActiveDelve() then
         return true
     end
@@ -389,7 +403,7 @@ function DungeonHandler:GetDungeonInfo()
         }
     end
 
-    local difficulty = DIFFICULTY_MAP[difficultyName]
+    local difficulty = DIFFICULTY_MAP[difficultyID]
     return {
         name = name,
         difficultyName = difficulty and difficulty.name or "Unknown",
@@ -458,7 +472,10 @@ function DungeonHandler:StartMythicPlus(dungeonInfo)
         self:ClearStandardDungeonStates()
     end
 
-    local dungeonName = string.format("%s (Mythic+)", dungeonInfo.name)
+    -- Get the keystone level
+    local keystoneLevel = C_ChallengeMode.GetActiveKeystoneInfo()
+    local dungeonName = string.format("%s (Mythic+ %d)", dungeonInfo.name, keystoneLevel)
+
     self.dungeonStates.mythicplus = true
     self.dungeonStates.currentDifficulty = "mythicplus"
     self:StartDungeon(dungeonName, "DUNGEON")

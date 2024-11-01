@@ -19,7 +19,6 @@ local strsplit = strsplit
 -----------------------------------------------------
 
 NCDB = {
-    prefix = "",
     basePath = "profile",
 }
 

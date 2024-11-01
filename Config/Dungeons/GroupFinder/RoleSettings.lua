@@ -8,21 +8,13 @@ local AceGUI = LibStub("AceGUI-3.0")
 local soundTable, soundTableSortKeys = GetSoundTable()
 local minItemLevelMin = 0
 local minItemLevelMax = 650
-local Type = _G.NCL.SoundDropdown.Type
-if not AceGUI:GetWidgetVersion(Type) then
-    LibStub("AceGUI-3.0"):RegisterWidgetType(
-        Type,
-        _G.NCL.SoundDropdown.Constructor,
-        _G.NCL.SoundDropdown.Version
-    )
-end
 
 -- Create the dropdown menu with preview buttons
 local function CreateSoundDropdown(role, order)
     return {
         order = order,
         type = "select",
-        dialogControl = "NCSoundDropdown", -- Specify our custom control
+        dialogControl = "SoundDropdown",
         name = "Notification Sound",
         desc = "Sound to play when a " .. role .. " applies",
         values = soundTable,

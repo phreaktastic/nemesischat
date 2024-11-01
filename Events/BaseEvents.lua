@@ -23,10 +23,17 @@ function NemesisChat:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
     if isInitialLogin or isReloadingUi then
         self:CheckGroup()
     end
+
+    NCRuntime:ClearAcceptedLFG()
+
+    if NCInfo and NCInfo.StatsFrame then
+        NCInfo:UpdatePlayerDropdown()
+    end
 end
 
 function NemesisChat:PLAYER_LEAVING_WORLD()
     if not IsNCEnabled() then return end
+    if NCDungeon:IsActive() then NCDungeon:UpdateCache() end
     core.DungeonHandler:OnPlayerLeavingWorld()
     NCRuntime:ClearPetOwners()
 end
@@ -34,6 +41,9 @@ end
 function NemesisChat:CHALLENGE_MODE_START()
     if not IsNCEnabled() then return end
     core.DungeonHandler:OnChallengeModeStart()
+    if NCInfo and NCInfo.StatsFrame and NCInfo.StatsFrame:IsShown() then
+        NCInfo:InitializePlayerDropdown()
+    end
 end
 
 function NemesisChat:CHALLENGE_MODE_COMPLETED()
@@ -151,9 +161,7 @@ function NemesisChat:INSPECT_READY(event, guid)
 end
 
 function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
-    C_Timer.After(0.1, function()
-        core.LFGHandler:OnApplicantUpdated(applicantID)
-    end)
+    core.LFGHandler:OnApplicantUpdated(applicantID)
 end
 
 function NemesisChat:LFG_LIST_ACTIVE_ENTRY_UPDATE(event, entryID)
@@ -175,5 +183,10 @@ end
 
 function NemesisChat:LFG_COMPLETION_REWARD()
     if not IsNCEnabled() then return end
-    core.LFGHandler:OnCompletionReward()
+    core.DungeonHandler:OnCompletionReward()
+end
+
+function NemesisChat:LFG_PROPOSAL_SUCCEEDED()
+    if not IsNCEnabled() then return end
+    core.Runtime:AcceptLFG()
 end

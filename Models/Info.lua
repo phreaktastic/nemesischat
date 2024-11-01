@@ -417,14 +417,25 @@ NCInfo = {
     end,
 
     -- Update function
-    Update = function(self, forceLastDungeon)
+    Update = function(self)
         if not IsNCEnabled() or not self.StatsFrame then return end
 
+        -- This is the key validation that was missing
         local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
-
-        if forceLastDungeon then
-            dungeonData = NCRuntime:GetLastCompletedDungeon()
+        if not dungeonData then
+            -- No dungeon data available, update UI accordingly
+            self:UpdateHeader()
+            self:UpdateMetrics(nil)  -- This will trigger the empty state
+            self:UpdatePrevNextButtons(nil)  -- This will disable the buttons
+            self:UpdateDropdownText()
+            self:UpdateChannelDropdown()
+            self:UpdatePlayerDropdown()
+            self:SetWidthsAndTruncatedTexts()
+            return
         end
+
+        -- Force roster update
+        NCRuntime:UpdateGroupRosterRoles()
 
         self:UpdateHeader()
         self:UpdatePlayerInfo(dungeonData)
@@ -442,18 +453,19 @@ NCInfo = {
         if not self.StatsFrame or not self.StatsFrame.header then return end
 
         local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
-        local headerText = "Dungeon Info & Stats"
+        local headerText = "Dungeon Statistics"  -- Default title
 
-        if not dungeonData then
-            self.StatsFrame.header:SetText(headerText)
-            return
-        end
+        if dungeonData then
+            -- Try to get identifier from either direct property or method
+            local identifier = dungeonData.Identifier or (dungeonData.GetIdentifier and dungeonData:GetIdentifier())
+            local level = dungeonData.Level or (dungeonData.GetLevel and dungeonData:GetLevel())
 
-        if dungeonData and dungeonData.Identifier and dungeonData.Identifier ~= "" and dungeonData.Identifier ~= "DUNGEON" then
-            if dungeonData.Level and dungeonData.Level > 0 then
-                headerText = dungeonData.Identifier .. " +" .. dungeonData.Level
-            else
-                headerText = dungeonData.Identifier
+            if identifier and identifier ~= "" and identifier ~= "DUNGEON" then
+                if level and level > 0 then
+                    headerText = identifier .. " +" .. level
+                else
+                    headerText = identifier
+                end
             end
         end
 
@@ -484,15 +496,88 @@ NCInfo = {
 
     UpdateCompareCheckbox = function(self)
         local checkbox = self.StatsFrame.scrollFrame.scrollChild.compareCheckbox
-        if checkbox then
-            checkbox:SetChecked(NCConfig:Get("infoClickCompare"))
+        if not checkbox then return end
+
+        local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        if not dungeonData then
+            checkbox:Hide()
+            return
         end
+
+        checkbox:Show()
+        checkbox:SetChecked(NCConfig:Get("infoClickCompare"))
     end,
 
     UpdateMetrics = function(self, dungeonData)
         if not dungeonData then
             dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
         end
+
+        local content = self.StatsFrame.scrollFrame.scrollChild
+
+        -- Hide all metric rows initially
+        for _, row in pairs(content.rows) do
+            row:Hide()
+        end
+
+        -- Disable UI elements when no data
+        local hasData = dungeonData ~= nil
+
+        -- Disable dropdowns
+        if hasData then
+            UIDropDownMenu_EnableDropDown(self.StatsFrame.playerDropdown)
+            UIDropDownMenu_EnableDropDown(self.StatsFrame.channelDropdown)
+        else
+            UIDropDownMenu_DisableDropDown(self.StatsFrame.playerDropdown)
+            UIDropDownMenu_DisableDropDown(self.StatsFrame.channelDropdown)
+        end
+
+        -- Update clear button
+        if self.StatsFrame.clearButton then
+            self.StatsFrame.clearButton:SetEnabled(hasData)
+            if hasData then
+                self.StatsFrame.clearButton:GetNormalTexture():SetDesaturated(false)
+                self.StatsFrame.clearButton:GetHighlightTexture():SetDesaturated(false)
+                self.StatsFrame.clearButton:GetPushedTexture():SetDesaturated(false)
+            else
+                self.StatsFrame.clearButton:GetNormalTexture():SetDesaturated(true)
+                self.StatsFrame.clearButton:GetHighlightTexture():SetDesaturated(true)
+                self.StatsFrame.clearButton:GetPushedTexture():SetDesaturated(true)
+            end
+        end
+
+        -- Hide compare checkbox when no data
+        if content.compareCheckbox then
+            content.compareCheckbox:SetShown(hasData)
+        end
+
+        if not hasData then
+            -- Show message if not already created
+            if not content.emptyStateText then
+                content.emptyStateText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+                content.emptyStateText:SetPoint("CENTER", content, "CENTER", 0, 20)
+                -- Using auto-wrapping text
+                content.emptyStateText:SetWidth(content:GetWidth() - 40) -- 20px padding on each side
+                content.emptyStateText:SetText("Dungeon statistics will appear when you enter or complete a dungeon")
+                content.emptyStateText:SetTextColor(0.7, 0.7, 0.7)
+                content.emptyStateText:SetJustifyH("CENTER")
+                content.emptyStateText:SetWordWrap(true)
+            else
+                -- Update width in case frame was resized
+                content.emptyStateText:SetWidth(content:GetWidth() - 40)
+            end
+            content.emptyStateText:Show()
+            return
+        else
+            -- Hide empty state message and show rows
+            if content.emptyStateText then
+                content.emptyStateText:Hide()
+            end
+            for _, row in pairs(content.rows) do
+                row:Show()
+            end
+        end
+
         for _, key in ipairs(self.MetricKeys) do
             local value = self:GetDungeonStat(dungeonData, self.CurrentPlayer, key)
             self:UpdateRow(key, value, dungeonData)
@@ -637,12 +722,27 @@ NCInfo = {
             dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
         end
 
-        if not dungeonData then
+        -- Disable buttons if no dungeon data or only one player
+        if not dungeonData or not dungeonData.RosterSnapshot then
             self.StatsFrame.prevPlayerButton:Disable()
             self.StatsFrame.nextPlayerButton:Disable()
             return
         end
 
+        -- Count players in roster
+        local playerCount = 0
+        for _ in pairs(dungeonData.RosterSnapshot) do
+            playerCount = playerCount + 1
+        end
+
+        -- Disable if only one player
+        if playerCount <= 1 then
+            self.StatsFrame.prevPlayerButton:Disable()
+            self.StatsFrame.nextPlayerButton:Disable()
+            return
+        end
+
+        -- Update player list if needed
         if not self.playerList or GetTime() - (self.lastPlayerListUpdate or 0) > 1 then
             self.playerList = {}
             for name in pairs(dungeonData.RosterSnapshot) do
@@ -652,13 +752,8 @@ NCInfo = {
             self.lastPlayerListUpdate = GetTime()
         end
 
-        if #self.playerList <= 1 then
-            self.StatsFrame.prevPlayerButton:Disable()
-            self.StatsFrame.nextPlayerButton:Disable()
-        else
-            self.StatsFrame.prevPlayerButton:Enable()
-            self.StatsFrame.nextPlayerButton:Enable()
-        end
+        self.StatsFrame.prevPlayerButton:Enable()
+        self.StatsFrame.nextPlayerButton:Enable()
     end,
 
     UpdateChannelDropdown = function(self)
@@ -667,9 +762,11 @@ NCInfo = {
 
     -- Update player dropdown
     UpdatePlayerDropdown = function(self)
-        if not self.StatsFrame then
-            return
-        end
+        if not self.StatsFrame then return end
+
+        -- Clear and rebuild player list
+        self.playerList = nil
+        self.lastPlayerListUpdate = nil
 
         local maxPlayerLength = GetMaxDropdownTextLength(self.StatsFrame)
         local playerDisplayText = TruncateName(self.CurrentPlayer, maxPlayerLength)
@@ -684,18 +781,28 @@ NCInfo = {
         if not self.StatsFrame then return end
 
         local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
-        local playerCount = dungeonData and NemesisChat:GetLength(dungeonData.RosterSnapshot) or 1
+        local raidGroup = IsInRaid()
+        local partyMembers = GetNumGroupMembers()
+
+        -- Force roster update if we're in a group
+        if IsInGroup() and dungeonData then
+            NCRuntime:UpdateGroupRosterRoles()
+            if dungeonData.SnapshotCurrentRoster then
+                dungeonData:SnapshotCurrentRoster()
+            end
+        end
 
         local f = self.StatsFrame
         UIDropDownMenu_Initialize(f.playerDropdown, function(dropdown, level, menuList)
             if level == 1 then
-                -- Only use raid groups if we actually have group data
-                if playerCount > 5 and dungeonData and next(dungeonData.RosterSnapshot) and dungeonData.RosterSnapshot[next(dungeonData.RosterSnapshot)].group then
+                -- Only use raid groups if we actually have group data and are in an active raid
+                if raidGroup and partyMembers > 5 and IsInRaid() and dungeonData and
+                   dungeonData.RosterSnapshot and next(dungeonData.RosterSnapshot) and
+                   dungeonData.RosterSnapshot[next(dungeonData.RosterSnapshot)].group then
                     self:CreateRaidGroupedDropdown(dropdown, level, dungeonData)
-                elseif playerCount > 1 then
-                    self:CreateNormalDropdown(dropdown, level, dungeonData)
                 else
-                    self:CreateSoloDropdown(dropdown, level)
+                    -- Use normal dropdown for completed dungeons or party groups
+                    self:CreateNormalDropdown(dropdown, level, dungeonData)
                 end
             elseif level == 2 and menuList then
                 self:CreateRaidGroupMenu(menuList, dropdown, level)
@@ -1081,7 +1188,9 @@ NCInfo = {
             f.footerFrame:Show()
             f.scrollFrame:Show()
             f.dropdownFrame:Show()
+            f.headerFrame:Show()     -- Show the header frame
             f.resizeButton:Show()
+            f:SetAlpha(1)           -- Restore full opacity
             self:Update()
         else
             -- Minimize the frame
@@ -1126,20 +1235,28 @@ NCInfo = {
         if not IsNCEnabled() or not self.StatsFrame then return end
 
         local f = self.StatsFrame
-        local titleHeight = f.title:GetHeight() + 8             -- Include top padding
-        local headerFrameHeight = f.headerFrame:GetHeight() + 5 -- Include spacing
-        local newHeight = titleHeight + headerFrameHeight + 10  -- Add extra padding
+        local titleHeight = f.title:GetHeight() + 8  -- Include top padding
+        local newHeight = titleHeight + 5            -- Just enough for title and buttons
 
+        -- Hide most elements
         f:SetHeight(newHeight)
         f:SetResizable(false)
         f.resizeButton:Hide()
         f.footerFrame:Hide()
         f.scrollFrame:Hide()
         f.dropdownFrame:Hide()
+        f.headerFrame:Hide()        -- Hide the header frame
         f.resizeButton:Hide()
+
+        -- Reduce frame alpha
+        f:SetAlpha(0.6)
     end,
 
     GetDungeonStat = function(self, dungeonData, playerName, metric)
+        -- First validate we have actual dungeon data
+        if not dungeonData then
+            dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        end
         if not dungeonData then return 0 end
 
         local value = 0
@@ -1150,12 +1267,16 @@ NCInfo = {
                 else
                     value = NCDungeon:GetStats(playerName, metric)
                 end
-            else
+            elseif dungeonData.Stats then
+                -- Handle restored data
                 if metric == "DPS" then
-                    value = (dungeonData.Stats.DPS and dungeonData.Stats.DPS[playerName]) or 0
+                    value = dungeonData.Stats and dungeonData.Stats.DPS and dungeonData.Stats.DPS[playerName] or 0
                 else
-                    value = (dungeonData.Stats[metric] and dungeonData.Stats[metric][playerName]) or 0
+                    value = dungeonData.Stats and dungeonData.Stats[metric] and dungeonData.Stats[metric][playerName] or
+                           dungeonData[metric] and dungeonData[metric][playerName] or 0
                 end
+            else
+                value = 0
             end
         end)
 
@@ -1169,9 +1290,14 @@ NCInfo = {
     end,
 
     OnStatUpdate = function(self, statType, player, value)
-        if player == self.CurrentPlayer and self.StatsFrame and self.StatsFrame:IsShown() then
+        if not self.StatsFrame or not self.StatsFrame:IsShown() then return end
+
+        if player == self.CurrentPlayer then
             local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
-            self:UpdateRow(statType, value, dungeonData)
+            if dungeonData then
+                self:UpdateRow(statType, value, dungeonData)
+                self:UpdateLayout()
+            end
         end
     end,
 

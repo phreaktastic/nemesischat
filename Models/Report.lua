@@ -12,6 +12,7 @@ function NemesisChat:Report(event, success)
         ["INTERRUPTS"] = "Interrupts",
         ["OFFHEALS"] = "Offheals",
         ["DEATHS"] = "Deaths",
+        ["CROWDCONTROL"] = "CrowdControl",
     }
     local EVENTS = {
         ["COMBAT"] = true,
@@ -55,6 +56,10 @@ function NemesisChat:Report(event, success)
             topMsg = "Shout out to %s with the lowest deaths for %s, at %s!",
             botMsg = "Most deaths for %s: %s at %s.",
         },
+        ["CROWDCONTROL"] = {
+            topMsg = "Shout out to %s with the highest CC score for %s, at %s!",
+            botMsg = "Lowest CC score for %s: %s at %s.",
+        },
     }
 
     if not EVENTS[event] then return end
@@ -86,6 +91,8 @@ function NemesisChat:Report(event, success)
                 isEnabled = NCConfig:IsReportingOffheals_Combat()
             elseif type == "DEATHS" then
                 isEnabled = NCConfig:IsReportingDeaths_Combat()
+            elseif type == "CROWDCONTROL" then
+                isEnabled = NCConfig:IsReportingCrowdControl_Combat()
             end
         elseif event == "BOSS" then
             if type == "DAMAGE" then
@@ -98,6 +105,8 @@ function NemesisChat:Report(event, success)
                 isEnabled = NCConfig:IsReportingOffheals_Boss()
             elseif type == "DEATHS" then
                 isEnabled = NCConfig:IsReportingDeaths_Boss()
+            elseif type == "CROWDCONTROL" then
+                isEnabled = NCConfig:IsReportingCrowdControl_Boss()
             end
         elseif event == "DUNGEON" then
             if type == "DAMAGE" then
@@ -110,6 +119,8 @@ function NemesisChat:Report(event, success)
                 isEnabled = NCConfig:IsReportingOffheals_Dungeon()
             elseif type == "DEATHS" then
                 isEnabled = NCConfig:IsReportingDeaths_Dungeon()
+            elseif type == "CROWDCONTROL" then
+                isEnabled = NCConfig:IsReportingCrowdControl_Dungeon()
             end
         end
 
@@ -135,6 +146,8 @@ function NemesisChat:Report(event, success)
                     isTopEnabled = NCConfig:IsReportingOffheals_Top()
                 elseif type == "DEATHS" then
                     isTopEnabled = NCConfig:IsReportingDeaths_Top()
+                elseif type == "CROWDCONTROL" then
+                    isTopEnabled = NCConfig:IsReportingCrowdControl_Top()
                 end
 
                 if isTopEnabled and topRanking and topRanking.Player then
@@ -162,6 +175,8 @@ function NemesisChat:Report(event, success)
                     isBottomEnabled = NCConfig:IsReportingOffheals_Bottom()
                 elseif type == "DEATHS" then
                     isBottomEnabled = NCConfig:IsReportingDeaths_Bottom()
+                elseif type == "CROWDCONTROL" then
+                    isBottomEnabled = NCConfig:IsReportingCrowdControl_Bottom()
                 end
 
                 if isBottomEnabled and bottomRanking and bottomRanking.Player then

@@ -79,7 +79,7 @@ local damageLookup = {
     ["SPELL_PERIODIC_DAMAGE"] = true
 }
 
-local groupRoster = core.runtime.groupRoster
+local groupRoster = NCRuntime:GetGroupRoster()
 
 local function GetDamageAmount(event, arg1, arg2, arg3, arg4)
     local index = damageTable[event]
@@ -205,10 +205,16 @@ end
 -----------------------------------------------------
 
 function CombatEventHandler:Fire()
+    if not groupRoster or not next(groupRoster) then
+        groupRoster = NCRuntime:GetGroupRoster()
+        return
+    end
+
     eventInfo.time, eventInfo.subEvent, eventInfo.hidecaster, eventInfo.sourceGUID, eventInfo.sourceName, eventInfo.sourceFlags, eventInfo.sourceRaidFlags, eventInfo.destGUID, eventInfo.destName, eventInfo.destFlags, eventInfo.destRaidFlags, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4 =
         CombatLogGetCurrentEventInfo()
 
-    if (not eventInfo.sourceName and not eventInfo.destName) or (not groupRoster[eventInfo.sourceName] and not groupRoster[eventInfo.destName] and bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_PET) == 0 and bit_band(eventInfo.sourceFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) == 0) then
+    if (not eventInfo.sourceName and not eventInfo.destName) or
+       (not groupRoster[eventInfo.sourceName] and not groupRoster[eventInfo.destName]) then
         wipe(eventInfo)
         return
     end
@@ -340,9 +346,13 @@ end
 
 function CombatEventHandler:ActionScoring()
     local spellId, sourceName = eventInfo.misc1, eventInfo.sourceName
-    if not IsInGroup() or not sourceName or not groupRoster[sourceName] then return end
+
+    if not IsInGroup() or not sourceName or not groupRoster[sourceName] then
+        return
+    end
 
     local flags = LibPlayerSpells:GetSpellInfo(spellId)
+
     if not flags then return end
 
     if not ignoredCCSpells[spellId] and (bit_band(flags, CROWD_CTRL) ~= 0 or bit_band(flags, KNOCKBACK) ~= 0 or bit_band(flags, SNARE) ~= 0) then

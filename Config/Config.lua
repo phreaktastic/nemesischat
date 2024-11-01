@@ -250,7 +250,7 @@ end
 
 function NemesisChat:ShowApiErrorPopup(api)
     self:ShowPopup(
-        string.format("Cannot enable %s API: %s could not be found! Please ensure it is enabled and functional.", api,
+        string.format("Cannot enable %s Plugin: %s could not be found! Please ensure it is enabled and functional.", api,
             api),
         false,
         "Error!"

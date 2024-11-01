@@ -46,6 +46,7 @@ core.options.args.messagesGroup.args.eventMessages = {
         messagesCategories = {
             order = 4,
             type = "select",
+            dialogControl = nil,
             name = "Category",
             width = "full",
             values = "GetCategories",

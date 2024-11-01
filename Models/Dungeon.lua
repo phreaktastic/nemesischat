@@ -23,7 +23,9 @@ function NCDungeon:StartCallback()
     self:SetKeystoneAffixes(dungeonHandler.keystoneAffixes)
     self:SetTimeLimit(dungeonHandler.dungeonTimeLimit)
     self:SetDetailsSegment(DETAILS_SEGMENTID_OVERALL)
+    self:SnapshotCurrentRoster()
     self:UpdateCache()
+    NCInfo:Update()
 end
 
 function NCDungeon:FinishCallback(success)
@@ -102,7 +104,7 @@ function NCDungeon:CheckCache()
 
             if not self:IsActive() then
                 NCRuntime:SetLastCompletedDungeon(self)
-                NCInfo:Update(true)
+                NCInfo:Update()
             else
                 self:RegisterObserver(NCInfo)
                 NCInfo:Update()

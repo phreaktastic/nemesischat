@@ -11,7 +11,10 @@ function CoreDbUsageCheck.new()
         exclusions = {
             "DB.lua", -- This is the only file that should use core.db
             "Core.lua:16", -- This is where we instantiate core.db
-            "SlashCommands.lua"
+            "SlashCommands.lua",
+            "Init.lua:643,647",
+            "Migrations.lua",
+            "Migration.lua"
         },
         severity = Severity.WARNING,
         cleanOptions = {

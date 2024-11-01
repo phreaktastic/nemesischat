@@ -497,6 +497,96 @@ core.options.args.messagesGroup.args.segmentMessages = {
                 },
             }
         },
+        crowdcontrol = {
+            order = 12,
+            type = "group",
+            name = "Crowd Control",
+            args = {
+                ccHeader = {
+                    order = 0,
+                    type = "header",
+                    name = "Crowd Control",
+                },
+                ccPaddingTop = {
+                    order = 1,
+                    type = "description",
+                    fontSize = "large",
+                    name = " ",
+                },
+                what = {
+                    order = 2,
+                    type = "group",
+                    name = "What to Report",
+                    inline = true,
+                    args = {
+                        topCcToggle = {
+                            order = 1,
+                            type = "toggle",
+                            name = "Shout-Outs",
+                            desc = "Report the highest CC score",
+                            descStyle = "inline",
+                            width = "full",
+                            get = function() return NCConfig:IsReportingCrowdControl_Top() end,
+                            set = function(info, value) NCConfig:ToggleReportingCrowdControl_Top() end,
+                        },
+                        bottomCcToggle = {
+                            order = 2,
+                            type = "toggle",
+                            name = "Call-Outs",
+                            desc = "Report the lowest CC score",
+                            descStyle = "inline",
+                            width = "full",
+                            get = function() return NCConfig:IsReportingCrowdControl_Bottom() end,
+                            set = function(info, value) NCConfig:ToggleReportingCrowdControl_Bottom() end,
+                        },
+                    }
+                },
+                when = {
+                    order = 3,
+                    type = "group",
+                    name = "When to Report",
+                    inline = true,
+                    args = {
+                        combatCcToggle = {
+                            order = 1,
+                            type = "toggle",
+                            name = "After Combat",
+                            desc = "Report CC after all combat segments",
+                            descStyle = "inline",
+                            width = "full",
+                            get = function() return NCConfig:IsReportingCrowdControl_Combat() end,
+                            set = function(info, value) NCConfig:ToggleReportingCrowdControl_Combat() end,
+                        },
+                        bossCcToggle = {
+                            order = 2,
+                            type = "toggle",
+                            name = "After Bosses",
+                            desc = "Report CC after bosses",
+                            descStyle = "inline",
+                            width = "full",
+                            get = function() return NCConfig:IsReportingCrowdControl_Boss() end,
+                            set = function(info, value) NCConfig:ToggleReportingCrowdControl_Boss() end,
+                        },
+                        dungeonCcToggle = {
+                            order = 3,
+                            type = "toggle",
+                            name = "After Dungeons",
+                            desc = "Report CC after dungeon completion",
+                            descStyle = "inline",
+                            width = "full",
+                            get = function() return NCConfig:IsReportingCrowdControl_Dungeon() end,
+                            set = function() NCConfig:ToggleReportingCrowdControl_Dungeon() end,
+                        },
+                    }
+                },
+                ccPaddingBottom = {
+                    order = 6,
+                    type = "description",
+                    fontSize = "large",
+                    name = " ",
+                },
+            }
+        },
     },
 }
 

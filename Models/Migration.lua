@@ -101,40 +101,16 @@ function NCMigration:AddStructuralChange(path, defaultValue)
 end
 
 function NCMigration:Run()
+    if core.db.profile.migrations == nil then
+        core.db.profile.migrations = {}
+    end
+
+    local totalCount = #core.db.profile.migrations
     local total = #NCMigration.migrations
     local count = 0
 
     for _, migration in pairs(NCMigration.migrations) do
-        if not NCConfig:GetPath("profile.migrations." .. migration.identifier) and NCSemver:Less(migration.lessThanVersion) then
-            -- Handle path transformations
-            if migration.pathTransforms then
-                for _, transform in pairs(migration.pathTransforms) do
-                    local oldValue = nil
-
-                    -- Handle old path in core.db.profile format
-                    if string.find(transform.oldPath, "core.db.profile") ~= nil then
-                        local cleanPath = string.gsub(transform.oldPath, "core.db.profile.", "")
-                        oldValue = NCConfig:GetPath(cleanPath)
-                    else
-                        oldValue = NCConfig:GetPath(transform.oldPath)
-                    end
-
-                    if oldValue ~= nil then
-                        NCConfig:SetPath(transform.newPath, oldValue)
-                    end
-                end
-            end
-
-            -- Handle structural changes
-            if migration.structuralChanges then
-                for _, change in pairs(migration.structuralChanges) do
-                    if NCConfig:GetPath(change.path) == nil then
-                        NCConfig:SetPath(change.path, change.default)
-                    end
-                end
-            end
-
-            -- Original erasure logic
+        if not core.db.profile.migrations[migration.identifier] and NCSemver:Less(migration.lessThanVersion) then
             if migration.pathsToErase then
                 for _, path in pairs(migration.pathsToErase) do
                     if string.find(path, "core.db.profile") ~= nil then
@@ -142,11 +118,14 @@ function NCMigration:Run()
                     end
 
                     local pathChunks = Split(path, ".")
-                    local table = NCConfig:Get()
+                    local table = core.db.profile
 
                     for i = 1, #pathChunks - 1 do
                         table = table[pathChunks[i]]
-                        if table == nil then break end
+
+                        if table == nil then
+                            break
+                        end
                     end
 
                     table[pathChunks[#pathChunks]] = nil
@@ -157,14 +136,13 @@ function NCMigration:Run()
                 migration.exec()
             end
 
-            NCConfig:SetPath("profile.migrations." .. migration.identifier, true)
+            core.db.profile.migrations[migration.identifier] = true
+
             count = count + 1
         end
     end
 
     if count > 0 then
-        NemesisChat:Print("Ran", NCColors.Emphasize(count), "migrations.")
+        NemesisChat:Print("Ran", NCColors.Emphasize(count), "migrations.", NCColors.Emphasize(totalCount), "total migrations.")
     end
-
-    NemesisChat:Print("Migrations complete. Checked:", total, "Ran:", count)
 end
