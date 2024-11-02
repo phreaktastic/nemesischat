@@ -57,6 +57,62 @@ local Config = {
     }
 }
 
+local ButtonStyles = {
+    Invite = {
+        backdrop = {
+            bgFile = "Interface\\Buttons\\GoldGradiant",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 12,
+            insets = { left = 3, right = 3, top = 3, bottom = 3 }
+        },
+        colors = {
+            normal = {
+                bg = { r = 0.1, g = 0.1, b = 0.1, a = 0.8 },
+                border = { r = 0.3, g = 0.3, b = 0.3, a = 0.8 }
+            },
+            hover = {
+                bg = { r = 0.2, g = 0.2, b = 0.2, a = 0.7 },
+                border = { r = 0.4, g = 0.4, b = 0.4, a = 0.7 }
+            },
+            pressed = {
+                bg = { r = 0.15, g = 0.15, b = 0.15, a = 1.0 },
+                border = { r = 0.3, g = 0.3, b = 0.3, a = 1.0 }
+            }
+        }
+    },
+    Default = {
+        backdrop = {
+            bgFile = "Interface\\Buttons\\GoldGradiant",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 12,
+            insets = { left = 3, right = 3, top = 3, bottom = 3 }
+        },
+        colors = {
+            normal = {
+                bg = { r = 0.2, g = 0.2, b = 0.2, a = 0.8 },
+                border = { r = 0.3, g = 0.3, b = 0.3, a = 0.8 }
+            },
+            hover = {
+                bg = { r = 0.3, g = 0.3, b = 0.3, a = 0.9 },
+                border = { r = 0.4, g = 0.4, b = 0.4, a = 0.9 }
+            },
+            pressed = {
+                bg = { r = 0.15, g = 0.15, b = 0.15, a = 1.0 },
+                border = { r = 0.3, g = 0.3, b = 0.3, a = 1.0 }
+            }
+        }
+    }
+}
+
+local ROLE_ICONS = {
+    TANK = "Interface\\Addons\\NemesisChat\\Media\\Icons\\TankRoleIcon",
+    HEALER = "Interface\\Addons\\NemesisChat\\Media\\Icons\\HealerRoleIcon",
+    DAMAGER = "Interface\\Addons\\NemesisChat\\Media\\Icons\\DPSRoleIcon"
+}
+
+local MAX_BATCH_SIZE = 10
+local BATCH_COOLDOWN = 1.0
+
 local Cache = {
     applicantIds = setmetatable({}, { __mode = "k" }),
     notificationSettings = 0,
@@ -66,6 +122,14 @@ local Cache = {
     lastUpdate = 0,
     hasDeclinePermission = false,
     lastPermissionCheck = 0,
+}
+
+local filterReasons = {
+    Config.FILTERS.REALM,           -- "Filtered Realm"
+    Config.FILTERS.CLASS,           -- "Filtered Class"
+    Config.FILTERS.SPEC,            -- "Filtered Specialization"
+    Config.FILTERS.ITEM_LEVEL,      -- "Below Item Level Requirement"
+    Config.FILTERS.DUNGEON_SCORE    -- "Below Score Requirement"
 }
 
 local function HasDeclinePermission()
@@ -288,105 +352,505 @@ local function IsAllowedSpec(spec)
     return (#allowedSpecs == 0 or tContains(allowedSpecs, spec)) and not tContains(ignoredSpecs, spec)
 end
 
+-- Helper function to color IO scores (if not already defined)
+local function GetScoreColor(score)
+    -- Ensure score is a number
+    score = tonumber(score) or 0
+
+    -- Check if RaiderIO exists and has the GetScoreColor function
+    if _G.RaiderIO and type(_G.RaiderIO.GetScoreColor) == "function" then
+        -- RaiderIO.GetScoreColor returns r, g, b values
+        local r, g, b = _G.RaiderIO.GetScoreColor(score)
+        -- Convert RGB values (0-1) to hex color code
+        return string.format("|cff%02x%02x%02x%s|r", r*255, g*255, b*255, score)
+    end
+
+    -- Fallback colors if RaiderIO isn't available
+    if score >= 3000 then return string.format("|cffff8000%s|r", score)      -- Orange/Gold
+    elseif score >= 2400 then return string.format("|cffff80ff%s|r", score)  -- Pink
+    elseif score >= 1800 then return string.format("|cff0070dd%s|r", score)  -- Blue
+    elseif score >= 1200 then return string.format("|cff1eff00%s|r", score)  -- Green
+    else return string.format("|cffffffff%s|r", score) end                   -- White
+end
+
+local function ApplyButtonStyle(button, style, state)
+    local colors = style.colors[state]
+    button:SetBackdropColor(colors.bg.r, colors.bg.g, colors.bg.b, colors.bg.a)
+    button:SetBackdropBorderColor(colors.border.r, colors.border.g, colors.border.b, colors.border.a)
+end
+
+function CreateStyledButton(parent, text)
+    local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate, BackdropTemplate")
+    button:SetSize(80, 24)
+    button:SetText(text)
+    button:SetNormalFontObject("GameFontNormal")
+    button:SetHighlightFontObject("GameFontHighlight")
+
+    local style = ButtonStyles[text] or ButtonStyles.Default
+    button:SetBackdrop(style.backdrop)
+
+    -- Initial state
+    ApplyButtonStyle(button, style, "normal")
+
+    -- Set custom colors for different states
+    button:SetScript("OnEnter", function(self)
+        ApplyButtonStyle(self, style, "hover")
+    end)
+
+    button:SetScript("OnLeave", function(self)
+        ApplyButtonStyle(self, style, "normal")
+    end)
+
+    button:SetScript("OnMouseDown", function(self)
+        ApplyButtonStyle(self, style, "pressed")
+    end)
+
+    button:SetScript("OnMouseUp", function(self)
+        if self:IsMouseOver() then
+            ApplyButtonStyle(self, style, "hover")
+        else
+            ApplyButtonStyle(self, style, "normal")
+        end
+    end)
+
+    return button
+end
+
+local function CreateApplicantEntry(parent, index)
+    local entry = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local yOffset = ((index - 1) * 65)
+    entry:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -yOffset)
+    entry:SetPoint("RIGHT", parent, "RIGHT", -5, 0)
+    entry:SetHeight(65)
+
+    -- Add translucent background
+    entry:SetBackdrop({
+        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 16,
+        edgeSize = 16,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 }
+    })
+    entry:SetBackdropColor(0.1, 0.1, 0.1, 0.6)
+    entry:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+
+    -- Role icon (left side)
+    entry.roleIcon = entry:CreateTexture(nil, "ARTWORK")
+    entry.roleIcon:SetPoint("LEFT", entry, "LEFT", 8, 0)
+    entry.roleIcon:SetSize(48, 48)
+
+    -- Primary info text (item level + spec + class)
+    entry.primaryInfo = entry:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    entry.primaryInfo:SetPoint("LEFT", entry.roleIcon, "RIGHT", 12, 20)
+    entry.primaryInfo:SetPoint("RIGHT", entry, "RIGHT", -8, 20)
+    entry.primaryInfo:SetJustifyH("LEFT")
+    entry.primaryInfo:SetWordWrap(false)
+
+    -- Secondary info (IO + realm)
+    entry.secondaryInfo = entry:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    entry.secondaryInfo:SetPoint("TOPLEFT", entry.primaryInfo, "BOTTOMLEFT", 0, -4)
+    entry.secondaryInfo:SetPoint("RIGHT", entry, "RIGHT", -8, 0)
+    entry.secondaryInfo:SetJustifyH("LEFT")
+    entry.secondaryInfo:SetWordWrap(false)
+
+    -- Filter reason (new)
+    entry.reasonInfo = entry:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    entry.reasonInfo:SetPoint("TOPLEFT", entry.secondaryInfo, "BOTTOMLEFT", 0, -4)
+    entry.reasonInfo:SetPoint("RIGHT", entry, "RIGHT", -8, -20)
+    entry.reasonInfo:SetJustifyH("LEFT")
+    entry.reasonInfo:SetWordWrap(false)
+    entry.reasonInfo:SetTextColor(0.9, 0.3, 0.3) -- Softer red
+
+    -- Buttons using the styled template (now stacked vertically)
+    entry.inviteButton = CreateStyledButton(entry, "Invite")
+    entry.inviteButton:SetPoint("TOPRIGHT", entry, "TOPRIGHT", -8, -8)
+    entry.inviteButton:SetScript("OnClick", function()
+        if entry.applicantData then
+            C_LFGList.InviteApplicant(entry.applicantData.applicantID)
+        end
+    end)
+
+    entry.declineButton = CreateStyledButton(entry, "Decline")
+    entry.declineButton:SetPoint("BOTTOMRIGHT", entry, "BOTTOMRIGHT", -8, 8)
+    entry.declineButton:SetScript("OnClick", function()
+        if entry.applicantData then
+            StaticPopup_Show(Config.STATIC_POPUPS.DECLINE_SINGLE, "applicant", nil, {
+                applicantID = entry.applicantData.applicantID,
+                handler = LFGHandler
+            })
+        end
+    end)
+
+    -- Enable mouse interaction for tooltip
+    entry:EnableMouse(true)
+    entry:SetScript("OnEnter", function(self)
+        if self.applicantData and self.applicantData.applicantID then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:AddLine(self.applicantData.info.primary.class, 1, 1, 1)
+
+            -- Add spec and item level
+            GameTooltip:AddLine(string.format("%s - %d",
+                self.applicantData.info.primary.spec,
+                self.applicantData.info.primary.itemLevel
+            ))
+
+            -- Add dungeon score if available
+            if self.applicantData.info.secondary.dungeonScore then
+                GameTooltip:AddLine(string.format("M+ Score: %d",
+                    self.applicantData.info.secondary.dungeonScore
+                ))
+            end
+
+            -- Add realm
+            GameTooltip:AddLine(self.applicantData.info.secondary.realm)
+
+            -- Add filter reason
+            GameTooltip:AddLine(LFGHandler:GetIgnoreReasonText(self.applicantData.reason), 1, 0.5, 0.5)
+
+            GameTooltip:Show()
+        end
+    end)
+    entry:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
+    end)
+
+    function entry:UpdateDisplay(applicant)
+        if not applicant then return end
+
+        self.applicantData = applicant
+        self.roleIcon:SetTexture(applicant.role.texture)
+
+        -- Color the spec and class text with class color
+        local primaryText = string.format("%d %s %s",
+            applicant.info.primary.itemLevel,
+            NCColors.ClassColor(applicant.info.primary.classFile, applicant.info.primary.spec),
+            NCColors.ClassColor(applicant.info.primary.classFile, applicant.info.primary.class))
+        self.primaryInfo:SetText(primaryText)
+
+        -- IO and realm on middle line
+        local secondaryText = string.format("%s IO - %s",
+            GetScoreColor(applicant.info.secondary.dungeonScore),
+            applicant.info.secondary.realm)
+        self.secondaryInfo:SetText(secondaryText)
+
+        -- Reason on bottom line
+        self.reasonInfo:SetText(LFGHandler:GetIgnoreReasonText(applicant.reason))
+    end
+
+    return entry
+end
+
+local function CreateGroupEntry(parent, index)
+    local entry = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+
+    -- Anchor first entry to top, subsequent entries below previous
+    if index > 1 and parent.entries and parent.entries[index-1] then
+        entry:SetPoint("TOPLEFT", parent.entries[index-1], "BOTTOMLEFT", 0, -10)
+        entry:SetPoint("TOPRIGHT", parent.entries[index-1], "BOTTOMRIGHT", 0, -10)
+    else
+        entry:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10)
+        entry:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, -10)
+    end
+
+    -- Set initial height (will be updated based on content)
+    entry:SetHeight(65)
+
+    -- Blue border and translucent background for group
+    entry:SetBackdrop({
+        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 16,
+        edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 }
+    })
+    entry:SetBackdropColor(0.1, 0.1, 0.2, 0.6)
+    entry:SetBackdropBorderColor(0.5, 0.7, 1.0, 0.8)
+
+    -- Group header
+    entry.header = CreateFrame("Frame", nil, entry)
+    entry.header:SetPoint("TOPLEFT", entry, "TOPLEFT", 5, -5)
+    entry.header:SetPoint("TOPRIGHT", entry, "TOPRIGHT", -5, -5)
+    entry.header:SetHeight(30)
+
+    -- Group text
+    entry.groupText = entry.header:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    entry.groupText:SetPoint("LEFT", 5, 0)
+    entry.groupText:SetPoint("RIGHT", -150, 0) -- Make room for buttons
+    entry.groupText:SetText("Group")
+
+    -- Group buttons (in header)
+    entry.declineButton = CreateStyledButton(entry.header, "Decline")
+    entry.declineButton:SetPoint("RIGHT", entry.header, "RIGHT", -5, 0)
+    entry.declineButton:SetScript("OnClick", function()
+        if entry.groupData and entry.groupData[1] then
+            StaticPopup_Show(Config.STATIC_POPUPS.DECLINE_SINGLE, "group", nil, {
+                applicantID = entry.groupData[1].applicantID,
+                handler = LFGHandler
+            })
+        end
+    end)
+
+    entry.inviteButton = CreateStyledButton(entry.header, "Invite")
+    entry.inviteButton:SetPoint("RIGHT", entry.declineButton, "LEFT", -5, 0)
+    entry.inviteButton:SetScript("OnClick", function()
+        if entry.groupData and entry.groupData[1] then
+            C_LFGList.InviteApplicant(entry.groupData[1].applicantID)
+        end
+    end)
+
+    -- Container for applicant entries
+    entry.applicantContainer = CreateFrame("Frame", nil, entry)
+    entry.applicantContainer:SetPoint("TOPLEFT", entry.header, "BOTTOMLEFT", 0, -5)
+    entry.applicantContainer:SetPoint("BOTTOMRIGHT", entry, "BOTTOMRIGHT", -5, 5)
+
+    function entry:UpdateDisplay(group)
+        if not group or #group == 0 then return end
+
+        -- Store group data for button callbacks
+        self.groupData = group
+
+        -- Update group text
+        self.groupText:SetText(format("Group (%d members)", #group))
+
+        -- Create/update applicant entries
+        local containerHeight = 0
+        for i, applicant in ipairs(group) do
+            local applicantEntry = self.applicantContainer["applicant"..i] or
+                                 CreateApplicantEntry(self.applicantContainer, i)
+            self.applicantContainer["applicant"..i] = applicantEntry
+
+            -- Remove individual buttons for group members
+            if applicantEntry.inviteButton then applicantEntry.inviteButton:Hide() end
+            if applicantEntry.declineButton then applicantEntry.declineButton:Hide() end
+
+            -- Allow text to use full width since there are no buttons
+            applicantEntry.primaryInfo:SetPoint("RIGHT", applicantEntry, "RIGHT", -8, 12)
+            applicantEntry.secondaryInfo:SetPoint("RIGHT", applicantEntry, "RIGHT", -8, -4)
+
+            applicantEntry:UpdateDisplay(applicant)
+            applicantEntry:Show()
+            containerHeight = containerHeight + applicantEntry:GetHeight() + 2
+        end
+
+        -- Hide unused applicant entries
+        local i = #group + 1
+        while self.applicantContainer["applicant"..i] do
+            self.applicantContainer["applicant"..i]:Hide()
+            i = i + 1
+        end
+
+        -- Update heights with proper padding
+        self.applicantContainer:SetHeight(containerHeight + 10) -- Add padding at bottom
+        self:SetHeight(40 + containerHeight + 15) -- header(30) + padding(10) + container + bottom padding(15)
+    end
+
+    return entry
+end
+
 local function CreateIgnoredPopup()
     if IsBlocked() then return end
 
-    local popup = CreateFrame("Frame", Config.UI.POPUP_NAME, UIParent, "ButtonFrameTemplate")
+    local popup = CreateFrame("Frame", Config.UI.POPUP_NAME, UIParent, "BackdropTemplate")
     popup:SetSize(450, 300)
     popup:SetPoint("CENTER")
+    popup:SetMovable(true)
+    popup:SetResizable(true)
+    popup:SetClampedToScreen(true)
+    popup:SetUserPlaced(true)
     popup:SetFrameStrata("DIALOG")
+    popup:SetResizeBounds(400, 220) -- Increased minimum width for better readability
 
-    -- Set the portrait texture
-    if popup.PortraitContainer and popup.PortraitContainer.portrait then
-        popup.PortraitContainer.portrait:SetTexture("Interface\\AddOns\\NemesisChat\\Media\\Logo")
-    end
+    -- Register with config system
+    NemesisChat:RegisterConfig(popup, "NemesisChatFilteredApplicantsDB")
+    NemesisChat:RestorePosition(popup)
+
+    -- Set backdrop to match Info frame
+    popup:SetBackdrop({
+        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 2,
+        edgeSize = 2,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 }
+    })
+    popup:SetBackdropColor(0, 0, 0, 0.4)
+    popup:SetBackdropBorderColor(0, 0, 0, 1)
 
     -- Title
-    if popup.TitleContainer and popup.TitleContainer.TitleText then
-        popup.TitleContainer.TitleText:SetText("Filtered Applicants")
-    else
-        popup.title = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        popup.title:SetPoint("TOP", 0, -5)
-        popup.title:SetText("Filtered Applicants")
+    popup.title = popup:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    popup.title:SetPoint("TOPLEFT", popup, "TOPLEFT", 8, -8)
+    popup.title:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -8, -8)
+    popup.title:SetText("Filtered Applicants")
+    popup.title:SetTextColor(0.50, 0.60, 1)
+    popup.title:SetJustifyH("CENTER")
+
+    -- Make title draggable
+    popup.title:EnableMouse(true)
+    popup.title:SetScript("OnMouseDown", function(_, button)
+        if button == "LeftButton" then
+            popup:StartMoving()
+        end
+    end)
+    popup.title:SetScript("OnMouseUp", function()
+        popup:StopMovingOrSizing()
+    end)
+
+    -- Close Button
+    popup.closeButton = CreateFrame("Button", nil, popup, "UIPanelCloseButton")
+    popup.closeButton:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -5, -5)
+    popup.closeButton:SetSize(16, 16)
+
+    -- Scroll Frame with padding
+    popup.scrollFrame = CreateFrame("ScrollFrame", nil, popup, "UIPanelScrollFrameTemplate")
+    popup.scrollFrame:SetPoint("TOPLEFT", popup, "TOPLEFT", 6, -32)
+    popup.scrollFrame:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 24)
+
+    -- Content Frame setup
+    popup.content = CreateFrame("Frame", nil, popup.scrollFrame)
+    popup.content:SetPoint("TOPLEFT", popup.scrollFrame, "TOPLEFT", 0, 0)
+    popup.content:SetPoint("TOPRIGHT", popup.scrollFrame, "TOPRIGHT", -20, 0)  -- Account for scrollbar
+    popup.content:SetHeight(1)  -- Initial height
+    popup.scrollFrame:SetScrollChild(popup.content)
+    popup.entries = {}
+
+    -- Force initial layout
+    popup:SetScript("OnShow", function(self)
+        self:GetScript("OnSizeChanged")(self, self:GetWidth(), self:GetHeight())
+    end)
+
+    -- Update content width when popup is resized
+    popup:SetScript("OnSizeChanged", function(self, width, height)
+        popup.content:SetWidth(width - 42)
+        for _, entry in ipairs(popup.entries) do
+            if entry:IsShown() then
+                entry:SetWidth(popup.content:GetWidth() - 20)
+            end
+        end
+        NemesisChat:SavePosition(popup)
+    end)
+
+    -- Footer Frame with backdrop (update existing)
+    popup.footerFrame = CreateFrame("Frame", nil, popup, "BackdropTemplate")
+    popup.footerFrame:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 0, 0)
+    popup.footerFrame:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", 0, 0)
+    popup.footerFrame:SetHeight(24)
+    popup.footerFrame:SetBackdrop({
+        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = true,
+        tileSize = 2,
+        edgeSize = 2,
+        insets = { left = 0, right = 0, top = 1, bottom = 0 }
+    })
+    popup.footerFrame:SetBackdropColor(0, 0, 0, 0.15)
+    popup.footerFrame:SetBackdropBorderColor(0, 0, 0, 1)
+
+    -- Status Bar
+    popup.statusBar = CreateFrame("StatusBar", nil, popup.footerFrame)
+    popup.statusBar:SetPoint("TOPLEFT", popup.footerFrame, "TOPLEFT", 8, -4)
+    popup.statusBar:SetPoint("BOTTOMRIGHT", popup.footerFrame, "BOTTOMRIGHT", -8, 4)
+    popup.statusBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    popup.statusBar:SetStatusBarColor(0.1, 0.5, 1.0)
+    popup.statusBar:SetMinMaxValues(0, 1)
+    popup.statusBar:SetValue(0)
+    popup.statusBar:Hide()
+
+    -- Status Text
+    popup.statusText = popup.statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    popup.statusText:SetPoint("CENTER")
+    popup.statusText:SetTextColor(1, 1, 1)
+
+    -- Batch Decline Button
+    popup.batchDeclineButton = CreateStyledButton(popup.footerFrame, "Decline")
+    popup.batchDeclineButton:SetSize(120, 20)
+    popup.batchDeclineButton:SetPoint("LEFT", popup.footerFrame, "LEFT", 8, 0)
+    popup.batchDeclineButton:SetEnabled(not IsBlocked())
+
+    -- Update batch decline button text
+    local function UpdateBatchButtonText()
+        local count = #Cache.ignoredQueue
+        local batchSize = math.min(count, MAX_BATCH_SIZE)
+        popup.batchDeclineButton:SetText(format("Decline %d", batchSize))
+        popup.batchDeclineButton:SetEnabled(count > 0 and not IsBlocked())
     end
 
-    popup.scrollFrame = CreateFrame("ScrollFrame", nil, popup, "UIPanelScrollFrameTemplate")
-    popup.scrollFrame:SetPoint("TOPLEFT", 12, -32)
-    popup.scrollFrame:SetPoint("BOTTOMRIGHT", -30, 60)
-
-    popup.content = CreateFrame("Frame", nil, popup.scrollFrame)
-    popup.content:SetSize(400, 200)
-    popup.scrollFrame:SetScrollChild(popup.content)
-
-    popup.applicants = {}
-
-    popup.declineAllButton = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
-    popup.declineAllButton:SetSize(120, 22)
-    popup.declineAllButton:SetPoint("BOTTOMLEFT", 20, 20)
-    popup.declineAllButton:SetText("Decline All")
-    popup.declineAllButton:SetEnabled(not IsBlocked())
-    popup.declineAllButton:SetScript("OnClick", function()
+    local function StartBatchDecline()
         if IsBlocked() then return end
-        StaticPopup_Show(Config.STATIC_POPUPS.DECLINE_ALL)
-    end)
 
-    popup.closeButton = CreateFrame("Button", nil, popup, "UIPanelButtonTemplate")
-    popup.closeButton:SetSize(100, 22)
-    popup.closeButton:SetPoint("BOTTOMRIGHT", -20, 20)
-    popup.closeButton:SetText("Close")
-    popup.closeButton:SetScript("OnClick", function()
-        popup:Hide()
-    end)
+        local count = #Cache.ignoredQueue
+        if count == 0 then return end
 
-    -- Add event handler for permission/combat state changes
-    popup:RegisterEvent("GROUP_ROSTER_UPDATE")
-    popup:RegisterEvent("PLAYER_REGEN_DISABLED")
-    popup:RegisterEvent("PLAYER_REGEN_ENABLED")
-    popup:SetScript("OnEvent", function(self, event)
-        local isBlocked = IsBlocked()
-        self.declineAllButton:SetEnabled(not isBlocked)
+        local batchSize = math.min(count, MAX_BATCH_SIZE)
+        local processed = 0
 
-        if event == "PLAYER_REGEN_DISABLED" or isBlocked then
-            self:Hide()
+        -- Disable all decline buttons
+        popup.batchDeclineButton:SetEnabled(false)
+        for _, entry in ipairs(popup.entries) do
+            entry.declineButton:SetEnabled(false)
+            entry.inviteButton:SetEnabled(false)
         end
+
+        -- Show and setup status bar
+        popup.statusBar:Show()
+        popup.statusBar:SetMinMaxValues(0, batchSize)
+        popup.statusBar:SetValue(0)
+
+        -- Process batch
+        for i = 1, batchSize do
+            local applicant = Cache.ignoredQueue[1]
+            if applicant then
+                if not applicant.isTest then
+                    C_LFGList.DeclineApplicant(applicant.applicantID)
+                end
+                tremove(Cache.ignoredQueue, 1)
+                processed = processed + 1
+
+                popup.statusBar:SetValue(processed)
+                popup.statusText:SetText(format("Declining %d/%d", processed, batchSize))
+            end
+        end
+
+        -- Re-enable buttons after cooldown
+        C_Timer.After(BATCH_COOLDOWN, function()
+            popup.batchDeclineButton:SetEnabled(true)
+            for _, entry in ipairs(popup.entries) do
+                entry.declineButton:SetEnabled(true)
+                entry.inviteButton:SetEnabled(true)
+            end
+            popup.statusBar:Hide()
+            UpdateBatchButtonText()
+
+            -- Refresh display
+            LFGHandler:ShowIgnoredPopup()
+        end)
+    end
+
+    popup.batchDeclineButton:SetScript("OnClick", StartBatchDecline)
+
+    -- Initial button text
+    UpdateBatchButtonText()
+
+    -- Resize Button
+    popup.resizeButton = CreateFrame("Button", nil, popup)
+    popup.resizeButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -2, 2)
+    popup.resizeButton:SetSize(16, 16)
+    popup.resizeButton:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    popup.resizeButton:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    popup.resizeButton:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+
+    popup.resizeButton:SetScript("OnMouseDown", function(_, button)
+        if button == "LeftButton" then
+            popup:StartSizing("BOTTOMRIGHT")
+        end
+    end)
+    popup.resizeButton:SetScript("OnMouseUp", function()
+        popup:StopMovingOrSizing()
     end)
 
     popup:Hide()
     return popup
-end
-
-local function CreateApplicantEntry(parent, index)
-    if not parent or not index then return end
-
-    local entry = CreateFrame("Frame", nil, parent)
-    entry:SetSize(380, 50)
-    entry:SetPoint("TOPLEFT", 10, -((index - 1) * 55))
-
-    entry.bg = entry:CreateTexture(nil, "BACKGROUND")
-    entry.bg:SetAllPoints()
-    entry.bg:SetColorTexture(0.1, 0.1, 0.1, 0.5)
-
-    entry.text = entry:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    entry.text:SetPoint("TOPLEFT", 10, -8)
-    entry.text:SetPoint("TOPRIGHT", -10, -8)
-    entry.text:SetJustifyH("LEFT")
-
-    entry.reason = entry:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    entry.reason:SetPoint("TOPLEFT", 10, -26)
-    entry.reason:SetPoint("TOPRIGHT", -70, -26)
-    entry.reason:SetTextColor(1, 0.7, 0)
-
-    entry.declineButton = CreateFrame("Button", nil, entry, "UIPanelButtonTemplate")
-    entry.declineButton:SetSize(60, 20)
-    entry.declineButton:SetPoint("BOTTOMRIGHT", -5, 5)
-    entry.declineButton:SetText("Decline")
-    entry.declineButton:SetEnabled(not IsBlocked())
-
-    entry:SetScript("OnShow", function(self)
-        self.declineButton:SetEnabled(not IsBlocked())
-    end)
-
-    return entry
 end
 
 local function CleanupApplicantCache()
@@ -394,6 +858,125 @@ local function CleanupApplicantCache()
     C_Timer.NewTicker(300, function()
         Cache.applicantIds = setmetatable({}, { __mode = "k" })
     end)
+end
+
+local classSpecs = {
+    WARRIOR = {
+        {name = "Arms", role = "DAMAGER"},
+        {name = "Fury", role = "DAMAGER"},
+        {name = "Protection", role = "TANK"}
+    },
+    PALADIN = {
+        {name = "Holy", role = "HEALER"},
+        {name = "Protection", role = "TANK"},
+        {name = "Retribution", role = "DAMAGER"}
+    },
+    HUNTER = {
+        {name = "Beast Mastery", role = "DAMAGER"},
+        {name = "Marksmanship", role = "DAMAGER"},
+        {name = "Survival", role = "DAMAGER"}
+    },
+    ROGUE = {
+        {name = "Assassination", role = "DAMAGER"},
+        {name = "Outlaw", role = "DAMAGER"},
+        {name = "Subtlety", role = "DAMAGER"}
+    },
+    PRIEST = {
+        {name = "Discipline", role = "HEALER"},
+        {name = "Holy", role = "HEALER"},
+        {name = "Shadow", role = "DAMAGER"}
+    },
+    DEATHKNIGHT = {
+        {name = "Blood", role = "TANK"},
+        {name = "Frost", role = "DAMAGER"},
+        {name = "Unholy", role = "DAMAGER"}
+    },
+    SHAMAN = {
+        {name = "Elemental", role = "DAMAGER"},
+        {name = "Enhancement", role = "DAMAGER"},
+        {name = "Restoration", role = "HEALER"}
+    },
+    MAGE = {
+        {name = "Arcane", role = "DAMAGER"},
+        {name = "Fire", role = "DAMAGER"},
+        {name = "Frost", role = "DAMAGER"}
+    },
+    WARLOCK = {
+        {name = "Affliction", role = "DAMAGER"},
+        {name = "Demonology", role = "DAMAGER"},
+        {name = "Destruction", role = "DAMAGER"}
+    },
+    MONK = {
+        {name = "Brewmaster", role = "TANK"},
+        {name = "Mistweaver", role = "HEALER"},
+        {name = "Windwalker", role = "DAMAGER"}
+    },
+    DRUID = {
+        {name = "Balance", role = "DAMAGER"},
+        {name = "Feral", role = "DAMAGER"},
+        {name = "Guardian", role = "TANK"},
+        {name = "Restoration", role = "HEALER"}
+    },
+    DEMONHUNTER = {
+        {name = "Havoc", role = "DAMAGER"},
+        {name = "Vengeance", role = "TANK"}
+    },
+    EVOKER = {
+        {name = "Devastation", role = "DAMAGER"},
+        {name = "Preservation", role = "HEALER"},
+        {name = "Augmentation", role = "DAMAGER"}
+    }
+}
+
+local realms = {
+    "Silvermoon", "Draenor", "Kazzak", "Tarren Mill", "Twisting Nether",
+    "Ravencrest", "Argent Dawn", "Burning Legion", "Sylvanas"
+}
+
+function GenerateRandomApplicant(groupID, groupSize)
+    -- Get all class files into an array for random selection
+    local classFiles = {}
+    for classFile in pairs(classSpecs) do
+        table.insert(classFiles, classFile)
+    end
+
+    -- Select random class
+    local classFile = classFiles[math.random(#classFiles)]
+    local className = LOCALIZED_CLASS_NAMES_MALE[classFile] or classFile
+
+    -- Select random spec for that class
+    local specData = classSpecs[classFile][math.random(#classSpecs[classFile])]
+    local spec = specData.name
+    local role = specData.role
+
+    local realm = realms[math.random(#realms)]
+    local itemLevel = math.random(565, 630)
+    local dungeonScore = math.random(200, 3500)
+
+    return {
+        info = {
+            primary = {
+                itemLevel = floor(itemLevel),
+                spec = spec,
+                class = className,
+                classFile = classFile,
+                specIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
+            },
+            secondary = {
+                dungeonScore = floor(dungeonScore),
+                realm = realm
+            }
+        },
+        role = {
+            type = role,
+            texture = ROLE_ICONS[role]
+        },
+        reason = filterReasons[math.random(#filterReasons)],
+        applicantID = math.random(1000000),
+        groupID = groupID,
+        groupSize = groupSize,
+        isTest = true
+    }
 end
 
 -- Core functionality
@@ -560,18 +1143,30 @@ function LFGHandler:ProcessApplicantMember(applicantID, memberIndex)
     }
 end
 
-function LFGHandler:FormatIgnoredApplicant(name, class, localizedClass, specName, itemLevel, dungeonScore, realm, specID,
-                                           reason, applicantID)
+function LFGHandler:FormatIgnoredApplicant(name, class, localizedClass, specName, itemLevel, dungeonScore, realm, specID, reason, applicantID)
     if not name or not class or not specID or not reason or not applicantID then return nil end
 
-    local _, _, _, icon = GetSpecializationInfoByID(specID)
-    local formattedInfo = FormatMemberInfo(name, class, localizedClass, specName, floor(itemLevel), dungeonScore, realm,
-        icon)
-
-    if not formattedInfo then return nil end
+    -- Get role and spec info
+    local _, _, role, _, _, _, specIcon = GetSpecializationInfoByID(specID)
 
     return {
-        info = formattedInfo,
+        info = {
+            primary = {
+                itemLevel = floor(itemLevel or 0),
+                spec = specName or "Unknown",
+                class = localizedClass or "Unknown",
+                classFile = class,
+                specIcon = specIcon
+            },
+            secondary = {
+                dungeonScore = floor(dungeonScore or 0),
+                realm = realm or "Unknown Realm"
+            }
+        },
+        role = {
+            type = role or "DAMAGER",
+            texture = ROLE_ICONS[role or "DAMAGER"]
+        },
         reason = reason,
         applicantID = applicantID
     }
@@ -655,6 +1250,12 @@ end
 function LFGHandler:ShowIgnoredPopup()
     if IsBlocked() then return end
 
+    -- Initialize or validate the queue
+    if not Cache.ignoredQueue then
+        Cache.ignoredQueue = {}
+        return
+    end
+
     -- Check if we should show popups
     if not NCConfig or not NCConfig:IsPopupOnIgnoredApplicants() then
         return
@@ -663,66 +1264,94 @@ function LFGHandler:ShowIgnoredPopup()
     -- Cleanup stale entries
     self:CleanupIgnoredQueue()
 
-    if not Cache.ignoredQueue or #Cache.ignoredQueue == 0 then
-        if Cache.ignoredPopup then
-            Cache.ignoredPopup:Hide()
-        end
-        return
-    end
+    if #Cache.ignoredQueue == 0 then return end
 
-    -- Throttle updates
-    local currentTime = GetTime()
-    if currentTime - Cache.lastUpdate < Config.UI.UPDATE_THROTTLE then
-        C_Timer.After(Config.UI.UPDATE_THROTTLE, function()
-            self:ShowIgnoredPopup()
-        end)
-        return
-    end
-    Cache.lastUpdate = currentTime
-
+    -- Create popup if it doesn't exist
     if not Cache.ignoredPopup then
         Cache.ignoredPopup = CreateIgnoredPopup()
-        if not Cache.ignoredPopup then
-            NemesisChat:HandleError("ShowIgnoredPopup: Failed to create popup frame")
-            return
+    end
+    local popup = Cache.ignoredPopup
+    if not popup then
+        NemesisChat:HandleError("ShowIgnoredPopup: Failed to create popup")
+        return
+    end
+
+    -- Group entries by groupID (but keep singles separate)
+    local groupedEntries = {}
+    local singleEntries = {}
+
+    for _, entry in ipairs(Cache.ignoredQueue) do
+        if entry and entry.applicantID then
+            if entry.groupID then
+                groupedEntries[entry.groupID] = groupedEntries[entry.groupID] or {}
+                table.insert(groupedEntries[entry.groupID], entry)
+            else
+                table.insert(singleEntries, entry)
+            end
         end
     end
 
-    local popup = Cache.ignoredPopup
+    -- Sort groups by size (larger groups first)
+    local sortedGroups = {}
+    for groupID, entries in pairs(groupedEntries) do
+        if entries and #entries > 0 then
+            table.insert(sortedGroups, entries)
+        end
+    end
 
-    -- Clear existing entries
-    for _, entry in ipairs(popup.applicants) do
+    table.sort(sortedGroups, function(a, b)
+        return (a[1].groupSize or 1) > (b[1].groupSize or 1)
+    end)
+
+    -- Reset all existing entries to hidden
+    for _, entry in ipairs(popup.entries) do
         entry:Hide()
     end
 
-    -- Create or update entries for each ignored applicant
-    for i, applicant in ipairs(Cache.ignoredQueue) do
-        if not popup.applicants[i] then
-            popup.applicants[i] = CreateApplicantEntry(popup.content, i)
-        end
+    -- Create or update entries
+    local yOffset = 0
+    local entryIndex = 1
 
-        local entry = popup.applicants[i]
-        if entry then
-            entry.text:SetText(applicant.info.formatted)
-            entry.reason:SetText(self:GetIgnoreReasonText(applicant.reason))
-            entry.declineButton:SetScript("OnClick", function()
-                if IsBlocked() then return end
-                local name = strsplit("-", applicant.info.plain)
-                local popup = StaticPopup_Show(Config.STATIC_POPUPS.DECLINE_SINGLE, name)
-                if popup then
-                    popup.data = {
-                        applicantID = applicant.applicantID,
-                        index = i,
-                        handler = self
-                    }
-                end
-            end)
-            entry:Show()
+    -- First, handle grouped entries
+    for _, group in ipairs(sortedGroups) do
+        -- Create or reuse entry
+        if not popup.entries[entryIndex] then
+            popup.entries[entryIndex] = CreateGroupEntry(popup.content, entryIndex)
         end
+        local entry = popup.entries[entryIndex]
+
+        entry:ClearAllPoints()
+        entry:SetPoint("TOPLEFT", popup.content, "TOPLEFT", 10, -yOffset)
+        entry:SetPoint("TOPRIGHT", popup.content, "TOPRIGHT", -10, -yOffset)
+
+        entry:UpdateDisplay(group)
+        entry:Show()
+
+        yOffset = yOffset + entry:GetHeight() + 10
+        entryIndex = entryIndex + 1
+    end
+
+    -- Then, handle single entries
+    for _, applicant in ipairs(singleEntries) do
+        -- Create or reuse entry
+        if not popup.entries[entryIndex] then
+            popup.entries[entryIndex] = CreateApplicantEntry(popup.content, entryIndex)
+        end
+        local entry = popup.entries[entryIndex]
+
+        entry:ClearAllPoints()
+        entry:SetPoint("TOPLEFT", popup.content, "TOPLEFT", 10, -yOffset)
+        entry:SetPoint("TOPRIGHT", popup.content, "TOPRIGHT", -10, -yOffset)
+
+        entry:UpdateDisplay(applicant)
+        entry:Show()
+
+        yOffset = yOffset + entry:GetHeight() + 5
+        entryIndex = entryIndex + 1
     end
 
     -- Update content height
-    popup.content:SetHeight(#Cache.ignoredQueue * 55 + 10)
+    popup.content:SetHeight(math.max(yOffset, 1))
     popup:Show()
 end
 
@@ -758,7 +1387,7 @@ function LFGHandler:CleanupIgnoredQueue()
         local applicant = Cache.ignoredQueue[i]
         if not applicant or
             not applicant.applicantID or
-            not C_LFGList.GetApplicantInfo(applicant.applicantID) then
+            (not applicant.isTest and not C_LFGList.GetApplicantInfo(applicant.applicantID)) then
             tremove(Cache.ignoredQueue, i)
         else
             i = i + 1
@@ -790,4 +1419,70 @@ function LFGHandler:UpdatePermissions()
     if not Cache.hasDeclinePermission and Cache.ignoredPopup then
         Cache.ignoredPopup:Hide()
     end
+end
+
+function LFGHandler:AddTestEntries(count)
+    count = count or 1
+
+    -- Clear any existing test entries from the queue
+    if Cache.ignoredQueue then
+        local i = 1
+        while i <= #Cache.ignoredQueue do
+            if Cache.ignoredQueue[i].isTest then
+                table.remove(Cache.ignoredQueue, i)
+            else
+                i = i + 1
+            end
+        end
+    else
+        Cache.ignoredQueue = {}
+    end
+
+    local originalIsBlocked = IsBlocked
+    IsBlocked = function() return false end
+
+    for i = 1, count do
+        -- Decide if this should be a group or single entry
+        local isGroup = (math.random(100) <= 10) -- 10% chance of being a group
+        local groupSize = isGroup and math.random(2, 4) or 1
+        local groupID = isGroup and math.random(1000000) or nil
+
+        for j = 1, groupSize do
+            local entry = GenerateRandomApplicant(groupID, groupSize)
+            table.insert(Cache.ignoredQueue, entry)
+        end
+    end
+
+    self:ShowIgnoredPopup()
+    IsBlocked = originalIsBlocked
+end
+
+function LFGHandler:OnApplicantListUpdated()
+    -- Clear out any applicants that are no longer in the list
+    local currentApplicants = C_LFGList.GetApplications()
+    local applicantMap = {}
+
+    -- Build a map of current applicants
+    for _, applicantID in ipairs(currentApplicants) do
+        applicantMap[applicantID] = true
+    end
+
+    -- Remove entries from ignoredQueue if they're no longer in the applicant list
+    if Cache.ignoredQueue then
+        for i = #Cache.ignoredQueue, 1, -1 do
+            if not applicantMap[Cache.ignoredQueue[i].applicantID] then
+                table.remove(Cache.ignoredQueue, i)
+            end
+        end
+    end
+
+    -- Update the popup if it's showing
+    local popup = _G[Config.UI.POPUP_NAME]
+    if popup and popup:IsShown() then
+        self:ShowIgnoredPopup()
+    end
+end
+
+function NemesisChat:AddTestEntries(count)
+    core.LFGHandler:AddTestEntries(count)
 end

@@ -164,6 +164,11 @@ function NemesisChat:LFG_LIST_APPLICANT_UPDATED(event, applicantID)
     core.LFGHandler:OnApplicantUpdated(applicantID)
 end
 
+function NemesisChat:LFG_LIST_APPLICANT_LIST_UPDATED(event)
+    if not IsNCEnabled() then return end
+    core.LFGHandler:OnApplicantListUpdated()
+end
+
 function NemesisChat:LFG_LIST_ACTIVE_ENTRY_UPDATE(event, entryID)
     core.LFGHandler:UpdatePermissions()
 end
