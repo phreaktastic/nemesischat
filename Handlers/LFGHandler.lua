@@ -860,125 +860,6 @@ local function CleanupApplicantCache()
     end)
 end
 
-local classSpecs = {
-    WARRIOR = {
-        {name = "Arms", role = "DAMAGER"},
-        {name = "Fury", role = "DAMAGER"},
-        {name = "Protection", role = "TANK"}
-    },
-    PALADIN = {
-        {name = "Holy", role = "HEALER"},
-        {name = "Protection", role = "TANK"},
-        {name = "Retribution", role = "DAMAGER"}
-    },
-    HUNTER = {
-        {name = "Beast Mastery", role = "DAMAGER"},
-        {name = "Marksmanship", role = "DAMAGER"},
-        {name = "Survival", role = "DAMAGER"}
-    },
-    ROGUE = {
-        {name = "Assassination", role = "DAMAGER"},
-        {name = "Outlaw", role = "DAMAGER"},
-        {name = "Subtlety", role = "DAMAGER"}
-    },
-    PRIEST = {
-        {name = "Discipline", role = "HEALER"},
-        {name = "Holy", role = "HEALER"},
-        {name = "Shadow", role = "DAMAGER"}
-    },
-    DEATHKNIGHT = {
-        {name = "Blood", role = "TANK"},
-        {name = "Frost", role = "DAMAGER"},
-        {name = "Unholy", role = "DAMAGER"}
-    },
-    SHAMAN = {
-        {name = "Elemental", role = "DAMAGER"},
-        {name = "Enhancement", role = "DAMAGER"},
-        {name = "Restoration", role = "HEALER"}
-    },
-    MAGE = {
-        {name = "Arcane", role = "DAMAGER"},
-        {name = "Fire", role = "DAMAGER"},
-        {name = "Frost", role = "DAMAGER"}
-    },
-    WARLOCK = {
-        {name = "Affliction", role = "DAMAGER"},
-        {name = "Demonology", role = "DAMAGER"},
-        {name = "Destruction", role = "DAMAGER"}
-    },
-    MONK = {
-        {name = "Brewmaster", role = "TANK"},
-        {name = "Mistweaver", role = "HEALER"},
-        {name = "Windwalker", role = "DAMAGER"}
-    },
-    DRUID = {
-        {name = "Balance", role = "DAMAGER"},
-        {name = "Feral", role = "DAMAGER"},
-        {name = "Guardian", role = "TANK"},
-        {name = "Restoration", role = "HEALER"}
-    },
-    DEMONHUNTER = {
-        {name = "Havoc", role = "DAMAGER"},
-        {name = "Vengeance", role = "TANK"}
-    },
-    EVOKER = {
-        {name = "Devastation", role = "DAMAGER"},
-        {name = "Preservation", role = "HEALER"},
-        {name = "Augmentation", role = "DAMAGER"}
-    }
-}
-
-local realms = {
-    "Silvermoon", "Draenor", "Kazzak", "Tarren Mill", "Twisting Nether",
-    "Ravencrest", "Argent Dawn", "Burning Legion", "Sylvanas"
-}
-
-function GenerateRandomApplicant(groupID, groupSize)
-    -- Get all class files into an array for random selection
-    local classFiles = {}
-    for classFile in pairs(classSpecs) do
-        table.insert(classFiles, classFile)
-    end
-
-    -- Select random class
-    local classFile = classFiles[math.random(#classFiles)]
-    local className = LOCALIZED_CLASS_NAMES_MALE[classFile] or classFile
-
-    -- Select random spec for that class
-    local specData = classSpecs[classFile][math.random(#classSpecs[classFile])]
-    local spec = specData.name
-    local role = specData.role
-
-    local realm = realms[math.random(#realms)]
-    local itemLevel = math.random(565, 630)
-    local dungeonScore = math.random(200, 3500)
-
-    return {
-        info = {
-            primary = {
-                itemLevel = floor(itemLevel),
-                spec = spec,
-                class = className,
-                classFile = classFile,
-                specIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
-            },
-            secondary = {
-                dungeonScore = floor(dungeonScore),
-                realm = realm
-            }
-        },
-        role = {
-            type = role,
-            texture = ROLE_ICONS[role]
-        },
-        reason = filterReasons[math.random(#filterReasons)],
-        applicantID = math.random(1000000),
-        groupID = groupID,
-        groupSize = groupSize,
-        isTest = true
-    }
-end
-
 -- Core functionality
 function LFGHandler:Initialize()
     if not NCConfig then
@@ -998,6 +879,7 @@ function LFGHandler:Initialize()
     Cache.chatMessageSettings = 0
     Cache.lastUpdate = 0
     Cache.lastPermissionCheck = 0
+    Cache.ignoredPopup = nil  -- Reset popup reference on initialize
 
     -- Update notification settings
     self:UpdateConfigCache()
@@ -1033,6 +915,40 @@ function LFGHandler:UpdateConfigCache()
 
     Cache.notificationSettings = notifySettings
     Cache.chatMessageSettings = chatSettings
+end
+
+function LFGHandler:OnApplicantListUpdated()
+    -- Clear out any applicants that are no longer in the list
+    local currentApplicants = C_LFGList.GetApplications()
+    local applicantMap = {}
+    local statusMap = {}
+
+    -- Build a map of current applicants and their statuses
+    for _, applicantID in ipairs(currentApplicants) do
+        local applicantInfo = C_LFGList.GetApplicantInfo(applicantID)
+        applicantMap[applicantID] = true
+        if applicantInfo then
+            statusMap[applicantID] = applicantInfo.applicationStatus
+        end
+    end
+
+    -- Remove entries from ignoredQueue if they're no longer in the list
+    -- or if they've been invited
+    if Cache.ignoredQueue then
+        for i = #Cache.ignoredQueue, 1, -1 do
+            local applicantID = Cache.ignoredQueue[i].applicantID
+            if not applicantMap[applicantID] or
+               (statusMap[applicantID] and statusMap[applicantID] == "invited") then
+                table.remove(Cache.ignoredQueue, i)
+            end
+        end
+    end
+
+    -- Update the popup if it's showing
+    local popup = _G[Config.UI.POPUP_NAME]
+    if popup and popup:IsShown() then
+        self:ShowIgnoredPopup()
+    end
 end
 
 function LFGHandler:OnApplicantUpdated(applicantID)
@@ -1123,9 +1039,19 @@ function LFGHandler:ProcessApplicantMember(applicantID, memberIndex)
 
     -- Handle filtered applicants
     if filterReason then
+        -- Check if popups are enabled before processing
         if NCConfig and NCConfig:IsPopupOnIgnoredApplicants() then
-            return self:FormatIgnoredApplicant(name, class, localizedClass, specName, itemLevel, dungeonScore, realm,
+            local applicantData = self:FormatIgnoredApplicant(name, class, localizedClass, specName, itemLevel, dungeonScore, realm,
                 specID, filterReason, applicantID)
+
+            -- Only show notification if it's not a class/spec filter
+            if filterReason ~= Config.FILTERS.CLASS and filterReason ~= Config.FILTERS.SPEC then
+                NemesisChat:Print(string.format("Filtered applicant: %s (%s)",
+                    name,
+                    self:GetIgnoreReasonText(filterReason)))
+            end
+
+            return applicantData
         end
         return nil
     end
@@ -1419,70 +1345,4 @@ function LFGHandler:UpdatePermissions()
     if not Cache.hasDeclinePermission and Cache.ignoredPopup then
         Cache.ignoredPopup:Hide()
     end
-end
-
-function LFGHandler:AddTestEntries(count)
-    count = count or 1
-
-    -- Clear any existing test entries from the queue
-    if Cache.ignoredQueue then
-        local i = 1
-        while i <= #Cache.ignoredQueue do
-            if Cache.ignoredQueue[i].isTest then
-                table.remove(Cache.ignoredQueue, i)
-            else
-                i = i + 1
-            end
-        end
-    else
-        Cache.ignoredQueue = {}
-    end
-
-    local originalIsBlocked = IsBlocked
-    IsBlocked = function() return false end
-
-    for i = 1, count do
-        -- Decide if this should be a group or single entry
-        local isGroup = (math.random(100) <= 10) -- 10% chance of being a group
-        local groupSize = isGroup and math.random(2, 4) or 1
-        local groupID = isGroup and math.random(1000000) or nil
-
-        for j = 1, groupSize do
-            local entry = GenerateRandomApplicant(groupID, groupSize)
-            table.insert(Cache.ignoredQueue, entry)
-        end
-    end
-
-    self:ShowIgnoredPopup()
-    IsBlocked = originalIsBlocked
-end
-
-function LFGHandler:OnApplicantListUpdated()
-    -- Clear out any applicants that are no longer in the list
-    local currentApplicants = C_LFGList.GetApplications()
-    local applicantMap = {}
-
-    -- Build a map of current applicants
-    for _, applicantID in ipairs(currentApplicants) do
-        applicantMap[applicantID] = true
-    end
-
-    -- Remove entries from ignoredQueue if they're no longer in the applicant list
-    if Cache.ignoredQueue then
-        for i = #Cache.ignoredQueue, 1, -1 do
-            if not applicantMap[Cache.ignoredQueue[i].applicantID] then
-                table.remove(Cache.ignoredQueue, i)
-            end
-        end
-    end
-
-    -- Update the popup if it's showing
-    local popup = _G[Config.UI.POPUP_NAME]
-    if popup and popup:IsShown() then
-        self:ShowIgnoredPopup()
-    end
-end
-
-function NemesisChat:AddTestEntries(count)
-    core.LFGHandler:AddTestEntries(count)
 end

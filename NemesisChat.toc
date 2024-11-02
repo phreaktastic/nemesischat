@@ -1,7 +1,7 @@
 ## Interface: 110500
 ## Version: 1.12.0
 ## Title: |cff00ccffNemesis Chat|r
-## IconTexture: Interface\Addons\NemesisChat\Media\Nemesis.blp
+## IconTexture: Interface\Addons\NemesisChat\Media\Icons\Nemesis6.blp
 ## Notes: The event-driven, targeted message framework.
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB

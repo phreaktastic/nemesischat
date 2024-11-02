@@ -195,7 +195,7 @@ core.constants.BOOLEAN_OPTIONS = {
 core.constants.NA = { 1 }
 core.constants.STANDARD = { 2, 3, 4, }
 core.constants.OTHERS = { 3, 4, }
-core.constants.ENEMIES = { 5, 6, 7 }
+core.constants.ENEMIES = { 5, 6 }
 core.constants.ALLUNITS = { 2, 3, 4, 5, 6 }
 core.constants.IS = {
     {

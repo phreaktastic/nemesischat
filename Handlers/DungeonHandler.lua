@@ -167,9 +167,20 @@ end
 
 function DungeonHandler:CheckEncounterJournalBoss(encounterID, difficultyID, instanceID, success)
     if not C_EncounterJournal then return false end
+    if not instanceID then return false end
 
+    -- Set difficulty first
     EJ_SetDifficulty(difficultyID)
-    if not EJ_SelectInstance(instanceID) then return false end
+
+    -- Protect against invalid instance IDs
+    local success, errorMsg = pcall(function()
+        return EJ_SelectInstance(instanceID)
+    end)
+
+    if not success then
+        -- Silent fail - this is expected for some instances
+        return false
+    end
 
     local index = 1
     local lastBossID
@@ -287,8 +298,16 @@ function DungeonHandler:SetupDungeonInfo(category)
 end
 
 function DungeonHandler:SetupMythicPlusDungeon()
+    -- Get active challenge map ID first
+    local mapID = C_ChallengeMode.GetActiveChallengeMapID()
+    if not mapID then return end
+
+    -- Get keystone info
     self.keystoneLevel, self.keystoneAffixes = C_ChallengeMode.GetActiveKeystoneInfo()
-    self.dungeonTimeLimit = select(3, C_ChallengeMode.GetMapUIInfo(C_ChallengeMode.GetActiveChallengeMapID()))
+
+    -- Get time limit with proper error handling
+    local timeLimit = select(3, C_ChallengeMode.GetMapUIInfo(mapID))
+    self.dungeonTimeLimit = timeLimit or 0
 end
 
 function DungeonHandler:ResetMythicPlusInfo()

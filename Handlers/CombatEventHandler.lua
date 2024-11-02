@@ -27,6 +27,7 @@ local bit_band = bit.band
 local IsInRaid = IsInRaid
 local UnitIsUnconscious = UnitIsUnconscious
 local UnitGUID = UnitGUID
+local GetSpellInfo = _G.C_Spell.GetSpellInfo
 
 local NC_PULL_EVENT_ATTACK = NC_PULL_EVENT_ATTACK
 local NC_PULL_EVENT_AGGRO = NC_PULL_EVENT_AGGRO
@@ -355,7 +356,7 @@ function CombatEventHandler:ActionScoring()
 
     if not flags then return end
 
-    if not ignoredCCSpells[spellId] and (bit_band(flags, CROWD_CTRL) ~= 0 or bit_band(flags, KNOCKBACK) ~= 0 or bit_band(flags, SNARE) ~= 0) then
+    if not ignoredCCSpells[spellId] and (bit_band(flags, CROWD_CTRL) ~= 0 or bit_band(flags, KNOCKBACK) ~= 0) then
         NCSegment:GlobalAddCrowdControl(sourceName)
     end
 
@@ -363,9 +364,16 @@ function CombatEventHandler:ActionScoring()
         NCSegment:GlobalAddDispell(sourceName)
     end
 
-    if bit_band(flags, SURVIVAL) ~= 0 and bit_band(flags, COOLDOWN) ~= 0 then
-        NCSegment:GlobalAddDefensive(sourceName)
-        NCRuntime:SetPlayerStateValue(sourceName, "lastDefensive", GetTime())
+    if bit_band(flags, SURVIVAL) ~= 0 and bit_band(flags, COOLDOWN) ~= 0 and eventInfo.subEvent == "SPELL_CAST_SUCCESS" then
+        -- We can't get the cooldown until the cast resolves -- we need to wait 0.1 second
+        C_Timer.After(0.1, function()
+            local cdInfo = C_Spell.GetSpellCooldown(spellId)
+            -- @TODO: Magic number -- this needs to either be a config value or a constant
+            if cdInfo.isEnabled and cdInfo.duration and cdInfo.duration >= 55 then
+                NCSegment:GlobalAddDefensive(sourceName)
+                NCRuntime:SetPlayerStateValue(sourceName, "lastDefensive", GetTime())
+            end
+        end)
     end
 end
 
