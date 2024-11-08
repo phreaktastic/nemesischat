@@ -1190,7 +1190,12 @@ function LFGHandler:ShowIgnoredPopup()
     -- Cleanup stale entries
     self:CleanupIgnoredQueue()
 
-    if #Cache.ignoredQueue == 0 then return end
+    if #Cache.ignoredQueue == 0 then
+        if Cache.ignoredPopup then
+            Cache.ignoredPopup:Hide()
+        end
+        return
+    end
 
     -- Create popup if it doesn't exist
     if not Cache.ignoredPopup then

@@ -77,6 +77,7 @@ function NCDungeon:GetTimeLeft()
 end
 
 function NCDungeon:UpdateCache()
+    self.Rankings:RecalculateMetric("DPS")
     local backup = self:GetBackup()
     backup.Level = self:GetLevel()
     backup.Affixes = self:GetKeystoneAffixes()

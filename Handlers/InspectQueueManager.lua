@@ -67,7 +67,7 @@ function InspectQueueManager:ProcessNext()
             -- Player is not (currently) inspectable, skip to the next player
             local guid = player.guid
 
-            C_Timer.After(1.5, function()
+            C_Timer.After(5, function()
                 self:QueuePlayerForInspect(guid)
             end)
 
@@ -80,10 +80,30 @@ end
 -- Handle the INSPECT_READY event
 function InspectQueueManager:OnInspectReady(guid)
     if self.currentInspection and self.currentInspection.guid == guid then
-        -- Successfully inspected the player, clear the current inspection
+        -- Get the spec and item level information while we have the inspection
+        local player = NCRuntime:GetPlayerFromGuid(guid)
+        if player and player.token then
+            local specID = GetInspectSpecialization(player.token)
+            if specID and specID > 0 then
+                local _, specName = GetSpecializationInfoByID(specID)
+                if specName and specName ~= "Unknown" then
+                    player.spec = specName
+                end
+            end
+
+            local itemLevel = C_PaperDollInfo.GetInspectItemLevel(player.token)
+            if itemLevel and itemLevel > 0 then
+                player.itemLevel = itemLevel
+            end
+        end
+
+        -- Clear inspection and continue queue
         self.currentInspection = nil
         ClearInspectPlayer()
-        self:ProcessNext()
+
+        C_Timer.After(0.5, function()
+            self:ProcessNext()
+        end)
     end
 end
 

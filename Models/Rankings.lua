@@ -168,15 +168,12 @@ NCRankings = {
 
         if self._segment and self._segment.RosterSnapshot and self._segment.RosterSnapshot[playerName] then
             playerRole = self._segment.RosterSnapshot[playerName].role
+        elseif NCRuntime:GetLastCompletedDungeon() then
+            playerRole = NCRuntime:GetLastCompletedDungeon().RosterSnapshot[playerName].role
         else
-            -- Fallback to current roster
-            local rosterPlayer = groupRoster[playerName]
+            -- Fallback to current roster, which falls back to the cached roster
+            local rosterPlayer = groupRoster[playerName] or NCRuntime:GetRosterCache()[playerName]
             playerRole = rosterPlayer and rosterPlayer.role or UnitGroupRolesAssigned(playerName)
-        end
-
-        -- If not in a group, assume all metrics are applicable
-        if not IsInGroup() then
-            return true
         end
 
         -- If we couldn't determine the role, assume the metric is applicable

@@ -466,6 +466,9 @@ NCRuntime = {
         NCConfig:SetPath("cache.groupRoster", DeepCopy(core.runtime.groupRoster))
         NCConfig:SetPath("cache.groupRosterTime", GetTime())
     end,
+    GetRosterCache = function(self)
+        return NCConfig:GetPath("cache.groupRoster")
+    end,
     GetGuildRoster = function(self)
         return core.runtime.guild
     end,
@@ -623,8 +626,8 @@ NCRuntime = {
         core.runtime.lastCompletedDungeon = {
             Identifier = dungeonData:GetIdentifier(),
             Level = dungeonData:GetLevel(),
-            RosterSnapshot = dungeonData.RosterSnapshot,
-            Stats = stats
+            RosterSnapshot = DeepCopy(dungeonData.RosterSnapshot),
+            Stats = stats,
         }
     end,
     GetLastCompletedDungeon = function(self)
@@ -682,20 +685,15 @@ NCRuntime = {
                 -- For the player character, use GetSpecialization()
                 local specIndex = GetSpecialization()
                 if specIndex then
-                    local id, specName, description, icon, role, classFile, className = GetSpecializationInfo(specIndex)
+                    local id, specName = GetSpecializationInfo(specIndex)
                     if specName then
                         unit.spec = specName
                     end
                 end
             else
-                -- For other players, use inspection
-                local specID = GetInspectSpecialization(unit.token)
-                if specID and specID > 0 then
-                    -- Spec data is available
-                    local id, specName, description, icon, role, classFile, className = GetSpecializationInfoByID(specID)
-                    if specName and specName ~= "Unknown" then
-                        unit.spec = specName
-                    end
+                -- Queue for inspection if we don't have the spec
+                if not unit.spec and unit.guid then
+                    NemesisChat.InspectQueueManager:QueuePlayerForInspect(unit.guid)
                 end
             end
         end

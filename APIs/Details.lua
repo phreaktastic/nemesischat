@@ -22,21 +22,21 @@ NemesisChatAPI:AddAPI("NC_DETAILS", "Details!")
     })
     :AddCompatibilityCheck({
         configCheck = false,
-        exec = function() 
+        exec = function()
             if Details == nil then
                 return false, "Details! is not installed."
             end
-    
+
             return true, nil
         end
     })
     :AddCompatibilityCheck({
         configCheck = true,
-        exec = function() 
+        exec = function()
             if not NemesisChatAPI:GetAPI("NC_DETAILS"):IsEnabled() then
                 return false, "Details! API is not enabled."
             end
-    
+
             return true, nil
         end
     })

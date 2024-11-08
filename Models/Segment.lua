@@ -163,6 +163,17 @@ NCSegment = {
         self.TotalTime = self.FinishTime - self.StartTime
         self.Success = success or false
         self.Wipe = NemesisChat:IsWipe()
+
+        -- Update DPS rankings before calculating final rankings
+        if self.RosterSnapshot then
+            for playerName, _ in pairs(self.RosterSnapshot) do
+                local dps = self:GetDps(playerName)
+                if dps and dps > 0 then
+                    self.Rankings:UpdateMetric("DPS", playerName, dps)
+                end
+            end
+        end
+
         self:SetInactive()
 
         if self.Rankings and self.Rankings.Calculate then

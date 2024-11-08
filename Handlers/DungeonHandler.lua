@@ -45,22 +45,46 @@ function DungeonHandler:CheckDungeonStatus()
     local dungeonInfo = self:GetDungeonInfo()
     local inInstance, instanceType = IsInInstance()
 
-    if inInstance then
-        -- Check follower first since it's more specific
-        if C_LFGInfo.IsInLFGFollowerDungeon() then
-            self:CheckFollowerDungeon()
-        -- LFG dungeons are handled by the standard dungeon check
-        elseif IsInLFGDungeon() then
-            self:StartStandardDungeon(dungeonInfo)
-        -- Then check delves
-        elseif C_DelvesUI and C_DelvesUI.HasActiveDelve() then
-            self:CheckDelveStart(dungeonInfo)
-        else
-            self:StartStandardDungeon(dungeonInfo)
+    -- Add timewalking check
+    if self.dungeonStates.timewalking and dungeonInfo.state ~= "timewalking" then
+        self:EndDungeon("DUNGEON", false)
+    end
+
+    -- Clear states if we're not in an instance
+    if not inInstance then
+        if self:IsInStandardDungeon() then
+            self:CheckStandardDungeonEnd()
         end
+        if self.dungeonStates.delve then
+            self:CheckDelveEnd(dungeonInfo)
+        end
+        if self.dungeonStates.follower then
+            self:EndDungeon("FOLLOWER", false)
+        end
+        return
+    end
+
+    -- Only handle party/raid instances
+    if instanceType ~= "party" and instanceType ~= "raid" then
+        return
+    end
+
+    -- Clear any existing states if difficulty changed
+    if dungeonInfo.difficultyName ~= self.dungeonStates.currentDifficulty then
+        self:ClearStandardDungeonStates()
+    end
+
+    -- Priority order for dungeon type detection
+    if C_ChallengeMode.IsChallengeModeActive() then
+        self:StartMythicPlus(dungeonInfo)
+    elseif C_LFGInfo.IsInLFGFollowerDungeon() then
+        self:CheckFollowerDungeon()
+    elseif IsInLFGDungeon() then
+        self:StartLFGDungeon(dungeonInfo)
+    elseif dungeonInfo.state == "delve" then
+        self:CheckDelveStart(dungeonInfo)
     else
-        self:CheckStandardDungeonEnd()
-        self:CheckDelveEnd(dungeonInfo)
+        self:StartStandardDungeon(dungeonInfo)
     end
 end
 
@@ -94,6 +118,7 @@ function DungeonHandler:ClearStandardDungeonStates()
     self.dungeonStates.mythic = false
     self.dungeonStates.mythicplus = false
     self.dungeonStates.lfg = false
+    self.dungeonStates.timewalking = false
     self.dungeonStates.currentDifficulty = nil
 end
 
@@ -141,6 +166,9 @@ end
 
 function DungeonHandler:OnBossKill(encounterID, encounterName, difficultyID, groupSize, success)
     if not self:IsInStandardDungeon() then return end
+
+    -- Add check for M+ to prevent duplicate completion
+    if self.dungeonStates.mythicplus then return end
 
     local _, instanceType, _, _, _, _, _, instanceID = GetInstanceInfo()
     if not instanceID or instanceType ~= "party" then return end
@@ -214,7 +242,7 @@ function DungeonHandler:OnPlayerLeavingWorld()
 end
 
 function DungeonHandler:OnCompletionReward()
-    if not self:IsInStandardDungeon() then return end
+    if not (self:IsInStandardDungeon() or self:IsLFGDungeon()) then return end
 
     -- LFG completion reward is a definitive sign of dungeon completion
     self:EndDungeon("DUNGEON", true)
@@ -231,6 +259,12 @@ function DungeonHandler:OnScenarioCriteriaUpdate()
 end
 
 function DungeonHandler:OnScenarioCompleted()
+    -- Add check for standard dungeons
+    if self:IsInStandardDungeon() and not self.dungeonStates.mythicplus then
+        self:EndDungeon("DUNGEON", true)
+        return
+    end
+
     if self.dungeonStates.follower then
         local scenarioInfo = C_ScenarioInfo.GetScenarioInfo()
         if scenarioInfo and scenarioInfo.completed then
@@ -317,6 +351,7 @@ function DungeonHandler:ResetMythicPlusInfo()
 end
 
 function DungeonHandler:EndDungeon(category, isSuccess)
+    -- Clear states before processing to prevent re-entry
     if category == "DUNGEON" then
         self:ClearStandardDungeonStates()
     else
@@ -329,17 +364,13 @@ function DungeonHandler:EndDungeon(category, isSuccess)
     NCEvent:RandomNemesis()
     NCEvent:RandomBystander()
 
-    if category == "DUNGEON" and C_ChallengeMode.IsChallengeModeActive() then
-        local _, _, _, _, _, _, _, _, _, completionCode = C_ChallengeMode.GetCompletionInfo()
-        isSuccess = completionCode == 1
-    end
-
     NemesisChat:Report("DUNGEON", isSuccess)
     NCDungeon:Finish(isSuccess)
     NemesisChat:HandleEvent()
+
     NemesisChat:Print(category .. " " .. (isSuccess and "completed" or "abandoned"))
 
-    self.dungeonStates[category:lower()] = false
+    -- Update timestamps and cleanup
     if category == "DELVES" then
         self.dungeonStates.lastDelveTime = GetTime()
     end
@@ -383,9 +414,11 @@ end
 
 function DungeonHandler:OnChallengeModeCompleted()
     if self.dungeonStates.mythicplus then
-        -- Get actual completion status
+        -- Cache the completion status immediately when the event fires
         local _, _, _, _, _, _, _, _, _, completionCode = C_ChallengeMode.GetCompletionInfo()
-        self:EndDungeon("DUNGEON", completionCode == 1)
+        C_Timer.After(0.5, function()
+            self:EndDungeon("DUNGEON", completionCode == 1)
+        end)
     end
 end
 
@@ -434,16 +467,16 @@ end
 function DungeonHandler:StartStandardDungeon(dungeonInfo)
     if not dungeonInfo.state or self.dungeonStates[dungeonInfo.state] then return end
 
-    -- Check if joining in-progress
-    local isInProgress = self:IsInProgressDungeon()
-    if isInProgress then
-        -- May want to handle this differently
-        NemesisChat:Print("Joined in-progress dungeon")
+    -- Special handling for timewalking
+    if dungeonInfo.state == "timewalking" then
+        self.dungeonStates.timewalking = true
+        self.dungeonStates.currentDifficulty = "timewalking"
+    else
+        self.dungeonStates[dungeonInfo.state] = true
+        self.dungeonStates.currentDifficulty = dungeonInfo.state
     end
 
     local dungeonName = string.format("%s (%s)", dungeonInfo.name, dungeonInfo.difficultyName)
-    self.dungeonStates[dungeonInfo.state] = true
-    self.dungeonStates.currentDifficulty = dungeonInfo.state
     self:StartDungeon(dungeonName, "DUNGEON")
 end
 
@@ -479,8 +512,9 @@ function DungeonHandler:CheckStandardDungeonEnd()
 
     local inInstance, instanceType = IsInInstance()
     if not inInstance then
-        -- Only handle abandonment case here - successful completion is handled by boss kills/LFG
-        if self.dungeonStates.currentDifficulty and not C_ChallengeMode.IsChallengeModeActive() then
+        -- Handle both normal dungeons and LFG dungeons
+        if (self.dungeonStates.currentDifficulty and not C_ChallengeMode.IsChallengeModeActive()) or
+           (self.dungeonStates.lfg and not IsInLFGDungeon()) then
             self:EndDungeon("DUNGEON", false) -- Left instance without completion
         end
     end
@@ -501,13 +535,15 @@ function DungeonHandler:StartMythicPlus(dungeonInfo)
 end
 
 function DungeonHandler:CheckDelveStart(dungeonInfo)
-    if not dungeonInfo.instanceID then return end
+    if not dungeonInfo.instanceID or not C_DelvesUI then return end
 
-    if C_DelvesUI.HasActiveDelve() then
+    local hasActiveDelve = C_DelvesUI.HasActiveDelve()
+    if hasActiveDelve then
         if not self.dungeonStates.delve or self.dungeonStates.currentDelveMapID ~= dungeonInfo.instanceID then
             if self.dungeonStates.delve then
                 self:EndDelve()
             end
+            self.dungeonStates.delve = true
             self.dungeonStates.currentDelveMapID = dungeonInfo.instanceID
             self:StartDungeon(dungeonInfo.name, "DELVES")
         end
@@ -517,17 +553,29 @@ end
 function DungeonHandler:CheckDelveEnd(dungeonInfo)
     if not self.dungeonStates.delve then return end
 
-    -- More explicit completion check
-    if self.dungeonStates.currentDelveMapID then
-        local isActive = C_DelvesUI.HasActiveDelve(self.dungeonStates.currentDelveMapID)
-        if not isActive then
-            self:EndDelve()
-            return
-        end
-    end
-
-    -- Check for zone change
-    if dungeonInfo.difficultyName ~= "Delves" then
+    local isActive = C_DelvesUI and C_DelvesUI.HasActiveDelve(self.dungeonStates.currentDelveMapID)
+    local _, instanceType = IsInInstance()
+    if not isActive or dungeonInfo.difficultyName ~= "Delves" or instanceType ~= "party" then
         self:EndDelve()
     end
+end
+
+function DungeonHandler:StartLFGDungeon(dungeonInfo)
+    if self.dungeonStates.lfg then return end
+
+    local dungeonName = string.format("%s (%s)", dungeonInfo.name, dungeonInfo.difficultyName)
+    self.dungeonStates.lfg = true
+    self.dungeonStates.currentDifficulty = "lfg"
+    self:StartDungeon(dungeonName, "DUNGEON")
+end
+
+function DungeonHandler:OnLFGComplete()
+    if self.dungeonStates.lfg then
+        self:EndDungeon("DUNGEON", true)
+    end
+end
+
+-- Add this helper function for clarity
+function DungeonHandler:IsLFGDungeon()
+    return self.dungeonStates.lfg
 end

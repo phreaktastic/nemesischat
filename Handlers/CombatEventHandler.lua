@@ -93,6 +93,11 @@ local function GetDamageAmount(event, arg1, arg2, arg3, arg4)
     end
 end
 
+-- Add this with other local variables at the top
+--- @type GameTooltip
+local scanningTooltip = CreateFrame("GameTooltip", "NCEliteScanTooltip", UIParent, "GameTooltipTemplate") --- @type GameTooltip
+scanningTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
+
 local function IsEliteMob(name, guid)
     if not name or not guid then return false end
 
@@ -101,16 +106,10 @@ local function IsEliteMob(name, guid)
         return eliteMobCache[name]
     end
 
-    local tooltip = GameTooltip
-    if not tooltip then
-        eliteMobCache[name] = false
-        return false
-    end
+    scanningTooltip:SetHyperlink("unit:" .. guid)
 
-    tooltip:SetHyperlink("unit:" .. guid)
-
-    for i = 2, tooltip:NumLines() do
-        local line = _G["GameTooltipTextLeft" .. i]
+    for i = 2, scanningTooltip:NumLines() do
+        local line = _G["NCEliteScanTooltipTextLeft" .. i]
         if line and line:GetText() and (string_find(line:GetText(), "Elite") or string_find(line:GetText(), "Boss")) then
             eliteMobCache[name] = true
             return true
@@ -239,7 +238,7 @@ function CombatEventHandler:Fire()
 
     local subEvent, sourceName, destName, misc1, misc2, misc4 = eventInfo.subEvent, eventInfo.sourceName,
         eventInfo.destName, eventInfo.misc1, eventInfo.misc2, eventInfo.misc4
-    local damage = damageLookup[subEvent] and GetDamageAmount(subEvent, misc1, misc4) or nil
+    local damage = damageLookup[subEvent] and GetDamageAmount(subEvent, eventInfo.misc1, eventInfo.misc2, eventInfo.misc3, eventInfo.misc4) or nil
 
     if damage and damage > 0 and groupRoster[destName] then
         handleDamageEvent(subEvent, sourceName, destName, misc1, misc2, damage)
@@ -365,15 +364,13 @@ function CombatEventHandler:ActionScoring()
     end
 
     if bit_band(flags, SURVIVAL) ~= 0 and bit_band(flags, COOLDOWN) ~= 0 and eventInfo.subEvent == "SPELL_CAST_SUCCESS" then
-        -- We can't get the cooldown until the cast resolves -- we need to wait 0.1 second
-        C_Timer.After(0.1, function()
-            local cdInfo = C_Spell.GetSpellCooldown(spellId)
-            -- @TODO: Magic number -- this needs to either be a config value or a constant
-            if cdInfo.isEnabled and cdInfo.duration and cdInfo.duration >= 55 then
-                NCSegment:GlobalAddDefensive(sourceName)
-                NCRuntime:SetPlayerStateValue(sourceName, "lastDefensive", GetTime())
-            end
-        end)
+        -- Get the base cooldown from the spell info
+        local _, _, _, castTime, _, _, baseCooldown = GetSpellInfo(spellId)
+        -- @TODO: Magic number -- this needs to either be a config value or a constant
+        if baseCooldown and baseCooldown >= 55000 then  -- baseCooldown is in milliseconds
+            NCSegment:GlobalAddDefensive(sourceName)
+            NCRuntime:SetPlayerStateValue(sourceName, "lastDefensive", GetTime())
+        end
     end
 end
 

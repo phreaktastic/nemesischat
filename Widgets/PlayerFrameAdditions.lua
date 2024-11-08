@@ -26,12 +26,10 @@ local function GetAllUnits()
         end
     end
 
-    -- Add nameplates
-    local numNameplates = #C_NamePlate.GetNamePlates()
-    for i = 1, numNameplates do
-        local nameplate = C_NamePlate.GetNamePlateForUnit("nameplate" .. i)
-        if nameplate then
-            table.insert(units, "nameplate" .. i)
+    -- Fix nameplate collection
+    for _, nameplate in ipairs(C_NamePlate.GetNamePlates()) do
+        if nameplate.namePlateUnitToken then
+            table.insert(units, nameplate.namePlateUnitToken)
         end
     end
 

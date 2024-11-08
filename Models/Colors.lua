@@ -40,9 +40,57 @@ NCColors = {
             [13] = "E5CC80",
         },
         other = {
-            ["EMPHASIS"] = "FFCC00"
+            ["EMPHASIS"] = "FFCC00",
+            ["METRICS"] = {
+                ["GREATER"] = { 0.5, 0.85, 0.6 },
+                ["GREATER_HEX"] = "55D371",
+                ["LESSER"] = { 0.85, 0.6, 0.5 },
+                ["LESSER_HEX"] = "D37955",
+                ["NEUTRAL"] = { 0.5, 0.6, 0.85 },
+                ["NEUTRAL_HEX"] = "8594D3",
+                ["DISABLED"] = { 0.25, 0.25, 0.25 },
+                ["DISABLED_HEX"] = "404040",
+            }
         }
     },
+
+    Metrics = function(delta)
+        if delta > 0 then
+            return NCColors.MetricsGreater
+        elseif delta < 0 then
+            return NCColors.MetricsLesser
+        else
+            return NCColors.MetricsNeutral
+        end
+    end,
+
+    MetricsGreater = function(message)
+        if not message then
+            return NCColors.colors.other.METRICS.GREATER
+        end
+        return "|cff" .. NCColors.colors.other.METRICS.GREATER_HEX .. message .. "|r"
+    end,
+
+    MetricsLesser = function(message)
+        if not message then
+            return NCColors.colors.other.METRICS.LESSER
+        end
+        return "|cff" .. NCColors.colors.other.METRICS.LESSER_HEX .. message .. "|r"
+    end,
+
+    MetricsNeutral = function(message)
+        if not message then
+            return NCColors.colors.other.METRICS.NEUTRAL
+        end
+        return "|cff" .. NCColors.colors.other.METRICS.NEUTRAL_HEX .. message .. "|r"
+    end,
+
+    MetricsDisabled = function(message)
+        if not message then
+            return NCColors.colors.other.METRICS.DISABLED
+        end
+        return "|cff" .. NCColors.colors.other.METRICS.DISABLED_HEX .. message .. "|r"
+    end,
 
     Say = function(msg)
         return "|cff" .. NCColors.colors.channels.SAY .. msg .. "|r"
