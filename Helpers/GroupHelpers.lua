@@ -56,6 +56,8 @@ function NemesisChat:HandleAcceptedLFG()
     NCEvent:SetCategory("GROUP")
     NCEvent:SetEvent("LFG_PROPOSAL_SUCCEEDED")
     NCEvent:SetTarget("NA")
+    NCEvent:RandomBystander()
+    NCEvent:RandomNemesis()
 
     self:HandleEvent()
 end

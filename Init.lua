@@ -330,7 +330,7 @@ core.events = {
         },
         {
             label = "LFG Group Found",
-            value = "ACCEPTED_LFG",
+            value = "LFG_PROPOSAL_SUCCEEDED",
             options = core.constants.NA
         },
     },
