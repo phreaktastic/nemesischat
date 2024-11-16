@@ -69,7 +69,7 @@ core.runtimeDefaults = {
     --- @type table<string, PlayerState>
     playerStates = {},
 
-    --- @type table<string, number>
+    --- @type table<string, boolean>
     friends = {
         -- A simple cache for any online friends, with their character names as the key. Allows for
         -- different interactions with friends, such as whispering them when they join a group.
@@ -123,6 +123,8 @@ core.runtimeDefaults = {
     },
     --- @type number|nil
     initializationTime = nil,
+    --- @type boolean
+    acceptedLFG = false,
 }
 
 --- @class NCRuntime
@@ -136,10 +138,10 @@ NCRuntime = {
         core.runtime.initialized = value
     end,
     HasNemesis = function(self)
-        return core.runtime.hasNemesis
+        return core.runtime.hasNemesis == true
     end,
     HasBystander = function(self)
-        return core.runtime.hasBystander
+        return core.runtime.hasBystander == true
     end,
     GetNemeses = function(self)
         return core.runtime.nemeses
@@ -316,17 +318,13 @@ NCRuntime = {
                 tDeleteItem(core.runtime.nemeses, playerName)
             end
 
-            if not NemesisChat:HasPartyNemeses(true) then
-                core.runtime.hasNemesis = false
-            end
+            core.runtime.hasNemesis = NemesisChat:HasPartyNemeses(true)
         else
             if tContains(core.runtime.bystanders, playerName) then
                 tDeleteItem(core.runtime.bystanders, playerName)
             end
 
-            if not NemesisChat:HasPartyBystanders(true) then
-                core.runtime.hasBystander = false
-            end
+            core.runtime.hasBystander = NemesisChat:HasPartyBystanders(true)
         end
 
         core.runtime.groupRoster[playerName] = nil
@@ -342,7 +340,7 @@ NCRuntime = {
         self:CacheGroupRoster()
     end,
     ---@param playerName string
-    ---@return GroupRosterPlayer
+    ---@return GroupRosterPlayer|nil
     AddGroupRosterPlayer = function(self, playerName)
         if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
             return nil
@@ -357,16 +355,30 @@ NCRuntime = {
         local race = "Unknown"
         local role = "NONE"
         local guid = nil
+        local spec = nil
 
-        -- Use pcall to catch any errors when calling WoW API functions
+        -- Use pcall to catch any errors when calling WoW API functions (allows us to store them for review in /nc debug)
         pcall(function()
-            if UnitExists(playerName) then
+            if UnitIsUnit(playerName, "player") then
+                class, rawClass = UnitClass("player")
+                race = UnitRace("player") or "Unknown"
+                role = UnitGroupRolesAssigned("player")
+                guid = UnitGUID("player")
+            elseif UnitExists(playerName) then
                 class, rawClass = UnitClass(playerName)
                 race = UnitRace(playerName) or "Unknown"
                 role = UnitGroupRolesAssigned(playerName)
                 guid = UnitGUID(playerName)
             end
         end)
+
+        if role == "NONE" then
+            local attemptedSpecID = GetSpecialization()
+            if attemptedSpecID then
+                role = GetSpecializationRole(attemptedSpecID)
+                _, spec = GetSpecializationInfo(attemptedSpecID)
+            end
+        end
 
         local data = {
             guid = guid,
@@ -378,11 +390,11 @@ NCRuntime = {
             race = race,
             class = class,
             rawClass = rawClass,
-            spec = nil,
+            spec = spec,
             groupLead = false,
             name = playerName,
             token = self:GetUnitTokenFromName(playerName),
-            group = 0,
+            group = 1,
         }
 
         if isNemesis then
@@ -398,6 +410,24 @@ NCRuntime = {
             if success and isGroupLead == true then
                 data.groupLead = true
                 core.runtime.groupLead = playerName
+            end
+            if IsInRaid() then
+                local unit = data.token -- e.g., 'raid5'
+                -- Extract the index number from the unit token
+                local index = tonumber(string.match(unit, "^raid(%d+)$"))
+                if index then
+                    -- Pass the index to GetRaidRosterInfo
+                    data.group = select(3, GetRaidRosterInfo(index))
+                else
+                    -- If the token is not in the expected 'raidN' format, find the index by name
+                    for i = 1, GetNumGroupMembers() do
+                        local name = GetRaidRosterInfo(i)
+                        if name == playerName then
+                            data.group = select(3, GetRaidRosterInfo(i))
+                            break
+                        end
+                    end
+                end
             end
         end
 
@@ -445,8 +475,11 @@ NCRuntime = {
         end
     end,
     CacheGroupRoster = function(self)
-        core.db.profile.cache.groupRoster = DeepCopy(core.runtime.groupRoster)
-        core.db.profile.cache.groupRosterTime = GetTime()
+        NCConfig:SetPath("cache.groupRoster", DeepCopy(core.runtime.groupRoster))
+        NCConfig:SetPath("cache.groupRosterTime", GetTime())
+    end,
+    GetRosterCache = function(self)
+        return NCConfig:GetPath("cache.groupRoster")
     end,
     GetGuildRoster = function(self)
         return core.runtime.guild
@@ -551,8 +584,8 @@ NCRuntime = {
         return core.runtime.friends[playerName] ~= nil
     end,
     CacheFriends = function(self)
-        core.db.profile.cache.friends = DeepCopy(core.runtime.friends)
-        core.db.profile.cache.friendsTime = GetTime()
+        NCConfig:SetPath("cache.friends", DeepCopy(core.runtime.friends))
+        NCConfig:SetPath("cache.friendsTime", GetTime())
     end,
     GetPetOwners = function(self)
         return core.runtime.petOwners
@@ -599,14 +632,14 @@ NCRuntime = {
 
         -- Populate DPS for each player
         for playerName, _ in pairs(dungeonData.RosterSnapshot) do
-            stats.DPS[playerName] = dungeonData:GetDps(playerName)
+            stats.DPS[playerName] = dungeonData:GetDPS(playerName)
         end
 
         core.runtime.lastCompletedDungeon = {
             Identifier = dungeonData:GetIdentifier(),
             Level = dungeonData:GetLevel(),
-            RosterSnapshot = dungeonData.RosterSnapshot,
-            Stats = stats
+            RosterSnapshot = DeepCopy(dungeonData.RosterSnapshot),
+            Stats = stats,
         }
     end,
     GetLastCompletedDungeon = function(self)
@@ -653,33 +686,34 @@ NCRuntime = {
                     end
                 end
             else
+                if not playerName or not UnitName(playerName) then return nil end
                 return core.runtime.playerNameToToken[Ambiguate(UnitName(playerName), "none")]
             end
         end
+        if not playerName or not UnitName(playerName) then return nil end
         return core.runtime.playerNameToToken[Ambiguate(UnitName(playerName), "none")]
     end,
     AttemptRetrieveSpec = function(self, unit)
         if unit.token and UnitExists(unit.token) and UnitIsConnected(unit.token) then
             if UnitIsUnit(unit.token, "player") then
                 -- For the player character, use GetSpecialization()
-                local specIndex = GetSpecialization()
-                if specIndex then
-                    local id, specName, description, icon, role, classFile, className = GetSpecializationInfo(specIndex)
-                    if specName then
-                        unit.spec = specName
+                if not unit.spec or not unit.role then
+                    local specIndex = GetSpecialization()
+                    if specIndex then
+                        local id, specName = GetSpecializationInfo(specIndex)
+                        if specName then
+                            unit.spec = specName
+                        end
+                        local role = GetSpecializationRole(specIndex)
+                        if role then
+                            unit.role = role
+                        end
                     end
                 end
             else
-                -- For other players, use inspection
-                local specID = GetInspectSpecialization(unit.token)
-                if specID and specID > 0 then
-                    -- Spec data is available
-                    local id, specName, description, icon, role, classFile, className = GetSpecializationInfoByID(specID)
-                    if specName and specName ~= "Unknown" then
-                        unit.spec = specName
-                    end
-                else
-                    -- Wait for INSPECT_READY event
+                -- Queue for inspection if we don't have the spec
+                if not unit.spec and unit.guid then
+                    NemesisChat.InspectQueueManager:QueuePlayerForInspect(unit.guid)
                 end
             end
         end
@@ -696,5 +730,14 @@ NCRuntime = {
     end,
     ClearPlayerGuidToRoster = function(self)
         wipe(core.runtime.playerGuidToRoster)
+    end,
+    AcceptLFG = function(self)
+        core.runtime.acceptedLFG = true
+    end,
+    IsAcceptedLFG = function(self)
+        return core.runtime.acceptedLFG
+    end,
+    ClearAcceptedLFG = function(self)
+        core.runtime.acceptedLFG = false
     end,
 }

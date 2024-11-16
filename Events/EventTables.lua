@@ -23,14 +23,16 @@ core.dynamicEvents = {
     "SCENARIO_CRITERIA_UPDATE", -- Follower dungeon
     "SCENARIO_COMPLETED",       -- Follower dungeon complete
     "INSPECT_READY",            -- Inspect ready
+    "CHAT_MSG_LOOT",            -- Player loots an item
 
     -- Self
-    -- "PLAYER_TARGET_CHANGED",
+    "PLAYER_TARGET_CHANGED",
     "COMBAT_LOG_EVENT_UNFILTERED",
 }
 
 -- We always subscribe to these events
 core.staticEvents = {
+    "ADDON_LOADED",
     "GROUP_ROSTER_UPDATE",
     "PLAYER_ENTERING_WORLD",
     "PLAYER_LEAVING_WORLD",
@@ -40,4 +42,9 @@ core.staticEvents = {
     "SCENARIO_CRITERIA_UPDATE",
     "SCENARIO_COMPLETED",
     "LFG_LIST_APPLICANT_UPDATED",
+    "LFG_LIST_ACTIVE_ENTRY_UPDATE",
+    "LFG_COMPLETION_REWARD",
+    "LFG_PROPOSAL_SUCCEEDED",
+    "LFG_LIST_APPLICANT_LIST_UPDATED",
+    "SHOW_DELVES_DISPLAY_UI",
 }

@@ -14,8 +14,6 @@ local _, core = ...;
 -- Core info frame logic
 -----------------------------------------------------
 
--- Models/Info.lua
-
 local function TruncateName(name, maxLength)
     if #name > maxLength then
         return name:sub(1, maxLength - 3) .. "..."
@@ -67,6 +65,8 @@ NCInfo = {
     PreviousSelectedChannel = nil,
     MetricKeys = {}, -- Will be initialized as a sorted clone of NCRankings.METRICS's keys
     IsMinimized = false,
+    hasBeenExpanded = false,
+    ExpandedHeight = 300,  -- Default height
 
     -- Main frame
     StatsFrame = nil,
@@ -142,23 +142,218 @@ NCInfo = {
         end)
 
         -- Close Button
-        f.closeButton = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+        f.closeButton = CreateFrame("Button", nil, f, "UIPanelCloseButton UIPanelButtonTemplate")
         f.closeButton:SetPoint("TOPRIGHT", f, "TOPRIGHT", -5, -5)
         f.closeButton:SetSize(16, 16)
+        f.closeButton.tooltipText = format("%s\n\nYou may use %s to re-open.", NCColors.Emphasize("Close the info frame"), NCColors.MetricsNeutral("/nc showinfo"))
         f.closeButton:SetScript("OnClick", function()
             NCConfig:SetShowInfoFrame(false)
             f:Hide()
         end)
 
         -- Minimize Button
-        f.minimizeButton = CreateFrame("Button", nil, f)
+        f.minimizeButton = CreateFrame("Button", nil, f, "UIPanelCloseButton UIPanelButtonTemplate")
+        f.minimizeButton:SetPoint("RIGHT", f.closeButton, "LEFT", 0, 0)
         f.minimizeButton:SetSize(16, 16)
-        f.minimizeButton:SetPoint("RIGHT", f.closeButton, "LEFT", -5, 0)
-        f.minimizeButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Up")
-        f.minimizeButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Down")
-        f.minimizeButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
+        f.minimizeButton:SetNormalAtlas("RedButton-Condense")
+        f.minimizeButton:SetPushedAtlas("RedButton-Condense-Pressed")
+        f.minimizeButton:SetDisabledAtlas("RedButton-Condense-Disabled")
+        f.minimizeButton:SetHighlightAtlas("RedButton-Highlight")
+        f.minimizeButton.tooltipText = NCColors.Emphasize("Minimize the info frame.")
         f.minimizeButton:SetScript("OnClick", function()
             NCInfo:ToggleMinimize()
+        end)
+
+        -- Add Settings Button with Dropdown
+        f.settingsButton = CreateFrame("Button", nil, f, "UIPanelCloseButton UIPanelButtonTemplate")
+        f.settingsButton:SetSize(16, 16)
+        f.settingsButton:SetPoint("TOPLEFT", f, "TOPLEFT", 5, -5)
+        f.settingsButton:SetNormalAtlas("128-RedButton-ArrowDown")
+        f.settingsButton:SetHighlightAtlas("128-RedButton-ArrowDown-Highlight")
+        f.settingsButton:SetPushedAtlas("128-RedButton-ArrowDown-Pressed")
+        f.settingsButton.tooltipText = NCColors.Emphasize("Quick Settings")
+
+        -- Create dropdown menu
+        f.settingsDropDown = CreateFrame("Frame", nil, f.settingsButton, "UIDropDownMenuTemplate")
+
+        local function InitializeDropDown(self, level, menuList)
+            local info = UIDropDownMenu_CreateInfo()
+
+            if level == 1 then
+                -- Enable/Disable NemesisChat
+                info.text = "Enable NemesisChat"
+                info.checked = IsNCEnabled()
+                info.func = function()
+                    NCConfig:ToggleEnabled()
+                end
+
+                UIDropDownMenu_AddButton(info, level)
+                UIDropDownMenu_AddSeparator(level)
+                info = UIDropDownMenu_CreateInfo()
+
+                -- Message Settings
+                info.text = "Message Settings"
+                info.hasArrow = true
+                info.menuList = "MESSAGE"
+                info.notCheckable = true
+                info.keepShownOnClick = true
+
+                UIDropDownMenu_AddButton(info, level)
+                info = UIDropDownMenu_CreateInfo()
+
+                -- LFG Settings Menu Item
+                info.text = "LFG Settings"
+                info.hasArrow = true
+                info.menuList = "LFG"
+                info.notCheckable = true
+                info.keepShownOnClick = true
+                UIDropDownMenu_AddButton(info, level)
+                info = UIDropDownMenu_CreateInfo()
+
+                -- Add other top-level settings here
+                -- info.text = "Other Setting"
+                -- info.hasArrow = false
+                -- info.menuList = nil
+                -- UIDropDownMenu_AddButton(info, level)
+
+            elseif level == 2 then
+                if menuList == "MESSAGE" then
+                    info.text = "Message Settings"
+                    info.isTitle = true
+                    info.notCheckable = true
+                    info.notClickable = true
+                    info.keepShownOnClick = true
+
+                    UIDropDownMenu_AddButton(info, level)
+                    UIDropDownMenu_AddSeparator(level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    info.text = "Enable Triggered Messages"
+                    info.checked = NCConfig:IsMessageSystemEnabled()
+                    info.func = function()
+                        NCConfig:ToggleMessageSystemEnabled()
+                    end
+                    UIDropDownMenu_AddButton(info, level)
+                    info = UIDropDownMenu_CreateInfo()
+                elseif menuList == "LFG" then
+                    -- General LFG Settings Header
+                    info.text = "General LFG Settings"
+                    info.isTitle = true
+                    info.notCheckable = true
+                    info.notClickable = true
+                    info.keepShownOnClick = true
+                    UIDropDownMenu_AddButton(info, level)
+                    UIDropDownMenu_AddSeparator(level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    -- Announce All Applicants When Not Leader
+                    info.text = "Announce All Applicants When Not Leader"
+                    info.checked = function() return NCConfig:IsDisableFiltersWhenNotLeader() end
+                    info.func = function() NCConfig:ToggleDisableFiltersWhenNotLeader() end
+                    info.keepShownOnClick = true
+                    info.tooltipTitle = "Allow all applicants to be announced in chat when you are not the group leader."
+                    info.tooltipText= "This will override the default behavior of only announcing applicants that meet your current filter criteria."
+                    info.tooltipInstruction = "This only applies when you are not the group leader."
+                    info.noTooltipWhileEnabled = false
+                    info.tooltipOnButton = true
+                    UIDropDownMenu_AddButton(info, level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    -- Show Notifications When Filtered
+                    info.text = "Log Filtered Applicants"
+                    info.checked = function() return NCConfig:IsShowNotificationsWhenFiltered() end
+                    info.func = function() NCConfig:ToggleShowNotificationsWhenFiltered() end
+                    info.keepShownOnClick = true
+                    info.tooltipTitle = "Log filtered applicants to chat."
+                    info.tooltipText = "This will log applicants that do not meet your current filter criteria to chat frames."
+                    info.tooltipInstruction = "This is only visible to you."
+                    info.noTooltipWhileEnabled = false
+                    info.tooltipOnButton = true
+                    UIDropDownMenu_AddButton(info, level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    UIDropDownMenu_AddSpace(level)
+
+                    -- Chat Announcements Header
+                    info.text = "Applicant Announcements"
+                    info.isTitle = true
+                    info.notCheckable = true
+                    info.notClickable = true
+                    info.keepShownOnClick = true
+
+                    UIDropDownMenu_AddButton(info, level)
+                    UIDropDownMenu_AddSeparator(level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    local isChecked = function()
+                        return NCConfig:IsRoleChatEnabled("tank") and NCConfig:IsRoleChatEnabled("healer") and NCConfig:IsRoleChatEnabled("dps")
+                    end
+                    info.text = not isChecked() and "Check All" or "Uncheck All"
+                    info.checked = isChecked
+                    info.isNotRadio = true
+                    info.keepShownOnClick = true
+                    info.func = function()
+                        local value = not NCInfo.toggleAllButton.checked()
+                        NemesisChat:Print("Setting role chat to:", value)
+                        NCConfig:SetRoleChatEnabled("tank", value)
+                        NCConfig:SetRoleChatEnabled("healer", value)
+                        NCConfig:SetRoleChatEnabled("dps", value)
+
+                        NCInfo.toggleAllButton:SetText(not NCInfo.toggleAllButton.checked() and "Check All" or "Uncheck All")
+
+                        UIDropDownMenu_Refresh(f.settingsDropDown, level)
+                    end
+                    NCInfo.toggleAllButton = UIDropDownMenu_AddButton(info, level)
+
+                    info = UIDropDownMenu_CreateInfo()
+
+                    local roles = {"TANK", "HEALER", "DPS"}
+                    local rolesHumanized = {"Tank", "Healer", "DPS"}
+                    for i, role in ipairs(roles) do
+                        info.text = string.format("%s Announce %s applicants in chat.", IconTable:GetIconString("Role", role, 24), rolesHumanized[i])
+                        info.checked = function() return NCConfig:IsRoleChatEnabled(string.lower(role)) end
+                        info.isNotRadio = true
+                        info.keepShownOnClick = true
+                        info.func = function()
+                            NCConfig:ToggleRoleChatEnabled(string.lower(role))
+                            NCInfo.toggleAllButton.checked = function() return NCConfig:IsRoleChatEnabled("tank") and NCConfig:IsRoleChatEnabled("healer") and NCConfig:IsRoleChatEnabled("dps") end
+                            NCInfo.toggleAllButton:Hide()
+                            NCInfo.toggleAllButton:Show()
+                        end
+                        NCInfo["Toggle" .. role .. "Button"] = UIDropDownMenu_AddButton(info, level)
+                    end
+                end
+            end
+        end
+
+        f.settingsButton:SetScript("OnClick", function(self)
+            UIDropDownMenu_Initialize(f.settingsDropDown, InitializeDropDown)
+            ToggleDropDownMenu(1, nil, f.settingsDropDown, self, 0, 0)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:AddLine(self.tooltipText)
+            GameTooltip:Show()
+        end)
+
+        f.settingsButton:SetScript("OnLeave", function(self)
+            GameTooltip:Hide()
+            -- Check if mouse is not over the dropdown menu
+            if not MouseIsOver(f.settingsButton) and not MouseIsOver(f.settingsDropDown) and not MouseIsOver(DropDownList1) and not MouseIsOver(DropDownList2) then
+                CloseDropDownMenus()
+            end
+        end)
+
+        -- Add hover detection for the dropdown itself
+        DropDownList1:HookScript("OnLeave", function(self)
+            if not MouseIsOver(f.settingsButton) and not MouseIsOver(f.settingsDropDown) and not MouseIsOver(DropDownList1) and not MouseIsOver(DropDownList2) then
+                CloseDropDownMenus()
+            end
+        end)
+
+        -- Add hover detection for the second level dropdown
+        DropDownList2:HookScript("OnLeave", function(self)
+            if not MouseIsOver(f.settingsButton) and not MouseIsOver(f.settingsDropDown) and not MouseIsOver(DropDownList1) and not MouseIsOver(DropDownList2) then
+                CloseDropDownMenus()
+            end
         end)
 
         -- Header Frame
@@ -340,6 +535,8 @@ NCInfo = {
         f.prevPlayerButton:SetPassThroughButtons("RightButton")
         f.nextPlayerButton:SetPassThroughButtons("RightButton")
         f.channelDropdown:SetPassThroughButtons("RightButton")
+        f.minimizeButton:SetPassThroughButtons("RightButton")
+        f.closeButton:SetPassThroughButtons("RightButton")
 
         -- Initialize rows table
         f.scrollFrame.scrollChild.rows = f.scrollFrame.scrollChild.rows or {}
@@ -381,7 +578,7 @@ NCInfo = {
             content.compareCheckbox:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -5)
             content.compareCheckbox:SetSize(16, 16) -- Set a smaller size
             content.compareCheckbox:SetScript("OnClick", function(self)
-                core.db.profile.infoClickCompare = self:GetChecked()
+                NCConfig:Set("infoClickCompare", self:GetChecked())
                 NCInfo:Update()
             end)
             content.compareCheckbox.text = content.compareCheckbox:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -417,13 +614,20 @@ NCInfo = {
     end,
 
     -- Update function
-    Update = function(self, forceLastDungeon)
+    Update = function(self)
         if not IsNCEnabled() or not self.StatsFrame then return end
 
         local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
 
-        if forceLastDungeon then
-            dungeonData = NCRuntime:GetLastCompletedDungeon()
+        -- Only auto-minimize on first load or when explicitly requested
+        if not dungeonData and not self.IsMinimized and not self.hasBeenExpanded then
+            self:ShowMinimized()
+            return
+        end
+
+        -- Allow updates while minimized if user is trying to expand
+        if self.IsMinimized and not self.hasBeenExpanded then
+            return
         end
 
         self:UpdateHeader()
@@ -442,18 +646,19 @@ NCInfo = {
         if not self.StatsFrame or not self.StatsFrame.header then return end
 
         local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
-        local headerText = "Dungeon Info & Stats"
+        local headerText = "Dungeon Statistics"  -- Default title
 
-        if not dungeonData then
-            self.StatsFrame.header:SetText(headerText)
-            return
-        end
+        if dungeonData then
+            -- Try to get identifier from either direct property or method
+            local identifier = dungeonData.Identifier or (dungeonData.GetIdentifier and dungeonData:GetIdentifier())
+            local level = dungeonData.Level or (dungeonData.GetLevel and dungeonData:GetLevel())
 
-        if dungeonData and dungeonData.Identifier and dungeonData.Identifier ~= "" and dungeonData.Identifier ~= "DUNGEON" then
-            if dungeonData.Level and dungeonData.Level > 0 then
-                headerText = dungeonData.Identifier .. " +" .. dungeonData.Level
-            else
-                headerText = dungeonData.Identifier
+            if identifier and identifier ~= "" and identifier ~= "DUNGEON" then
+                if level and level > 0 then
+                    headerText = identifier .. " +" .. level
+                else
+                    headerText = identifier
+                end
             end
         end
 
@@ -466,33 +671,114 @@ NCInfo = {
         end
         local playerInfo = dungeonData and dungeonData.RosterSnapshot[self.CurrentPlayer] or {}
 
-        local leftText = playerInfo.spec or playerInfo.race or nil
+        local leftText = playerInfo.spec or nil
         local rightText = playerInfo.class or nil
         local rawClass = playerInfo.rawClass or nil
+        local role = playerInfo.role or UnitGroupRolesAssigned(self.CurrentPlayer) or "OTHER"
 
         if leftText == "Unknown" then
             leftText = nil
+        end
+
+        -- Map OTHER/DPS role to DAMAGER for icon lookup
+        local iconRole = role
+        if role == "OTHER" or role == "DPS" then
+            iconRole = "DAMAGER"
         end
 
         local infoText = leftText
             and NCColors.ClassColor(rawClass, leftText .. " " .. rightText)
             or NCColors.ClassColor(rawClass, rightText)
 
-        self.StatsFrame.infoFrame.text:SetText(infoText or "")
-        UIDropDownMenu_SetText(self.StatsFrame.playerDropdown, TruncateName(self.CurrentPlayer, 12))
+        -- Only add icon if we have a valid role
+        local roleIcon = IconTable:GetIconString("Role", iconRole, 20)
+        self.StatsFrame.infoFrame.text:SetText((roleIcon ~= "" and roleIcon .. "  " or "") .. (infoText or ""))
     end,
 
     UpdateCompareCheckbox = function(self)
         local checkbox = self.StatsFrame.scrollFrame.scrollChild.compareCheckbox
-        if checkbox then
-            checkbox:SetChecked(core.db.profile.infoClickCompare)
+        if not checkbox then return end
+
+        local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        if not dungeonData then
+            checkbox:Hide()
+            return
         end
+
+        checkbox:Show()
+        checkbox:SetChecked(NCConfig:Get("infoClickCompare"))
     end,
 
     UpdateMetrics = function(self, dungeonData)
         if not dungeonData then
             dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
         end
+
+        local content = self.StatsFrame.scrollFrame.scrollChild
+
+        -- Hide all metric rows initially
+        for _, row in pairs(content.rows) do
+            row:Hide()
+        end
+
+        -- Disable UI elements when no data
+        local hasData = dungeonData ~= nil
+
+        -- Disable dropdowns
+        if hasData then
+            UIDropDownMenu_EnableDropDown(self.StatsFrame.playerDropdown)
+            UIDropDownMenu_EnableDropDown(self.StatsFrame.channelDropdown)
+        else
+            UIDropDownMenu_DisableDropDown(self.StatsFrame.playerDropdown)
+            UIDropDownMenu_DisableDropDown(self.StatsFrame.channelDropdown)
+        end
+
+        -- Update clear button
+        if self.StatsFrame.clearButton then
+            self.StatsFrame.clearButton:SetEnabled(hasData)
+            if hasData then
+                self.StatsFrame.clearButton:GetNormalTexture():SetDesaturated(false)
+                self.StatsFrame.clearButton:GetHighlightTexture():SetDesaturated(false)
+                self.StatsFrame.clearButton:GetPushedTexture():SetDesaturated(false)
+            else
+                self.StatsFrame.clearButton:GetNormalTexture():SetDesaturated(true)
+                self.StatsFrame.clearButton:GetHighlightTexture():SetDesaturated(true)
+                self.StatsFrame.clearButton:GetPushedTexture():SetDesaturated(true)
+            end
+        end
+
+        -- Hide compare checkbox when no data
+        if content.compareCheckbox then
+            content.compareCheckbox:SetShown(hasData)
+        end
+
+        if not hasData then
+            -- Show message if not already created
+            if not content.emptyStateText then
+                content.emptyStateText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+                content.emptyStateText:SetPoint("CENTER", content, "CENTER", 0, 20)
+                -- Using auto-wrapping text
+                content.emptyStateText:SetWidth(content:GetWidth() - 40) -- 20px padding on each side
+                content.emptyStateText:SetText("Dungeon statistics will appear when you enter or complete a dungeon")
+                content.emptyStateText:SetTextColor(0.7, 0.7, 0.7)
+                content.emptyStateText:SetJustifyH("CENTER")
+                content.emptyStateText:SetWordWrap(true)
+            else
+                -- Update width in case frame was resized
+                content.emptyStateText:SetWidth(content:GetWidth() - 40)
+            end
+            content.emptyStateText:Show()
+            return
+        else
+            -- Hide empty state message and show rows
+            if content.emptyStateText then
+                content.emptyStateText:Hide()
+            end
+            for _, row in pairs(content.rows) do
+                row:Show()
+            end
+        end
+
         for _, key in ipairs(self.MetricKeys) do
             local value = self:GetDungeonStat(dungeonData, self.CurrentPlayer, key)
             self:UpdateRow(key, value, dungeonData)
@@ -505,11 +791,15 @@ NCInfo = {
         local yOffset = -5
         local rowHeight = 18
         local contentPadding = 10
+        local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+
+        -- Disable UI elements when no data
+        local hasData = dungeonData ~= nil
 
         -- Calculate minimum height components
         local titleHeight = f.title:GetHeight() + 2
         local headerFrameHeight = f.headerFrame:GetHeight() + 2
-        local dropdownFrameHeight = f.dropdownFrame:GetHeight() + 10 -- Increased spacing
+        local dropdownFrameHeight = f.dropdownFrame:GetHeight() + 10
         local infoFrameHeight = f.infoFrame:GetHeight() + 2
         local compareCheckboxHeight = 0
         if content.compareCheckbox and content.compareCheckbox:IsShown() then
@@ -524,7 +814,23 @@ NCInfo = {
 
         if content.compareCheckbox then
             content.compareCheckbox:SetPoint("TOPLEFT", content, "TOPLEFT", 0, yOffset)
-            content.compareCheckbox:Show()
+            content.compareCheckbox.tooltipText = format("%s\n\n%s\n%s",
+                NCColors.Emphasize("Compare other players' metrics to your own."),
+                NCColors.MetricsLesser("Red: The other player's value is better than yours."),
+                NCColors.MetricsGreater("Green: Your value is better than the other player's."))
+            content.compareCheckbox:SetScript("OnEnter", function()
+                GameTooltip:SetOwner(content.compareCheckbox, "ANCHOR_RIGHT")
+                GameTooltip:AddLine(content.compareCheckbox.tooltipText, 1, 1, 1)
+                GameTooltip:Show()
+            end)
+            content.compareCheckbox:SetScript("OnLeave", function()
+                GameTooltip:Hide()
+            end)
+
+            if hasData then
+                content.compareCheckbox:Show()
+            end
+
             yOffset = yOffset - content.compareCheckbox:GetHeight() - 5
         end
 
@@ -553,10 +859,13 @@ NCInfo = {
             contentHeight = contentHeight + rowHeight
         end
 
-        content:SetHeight(math.abs(yOffset))
+        -- Calculate total content height (absolute value of final yOffset)
+        contentHeight = math.abs(yOffset)
+
+        -- Set the scroll child height to exactly match the content
+        content:SetHeight(contentHeight)
 
         -- Calculate total minimum height
-        local contentHeight = #self.MetricKeys * rowHeight
         local minHeight = titleHeight + headerFrameHeight + dropdownFrameHeight + infoFrameHeight + compareCheckboxHeight +
             contentHeight + footerFrameHeight + contentPadding - 80
 
@@ -575,8 +884,11 @@ NCInfo = {
         end
 
         -- Adjust scroll frame height
-        f.scrollFrame:SetHeight(f:GetHeight() -
-            (titleHeight + headerFrameHeight + dropdownFrameHeight + footerFrameHeight))
+        f.scrollFrame:SetHeight(f:GetHeight() - (titleHeight + headerFrameHeight + dropdownFrameHeight + footerFrameHeight))
+
+        if self.IsMinimized then
+            self:ShowMinimized()
+        end
     end,
 
     UpdateRow = function(self, statType, value, dungeonData)
@@ -584,13 +896,20 @@ NCInfo = {
         if not row then return end
 
         local positive = NCRankings.METRICS[statType]
-        local greaterColor = positive and { 0.5, 0.85, 0.6 } or { 0.85, 0.6, 0.5 }
-        local lesserColor = positive and { 0.85, 0.6, 0.5 } or { 0.5, 0.85, 0.6 }
-        local neutralColor = { 0.5, 0.6, 0.85 }
+        local greaterColor = positive and NCColors.MetricsGreater() or NCColors.MetricsLesser()
+        local lesserColor = positive and NCColors.MetricsLesser() or NCColors.MetricsGreater()
+        local neutralColor = NCColors.MetricsNeutral()
 
         row.columns[2]:SetText(NemesisChat:FormatNumber(value))
 
-        if core.db.profile.infoClickCompare and self.CurrentPlayer ~= UnitName("player") then
+        -- Store the comparison info for tooltip use
+        row.tooltipInfo = {
+            statType = statType,
+            value = value,
+            dungeonData = dungeonData
+        }
+
+        if NCConfig:Get("infoClickCompare") and self.CurrentPlayer ~= UnitName("player") then
             local myStat = self:GetDungeonStat(dungeonData, UnitName("player"), statType)
             local delta = value - myStat
 
@@ -612,23 +931,66 @@ NCInfo = {
             row.columns[2].desiredColor = neutralColor
         end
 
-        if IsInGroup() and not NCRankings:IsMetricApplicable(statType, self.CurrentPlayer) then
-            row.columns[1]:SetTextColor(0.25, 0.25, 0.25)
-            row.columns[1].desiredColor = { 0.25, 0.25, 0.25 }
-            row.columns[2]:SetTextColor(0.25, 0.25, 0.25)
-            row.columns[2].desiredColor = { 0.25, 0.25, 0.25 }
+        if dungeonData and not NCRankings:IsMetricApplicable(statType, self.CurrentPlayer, dungeonData) then
+            local disabledColor = NCColors.MetricsDisabled()
+            row.columns[1]:SetTextColor(unpack(disabledColor))
+            row.columns[1].desiredColor = disabledColor
+            row.columns[2]:SetTextColor(unpack(disabledColor))
+            row.columns[2].desiredColor = disabledColor
         else
-            row.columns[1]:SetTextColor(0.5, 0.6, 0.85)
-            row.columns[1].desiredColor = { 0.5, 0.6, 0.85 }
+            row.columns[1]:SetTextColor(unpack(neutralColor))
+            row.columns[1].desiredColor = neutralColor
         end
 
         row:SetScript("OnEnter", function()
+            -- Highlight the text
             row.columns[1]:SetTextColor(1, 1, 1)
             row.columns[2]:SetTextColor(1, 1, 1)
+
+            -- Show tooltip
+            GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+
+            local helperText = format("%s: Report this metric.\n%s: Passthrough (control camera)",
+                NCColors.Emphasize("Left-click"),
+                NCColors.Emphasize("Right-click"))
+
+            if NCConfig:Get("infoClickCompare") and self.CurrentPlayer ~= UnitName("player") then
+                local myStat = self:GetDungeonStat(row.tooltipInfo.dungeonData, UnitName("player"), row.tooltipInfo.statType)
+                local delta = math.abs(row.tooltipInfo.value - myStat)
+                local comparison = row.tooltipInfo.value > myStat and "higher than" or (row.tooltipInfo.value < myStat and "lower than" or "(the same as)")
+
+                -- Get player class for coloring
+                local playerData = row.tooltipInfo.dungeonData.RosterSnapshot[self.CurrentPlayer]
+                local rawClass = playerData and playerData.rawClass or select(2, UnitClass(self.CurrentPlayer)) or "UNKNOWN"
+
+                -- Color the comparison text based on the value
+                local positive = NCRankings.METRICS[row.tooltipInfo.statType]
+                local coloredComparison = row.tooltipInfo.value > myStat and
+                    (positive and NCColors.MetricsGreater(comparison) or NCColors.MetricsLesser(comparison)) or
+                    (row.tooltipInfo.value < myStat and
+                        (positive and NCColors.MetricsLesser(comparison) or NCColors.MetricsGreater(comparison)) or
+                        NCColors.MetricsNeutral(comparison))
+
+                local tooltipText = format("%s's %s is %s %s yours (%s)\n\n%s",
+                    NCColors.ClassColor(rawClass, self.CurrentPlayer),
+                    self.METRIC_REPLACEMENTS[row.tooltipInfo.statType] or row.tooltipInfo.statType,
+                    NemesisChat:FormatNumber(delta),
+                    coloredComparison,
+                    NemesisChat:FormatNumber(myStat),
+                    helperText
+                )
+                GameTooltip:AddLine(tooltipText, 1, 1, 1, true)
+            else
+                GameTooltip:AddLine(helperText, 1, 1, 1, true)
+            end
+
+            GameTooltip:Show()
         end)
+
         row:SetScript("OnLeave", function()
             row.columns[1]:SetTextColor(unpack(row.columns[1].desiredColor))
             row.columns[2]:SetTextColor(unpack(row.columns[2].desiredColor))
+            GameTooltip:Hide()
         end)
     end,
 
@@ -637,12 +999,27 @@ NCInfo = {
             dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
         end
 
-        if not dungeonData then
+        -- Disable buttons if no dungeon data or only one player
+        if not dungeonData or not dungeonData.RosterSnapshot then
             self.StatsFrame.prevPlayerButton:Disable()
             self.StatsFrame.nextPlayerButton:Disable()
             return
         end
 
+        -- Count players in roster
+        local playerCount = 0
+        for _ in pairs(dungeonData.RosterSnapshot) do
+            playerCount = playerCount + 1
+        end
+
+        -- Disable if only one player
+        if playerCount <= 1 then
+            self.StatsFrame.prevPlayerButton:Disable()
+            self.StatsFrame.nextPlayerButton:Disable()
+            return
+        end
+
+        -- Update player list if needed
         if not self.playerList or GetTime() - (self.lastPlayerListUpdate or 0) > 1 then
             self.playerList = {}
             for name in pairs(dungeonData.RosterSnapshot) do
@@ -652,13 +1029,8 @@ NCInfo = {
             self.lastPlayerListUpdate = GetTime()
         end
 
-        if #self.playerList <= 1 then
-            self.StatsFrame.prevPlayerButton:Disable()
-            self.StatsFrame.nextPlayerButton:Disable()
-        else
-            self.StatsFrame.prevPlayerButton:Enable()
-            self.StatsFrame.nextPlayerButton:Enable()
-        end
+        self.StatsFrame.prevPlayerButton:Enable()
+        self.StatsFrame.nextPlayerButton:Enable()
     end,
 
     UpdateChannelDropdown = function(self)
@@ -667,9 +1039,11 @@ NCInfo = {
 
     -- Update player dropdown
     UpdatePlayerDropdown = function(self)
-        if not self.StatsFrame then
-            return
-        end
+        if not self.StatsFrame then return end
+
+        -- Clear and rebuild player list
+        self.playerList = nil
+        self.lastPlayerListUpdate = nil
 
         local maxPlayerLength = GetMaxDropdownTextLength(self.StatsFrame)
         local playerDisplayText = TruncateName(self.CurrentPlayer, maxPlayerLength)
@@ -684,17 +1058,28 @@ NCInfo = {
         if not self.StatsFrame then return end
 
         local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
-        local playerCount = dungeonData and NemesisChat:GetLength(dungeonData.RosterSnapshot) or 1
+        local raidGroup = IsInRaid()
+        local partyMembers = GetNumGroupMembers()
+
+        -- Force roster update if we're in a group
+        if IsInGroup() and dungeonData then
+            NCRuntime:UpdateGroupRosterRoles()
+            if dungeonData.SnapshotCurrentRoster then
+                dungeonData:SnapshotCurrentRoster()
+            end
+        end
 
         local f = self.StatsFrame
         UIDropDownMenu_Initialize(f.playerDropdown, function(dropdown, level, menuList)
             if level == 1 then
-                if playerCount > 5 then
+                -- Only use raid groups if we actually have group data and are in an active raid
+                if raidGroup and partyMembers > 5 and IsInRaid() and dungeonData and
+                   dungeonData.RosterSnapshot and next(dungeonData.RosterSnapshot) and
+                   dungeonData.RosterSnapshot[next(dungeonData.RosterSnapshot)].group then
                     self:CreateRaidGroupedDropdown(dropdown, level, dungeonData)
-                elseif playerCount > 1 then
-                    self:CreateNormalDropdown(dropdown, level, dungeonData)
                 else
-                    self:CreateSoloDropdown(dropdown, level)
+                    -- Use normal dropdown for completed dungeons or party groups
+                    self:CreateNormalDropdown(dropdown, level, dungeonData)
                 end
             elseif level == 2 and menuList then
                 self:CreateRaidGroupMenu(menuList, dropdown, level)
@@ -729,8 +1114,40 @@ NCInfo = {
         dungeonData = dungeonData or (NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon())
         if not dungeonData then return end
 
+        local playerName = UnitName("player")
+        local sortedPlayers = {}
+        local roleOrder = { ["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3, ["DPS"] = 3, ["OTHER"] = 4 }
+
+        -- First, add current player
+        if dungeonData.RosterSnapshot[playerName] then
+            self:AddPlayerToDropdown({ name = playerName, data = dungeonData.RosterSnapshot[playerName] }, dropdown, level)
+        end
+
+        -- Sort remaining players by role (defined by roleOrder above)
         for name, player in pairs(dungeonData.RosterSnapshot) do
-            self:AddPlayerToDropdown({ name = name, data = player }, dropdown, level)
+            if name ~= playerName then
+                local role = player.role or UnitGroupRolesAssigned(name) or "OTHER"
+                -- Normalize DPS to DAMAGER
+                if role == "DPS" then role = "DAMAGER" end
+
+                table.insert(sortedPlayers, {
+                    name = name,
+                    data = player,
+                    roleOrder = roleOrder[role] or 4
+                })
+            end
+        end
+
+        table.sort(sortedPlayers, function(a, b)
+            if a.roleOrder == b.roleOrder then
+                return a.name < b.name
+            end
+            return a.roleOrder < b.roleOrder
+        end)
+
+        -- Add sorted players to dropdown
+        for _, player in ipairs(sortedPlayers) do
+            self:AddPlayerToDropdown({ name = player.name, data = player.data }, dropdown, level)
         end
     end,
 
@@ -741,7 +1158,10 @@ NCInfo = {
         if not dungeonData then return groupedPlayers end
 
         for name, player in pairs(dungeonData.RosterSnapshot) do
-            local subgroup = player.group or 1
+            -- Default to group 1 if no group is assigned
+            local subgroup = tonumber(player.group) or 1
+            -- Ensure subgroup is within valid range
+            subgroup = math.min(math.max(subgroup, 1), 8)
             table.insert(groupedPlayers[subgroup], { name = name, data = player })
         end
 
@@ -783,14 +1203,15 @@ NCInfo = {
         local class = player.class or UnitClass(name) or "Unknown"
         local rawClass = player.rawClass or select(2, UnitClass(name)) or "Unknown"
         local role = player.role or UnitGroupRolesAssigned(name) or "OTHER"
-        local replacedRole = self.ROLE_REPLACEMENTS[role] or "Other"
-        local infoString = class .. " " .. replacedRole
 
         local maxLength = GetMaxDropdownTextLength(self.StatsFrame)
-        local truncatedName = TruncateName(name, maxLength - #infoString - 3)
+        local truncatedName = TruncateName(name, maxLength)
 
-        local colorized = NCColors.ClassColor(rawClass, truncatedName .. " (" .. infoString .. ")")
+        -- Create the icon string using the role icon
+        local roleIcon = IconTable:GetIconString("Role", role, 16)
+        local infoString = string.format("%s", truncatedName)
 
+        local colorized = NCColors.ClassColor(rawClass, roleIcon .. " " .. infoString)
         if name == UnitName("player") then
             colorized = NCColors.Emphasize(truncatedName)
         end
@@ -980,7 +1401,7 @@ NCInfo = {
             message = string.format("%s for %s (%s): %s", (self.METRIC_REPLACEMENTS[metric] or metric), player,
                 dungeonData.Identifier or "dungeon",
                 NemesisChat:FormatNumber(self:GetDungeonStat(dungeonData, player, metric)))
-            if core.db.profile.infoClickCompare then
+            if NCConfig:Get("infoClickCompare") then
                 local delta = self:GetDungeonStat(dungeonData, player, metric) -
                     self:GetDungeonStat(dungeonData, UnitName("player"), metric)
                 if delta > 0 then
@@ -1019,12 +1440,7 @@ NCInfo = {
         local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
         if not dungeonData then return end
 
-        local playerList = {}
-        for name in pairs(dungeonData.RosterSnapshot) do
-            table.insert(playerList, name)
-        end
-        table.sort(playerList)
-
+        local playerList = self:GetSortedPlayerList(dungeonData)
         local currentIndex = tIndexOf(playerList, self.CurrentPlayer)
         if currentIndex then
             local nextIndex = currentIndex % #playerList + 1
@@ -1032,7 +1448,6 @@ NCInfo = {
             self:UpdatePlayerInfo(dungeonData)
             self:UpdateMetrics(dungeonData)
             self:UpdateDropdownText()
-            -- UIDropDownMenu_Refresh(self.StatsFrame.playerDropdown)
         end
     end,
 
@@ -1042,12 +1457,7 @@ NCInfo = {
         local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
         if not dungeonData then return end
 
-        local playerList = {}
-        for name in pairs(dungeonData.RosterSnapshot) do
-            table.insert(playerList, name)
-        end
-        table.sort(playerList)
-
+        local playerList = self:GetSortedPlayerList(dungeonData)
         local currentIndex = tIndexOf(playerList, self.CurrentPlayer)
         if currentIndex then
             local prevIndex = (currentIndex - 2 + #playerList) % #playerList + 1
@@ -1055,7 +1465,6 @@ NCInfo = {
             self:UpdatePlayerInfo(dungeonData)
             self:UpdateMetrics(dungeonData)
             self:UpdateDropdownText()
-            --UIDropDownMenu_Refresh(self.StatsFrame.playerDropdown)
         end
     end,
 
@@ -1066,29 +1475,31 @@ NCInfo = {
         if self.IsMinimized then
             -- Expand the frame
             self.IsMinimized = false
-            f.minimizeButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Up")
-            f.minimizeButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Down")
-            f.minimizeButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-CollapseButton-Highlight")
+            self.hasBeenExpanded = true
+            f.minimizeButton:SetNormalAtlas("RedButton-Expand")
+            f.minimizeButton:SetPushedAtlas("RedButton-Expand-Pressed")
+            f.minimizeButton:SetDisabledAtlas("RedButton-Expand-Disabled")
+            f.minimizeButton:SetHighlightAtlas("RedButton-Highlight")
+            f.minimizeButton.tooltipText = NCColors.Emphasize("Minimize the info frame.")
 
             -- Show all elements
-            f:SetHeight(self.ExpandedHeight or 300) -- Restore previous height or default
+            f:SetHeight(self.ExpandedHeight or 300)
             f:SetResizable(true)
-            f.resizeButton:Show()
-            f.footerFrame:Show()
             f.scrollFrame:Show()
             f.dropdownFrame:Show()
+            f.footerFrame:Show()
+            f.headerFrame:Show()
             f.resizeButton:Show()
+            f:SetAlpha(1)
+
+            -- Force a full update
             self:Update()
         else
-            -- Minimize the frame
-            self.IsMinimized = true
-            f.minimizeButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-ExpandButton-Up")
-            f.minimizeButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-ExpandButton-Down")
-            f.minimizeButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-ExpandButton-Highlight")
-
+            self.hasBeenExpanded = false
             -- Save current height
             self.ExpandedHeight = f:GetHeight()
 
+            -- Minimize the frame
             self:ShowMinimized()
         end
     end,
@@ -1122,36 +1533,58 @@ NCInfo = {
         if not IsNCEnabled() or not self.StatsFrame then return end
 
         local f = self.StatsFrame
-        local titleHeight = f.title:GetHeight() + 8             -- Include top padding
-        local headerFrameHeight = f.headerFrame:GetHeight() + 5 -- Include spacing
-        local newHeight = titleHeight + headerFrameHeight + 10  -- Add extra padding
+        self.IsMinimized = true
+        self.savedHeight = f:GetHeight()
 
-        f:SetHeight(newHeight)
-        f:SetResizable(false)
-        f.resizeButton:Hide()
-        f.footerFrame:Hide()
+        f.minimizeButton.tooltipText = NCColors.Emphasize("Expand the info frame.")
+
+        -- Update minimize button texture
+        f.minimizeButton:SetNormalAtlas("RedButton-Condense")
+        f.minimizeButton:SetPushedAtlas("RedButton-Condense-Pressed")
+        f.minimizeButton:SetDisabledAtlas("RedButton-Condense-Disabled")
+        f.minimizeButton:SetHighlightAtlas("RedButton-Highlight")
+
+        -- Set minimized height
+        local titleHeight = f.title:GetHeight() + 16
+        f:SetHeight(titleHeight)
+
+        -- Hide content while minimized
         f.scrollFrame:Hide()
         f.dropdownFrame:Hide()
+        f.footerFrame:Hide()
+        f.headerFrame:Hide()
         f.resizeButton:Hide()
+
+        -- Disable resizing while minimized
+        f:SetResizable(false)
+        f:SetAlpha(0.6)
     end,
 
     GetDungeonStat = function(self, dungeonData, playerName, metric)
+        -- First validate we have actual dungeon data
+        if not dungeonData then
+            dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
+        end
         if not dungeonData then return 0 end
 
         local value = 0
         local success, err = pcall(function()
             if dungeonData == NCDungeon then
                 if metric == "DPS" then
-                    value = NCDungeon:GetDps(playerName)
+                    value = NCDungeon:GetDPS(playerName)
                 else
                     value = NCDungeon:GetStats(playerName, metric)
                 end
-            else
+            elseif dungeonData.Stats then
+                -- Handle restored data
                 if metric == "DPS" then
-                    value = (dungeonData.Stats.DPS and dungeonData.Stats.DPS[playerName]) or 0
+                    value = dungeonData.Stats and dungeonData.Stats.DPS and dungeonData.Stats.DPS[playerName] or 0
                 else
-                    value = (dungeonData.Stats[metric] and dungeonData.Stats[metric][playerName]) or 0
+                    value = dungeonData.Stats and dungeonData.Stats[metric] and dungeonData.Stats[metric][playerName] or
+                           dungeonData[metric] and dungeonData[metric][playerName] or 0
                 end
+            else
+                value = 0
             end
         end)
 
@@ -1165,9 +1598,14 @@ NCInfo = {
     end,
 
     OnStatUpdate = function(self, statType, player, value)
-        if player == self.CurrentPlayer and self.StatsFrame and self.StatsFrame:IsShown() then
+        if not self.StatsFrame or not self.StatsFrame:IsShown() then return end
+
+        if player == self.CurrentPlayer then
             local dungeonData = NCDungeon:IsActive() and NCDungeon or NCRuntime:GetLastCompletedDungeon()
-            self:UpdateRow(statType, value, dungeonData)
+            if dungeonData then
+                self:UpdateRow(statType, value, dungeonData)
+                self:UpdateLayout()
+            end
         end
     end,
 
@@ -1220,6 +1658,52 @@ NCInfo = {
         table.insert(channels, { text = "Whisper: Custom", value = "WHISPER_CUSTOM" })
 
         return channels
+    end,
+
+    -- Add this helper function
+    GetSortedPlayerList = function(self, dungeonData)
+        local playerName = UnitName("player")
+        local sortedPlayers = {}
+        local roleOrder = { ["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3, ["DPS"] = 3, ["OTHER"] = 4 }
+
+        -- First add current player
+        if dungeonData.RosterSnapshot[playerName] then
+            table.insert(sortedPlayers, {
+                name = playerName,
+                data = dungeonData.RosterSnapshot[playerName],
+                roleOrder = 0  -- Always first
+            })
+        end
+
+        -- Add remaining players
+        for name, player in pairs(dungeonData.RosterSnapshot) do
+            if name ~= playerName then
+                local role = player.role or UnitGroupRolesAssigned(name) or "OTHER"
+                if role == "DPS" then role = "DAMAGER" end
+
+                table.insert(sortedPlayers, {
+                    name = name,
+                    data = player,
+                    roleOrder = roleOrder[role] or 4
+                })
+            end
+        end
+
+        -- Sort by role, then name
+        table.sort(sortedPlayers, function(a, b)
+            if a.roleOrder == b.roleOrder then
+                return a.name < b.name
+            end
+            return a.roleOrder < b.roleOrder
+        end)
+
+        -- Convert to simple name list while maintaining order
+        local nameList = {}
+        for _, player in ipairs(sortedPlayers) do
+            table.insert(nameList, player.name)
+        end
+
+        return nameList
     end,
 }
 

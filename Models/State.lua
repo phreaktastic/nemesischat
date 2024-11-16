@@ -1,3 +1,6 @@
+---@deprecated "This file is deprecated and will be removed in a future version."
+-- WARNING: This file is deprecated and will be removed in a future version.
+
 -----------------------------------------------------
 -- STATE
 -----------------------------------------------------

@@ -473,7 +473,7 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Bystander Role",
         value = "BYSTANDERROLE",
-        exec = function() return GetRole(NCEvent:GetBystander()) end,
+        exec = function() return core.rolesLookup[NCRuntime:GetGroupRosterPlayer(NCEvent:GetBystander()).role] end,
         description = "The Bystander's role.",
         isNumeric = false,
         example = function()
@@ -612,10 +612,10 @@ NemesisChatAPI:AddAPI("CORE", "Core")
     :AddReplacement({
         label = "Nemesis Role",
         value = "NEMESISROLE",
-        exec = function() return GetRole(NCEvent:GetNemesis()) end,
+        exec = function() return core.rolesLookup[NCRuntime:GetGroupRosterPlayer(NCEvent:GetNemesis()).role] end,
         description = "The Nemesis's role.",
         isNumeric = false,
-        example = function() 
+        example = function()
             local examples = {
                 "TANK",
                 "HEALER",

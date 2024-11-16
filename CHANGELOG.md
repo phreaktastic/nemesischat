@@ -2,28 +2,7 @@
 
 **Join the Discord! https://discord.gg/mqu3vk6csk**
 
-Version 1.11.x brings a big update to the addon, focusing on making it faster, adding new features, and fixing bugs. Here are the main highlights:
-
-1. Big improvements in speed, using less memory and fixing slowdowns.
-2. Major upgrades to the information window, making it easier to use and more helpful.
-3. Added support for delves, dungeons, and follower dungeons, matching what you'd expect in Mythic+ dungeons.
-4. Lots of behind-the-scenes improvements for better stability.
-5. Fixed many bugs related to combat tracking, avoidable damage, and the user interface.
-6. Updated to work with The War Within expansion.
-7. New options to keep track of players who leave groups or underperform.
-8. Better at spotting dangerous pulls in dungeons.
-9. Improved how messages are handled and triggered.
-10. Messages can now trigger even when you're not in an instance.
-
-This update is a big overhaul of the addon, setting things up for future improvements and giving you a better, smoother experience.
-
->❗**Note: We might need to reset leaver and low performer data in a future update**❗
->
-> ❗**Important:** We may need to reset leaver and low performer data in a future update. This could affect reporting on servers, classes, specs, and guilds.
-
-> Currently, we track leavers and low performers using a special ID, allowing us to identify players even if they change their name or server. We're exploring improvements that may require changes to this system. We'll strive to preserve existing data, but users should be aware of potential future impacts.
->
-> We've found a way to maintain the leaver and low performer databases while keeping high efficiency. However, users should still be aware that future changes may affect this data. We'll do our best to preserve it, but things can always change.
+Version 1.12.0 stub.
 
 # 🙏 Thank You
 

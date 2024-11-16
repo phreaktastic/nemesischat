@@ -14,7 +14,7 @@ core.version = C_AddOns.GetAddOnMetadata(addonName, 'Version')
 -----------------------------------------------------
 NemesisChat = LibStub("AceAddon-3.0"):NewAddon("NemesisChat", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0",
     "AceTimer-3.0", "LibToast-1.0")
-LibPlayerSpells = LibStub('LibPlayerSpells-1.0')
+LibPlayerSpells = LibStub("LibPlayerSpells-1.0")
 
 -----------------------------------------------------
 -- Global functions
@@ -147,6 +147,10 @@ function GetHashmapKeys(hashmap)
     return keys
 end
 
+function GetWeakTable()
+    return setmetatable({}, { __mode = "kv" })
+end
+
 -----------------------------------------------------
 -- Core options
 -----------------------------------------------------
@@ -191,8 +195,8 @@ core.constants.BOOLEAN_OPTIONS = {
 core.constants.NA = { 1 }
 core.constants.STANDARD = { 2, 3, 4, }
 core.constants.OTHERS = { 3, 4, }
-core.constants.ENEMIES = { 5, 6, 7 }
-core.constants.ALLUNITS = { 2, 3, 4, 5, 6, 7 }
+core.constants.ENEMIES = { 5, 6 }
+core.constants.ALLUNITS = { 2, 3, 4, 5, 6 }
 core.constants.IS = {
     {
         label = "is",
@@ -244,14 +248,14 @@ core.constants.UNIT_OPERATORS = {
         label = "NOT a guildmate",
         value = "NOT_GUILDMATE",
     },
-    {
-        label = "is underperformer",
-        value = "IS_UNDERPERFORMER",
-    },
-    {
-        label = "is overperformer",
-        value = "IS_OVERPERFORMER",
-    },
+    -- {
+    --     label = "is underperformer",
+    --     value = "IS_UNDERPERFORMER",
+    -- },
+    -- {
+    --     label = "is overperformer",
+    --     value = "IS_OVERPERFORMER",
+    -- },
     {
         label = "is alive",
         value = "IS_ALIVE",
@@ -323,7 +327,12 @@ core.events = {
             label = "Leave",
             value = "LEAVE",
             options = core.constants.OTHERS
-        }
+        },
+        {
+            label = "LFG Group Found",
+            value = "ACCEPTED_LFG",
+            options = core.constants.NA
+        },
     },
     guild = {
         {
@@ -444,6 +453,14 @@ core.configTree = {
         label = "Raid",
         events = DeepCopy(core.events.group)
     },
+    ["DELVES"] = {
+        label = "Delves",
+        events = DeepCopy(core.events.segment)
+    },
+    ["TIMEWALKING"] = {
+        label = "Timewalking",
+        events = DeepCopy(core.events.segment)
+    },
 }
 core.channels = {
     ["GROUP"] = "Group (party/instance/raid)",
@@ -535,11 +552,14 @@ core.feastIDs = {
     -- Additions from NemesisChat Below --
 
     -- The War Within
-    [222735] = 1, -- Everything Stew
-    [222734] = 1, -- Village Potluck
-    [222733] = 1, -- Feast of the Midnight Masquerade
-    [222732] = 1, -- Feast of the Divine Day
-    [222720] = 1, -- The Sushi Special
+    [445115] = 1, -- Everything Stew
+    [457487] = 1, -- Everything Stew (Hearty)
+    [445113] = 1, -- Feast of the Midnight Masquerade
+    [462213] = 1, -- Feast of the Midnight Masquerade (Hearty)
+    [445112] = 1, -- Feast of the Divine Day
+    [462212] = 1, -- Feast of the Divine Day (Hearty)
+    [445100] = 1, -- The Sushi Special
+    [462211] = 1, -- The Sushi Special (Hearty)
 }
 
 -- Cache core.roles to avoid repeated lookups
@@ -615,11 +635,6 @@ if not DETAILS_SEGMENTID_OVERALL then
     DETAILS_SEGMENTID_CURRENT = 0
 end
 
--- NCEvent = {}
--- NCController = {}
--- NCSpell = {}
-
-C_Timer.NewTicker(0.1, function() if IsNCEnabled() then NemesisChat:CheckGuild() end end)
 -- This was a fun experiment, it might be fun to expose it to users
 -- C_Timer.NewTicker(0.25, function()
 --     if NemesisChat:HasPartyNemeses() and not IsInInstance() then
@@ -628,24 +643,3 @@ C_Timer.NewTicker(0.1, function() if IsNCEnabled() then NemesisChat:CheckGuild()
 --         SetRaidTarget(nemesis.token, math.random(8))
 --     end
 -- end)
-C_Timer.NewTicker(5, function() if IsNCEnabled() then NemesisChat:LowPriorityTimer() end end)
-C_Timer.NewTicker(60, function()
-    if not NCCombat or not NCCombat.IsActive then
-        return
-    end
-    if not NCCombat:IsActive() then
-        local count = 0
-
-        for key, val in pairs(core.db.global.lastSync) do
-            if GetTime() - val > 1800 then
-                count = count + 1
-
-                core.db.global.lastSync[key] = nil
-            end
-
-            if count > 100 then
-                break
-            end
-        end
-    end
-end)

@@ -30,7 +30,10 @@ function NCCombat:FinishCallback()
     NCEvent:RandomNemesis()
     NCEvent:RandomBystander()
 
-    core.runtime.pulledUnits = {}
+    NCDungeon:ClearTempCombatTime()
+    NCDungeon:AddCombatTime(self:GetTotalTime())
+
+    core.runtime.pulledUnits = GetWeakTable()
 
     if NCDungeon.Rankings.Calculate then
         NCDungeon.Rankings:Calculate()
@@ -47,4 +50,9 @@ function NCCombat:FinishCallback()
 
     NCRuntime:CacheGroupRoster()
     NCDungeon:UpdateCache()
+end
+
+function NCCombat:AddDamageCallback(unit, amount)
+    local tempCombatTime = GetTime() - self:GetStartTime()
+    core.EventSystem:Publish("COMBAT_DAMAGE", unit, amount, tempCombatTime)
 end

@@ -18,6 +18,7 @@ local messageCache = {}
 local eventLookup = {}
 local lastNemesisIndices = {}
 local lastRegularIndices = {}
+local groupRoster = core.runtime.groupRoster
 
 -----------------------------------------------------
 -- Controller logic for handling events
@@ -34,6 +35,7 @@ NCController = {
     placeholders = {},
     subjectValueCache = {},
     conditionSubjects = {},
+    lastGuildCacheKey = "",
 }
 
 function NCController:Initialize()
@@ -64,6 +66,8 @@ function NCController:Reset()
 end
 
 function NCController:PreprocessMessages()
+    if not self.isInitialized then return end
+
     local groupCacheKey = "nemesis:" ..
         tostring(NCRuntime:HasNemesis()) .. "_bystander:" .. tostring(NCRuntime:HasBystander())
     if self.lastGroupCacheKey == groupCacheKey then
@@ -74,10 +78,38 @@ function NCController:PreprocessMessages()
 
     local tempCache = {}
 
-    for category, events in pairs(core.db.profile.messages) do
+    for category, events in pairs(NCConfig:GetMessages()) do
         for event, targets in pairs(events) do
             for target, messages in pairs(targets) do
-                if target ~= "NEMESIS" or NCRuntime:HasNemesis() then
+                -- Check both target and message content for nemesis/bystander requirements
+                local hasRequiredPlayers = true
+
+                -- Check if target requires specific players
+                if (target == "NEMESIS" and not NCRuntime:HasNemesis()) or
+                   (target == "BYSTANDER" and not NCRuntime:HasBystander()) then
+                    hasRequiredPlayers = false
+                end
+
+                -- Check if message content requires specific players
+                if hasRequiredPlayers then
+                    for _, message in ipairs(messages) do
+                        -- Check for channel requirements
+                        if (message.channel == "WHISPER_NEMESIS" and not NCRuntime:HasNemesis()) or
+                           (message.channel == "WHISPER_BYSTANDER" and not NCRuntime:HasBystander()) then
+                            hasRequiredPlayers = false
+                            break
+                        end
+
+                        -- Existing placeholder check
+                        if (message.message:find("%[NEMESIS%]") and not NCRuntime:HasNemesis()) or
+                           (message.message:find("%[BYSTANDER%]") and not NCRuntime:HasBystander()) then
+                            hasRequiredPlayers = false
+                            break
+                        end
+                    end
+                end
+
+                if hasRequiredPlayers then
                     local eventKey = category .. "_" .. event .. "_" .. target
                     tempCache[eventKey] = {
                         nemesis = {},
@@ -138,6 +170,113 @@ function NCController:PreprocessMessages()
     wipe(eventLookup)
     for eventKey in pairs(messageCache) do
         eventLookup[eventKey] = true
+    end
+end
+
+function NCController:PreprocessGuildMessages()
+    if not self.isInitialized then return end
+
+    local guildCacheKey = "guild_nemesis:" ..
+        tostring(NCRuntime:HasGuildNemesis()) .. "_guild_bystander:" .. tostring(NCRuntime:HasGuildBystander())
+    if self.lastGuildCacheKey == guildCacheKey then
+        return
+    end
+    self.lastGuildCacheKey = guildCacheKey
+
+    local tempCache = {}
+
+    -- Only process GUILD category messages
+    local guildEvents = NCConfig:GetMessages()["GUILD"]
+    if not guildEvents then return end
+
+    for event, targets in pairs(guildEvents) do
+        for target, messages in pairs(targets) do
+            local hasRequiredPlayers = true
+
+            if (target == "NEMESIS" and not NemesisChat:HasGuildNemeses()) or
+               (target == "BYSTANDER" and not NemesisChat:HasGuildBystanders()) then
+                hasRequiredPlayers = false
+            end
+
+            if hasRequiredPlayers then
+                for _, message in ipairs(messages) do
+                    -- Check for channel requirements
+                    if (message.channel == "WHISPER_NEMESIS" and not NemesisChat:HasGuildNemeses()) or
+                       (message.channel == "WHISPER_BYSTANDER" and not NemesisChat:HasGuildBystanders()) then
+                        hasRequiredPlayers = false
+                        break
+                    end
+
+                    -- Check for placeholder requirements
+                    if (message.message:find("%[NEMESIS%]") and not NemesisChat:HasGuildNemeses()) or
+                       (message.message:find("%[BYSTANDER%]") and not NemesisChat:HasGuildBystanders()) then
+                        hasRequiredPlayers = false
+                        break
+                    end
+                end
+            end
+
+            if hasRequiredPlayers then
+                local eventKey = "GUILD_" .. event .. "_" .. target
+                -- Remove existing cache entry if it exists
+                messageCache[eventKey] = nil
+                eventLookup[eventKey] = nil
+
+                tempCache[eventKey] = {
+                    nemesis = {},
+                    regular = {}
+                }
+
+                for _, message in ipairs(messages) do
+                    local processedMessage = {
+                        label = message.label,
+                        channel = message.channel,
+                        message = message.message,
+                        chance = message.chance,
+                        conditions = {},
+                        placeholders = {}
+                    }
+
+                    for placeholder in message.message:gmatch("%[([A-Z_]+)%]") do
+                        processedMessage.placeholders[placeholder] = true
+                    end
+
+                    if message.conditions then
+                        for _, condition in ipairs(message.conditions) do
+                            local preprocessedCondition = self:PreprocessCondition(condition)
+                            if preprocessedCondition then
+                                table.insert(processedMessage.conditions, preprocessedCondition)
+                            else
+                                NemesisChat:HandleError("Invalid condition in guild message: " .. (message.label or ""))
+                            end
+                        end
+                    end
+
+                    if target == "NEMESIS" then
+                        table.insert(tempCache[eventKey].nemesis, processedMessage)
+                    else
+                        table.insert(tempCache[eventKey].regular, processedMessage)
+                    end
+                end
+
+                -- Update indices
+                if not lastNemesisIndices[eventKey] then
+                    lastNemesisIndices[eventKey] = 0
+                elseif #tempCache[eventKey].nemesis > 0 and lastNemesisIndices[eventKey] >= #tempCache[eventKey].nemesis then
+                    lastNemesisIndices[eventKey] = 0
+                end
+
+                if not lastRegularIndices[eventKey] then
+                    lastRegularIndices[eventKey] = 0
+                elseif #tempCache[eventKey].regular > 0 and lastRegularIndices[eventKey] >= #tempCache[eventKey].regular then
+                    lastRegularIndices[eventKey] = 0
+                end
+
+                -- Update main cache and lookup
+                messageCache[eventKey] = tempCache[eventKey]
+                eventLookup[eventKey] = true
+            end
+        end
     end
 end
 
@@ -278,57 +417,90 @@ function NCController:ReplaceStrings()
     NCController:SetMessage(NCController:GetReplacedString(NCController:GetMessage()))
 end
 
-function NCController:GetReplacedString(input, useExamples)
+function NCController:GetExampleString(input)
     if not input or input == "" then
         return ""
     end
 
-    if NCEvent and NCEvent.GetBystander and NCEvent:GetBystander() == nil and not useExamples then
+    -- Early exit if no placeholders found - using correct pattern
+    if not input:find("%[([A-Z_]+)%]") then
+        return input
+    end
+
+    local msg = input
+    local customReplacementExamples = self.customReplacementExamples or {}
+
+    -- Single pass since we don't need validation for examples
+    for placeholder in msg:gmatch("%[([A-Z_]+)%]") do
+        local key = "[" .. placeholder .. "]"
+        local exampleFunc = customReplacementExamples[key]
+
+        if exampleFunc then
+            local success, val = pcall(exampleFunc)
+            if success and (type(val) == "string" or type(val) == "number") then
+                -- Escape the pattern properly for gsub
+                local escapedKey = key:gsub("([%[%]])", "%%%1")
+                msg = msg:gsub(escapedKey, tostring(val))
+            end
+        end
+    end
+
+    return msg
+end
+
+function NCController:GetReplacedString(input)
+    if not input or input == "" then
+        return ""
+    end
+
+    if not input:find("%[([A-Z_]+)%]") then
+        return input
+    end
+
+    if NCEvent and NCEvent.GetBystander and NCEvent:GetBystander() == nil then
         NCEvent:RandomBystander()
     end
 
     local msg = input
-    local placeholders = self.placeholders
+    local customReplacements = self.customReplacements or {}
 
-    -- If placeholders are not available, extract them from the input
-    if not placeholders then
-        placeholders = {}
-        for placeholder in msg:gmatch("%[([A-Z_]+)%]") do
-            placeholders[placeholder] = true
+    -- First pass - handle condition-specific replacements
+    for placeholder in msg:gmatch("%[([A-Z_]+_CONDITION)%]") do
+        local key = "[" .. placeholder .. "]"
+        local replacementFunc = customReplacements[key]
+
+        if replacementFunc then
+            local success, val = pcall(replacementFunc)
+            if success and (type(val) == "string" or type(val) == "number") then
+                local escapedKey = key:gsub("([%[%]])", "%%%1")
+                msg = msg:gsub(escapedKey, tostring(val))
+            else
+                NemesisChat:HandleError("Failed to get condition replacement value for " .. key)
+                return nil
+            end
         end
     end
 
-    local customReplacements = self.customReplacements or {}
-    local customReplacementExamples = self.customReplacementExamples or {}
+    -- Clean up any remaining conditions
+    msg = msg:gsub("%[([A-Z_]+)_CONDITION%]", "[%1]")
 
-    -- Process each placeholder
-    for placeholder in pairs(placeholders) do
+    -- Second pass - handle all remaining replacements
+    for placeholder in msg:gmatch("%[([A-Z_]+)%]") do
         local key = "[" .. placeholder .. "]"
         local replacementFunc = customReplacements[key]
-        local val
 
-        if useExamples and customReplacementExamples[key] then
-            val = customReplacementExamples[key]()
-        elseif replacementFunc then
-            val = replacementFunc()
-        else
-            val = nil -- No replacement function available
+        if not replacementFunc then
+            NemesisChat:HandleError("Missing replacement function for " .. key)
+            return nil
         end
 
-        if val ~= nil then
-            if type(val) == "string" or type(val) == "number" then
-                local success, err = pcall(function()
-                    msg = msg:gsub("%[" .. placeholder .. "%]", tostring(val))
-                end)
-                if not success then
-                    NemesisChat:HandleError("Replacement for " .. key .. " failed: " .. tostring(err))
-                end
-            else
-                NemesisChat:HandleError("Replacement for " .. key .. " is not a string or number: " .. type(val))
-            end
+        local success, val = pcall(replacementFunc)
+        if success and (type(val) == "string" or type(val) == "number") then
+            local escapedKey = key:gsub("([%[%]])", "%%%1")
+            msg = msg:gsub(escapedKey, tostring(val))
         else
-            -- Will ponder this
-            msg = msg:gsub("%[" .. placeholder .. "%]", "UNKNOWN")
+            NemesisChat:HandleError("Failed to get replacement value for " .. key)
+            return nil
         end
     end
 
@@ -382,6 +554,10 @@ function NCController:IsNonCombatModeException()
         return true
     end
 
+    if NCEvent:GetEvent() == "AVOIDABLE_DAMAGE" and NCConfig:IsAvoidableDamageException() then
+        return true
+    end
+
     return false
 end
 
@@ -431,12 +607,14 @@ function NCController:GetRollingMessage(relevantMessages, eventKey)
         if #messages == 0 then
             return nil, lastIndexTable[eventKey]
         end
-        local newIndex = (lastIndexTable[eventKey] % #messages) + 1
-        local message = messages[newIndex]
-        if self:IsValidMessage(message) and self:CheckAllConditions(message) then
-            return message, newIndex
+
+        local validMessages = self:GetValidMessages(messages)
+        if #validMessages == 0 then
+            return nil, lastIndexTable[eventKey]
         end
-        return nil, newIndex
+
+        local newIndex = (lastIndexTable[eventKey] % #validMessages) + 1
+        return validMessages[newIndex], newIndex
     end
 
     local nemesisMessage, nemesisIndex = getNextMessage(relevantMessages.nemesis, lastNemesisIndices)
@@ -501,22 +679,6 @@ function NCController:IsValidMessage(message)
         return false
     end
     return true
-end
-
--- Get a pool of conditional messages pertaining to the current scenarios
-function NCController:GetConditionalMessages(pool)
-    local conditionalMessages = {}
-    local unconditionalMessages = {}
-
-    for _, message in ipairs(pool) do
-        if message.conditions and #message.conditions > 0 then
-            table.insert(conditionalMessages, message)
-        else
-            table.insert(unconditionalMessages, message)
-        end
-    end
-
-    return #conditionalMessages > 0 and conditionalMessages or unconditionalMessages
 end
 
 function NCController:CheckAllConditions(message)
@@ -588,7 +750,7 @@ function NCController:ValidMessage()
 end
 
 local function getPlayerData(val1)
-    local playerData = NCRuntime:GetGroupRosterPlayer(val1)
+    local playerData = groupRoster[val1]
     return playerData or {}
 end
 
@@ -651,12 +813,24 @@ NCController.ConditionOperators = {
 
         return not getPlayerData(val1).isGuildmate
     end,
-    ["IS_UNDERPERFORMER"] = function(val1, val2)
-        return NCDungeon:GetUnderperformer() == val1
-    end,
-    ["IS_OVERPERFORMER"] = function(val1, val2)
-        return NCDungeon:GetOverperformer() == val1
-    end,
+
+    --------------------------------------------------------
+    --------------------------------------------------------
+    --- These are stubbed, and will be implemented later ---
+    --------------------------------------------------------
+    --- With the refactor of the Rankings model, these   ---
+    --- were removed. They will be re-added later.       ---
+    --------------------------------------------------------
+    --------------------------------------------------------
+    ["IS_UNDERPERFORMER"] = function(val1, val2) -----------
+        return false                             -----------
+    end,                                         -----------
+    ["IS_OVERPERFORMER"] = function(val1, val2)  -----------
+        return false                             -----------
+    end,                                         -----------
+    --------------------------------------------------------
+    --------------------------------------------------------
+
     ["IS_ALIVE"] = function(val1, val2)
         return UnitIsDeadOrGhost(val1) == false
     end,

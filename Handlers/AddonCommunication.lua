@@ -35,33 +35,33 @@ function AddonCommunication:TransmitSyncData()
 end
 
 function AddonCommunication:TransmitLeavers()
-    if core.db.profile.leavers == nil or core.db.profile.leaversSerialized == nil or NCDungeon:IsActive() then
+    if NCConfig:GetLeavers() == nil or NCConfig:GetLeaversSerialized() == nil or NCDungeon:IsActive() then
         return
     end
 
     local _, online = GetNumGuildMembers()
 
     if online > 1 and NCRuntime:GetLastLeaverSyncType() ~= "GUILD" then
-        AddonCommunication:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "GUILD")
+        AddonCommunication:Transmit("NC_LEAVERS", NCConfig:GetLeaversSerialized(), "GUILD")
         NCRuntime:SetLastLeaverSyncType("GUILD")
     else
-        AddonCommunication:Transmit("NC_LEAVERS", core.db.profile.leaversSerialized, "YELL")
+        AddonCommunication:Transmit("NC_LEAVERS", NCConfig:GetLeaversSerialized(), "YELL")
         NCRuntime:SetLastLeaverSyncType("YELL")
     end
 end
 
 function AddonCommunication:TransmitLowPerformers()
-    if core.db.profile.lowPerformers == nil or core.db.profile.lowPerformersSerialized == nil or NCDungeon:IsActive() then
+    if NCConfig:GetLowPerformers() == nil or NCConfig:GetLowPerformersSerialized() == nil or NCDungeon:IsActive() then
         return
     end
 
     local _, online = GetNumGuildMembers()
 
     if online > 1 and NCRuntime:GetLastLowPerformerSyncType() ~= "GUILD" then
-        AddonCommunication:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "GUILD")
+        AddonCommunication:Transmit("NC_LOWPERFORMERS", NCConfig:GetLowPerformersSerialized(), "GUILD")
         NCRuntime:SetLastLowPerformerSyncType("GUILD")
     else
-        AddonCommunication:Transmit("NC_LOWPERFORMERS", core.db.profile.lowPerformersSerialized, "YELL")
+        AddonCommunication:Transmit("NC_LOWPERFORMERS", NCConfig:GetLowPerformersSerialized(), "YELL")
         NCRuntime:SetLastLowPerformerSyncType("YELL")
     end
 end
@@ -95,8 +95,8 @@ function AddonCommunication:ProcessReceivedData(configKey, data)
         return
     end
 
-    if core.db.profile[configKey] == nil then
-        core.db.profile[configKey] = setmetatable({}, {__mode = "kv"})
+    if NCConfig:Get(configKey) == nil then
+        NCConfig:Set(configKey, setmetatable({}, {__mode = "kv"}))
     end
 
     local count = 0
@@ -104,11 +104,11 @@ function AddonCommunication:ProcessReceivedData(configKey, data)
 
     for key,val in pairs(data) do
         count = count + 1
-        if core.db.profile[configKey][key] == nil then
-            core.db.profile[configKey][key] = val
+        if NCConfig:Get(configKey)[key] == nil then
+            NCConfig:Set(configKey, NCConfig:Get(configKey) + { [key] = val })
         else
-            combinedRow = ArrayMerge(core.db.profile[configKey][key], val)
-            core.db.profile[configKey][key] = combinedRow
+            combinedRow = ArrayMerge(NCConfig:Get(configKey)[key], val)
+            NCConfig:Set(configKey, NCConfig:Get(configKey) + { [key] = combinedRow })
         end
     end
 end
@@ -118,16 +118,16 @@ function AddonCommunication:OnCommReceived(prefix, payload, distribution, sender
 
     local myFullName = UnitName("player") .. "-" .. GetNormalizedRealmName()
 
-    if not core.db.global.lastSync then
-        core.db.global.lastSync = setmetatable({}, {__mode = "kv"})
+    if not NCConfig:GetPath("global.lastSync") then
+        NCConfig:SetPath("global.lastSync", setmetatable({}, {__mode = "kv"}))
     end
 
     -- We attempt to sync fairly often, but we don't want to actually sync that much. We also don't want to sync if we're in combat.
-    if sender == myFullName or NCCombat:IsActive() or (core.db.global.lastSync[sender] and (GetTime() - core.db.global.lastSync[sender] <= 1800)) then
+    if sender == myFullName or NCCombat:IsActive() or (NCConfig:GetPath("global.lastSync")[sender] and (GetTime() - NCConfig:GetPath("global.lastSync")[sender] <= 1800)) then
         return
     end
 
-    core.db.global.lastSync[sender] = GetTime()
+    NCConfig:SetPath("global.lastSync." .. sender, GetTime())
 
     core:Print("Synchronizing data received from " .. Ambiguate(sender, "guild"))
 

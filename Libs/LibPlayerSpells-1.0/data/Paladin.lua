@@ -31,13 +31,16 @@ lib:__RegisterSpells('PALADIN', 80000, 1, {
 		  85222, -- Light of Dawn (Holy)
 		 114158, -- Light's Hammer (Holy talent)
 		 114165, -- Holy Prism (Holy talent)
+		 115750, -- Blinding Light (talent)
 		 184092, -- Light of the Protector (Protection)
 		 184575, -- Blade of Justice (Retribution)
+		 184662, -- Shield of Vengeance (Retribution)
 		 204035, -- Bastion of Light (Protection talent)
 		 205228, -- Consecration (Retribution talent)
 		 210191, -- Word of Glory (Retribution talent)
 		 213652, -- Hand of the Protector (Protection talent)
 		 275779, -- Judgement (Protection)
+		 403876, -- Divine Protection
 		[ 96231] = 'INTERRUPT', -- Rebuke
 		AURA = {
 			HARMFUL = {
@@ -46,12 +49,13 @@ lib:__RegisterSpells('PALADIN', 80000, 1, {
 				 204242, -- Consecration (Protection/Holy)
 				 204301, -- Blessed Hammer (Protection talent)
 				 214222, -- Judgement (Holy)
-				[ 31935] = 'INTERRUPT', -- Avenger's Shield (Protection)
+				[31935]  = 'INTERRUPT', -- Avenger's Shield (Protection)
 				[206891] = 'UNIQUE_AURA', -- Inquisition (Protection honor talent)
 				[267799] = 'BURST', -- Execution Sentence (Retribution talent)
 				CROWD_CTRL = {
 					[ 20066] = 'INCAPACITATE', -- Repentance (talent)
 					[105421] = 'DISORIENT', -- Blinding Light (talent)
+					[115750] = 'DISORIENT', -- Blinding Light (talent)
 					STUN = {
 						   853, -- Hammer of Justice
 						205290, -- Wake of Ashes (Retribution talent)
@@ -78,14 +82,17 @@ lib:__RegisterSpells('PALADIN', 80000, 1, {
 				SURVIVAL = {
 					  1022, -- Blessing of Protection
 					  6940, -- Blessing of Sacrifice (Holy/Protection)
+					184662, -- Shield of Vengeance (Retribution)
 					199507, -- Spreading The Word: Protection (Holy honor talent)
 					228050, -- Divine Shield (Protection honor talent)
+					403876, -- Divine Protection
 				},
 			},
 			PERSONAL = {
 				  31821, -- Aura Mastery (Holy)
 				 114250, -- Selfless Healer (Retribution talent)
 				 188370, -- Consecration (Protection)
+				 184662, -- Shield of Vengeance (Retribution)
 				 197561, -- Avenger's Valor (Protection)
 				 199545, -- Steed of Glory (Protection honor talent)
 				 209785, -- Fires of Justice (Retribution talent)
@@ -103,9 +110,11 @@ lib:__RegisterSpells('PALADIN', 80000, 1, {
 				 276111, -- Divine Steed (Dwarf)
 				 276112, -- Divine Steed (Dark Iron Dwarf)
 				 280375, -- Redoubt (Protection talent)
+				 403876, -- Divine Protection
 				[199448] = 'INVERT_AURA', -- Blessing of Sacrifice (Holy honor talent) -- NOTE: from Ultimate Sacrifice
 				BURST = {
 					 31884, -- Avenging Wrath
+					 85673, -- Word of Glory (Retribution talent)
 					105809, -- Holy Avenger (Holy talent)
 					216331, -- Avenging Crusader (Holy talent)
 					231895, -- Crusade (Retribution talent)
@@ -120,6 +129,7 @@ lib:__RegisterSpells('PALADIN', 80000, 1, {
 					184662, -- Shield of Vengeance (Retribution)
 					204150, -- Aegis of Light (Protection talent)
 					205191, -- Eye for an Eye (Retribution talent)
+					403876, -- Divine Protection
 				},
 			},
 		},
@@ -149,6 +159,7 @@ lib:__RegisterSpells('PALADIN', 80000, 1, {
 			267611, -- Righteous Verdict (Retribution talent)
 			271581, -- Divine Judgement (Retribution talent)
 			281178, -- Blade of Wrath (Retribution talent)
+			403876, -- Divine Protection
 		},
 	},
 }, {

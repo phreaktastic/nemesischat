@@ -1,17 +1,31 @@
-## Interface: 110000
-## Version: 1.11.2
+## Interface: 110500
+## Version: 1.12.0
 ## Title: |cff00ccffNemesis Chat|r
-## IconTexture: Interface\ICONS\Warrior_DisruptingShout.blp
+## IconTexture: Interface\Addons\NemesisChat\Media\Icons\Nemesis6.blp
 ## Notes: The event-driven, targeted message framework.
 ## Author: Phreaktastic
 ## SavedVariables: NemesisChatDB
-## OptionalDeps: LibStub, Ace3, LibPlayerSpells, LibToast, LibCompress, LibSerialize
 
 # Third party libraries
 Embeds.xml
 
+# Core Localization
+Locales\enUS.lua
+
+# Core Event System
+Events\EventSystem.lua
+
 # NC Lookup Tables
 LookupTables\SoundTable.lua
+LookupTables\ClassTable.lua
+LookupTables\SpecTable.lua
+LookupTables\IconTable.lua
+Config\Core\Defaults.lua
+
+# Custom Widgets
+Widgets\SoundDropdown.lua
+Widgets\PlayerDropdownAdditions.lua
+Widgets\PlayerFrameAdditions.lua
 
 # Core NC initialization
 Init.lua
@@ -24,17 +38,32 @@ Models\Runtime.lua
 Models\Colors.lua
 
 # Core NC configuration UI
-Config\General.lua
-Config\Nemeses.lua
-Config\Messages.lua
-Config\Reports.lua
-Config\Reference.lua
-Config\About.lua
+Config\Core\GeneralSettings.lua
+Config\Core\About.lua
+Config\Messages\MessageSettings.lua
+Config\Messages\Messages.lua
+Config\Messages\Reports.lua
+Config\Dungeons\GroupFinder\GlobalSettings.lua
+Config\Dungeons\GroupFinder\RoleSettings.lua
+Config\Dungeons\GroupFinder\Filters.lua
+Config\Dungeons\Delves.lua
+Config\Dungeons\MythicPlus.lua
+Config\UI\Nemeses.lua
+Config\UI\Reference.lua
 
 # NC helper functions
-Helpers\Frame.lua
-Helpers\Group.lua
-Helpers.lua
+Helpers\CoreHelpers.lua
+Helpers\DataHelpers.lua
+Helpers\SerializationHelpers.lua
+Helpers\EventHelpers.lua
+Helpers\TimerHelpers.lua
+Helpers\UIHelpers.lua
+Helpers\FrameHelpers.lua
+Helpers\GroupHelpers.lua
+Helpers\PlayerHelpers.lua
+Helpers\CombatHelpers.lua
+Helpers\FriendHelpers.lua
+Helpers\NemesisHelpers.lua
 
 # NC models
 Models\Event.lua
@@ -75,7 +104,9 @@ Core.lua
 Events\EventTables.lua
 
 # NC Handlers
-Handlers\CombatLog.lua
+Handlers\CombatEventHandler.lua
 Handlers\AddonCommunication.lua
 Handlers\InspectQueueManager.lua
 Handlers\ErrorHandler.lua
+Handlers\DungeonHandler.lua
+Handlers\LFGHandler.lua

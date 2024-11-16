@@ -7,13 +7,18 @@
 -----------------------------------------------------
 local _, core = ...;
 
+local next = next
+local pairs = pairs
+local table_insert = table.insert
+local table_remove = table.remove
+local strsplit = strsplit
+
 -----------------------------------------------------
 -- Logic for everything that interacts with permanent
 -- storage.
 -----------------------------------------------------
 
 NCDB = {
-    prefix = "",
     basePath = "profile",
 }
 
@@ -124,7 +129,7 @@ function NCDB:InsertIntoArray(key, value)
             core.db[self.basePath][key] = {}
         end
 
-        table.insert(core.db[self.basePath][key], value)
+        table_insert(core.db[self.basePath][key], value)
         return
     end
 
@@ -132,7 +137,7 @@ function NCDB:InsertIntoArray(key, value)
         core.db[self.basePath][self.prefix][key] = {}
     end
 
-    table.insert(core.db[self.basePath][self.prefix][key], value)
+    table_insert(core.db[self.basePath][self.prefix][key], value)
 end
 
 function NCDB:DeleteFromArray(key, value)
@@ -147,7 +152,7 @@ function NCDB:DeleteFromArray(key, value)
 
         for i = 1, #core.db[self.basePath][key] do
             if core.db[self.basePath][key][i] == value then
-                table.remove(core.db[self.basePath][key], i)
+                table_remove(core.db[self.basePath][key], i)
                 return
             end
         end
@@ -161,7 +166,7 @@ function NCDB:DeleteFromArray(key, value)
 
     for i = 1, #core.db[self.basePath][self.prefix][key] do
         if core.db[self.basePath][self.prefix][key][i] == value then
-            table.remove(core.db[self.basePath][self.prefix][key], i)
+            table_remove(core.db[self.basePath][self.prefix][key], i)
             return
         end
     end
@@ -202,6 +207,26 @@ function NCDB:GetPath(key)
     end
 
     return value
+end
+
+function NCDB:Wipe(key)
+    if not key then
+        return
+    end
+
+    pcall(function()
+        wipe(self:GetKey(key))
+    end)
+end
+
+function NCDB:WipePath(path)
+    if not path then
+        return
+    end
+
+    pcall(function()
+        wipe(self:GetPath(path))
+    end)
 end
 
 function NCDB:SetPath(key, value)
@@ -398,4 +423,23 @@ function NCDB:TogglePath(key)
     end
 
     self:SetPath(key, not value)
+end
+
+function NCDB:GetLength(key)
+    local db = key and self:GetPath(key) or self.db
+    if not db or next(db) == nil then return 0 end
+
+    -- Check if we can use the # operator
+    if #db > 0 then
+        return #db
+    end
+
+    -- Otherwise count key-value pairs
+    local count = 0
+    for _ in pairs(db) do count = count + 1 end
+    return count
+end
+
+function NCDB:GetPathLength(path)
+    return self:GetPath(path) and self:GetLength(self:GetPath(path)) or 0
 end

@@ -25,8 +25,10 @@ function GetSoundTable()
         [12867] = "Alarm Warning 1",
         [12889] = "Alarm Warning 2",
         [247579] = "Brann: 'Fantastic!'",
+        [247578] = "Brann: 'That's more like it!'",
         [247580] = "Brann: 'Nice find!'",
         [247520] = "Brann: 'Here we go!'",
+        [416] = "Murloc Aggro",
     }
 
     -- Create a sorted array of keys based on the sound names

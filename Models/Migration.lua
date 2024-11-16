@@ -59,11 +59,53 @@ function NCMigration:SetLessThanVersion(maxVersion)
     return self
 end
 
+function NCMigration:AddPathTransform(oldPath, newPath)
+    if not self.pathTransforms then
+        self.pathTransforms = {}
+    end
+
+    table.insert(self.pathTransforms, {
+        oldPath = oldPath,
+        newPath = newPath
+    })
+
+    return self
+end
+
+function NCMigration:AddBulkTransform(transforms)
+    if not self.pathTransforms then
+        self.pathTransforms = {}
+    end
+
+    for oldPath, newPath in pairs(transforms) do
+        table.insert(self.pathTransforms, {
+            oldPath = oldPath,
+            newPath = newPath
+        })
+    end
+
+    return self
+end
+
+function NCMigration:AddStructuralChange(path, defaultValue)
+    if not self.structuralChanges then
+        self.structuralChanges = {}
+    end
+
+    table.insert(self.structuralChanges, {
+        path = path,
+        default = defaultValue
+    })
+
+    return self
+end
+
 function NCMigration:Run()
     if core.db.profile.migrations == nil then
         core.db.profile.migrations = {}
     end
 
+    local totalCount = #core.db.profile.migrations
     local total = #NCMigration.migrations
     local count = 0
 
@@ -74,7 +116,7 @@ function NCMigration:Run()
                     if string.find(path, "core.db.profile") ~= nil then
                         path = string.gsub(path, "core.db.profile.", "")
                     end
-                    
+
                     local pathChunks = Split(path, ".")
                     local table = core.db.profile
 
@@ -101,8 +143,6 @@ function NCMigration:Run()
     end
 
     if count > 0 then
-        NemesisChat:Print("Ran", NCColors.Emphasize(count), "migrations.")
+        NemesisChat:Print("Ran", NCColors.Emphasize(count), "migrations.", NCColors.Emphasize(totalCount), "total migrations.")
     end
-
-    NemesisChat:Print("Migrations complete. Checked:", total, "Ran:", count)
 end
