@@ -164,6 +164,8 @@ local function handleDamageEvent(subEvent, sourceName, destName, misc1, misc2, d
         NCSegment:GlobalAddAvoidableDamage(damage, destName)
     end
 
+    NCSegment:GlobalAddDamage(damage, sourceName)
+
     NCRuntime:SetPlayerStateValue(destName, "lastDamageAvoidable", isAvoidable)
 
     NCEvent:Damage(sourceName, destName, misc1, misc2, damage, isAvoidable)
@@ -242,6 +244,8 @@ function CombatEventHandler:Fire()
 
     if damage and damage > 0 and groupRoster[destName] then
         handleDamageEvent(subEvent, sourceName, destName, misc1, misc2, damage)
+    elseif damage and damage > 0 and groupRoster[sourceName] then
+        NCSegment:GlobalAddDamage(damage, sourceName)
     end
 
     if eventPatterns[subEvent] then

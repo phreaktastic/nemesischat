@@ -616,6 +616,30 @@ NCConfig = {
         self.LfgDB:TogglePath("applicants.global.popupOnIgnoredApplicants")
     end,
 
+    IsDisableFiltersWhenNotLeader = function(self)
+        return self.LfgDB:GetPath("applicants.global.disableFiltersWhenNotLeader")
+    end,
+
+    SetDisableFiltersWhenNotLeader = function(self, value)
+        self.LfgDB:SetPath("applicants.global.disableFiltersWhenNotLeader", value)
+    end,
+
+    ToggleDisableFiltersWhenNotLeader = function(self)
+        self.LfgDB:TogglePath("applicants.global.disableFiltersWhenNotLeader")
+    end,
+
+    IsShowNotificationsWhenFiltered = function(self)
+        return self.LfgDB:GetPath("applicants.global.showNotificationsWhenFiltered")
+    end,
+
+    SetShowNotificationsWhenFiltered = function(self, value)
+        self.LfgDB:SetPath("applicants.global.showNotificationsWhenFiltered", value)
+    end,
+
+    ToggleShowNotificationsWhenFiltered = function(self)
+        self.LfgDB:TogglePath("applicants.global.showNotificationsWhenFiltered")
+    end,
+
     -- Realm Settings
     GetAllowedRealms = function(self)
         return self.LfgDB:GetPath("applicants.global.allowedRealms")

@@ -57,6 +57,14 @@ function NemesisChat:GetGuildNemeses()
     return nemeses
 end
 
+function NemesisChat:GetGuildNemesesCount()
+    return NemesisChat:GetLength(NemesisChat:GetGuildNemeses())
+end
+
+function NemesisChat:HasGuildNemeses()
+    return NemesisChat:GetGuildNemesesCount() > 0
+end
+
 -----------------------------------------------------
 -- Bystander Management
 -----------------------------------------------------
@@ -92,6 +100,14 @@ function NemesisChat:GetGuildBystanders()
     return bystanders
 end
 
+function NemesisChat:GetGuildBystandersCount()
+    return NemesisChat:GetLength(NemesisChat:GetGuildBystanders())
+end
+
+function NemesisChat:HasGuildBystanders()
+    return NemesisChat:GetGuildBystandersCount() > 0
+end
+
 function NemesisChat:GetPartyBystandersCount()
     return NemesisChat:GetLength(NemesisChat:GetPartyBystanders())
 end
@@ -105,16 +121,16 @@ end
 
 function NemesisChat:HasPartyNemeses(forceFullLookup)
     if not forceFullLookup then
-        return NCRuntime.hasNemesis
+        return NCRuntime.hasNemesis == true
     end
-    return NemesisChat:GetLength(NemesisChat:GetPartyNemeses()) > 0
+    return NemesisChat:GetPartyNemesesCount() > 0
 end
 
 function NemesisChat:HasPartyBystanders(forceFullLookup)
     if not forceFullLookup then
-        return NCRuntime.hasBystander
+        return NCRuntime.hasBystander == true
     end
-    return NemesisChat:GetLength(NemesisChat:GetPartyBystanders()) > 0
+    return NemesisChat:GetPartyBystandersCount() > 0
 end
 
 function NemesisChat:GetNemesesLength()

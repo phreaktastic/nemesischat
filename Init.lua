@@ -330,7 +330,7 @@ core.events = {
         },
         {
             label = "LFG Group Found",
-            value = "LFG_PROPOSAL_SUCCEEDED",
+            value = "ACCEPTED_LFG",
             options = core.constants.NA
         },
     },
@@ -453,6 +453,14 @@ core.configTree = {
         label = "Raid",
         events = DeepCopy(core.events.group)
     },
+    ["DELVES"] = {
+        label = "Delves",
+        events = DeepCopy(core.events.segment)
+    },
+    ["TIMEWALKING"] = {
+        label = "Timewalking",
+        events = DeepCopy(core.events.segment)
+    },
 }
 core.channels = {
     ["GROUP"] = "Group (party/instance/raid)",
@@ -544,11 +552,14 @@ core.feastIDs = {
     -- Additions from NemesisChat Below --
 
     -- The War Within
-    [222735] = 1, -- Everything Stew
-    [222734] = 1, -- Village Potluck
-    [222733] = 1, -- Feast of the Midnight Masquerade
-    [222732] = 1, -- Feast of the Divine Day
-    [222720] = 1, -- The Sushi Special
+    [445115] = 1, -- Everything Stew
+    [457487] = 1, -- Everything Stew (Hearty)
+    [445113] = 1, -- Feast of the Midnight Masquerade
+    [462213] = 1, -- Feast of the Midnight Masquerade (Hearty)
+    [445112] = 1, -- Feast of the Divine Day
+    [462212] = 1, -- Feast of the Divine Day (Hearty)
+    [445100] = 1, -- The Sushi Special
+    [462211] = 1, -- The Sushi Special (Hearty)
 }
 
 -- Cache core.roles to avoid repeated lookups

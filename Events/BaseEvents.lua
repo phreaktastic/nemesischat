@@ -24,8 +24,6 @@ function NemesisChat:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
         self:CheckGroup()
     end
 
-    NCRuntime:ClearAcceptedLFG()
-
     if NCInfo and NCInfo.StatsFrame then
         NCInfo:UpdatePlayerDropdown()
     end
@@ -194,4 +192,18 @@ end
 function NemesisChat:LFG_PROPOSAL_SUCCEEDED()
     if not IsNCEnabled() then return end
     core.Runtime:AcceptLFG()
+end
+
+function NemesisChat:CHAT_MSG_LOOT(event, text, sender, language, channelString, target, flags, unknown, ...)
+    if not IsNCEnabled() then return end
+    -- core.LootHandler:OnLoot(text, sender, language, channelString, target, flags, unknown, ...)
+end
+
+function NemesisChat:PLAYER_TARGET_CHANGED()
+    -- stub
+end
+
+function NemesisChat:SHOW_DELVES_DISPLAY_UI()
+    if not IsNCEnabled() then return end
+    core.DungeonHandler:OnShowDelvesDisplayUI()
 end

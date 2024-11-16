@@ -138,10 +138,10 @@ NCRuntime = {
         core.runtime.initialized = value
     end,
     HasNemesis = function(self)
-        return core.runtime.hasNemesis
+        return core.runtime.hasNemesis == true
     end,
     HasBystander = function(self)
-        return core.runtime.hasBystander
+        return core.runtime.hasBystander == true
     end,
     GetNemeses = function(self)
         return core.runtime.nemeses
@@ -324,9 +324,7 @@ NCRuntime = {
                 tDeleteItem(core.runtime.bystanders, playerName)
             end
 
-            if not NemesisChat:HasPartyBystanders(true) then
-                core.runtime.hasBystander = false
-            end
+            core.runtime.hasBystander = NemesisChat:HasPartyBystanders(true)
         end
 
         core.runtime.groupRoster[playerName] = nil
@@ -342,7 +340,7 @@ NCRuntime = {
         self:CacheGroupRoster()
     end,
     ---@param playerName string
-    ---@return GroupRosterPlayer
+    ---@return GroupRosterPlayer|nil
     AddGroupRosterPlayer = function(self, playerName)
         if playerName == "Brann Bronzebeard" and not NCConfig:IsAllowingBrannMessages() then
             return nil
@@ -357,16 +355,30 @@ NCRuntime = {
         local race = "Unknown"
         local role = "NONE"
         local guid = nil
+        local spec = nil
 
-        -- Use pcall to catch any errors when calling WoW API functions
+        -- Use pcall to catch any errors when calling WoW API functions (allows us to store them for review in /nc debug)
         pcall(function()
-            if UnitExists(playerName) then
+            if UnitIsUnit(playerName, "player") then
+                class, rawClass = UnitClass("player")
+                race = UnitRace("player") or "Unknown"
+                role = UnitGroupRolesAssigned("player")
+                guid = UnitGUID("player")
+            elseif UnitExists(playerName) then
                 class, rawClass = UnitClass(playerName)
                 race = UnitRace(playerName) or "Unknown"
                 role = UnitGroupRolesAssigned(playerName)
                 guid = UnitGUID(playerName)
             end
         end)
+
+        if role == "NONE" then
+            local attemptedSpecID = GetSpecialization()
+            if attemptedSpecID then
+                role = GetSpecializationRole(attemptedSpecID)
+                _, spec = GetSpecializationInfo(attemptedSpecID)
+            end
+        end
 
         local data = {
             guid = guid,
@@ -378,11 +390,11 @@ NCRuntime = {
             race = race,
             class = class,
             rawClass = rawClass,
-            spec = nil,
+            spec = spec,
             groupLead = false,
             name = playerName,
             token = self:GetUnitTokenFromName(playerName),
-            group = 0,
+            group = 1,
         }
 
         if isNemesis then
@@ -620,7 +632,7 @@ NCRuntime = {
 
         -- Populate DPS for each player
         for playerName, _ in pairs(dungeonData.RosterSnapshot) do
-            stats.DPS[playerName] = dungeonData:GetDps(playerName)
+            stats.DPS[playerName] = dungeonData:GetDPS(playerName)
         end
 
         core.runtime.lastCompletedDungeon = {
@@ -674,20 +686,28 @@ NCRuntime = {
                     end
                 end
             else
+                if not playerName or not UnitName(playerName) then return nil end
                 return core.runtime.playerNameToToken[Ambiguate(UnitName(playerName), "none")]
             end
         end
+        if not playerName or not UnitName(playerName) then return nil end
         return core.runtime.playerNameToToken[Ambiguate(UnitName(playerName), "none")]
     end,
     AttemptRetrieveSpec = function(self, unit)
         if unit.token and UnitExists(unit.token) and UnitIsConnected(unit.token) then
             if UnitIsUnit(unit.token, "player") then
                 -- For the player character, use GetSpecialization()
-                local specIndex = GetSpecialization()
-                if specIndex then
-                    local id, specName = GetSpecializationInfo(specIndex)
-                    if specName then
-                        unit.spec = specName
+                if not unit.spec or not unit.role then
+                    local specIndex = GetSpecialization()
+                    if specIndex then
+                        local id, specName = GetSpecializationInfo(specIndex)
+                        if specName then
+                            unit.spec = specName
+                        end
+                        local role = GetSpecializationRole(specIndex)
+                        if role then
+                            unit.role = role
+                        end
                     end
                 end
             else

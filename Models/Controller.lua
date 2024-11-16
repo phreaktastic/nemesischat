@@ -35,6 +35,7 @@ NCController = {
     placeholders = {},
     subjectValueCache = {},
     conditionSubjects = {},
+    lastGuildCacheKey = "",
 }
 
 function NCController:Initialize()
@@ -80,7 +81,35 @@ function NCController:PreprocessMessages()
     for category, events in pairs(NCConfig:GetMessages()) do
         for event, targets in pairs(events) do
             for target, messages in pairs(targets) do
-                if target ~= "NEMESIS" or NCRuntime:HasNemesis() then
+                -- Check both target and message content for nemesis/bystander requirements
+                local hasRequiredPlayers = true
+
+                -- Check if target requires specific players
+                if (target == "NEMESIS" and not NCRuntime:HasNemesis()) or
+                   (target == "BYSTANDER" and not NCRuntime:HasBystander()) then
+                    hasRequiredPlayers = false
+                end
+
+                -- Check if message content requires specific players
+                if hasRequiredPlayers then
+                    for _, message in ipairs(messages) do
+                        -- Check for channel requirements
+                        if (message.channel == "WHISPER_NEMESIS" and not NCRuntime:HasNemesis()) or
+                           (message.channel == "WHISPER_BYSTANDER" and not NCRuntime:HasBystander()) then
+                            hasRequiredPlayers = false
+                            break
+                        end
+
+                        -- Existing placeholder check
+                        if (message.message:find("%[NEMESIS%]") and not NCRuntime:HasNemesis()) or
+                           (message.message:find("%[BYSTANDER%]") and not NCRuntime:HasBystander()) then
+                            hasRequiredPlayers = false
+                            break
+                        end
+                    end
+                end
+
+                if hasRequiredPlayers then
                     local eventKey = category .. "_" .. event .. "_" .. target
                     tempCache[eventKey] = {
                         nemesis = {},
@@ -141,6 +170,113 @@ function NCController:PreprocessMessages()
     wipe(eventLookup)
     for eventKey in pairs(messageCache) do
         eventLookup[eventKey] = true
+    end
+end
+
+function NCController:PreprocessGuildMessages()
+    if not self.isInitialized then return end
+
+    local guildCacheKey = "guild_nemesis:" ..
+        tostring(NCRuntime:HasGuildNemesis()) .. "_guild_bystander:" .. tostring(NCRuntime:HasGuildBystander())
+    if self.lastGuildCacheKey == guildCacheKey then
+        return
+    end
+    self.lastGuildCacheKey = guildCacheKey
+
+    local tempCache = {}
+
+    -- Only process GUILD category messages
+    local guildEvents = NCConfig:GetMessages()["GUILD"]
+    if not guildEvents then return end
+
+    for event, targets in pairs(guildEvents) do
+        for target, messages in pairs(targets) do
+            local hasRequiredPlayers = true
+
+            if (target == "NEMESIS" and not NemesisChat:HasGuildNemeses()) or
+               (target == "BYSTANDER" and not NemesisChat:HasGuildBystanders()) then
+                hasRequiredPlayers = false
+            end
+
+            if hasRequiredPlayers then
+                for _, message in ipairs(messages) do
+                    -- Check for channel requirements
+                    if (message.channel == "WHISPER_NEMESIS" and not NemesisChat:HasGuildNemeses()) or
+                       (message.channel == "WHISPER_BYSTANDER" and not NemesisChat:HasGuildBystanders()) then
+                        hasRequiredPlayers = false
+                        break
+                    end
+
+                    -- Check for placeholder requirements
+                    if (message.message:find("%[NEMESIS%]") and not NemesisChat:HasGuildNemeses()) or
+                       (message.message:find("%[BYSTANDER%]") and not NemesisChat:HasGuildBystanders()) then
+                        hasRequiredPlayers = false
+                        break
+                    end
+                end
+            end
+
+            if hasRequiredPlayers then
+                local eventKey = "GUILD_" .. event .. "_" .. target
+                -- Remove existing cache entry if it exists
+                messageCache[eventKey] = nil
+                eventLookup[eventKey] = nil
+
+                tempCache[eventKey] = {
+                    nemesis = {},
+                    regular = {}
+                }
+
+                for _, message in ipairs(messages) do
+                    local processedMessage = {
+                        label = message.label,
+                        channel = message.channel,
+                        message = message.message,
+                        chance = message.chance,
+                        conditions = {},
+                        placeholders = {}
+                    }
+
+                    for placeholder in message.message:gmatch("%[([A-Z_]+)%]") do
+                        processedMessage.placeholders[placeholder] = true
+                    end
+
+                    if message.conditions then
+                        for _, condition in ipairs(message.conditions) do
+                            local preprocessedCondition = self:PreprocessCondition(condition)
+                            if preprocessedCondition then
+                                table.insert(processedMessage.conditions, preprocessedCondition)
+                            else
+                                NemesisChat:HandleError("Invalid condition in guild message: " .. (message.label or ""))
+                            end
+                        end
+                    end
+
+                    if target == "NEMESIS" then
+                        table.insert(tempCache[eventKey].nemesis, processedMessage)
+                    else
+                        table.insert(tempCache[eventKey].regular, processedMessage)
+                    end
+                end
+
+                -- Update indices
+                if not lastNemesisIndices[eventKey] then
+                    lastNemesisIndices[eventKey] = 0
+                elseif #tempCache[eventKey].nemesis > 0 and lastNemesisIndices[eventKey] >= #tempCache[eventKey].nemesis then
+                    lastNemesisIndices[eventKey] = 0
+                end
+
+                if not lastRegularIndices[eventKey] then
+                    lastRegularIndices[eventKey] = 0
+                elseif #tempCache[eventKey].regular > 0 and lastRegularIndices[eventKey] >= #tempCache[eventKey].regular then
+                    lastRegularIndices[eventKey] = 0
+                end
+
+                -- Update main cache and lookup
+                messageCache[eventKey] = tempCache[eventKey]
+                eventLookup[eventKey] = true
+            end
+        end
     end
 end
 
@@ -471,12 +607,14 @@ function NCController:GetRollingMessage(relevantMessages, eventKey)
         if #messages == 0 then
             return nil, lastIndexTable[eventKey]
         end
-        local newIndex = (lastIndexTable[eventKey] % #messages) + 1
-        local message = messages[newIndex]
-        if self:IsValidMessage(message) and self:CheckAllConditions(message) then
-            return message, newIndex
+
+        local validMessages = self:GetValidMessages(messages)
+        if #validMessages == 0 then
+            return nil, lastIndexTable[eventKey]
         end
-        return nil, newIndex
+
+        local newIndex = (lastIndexTable[eventKey] % #validMessages) + 1
+        return validMessages[newIndex], newIndex
     end
 
     local nemesisMessage, nemesisIndex = getNextMessage(relevantMessages.nemesis, lastNemesisIndices)

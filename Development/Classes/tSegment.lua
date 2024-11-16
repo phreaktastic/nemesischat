@@ -9,6 +9,7 @@
 --- @field ActionPoints table<string, number>
 --- @field Affixes table<string, number>
 --- @field AvoidableDamage table<string, number>
+--- @field Damage table<string, number>
 --- @field CrowdControl table<string, number>
 --- @field Deaths table<string, number>
 --- @field Defensives table<string, number>
@@ -29,6 +30,7 @@
 --- @field SetStartParameters fun(self: NCSegment)
 --- @field StartCallback fun(self: NCSegment)
 --- @field Finish fun(self: NCSegment, success: boolean)
+--- @field FinishCallback fun(self: NCSegment, success: boolean)
 --- @field SetActive fun(self: NCSegment)
 --- @field SetActiveCallback fun(self: NCSegment)
 --- @field SetInactive fun(self: NCSegment)
@@ -41,15 +43,18 @@
 --- @field GetStartTime fun(self: NCSegment): number
 --- @field GetTotalTime fun(self: NCSegment): number
 --- @field GetAffixes fun(self: NCSegment, player: string|nil): table<string, number>|number
---- @field AddActionPoints fun(self: NCSegment, amount: number, player: string, optDescription: string|nil)
---- @field AddActionPointsCallback fun(self: NCSegment, amount: number, player: string, optDescription: string|nil)
+--- @field AddActionPoints fun(self: NCSegment, player: string, amount: number, optDescription: string|nil)
+--- @field AddActionPointsCallback fun(self: NCSegment, player: string, amount: number, optDescription: string|nil)
 --- @field GetActionPoints fun(self: NCSegment, player: string|nil): table<string, table>|table
 --- @field GetActionPointsAmount fun(self: NCSegment, player: string): number
 --- @field AddAffix fun(self: NCSegment, player: string, optCount: number|nil)
---- @field AddAffixCallback fun(self: NCSegment, player: string)
+--- @field AddAffixCallback fun(self: NCSegment, player: string, optCount: number|nil)
 --- @field GetAvoidableDamage fun(self: NCSegment, player: string|nil): table<string, number>|number
---- @field AddAvoidableDamage fun(self: NCSegment, amount: number, player: string)
---- @field AddAvoidableDamageCallback fun(self: NCSegment, amount: number, player: string)
+--- @field AddAvoidableDamage fun(self: NCSegment, player: string, amount: number)
+--- @field AddAvoidableDamageCallback fun(self: NCSegment, player: string, amount: number)
+--- @field GetDamage fun(self: NCSegment, player: string|nil): table<string, number>|number
+--- @field AddDamage fun(self: NCSegment, player: string, amount: number)
+--- @field AddDamageCallback fun(self: NCSegment, player: string, amount: number)
 --- @field GetCrowdControls fun(self: NCSegment, player: string|nil): table<string, number>|number
 --- @field AddCrowdControl fun(self: NCSegment, player: string)
 --- @field AddCrowdControlCallback fun(self: NCSegment, player: string)
@@ -63,8 +68,8 @@
 --- @field AddDispell fun(self: NCSegment, player: string)
 --- @field AddDispellCallback fun(self: NCSegment, player: string)
 --- @field GetHeals fun(self: NCSegment, player: string|nil): table<string, number>|number
---- @field AddHeals fun(self: NCSegment, amount: number, source: string, target: string)
---- @field AddHealsCallback fun(self: NCSegment, amount: number, player: string)
+--- @field AddHeals fun(self: NCSegment, player: string, amount: number)
+--- @field AddHealsCallback fun(self: NCSegment, player: string, amount: number)
 --- @field GetIdentifier fun(self: NCSegment): string
 --- @field SetIdentifier fun(self: NCSegment, identifier: string)
 --- @field GetInterrupts fun(self: NCSegment, player: string|nil): table<string, number>|number
@@ -74,13 +79,13 @@
 --- @field AddKill fun(self: NCSegment, player: string)
 --- @field AddKillCallback fun(self: NCSegment, player: string)
 --- @field GetOffheals fun(self: NCSegment, player: string|nil): table<string, number>|number
---- @field AddOffheals fun(self: NCSegment, amount: number, player: string)
---- @field AddOffhealsCallback fun(self: NCSegment, amount: number, player: string)
+--- @field AddOffheals fun(self: NCSegment, player: string, amount: number)
+--- @field AddOffhealsCallback fun(self: NCSegment, player: string, amount: number)
 --- @field GetPulls fun(self: NCSegment, player: string|nil): table<string, number>|number
 --- @field AddPull fun(self: NCSegment, player: string)
 --- @field AddPullCallback fun(self: NCSegment, player: string)
 --- @field GetStats fun(self: NCSegment, playerName: string|nil, metric: string): number
---- @field GetDps fun(self: NCSegment, playerName: string): number
+--- @field GetDPS fun(self: NCSegment, playerName: string): number
 --- @field GetDetailsSegment fun(self: NCSegment): integer
 --- @field SetDetailsSegment fun(self: NCSegment, detailsSegment: integer)
 --- @field GetLowestPerformer fun(self: NCSegment): string
@@ -88,6 +93,7 @@
 --- @field GlobalAddActionPoints fun(self: NCSegment, amount: number, player: string, optDescription: string|nil)
 --- @field GlobalAddAffix fun(self: NCSegment, player: string, optCount: number|nil)
 --- @field GlobalAddAvoidableDamage fun(self: NCSegment, amount: number, player: string)
+--- @field GlobalAddDamage fun(self: NCSegment, amount: number, player: string)
 --- @field GlobalAddCrowdControl fun(self: NCSegment, player: string)
 --- @field GlobalAddDeath fun(self: NCSegment, player: string)
 --- @field GlobalAddDefensive fun(self: NCSegment, player: string)
@@ -105,6 +111,6 @@
 --- @field Restore fun(self: NCSegment, backup: NCSegmentBackup)
 --- @field RestoreCallback fun(self: NCSegment, backup: NCSegmentBackup)
 --- @field GetBackup fun(self: NCSegment): NCSegmentBackup|nil
---- @field RegisterObserver fun(self: NCSegment, observer: table)
---- @field UnregisterObserver fun(self: NCSegment, observer: table)
+--- @field RegisterObserver fun(self: NCSegment, observer: string)
+--- @field UnregisterObserver fun(self: NCSegment, observer: string)
 --- @field NotifyObservers fun(self: NCSegment, statType: string, player: string, value: number)

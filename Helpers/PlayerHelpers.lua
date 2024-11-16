@@ -3,6 +3,7 @@
 -- Handles player state tracking, health monitoring, and player data management
 -----------------------------------------------------
 local addonName, core = ...
+local Details = _G.Details
 
 -----------------------------------------------------
 -- Player State Management
@@ -189,6 +190,8 @@ end
 -- Item Level Management
 -----------------------------------------------------
 function NemesisChat:GetItemLevel(unit)
+    if not unit then return nil end
+
     -- Handle different unit types
     if type(unit) == "string" then
         -- If unit is a name, convert to proper unit token
@@ -202,13 +205,24 @@ function NemesisChat:GetItemLevel(unit)
 
     -- Get item level
     if unit == "player" then
-        return C_PaperDollInfo.GetInspectItemLevel("player")
+        return GetAverageItemLevel()
     end
 
     -- For other group members, use inspection system
+    local itemLevel = nil
     local inspectGUID = UnitGUID(unit)
     if inspectGUID then
-        return C_PaperDollInfo.GetInspectItemLevel(unit)
+        itemLevel = C_PaperDollInfo.GetInspectItemLevel(unit)
+    end
+
+    if not itemLevel or itemLevel == 0 and Details and Details.ilevel then
+        local guid = UnitGUID(unit)
+        if guid then
+            itemLevel = Details:GetItemLevelFromGuid(guid)
+            if itemLevel and itemLevel > 0 then
+                return itemLevel
+            end
+        end
     end
 
     return nil

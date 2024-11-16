@@ -164,6 +164,198 @@ NCInfo = {
             NCInfo:ToggleMinimize()
         end)
 
+        -- Add Settings Button with Dropdown
+        f.settingsButton = CreateFrame("Button", nil, f, "UIPanelCloseButton UIPanelButtonTemplate")
+        f.settingsButton:SetSize(16, 16)
+        f.settingsButton:SetPoint("TOPLEFT", f, "TOPLEFT", 5, -5)
+        f.settingsButton:SetNormalAtlas("128-RedButton-ArrowDown")
+        f.settingsButton:SetHighlightAtlas("128-RedButton-ArrowDown-Highlight")
+        f.settingsButton:SetPushedAtlas("128-RedButton-ArrowDown-Pressed")
+        f.settingsButton.tooltipText = NCColors.Emphasize("Quick Settings")
+
+        -- Create dropdown menu
+        f.settingsDropDown = CreateFrame("Frame", nil, f.settingsButton, "UIDropDownMenuTemplate")
+
+        local function InitializeDropDown(self, level, menuList)
+            local info = UIDropDownMenu_CreateInfo()
+
+            if level == 1 then
+                -- Enable/Disable NemesisChat
+                info.text = "Enable NemesisChat"
+                info.checked = IsNCEnabled()
+                info.func = function()
+                    NCConfig:ToggleEnabled()
+                end
+
+                UIDropDownMenu_AddButton(info, level)
+                UIDropDownMenu_AddSeparator(level)
+                info = UIDropDownMenu_CreateInfo()
+
+                -- Message Settings
+                info.text = "Message Settings"
+                info.hasArrow = true
+                info.menuList = "MESSAGE"
+                info.notCheckable = true
+                info.keepShownOnClick = true
+
+                UIDropDownMenu_AddButton(info, level)
+                info = UIDropDownMenu_CreateInfo()
+
+                -- LFG Settings Menu Item
+                info.text = "LFG Settings"
+                info.hasArrow = true
+                info.menuList = "LFG"
+                info.notCheckable = true
+                info.keepShownOnClick = true
+                UIDropDownMenu_AddButton(info, level)
+                info = UIDropDownMenu_CreateInfo()
+
+                -- Add other top-level settings here
+                -- info.text = "Other Setting"
+                -- info.hasArrow = false
+                -- info.menuList = nil
+                -- UIDropDownMenu_AddButton(info, level)
+
+            elseif level == 2 then
+                if menuList == "MESSAGE" then
+                    info.text = "Message Settings"
+                    info.isTitle = true
+                    info.notCheckable = true
+                    info.notClickable = true
+                    info.keepShownOnClick = true
+
+                    UIDropDownMenu_AddButton(info, level)
+                    UIDropDownMenu_AddSeparator(level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    info.text = "Enable Triggered Messages"
+                    info.checked = NCConfig:IsMessageSystemEnabled()
+                    info.func = function()
+                        NCConfig:ToggleMessageSystemEnabled()
+                    end
+                    UIDropDownMenu_AddButton(info, level)
+                    info = UIDropDownMenu_CreateInfo()
+                elseif menuList == "LFG" then
+                    -- General LFG Settings Header
+                    info.text = "General LFG Settings"
+                    info.isTitle = true
+                    info.notCheckable = true
+                    info.notClickable = true
+                    info.keepShownOnClick = true
+                    UIDropDownMenu_AddButton(info, level)
+                    UIDropDownMenu_AddSeparator(level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    -- Announce All Applicants When Not Leader
+                    info.text = "Announce All Applicants When Not Leader"
+                    info.checked = function() return NCConfig:IsDisableFiltersWhenNotLeader() end
+                    info.func = function() NCConfig:ToggleDisableFiltersWhenNotLeader() end
+                    info.keepShownOnClick = true
+                    info.tooltipTitle = "Allow all applicants to be announced in chat when you are not the group leader."
+                    info.tooltipText= "This will override the default behavior of only announcing applicants that meet your current filter criteria."
+                    info.tooltipInstruction = "This only applies when you are not the group leader."
+                    info.noTooltipWhileEnabled = false
+                    info.tooltipOnButton = true
+                    UIDropDownMenu_AddButton(info, level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    -- Show Notifications When Filtered
+                    info.text = "Log Filtered Applicants"
+                    info.checked = function() return NCConfig:IsShowNotificationsWhenFiltered() end
+                    info.func = function() NCConfig:ToggleShowNotificationsWhenFiltered() end
+                    info.keepShownOnClick = true
+                    info.tooltipTitle = "Log filtered applicants to chat."
+                    info.tooltipText = "This will log applicants that do not meet your current filter criteria to chat frames."
+                    info.tooltipInstruction = "This is only visible to you."
+                    info.noTooltipWhileEnabled = false
+                    info.tooltipOnButton = true
+                    UIDropDownMenu_AddButton(info, level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    UIDropDownMenu_AddSpace(level)
+
+                    -- Chat Announcements Header
+                    info.text = "Applicant Announcements"
+                    info.isTitle = true
+                    info.notCheckable = true
+                    info.notClickable = true
+                    info.keepShownOnClick = true
+
+                    UIDropDownMenu_AddButton(info, level)
+                    UIDropDownMenu_AddSeparator(level)
+                    info = UIDropDownMenu_CreateInfo()
+
+                    local isChecked = function()
+                        return NCConfig:IsRoleChatEnabled("tank") and NCConfig:IsRoleChatEnabled("healer") and NCConfig:IsRoleChatEnabled("dps")
+                    end
+                    info.text = not isChecked() and "Check All" or "Uncheck All"
+                    info.checked = isChecked
+                    info.isNotRadio = true
+                    info.keepShownOnClick = true
+                    info.func = function()
+                        local value = not NCInfo.toggleAllButton.checked()
+                        NemesisChat:Print("Setting role chat to:", value)
+                        NCConfig:SetRoleChatEnabled("tank", value)
+                        NCConfig:SetRoleChatEnabled("healer", value)
+                        NCConfig:SetRoleChatEnabled("dps", value)
+
+                        NCInfo.toggleAllButton:SetText(not NCInfo.toggleAllButton.checked() and "Check All" or "Uncheck All")
+
+                        UIDropDownMenu_Refresh(f.settingsDropDown, level)
+                    end
+                    NCInfo.toggleAllButton = UIDropDownMenu_AddButton(info, level)
+
+                    info = UIDropDownMenu_CreateInfo()
+
+                    local roles = {"TANK", "HEALER", "DPS"}
+                    local rolesHumanized = {"Tank", "Healer", "DPS"}
+                    for i, role in ipairs(roles) do
+                        info.text = string.format("%s Announce %s applicants in chat.", IconTable:GetIconString("Role", role, 24), rolesHumanized[i])
+                        info.checked = function() return NCConfig:IsRoleChatEnabled(string.lower(role)) end
+                        info.isNotRadio = true
+                        info.keepShownOnClick = true
+                        info.func = function()
+                            NCConfig:ToggleRoleChatEnabled(string.lower(role))
+                            NCInfo.toggleAllButton.checked = function() return NCConfig:IsRoleChatEnabled("tank") and NCConfig:IsRoleChatEnabled("healer") and NCConfig:IsRoleChatEnabled("dps") end
+                            NCInfo.toggleAllButton:Hide()
+                            NCInfo.toggleAllButton:Show()
+                        end
+                        NCInfo["Toggle" .. role .. "Button"] = UIDropDownMenu_AddButton(info, level)
+                    end
+                end
+            end
+        end
+
+        f.settingsButton:SetScript("OnClick", function(self)
+            UIDropDownMenu_Initialize(f.settingsDropDown, InitializeDropDown)
+            ToggleDropDownMenu(1, nil, f.settingsDropDown, self, 0, 0)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:AddLine(self.tooltipText)
+            GameTooltip:Show()
+        end)
+
+        f.settingsButton:SetScript("OnLeave", function(self)
+            GameTooltip:Hide()
+            -- Check if mouse is not over the dropdown menu
+            if not MouseIsOver(f.settingsButton) and not MouseIsOver(f.settingsDropDown) and not MouseIsOver(DropDownList1) and not MouseIsOver(DropDownList2) then
+                CloseDropDownMenus()
+            end
+        end)
+
+        -- Add hover detection for the dropdown itself
+        DropDownList1:HookScript("OnLeave", function(self)
+            if not MouseIsOver(f.settingsButton) and not MouseIsOver(f.settingsDropDown) and not MouseIsOver(DropDownList1) and not MouseIsOver(DropDownList2) then
+                CloseDropDownMenus()
+            end
+        end)
+
+        -- Add hover detection for the second level dropdown
+        DropDownList2:HookScript("OnLeave", function(self)
+            if not MouseIsOver(f.settingsButton) and not MouseIsOver(f.settingsDropDown) and not MouseIsOver(DropDownList1) and not MouseIsOver(DropDownList2) then
+                CloseDropDownMenus()
+            end
+        end)
+
         -- Header Frame
         f.headerFrame = CreateFrame("Frame", nil, f)
         f.headerFrame:SetPoint("TOPLEFT", f.title, "BOTTOMLEFT", 0, 0)
@@ -693,6 +885,10 @@ NCInfo = {
 
         -- Adjust scroll frame height
         f.scrollFrame:SetHeight(f:GetHeight() - (titleHeight + headerFrameHeight + dropdownFrameHeight + footerFrameHeight))
+
+        if self.IsMinimized then
+            self:ShowMinimized()
+        end
     end,
 
     UpdateRow = function(self, statType, value, dungeonData)
@@ -735,7 +931,7 @@ NCInfo = {
             row.columns[2].desiredColor = neutralColor
         end
 
-        if dungeonData and not NCRankings:IsMetricApplicable(statType, self.CurrentPlayer) then
+        if dungeonData and not NCRankings:IsMetricApplicable(statType, self.CurrentPlayer, dungeonData) then
             local disabledColor = NCColors.MetricsDisabled()
             row.columns[1]:SetTextColor(unpack(disabledColor))
             row.columns[1].desiredColor = disabledColor
@@ -761,7 +957,7 @@ NCInfo = {
             if NCConfig:Get("infoClickCompare") and self.CurrentPlayer ~= UnitName("player") then
                 local myStat = self:GetDungeonStat(row.tooltipInfo.dungeonData, UnitName("player"), row.tooltipInfo.statType)
                 local delta = math.abs(row.tooltipInfo.value - myStat)
-                local comparison = row.tooltipInfo.value > myStat and "higher than" or (row.tooltipInfo.value < myStat and "lower than" or "the same as")
+                local comparison = row.tooltipInfo.value > myStat and "higher than" or (row.tooltipInfo.value < myStat and "lower than" or "(the same as)")
 
                 -- Get player class for coloring
                 local playerData = row.tooltipInfo.dungeonData.RosterSnapshot[self.CurrentPlayer]
@@ -1299,6 +1495,7 @@ NCInfo = {
             -- Force a full update
             self:Update()
         else
+            self.hasBeenExpanded = false
             -- Save current height
             self.ExpandedHeight = f:GetHeight()
 
@@ -1374,7 +1571,7 @@ NCInfo = {
         local success, err = pcall(function()
             if dungeonData == NCDungeon then
                 if metric == "DPS" then
-                    value = NCDungeon:GetDps(playerName)
+                    value = NCDungeon:GetDPS(playerName)
                 else
                     value = NCDungeon:GetStats(playerName, metric)
                 end

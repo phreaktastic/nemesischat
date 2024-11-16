@@ -16,6 +16,8 @@ NCDungeon = NCSegmentPool:Acquire("DUNGEON")
 NCDungeon.Level = 0
 NCDungeon.Affixes = {}
 NCDungeon.TimeLimit = 0
+NCDungeon.CombatTime = 0
+NCDungeon._tempCombatTime = 0
 
 function NCDungeon:StartCallback()
     local dungeonHandler = core.DungeonHandler
@@ -107,7 +109,7 @@ function NCDungeon:CheckCache()
                 NCRuntime:SetLastCompletedDungeon(self)
                 NCInfo:Update()
             else
-                self:RegisterObserver(NCInfo)
+                self:RegisterObserver("NCInfo")
                 NCInfo:Update()
             end
         end
@@ -126,3 +128,57 @@ function NCDungeon:RestoreCallback(backup)
     self.Affixes = backup.Affixes or self.Affixes
     self.TimeLimit = backup.TimeLimit or self.TimeLimit
 end
+
+function NCDungeon:AddCombatTime(time)
+    self.CombatTime = (self.CombatTime or 0) + time
+end
+
+function NCDungeon:GetCombatTime()
+    return self.CombatTime or 0
+end
+
+function NCDungeon:ResetCombatTime()
+    self.CombatTime = 0
+end
+
+function NCDungeon:GetTempCombatTime()
+    return self._tempCombatTime or 0
+end
+
+function NCDungeon:SetTempCombatTime(time)
+    self._tempCombatTime = time or 0
+end
+
+function NCDungeon:ClearTempCombatTime()
+    self._tempCombatTime = 0
+end
+
+function NCDungeon:ResetTempCombatTime()
+    self._tempCombatTime = 0
+end
+
+function NCDungeon:AddTempCombatTime(time)
+    self._tempCombatTime = (self._tempCombatTime or 0) + time
+end
+
+function NCDungeon:GetDPS(playerName)
+    local combatTime = self:GetCombatTime()
+    local tempCombatTime = self:GetTempCombatTime()
+    local totalCombatTime = combatTime + tempCombatTime
+    local damage = self:GetDamage(playerName)
+    return math.floor(damage / totalCombatTime * 100) / 100
+end
+
+function NCDungeon:AddAvoidedDamageCallback(amount, playerName)
+    NCDungeon.Rankings:RecalculateMetric("AvoidableDamage")
+end
+
+-- COMBAT_DAMAGE is a very low priority event which is used to Update
+-- the DPS metric for the player. We leverage _tempCombatTime to avoid
+-- recalculating the entire combat time for each event, and to avoid
+-- attempts at division by zero. When combat ends, _tempCombatTime is
+-- cleared and the final DPS value is calculated.
+core.EventSystem:RegisterEvent("COMBAT_DAMAGE", function(unit, _, tempCombatTime)
+    NCDungeon:SetTempCombatTime(tempCombatTime)
+    NCDungeon.Rankings:UpdateMetric("DPS", unit, NCDungeon:GetDPS(unit))
+end, 1, { staggered = true, frameDelay = 15 })

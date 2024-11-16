@@ -1023,7 +1023,7 @@ function LFGHandler:ProcessApplicantMember(applicantID, memberIndex)
 
     if not specName or not roleName then return nil end
 
-    -- First perform filtering checks
+    -- Always check filter status for notifications/sounds
     local filterReason
     if not IsAllowedRealm(realm) or IsIgnoredRealm(realm) then
         filterReason = Config.FILTERS.REALM
@@ -1037,18 +1037,19 @@ function LFGHandler:ProcessApplicantMember(applicantID, memberIndex)
         filterReason = Config.FILTERS.DUNGEON_SCORE
     end
 
-    -- Handle filtered applicants
-    if filterReason then
-        -- Check if popups are enabled before processing
+    -- If filtered and we're the leader (or bypass not enabled), handle as filtered
+    if filterReason and (UnitIsGroupLeader("player") or not NCConfig:IsDisableFiltersWhenNotLeader()) then
         if NCConfig and NCConfig:IsPopupOnIgnoredApplicants() then
             local applicantData = self:FormatIgnoredApplicant(name, class, localizedClass, specName, itemLevel, dungeonScore, realm,
                 specID, filterReason, applicantID)
 
             -- Only show notification if it's not a class/spec filter
             if filterReason ~= Config.FILTERS.CLASS and filterReason ~= Config.FILTERS.SPEC then
-                NemesisChat:Print(string.format("Filtered applicant: %s (%s)",
-                    name,
-                    self:GetIgnoreReasonText(filterReason)))
+                if NCConfig and NCConfig:IsShowNotificationsWhenFiltered() then
+                    NemesisChat:Print(string.format("Filtered applicant: %s (%s)",
+                        name,
+                        self:GetIgnoreReasonText(filterReason)))
+                end
             end
 
             return applicantData
@@ -1056,17 +1057,31 @@ function LFGHandler:ProcessApplicantMember(applicantID, memberIndex)
         return nil
     end
 
-    local roleFlag = (healer and Config.FEATURES.NOTIFY_HEALER) or (tank and Config.FEATURES.NOTIFY_TANK) or
-        (damage and Config.FEATURES.NOTIFY_DPS) or 0
-    if band(Cache.notificationSettings, roleFlag) == 0 then return nil end
+    -- If we get here, either:
+    -- 1. The applicant wasn't filtered
+    -- 2. We're not the leader and bypass is enabled
+    -- In either case, we only want sounds/notifications if they weren't actually filtered
+    if not filterReason then
+        local roleFlag = (healer and Config.FEATURES.NOTIFY_HEALER) or
+                        (tank and Config.FEATURES.NOTIFY_TANK) or
+                        (damage and Config.FEATURES.NOTIFY_DPS) or 0
+        if band(Cache.notificationSettings, roleFlag) == 0 then return nil end
 
-    local _, _, _, icon = GetSpecializationInfoByID(specID)
+        local _, _, _, icon = GetSpecializationInfoByID(specID)
 
-    return {
-        info = FormatMemberInfo(name, class, localizedClass, specName, itemLevel, dungeonScore, realm, icon),
-        sound = GetRoleSound(roleFlag),
-        roleFlag = roleFlag
-    }
+        return {
+            info = FormatMemberInfo(name, class, localizedClass, specName, itemLevel, dungeonScore, realm, icon),
+            sound = GetRoleSound(roleFlag),
+            roleFlag = roleFlag
+        }
+    else
+        -- Filtered but bypassing - return without sound/notification flags
+        local _, _, _, icon = GetSpecializationInfoByID(specID)
+        return {
+            info = FormatMemberInfo(name, class, localizedClass, specName, itemLevel, dungeonScore, realm, icon),
+            roleFlag = 0  -- No notifications
+        }
+    end
 end
 
 function LFGHandler:FormatIgnoredApplicant(name, class, localizedClass, specName, itemLevel, dungeonScore, realm, specID, reason, applicantID)
@@ -1151,6 +1166,8 @@ function LFGHandler:SendNotification(groupMembers, sound)
 end
 
 function LFGHandler:SendGroupMessage(message)
+    if NCCombat:IsActive() then return end
+
     if not message or type(message) ~= "string" then
         NemesisChat:HandleError("SendGroupMessage: message is required")
         return
@@ -1166,7 +1183,7 @@ function LFGHandler:SendGroupMessage(message)
 
         -- Ensure we actually have content to send
         if chunk and #chunk > 0 then
-            SendChatMessage("NemesisChat: " .. chunk, "PARTY")
+            SendChatMessage("NemesisChat: " .. chunk, NemesisChat:GetActualChannel("GROUP"))
         end
 
         message = message:sub(#chunk + 1):gsub("^%s*", "")

@@ -176,6 +176,7 @@ function NemesisChat:CheckGuild()
                 guildRoster[name] = { rank = rank, online = online, isNemesis = IsNemesis(name) }
                 if core.runtime.guild[name] then
                     if core.runtime.guild[name].online ~= online then
+                        NCController:PreprocessGuildMessages()
                         _ = online and NemesisChat:GUILD_PLAYER_LOGIN(name, IsNemesis(name)) or
                             NemesisChat:GUILD_PLAYER_LOGOUT(name, IsNemesis(name))
                     end
@@ -198,6 +199,7 @@ function NemesisChat:CheckGuild()
             if name and core.runtime.guild[name] then
                 if core.runtime.guild[name].online ~= online then
                     core.runtime.guild[name].online = online
+                    NCController:PreprocessGuildMessages()
                     _ = online and NemesisChat:GUILD_PLAYER_LOGIN(name, IsNemesis(name)) or
                         NemesisChat:GUILD_PLAYER_LOGOUT(name, IsNemesis(name))
                 end

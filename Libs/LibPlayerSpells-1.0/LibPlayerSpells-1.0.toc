@@ -1,11 +1,11 @@
-## Interface: 110000
+## Interface: 110002
 ## Title: Lib: PlayerSpells-1.0
 ## Notes: Additional information about player spells.
 ## Author: Adirelle
-## Version: @project-version@
+## Version: 1.2.0
 ## LoadOnDemand: 1
 ## OptionalDeps: AdiDebug
-## X-Date: @project-date-iso@
+## X-Date: 2024-10-19T20:41:52Z
 ## X-Category: Library
 ## X-License: GPL v3
 ## X-eMail: adirelle@gmail.com

@@ -77,7 +77,8 @@ IconTable.Spec = {
 IconTable.Role = {
     TANK = "Interface\\LFGFrame\\UI-LFG-ICON-ROLES",
     HEALER = "Interface\\LFGFrame\\UI-LFG-ICON-ROLES",
-    DAMAGER = "Interface\\LFGFrame\\UI-LFG-ICON-ROLES"
+    DAMAGER = "Interface\\LFGFrame\\UI-LFG-ICON-ROLES",
+    DPS = "Interface\\LFGFrame\\UI-LFG-ICON-ROLES",
 }
 
 function IconTable:GetIcon(iconType, id)
@@ -99,7 +100,8 @@ function IconTable:GetIconString(iconType, id, size)
         local roleCoords = {
             TANK = { 0, 0.25, 0.25, 0.5 },       -- Tank is bottom left quadrant
             HEALER = { 0.25, 0.5, 0, 0.25 },     -- Healer is top middle quadrant
-            DAMAGER = { 0.25, 0.5, 0.25, 0.5 }   -- DPS is middle quadrant
+            DAMAGER = { 0.25, 0.5, 0.25, 0.5 },   -- DPS is middle quadrant
+            DPS = { 0.25, 0.5, 0.25, 0.5 },
         }
         local coords = roleCoords[id]
         return string.format("|T%s:%d:%d:0:0:%d:%d:%d:%d:%d:%d|t", path, size, size, 256, 256, coords[1] * 256,

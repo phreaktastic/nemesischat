@@ -21,6 +21,10 @@ function NemesisChat:HandleRosterUpdate()
         NemesisChat:CheckGroup()
         NCController:PreprocessMessages()
 
+        -- Reset AcceptedLFG
+        NCRuntime:ClearAcceptedLFG()
+
+        -- Handle the AcceptedLFG event
         NemesisChat:HandleAcceptedLFG()
         return
     end
@@ -54,7 +58,7 @@ end
 
 function NemesisChat:HandleAcceptedLFG()
     NCEvent:SetCategory("GROUP")
-    NCEvent:SetEvent("LFG_PROPOSAL_SUCCEEDED")
+    NCEvent:SetEvent("ACCEPTED_LFG")
     NCEvent:SetTarget("NA")
     NCEvent:RandomBystander()
     NCEvent:RandomNemesis()

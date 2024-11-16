@@ -589,13 +589,3 @@ core.options.args.messagesGroup.args.segmentMessages = {
         },
     },
 }
-
-function NemesisChat:GetMarkerOptionsWithIcons()
-    local options = setmetatable({}, { __mode = "kv" })
-
-    for key, val in ipairs(core.markers) do
-        options[key] = val.name
-    end
-
-    return options
-end

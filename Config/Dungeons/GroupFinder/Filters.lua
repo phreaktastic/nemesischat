@@ -25,7 +25,25 @@ core.options.args.dungeonGroup.args.lfgTools.args.filterSettings = {
                     width = "full",
                     get = function() return NCConfig:IsPopupOnIgnoredApplicants() end,
                     set = function() NCConfig:TogglePopupOnIgnoredApplicants() end,
-                }
+                },
+                disableFiltersWhenNotLeader = {
+                    order = 2,
+                    type = "toggle",
+                    name = "Announce All Applicants When Not Leader",
+                    desc = "Announce all applicants when you are not the group leader, if chat announcements are enabled.",
+                    width = "full",
+                    get = function() return NCConfig:IsDisableFiltersWhenNotLeader() end,
+                    set = function() NCConfig:ToggleDisableFiltersWhenNotLeader() end,
+                },
+                showNotificationsWhenFiltered = {
+                    order = 3,
+                    type = "toggle",
+                    name = "Show Notifications When Filtered",
+                    desc = "Show notifications when an applicant is filtered.",
+                    width = "full",
+                    get = function() return NCConfig:IsShowNotificationsWhenFiltered() end,
+                    set = function() NCConfig:ToggleShowNotificationsWhenFiltered() end,
+                },
             }
         },
         realms = {

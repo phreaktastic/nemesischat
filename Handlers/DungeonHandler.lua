@@ -37,6 +37,8 @@ local DIFFICULTY_MAP = {
     [DifficultyUtil.ID.DungeonTimewalker] = { name = "Timewalking", state = "timewalking" },
 }
 
+local Details = _G.Details
+
 function DungeonHandler:Fire()
     self:CheckDungeonStatus()
 end
@@ -44,6 +46,11 @@ end
 function DungeonHandler:CheckDungeonStatus()
     local dungeonInfo = self:GetDungeonInfo()
     local inInstance, instanceType = IsInInstance()
+
+    if C_DelvesUI and dungeonInfo.instanceID and C_DelvesUI.HasActiveDelve(dungeonInfo.instanceID) then
+        self:CheckDelveStart(dungeonInfo)
+        return
+    end
 
     -- Add timewalking check
     if self.dungeonStates.timewalking and dungeonInfo.state ~= "timewalking" then
@@ -56,7 +63,7 @@ function DungeonHandler:CheckDungeonStatus()
             self:CheckStandardDungeonEnd()
         end
         if self.dungeonStates.delve then
-            self:CheckDelveEnd(dungeonInfo)
+            self:CheckDelveEnd()
         end
         if self.dungeonStates.follower then
             self:EndDungeon("FOLLOWER", false)
@@ -109,7 +116,7 @@ end
 
 function DungeonHandler:IsInStandardDungeon()
     return self.dungeonStates.normal or self.dungeonStates.heroic or self.dungeonStates.mythic or
-        self.dungeonStates.mythicplus or self.dungeonStates.lfg
+        self.dungeonStates.mythicplus or self.dungeonStates.lfg or self.dungeonStates.timewalking or self.dungeonStates.delve
 end
 
 function DungeonHandler:ClearStandardDungeonStates()
@@ -155,16 +162,19 @@ function DungeonHandler:CheckDelve(difficultyName, instanceID, inInstance)
     end
 end
 
-function DungeonHandler:EndDelve()
-    local success = false
-    if self.dungeonStates.currentDelveMapID then
-        success = not C_DelvesUI.HasActiveDelve(self.dungeonStates.currentDelveMapID)
-    end
-    self:EndDungeon("DELVES", success)
+function DungeonHandler:EndDelve(isSuccess)
+    self:EndDungeon("DELVES", isSuccess)
+    self.dungeonStates.delve = false
     self.dungeonStates.currentDelveMapID = nil
 end
 
 function DungeonHandler:OnBossKill(encounterID, encounterName, difficultyID, groupSize, success)
+    -- Handle Delves first
+    if self.dungeonStates.delve then
+        self:EndDelve(success == 1)
+        return true
+    end
+
     if not self:IsInStandardDungeon() then return end
 
     -- Add check for M+ to prevent duplicate completion
@@ -236,7 +246,10 @@ end
 
 function DungeonHandler:OnPlayerLeavingWorld()
     if self:IsInAnyDungeon() then
-        local category = NCEvent:GetCategory()
+        local category = self.dungeonStates.mythicplus and "DUNGEON" or
+                        self.dungeonStates.delve and "DELVES" or
+                        self.dungeonStates.follower and "FOLLOWER" or
+                        "DUNGEON"
         self:EndDungeon(category, false)
     end
 end
@@ -249,7 +262,13 @@ function DungeonHandler:OnCompletionReward()
 end
 
 function DungeonHandler:OnScenarioCriteriaUpdate()
-    if not self:IsInStandardDungeon() then return end
+    if not self:IsInStandardDungeon() then
+        if C_DelvesUI and C_DelvesUI.HasActiveDelve() then
+            local dungeonInfo = self:GetDungeonInfo()
+            self:CheckDelveStart(dungeonInfo)
+        end
+        return
+    end
 
     local scenarioInfo = C_Scenario.GetInfo()
     if scenarioInfo and scenarioInfo.completed then
@@ -267,30 +286,32 @@ function DungeonHandler:OnScenarioCompleted()
 
     if self.dungeonStates.follower then
         local scenarioInfo = C_ScenarioInfo.GetScenarioInfo()
-        if scenarioInfo and scenarioInfo.completed then
+        if scenarioInfo and scenarioInfo.isComplete then
             self:EndDungeon("FOLLOWER", true)
         end
     end
 end
 
 function DungeonHandler:OnActiveDelveDataUpdate()
-    C_Timer.After(2, function()
+    C_Timer.After(1.5, function()
         local dungeonInfo = self:GetDungeonInfo()
-        if dungeonInfo.instanceID then
+        if dungeonInfo.state == "delve" and dungeonInfo.instanceID and C_DelvesUI.HasActiveDelve(dungeonInfo.instanceID) then
             self:CheckDelveStart(dungeonInfo)
         else
-            self:CheckDelveEnd(dungeonInfo)
+            self:CheckDelveEnd()
         end
     end)
 end
 
 function DungeonHandler:OnZoneChangedNewArea()
-    C_Timer.After(2, function()
-        local dungeonInfo = self:GetDungeonInfo()
-        if dungeonInfo.instanceID then
-            self:CheckDelveStart(dungeonInfo)
-        else
-            self:CheckDelveEnd(dungeonInfo)
+    C_Timer.After(1.5, function()
+        if C_DelvesUI then
+            local _, _, _, difficultyName, _, _, _, instanceID = GetInstanceInfo()
+            if difficultyName == "Delves" and instanceID and C_DelvesUI.HasActiveDelve(instanceID) then
+                local dungeonInfo = self:GetDungeonInfo()
+                self:CheckDelveStart(dungeonInfo)
+                return
+            end
         end
         self:CheckDungeonStatus()
     end)
@@ -351,6 +372,10 @@ function DungeonHandler:ResetMythicPlusInfo()
 end
 
 function DungeonHandler:EndDungeon(category, isSuccess)
+    if not category or not self.dungeonStates[category:lower()] then
+        return
+    end
+
     -- Clear states before processing to prevent re-entry
     if category == "DUNGEON" then
         self:ClearStandardDungeonStates()
@@ -388,15 +413,21 @@ function DungeonHandler:ResetDungeonInfo()
 end
 
 function DungeonHandler:IsInAnyDungeon()
-    if IsInLFGDungeon() then
-        return true
+    local inInstance, instanceType = IsInInstance()
+    if not inInstance then return false end
+
+    -- Only allow party/raid instances
+    if instanceType ~= "party" and instanceType ~= "raid" then return false end
+
+    if IsInLFGDungeon() then return true end
+    if C_LFGInfo.IsInLFGFollowerDungeon() then return true end
+    if C_DelvesUI then
+        local _, _, _, _, _, _, _, instanceID = GetInstanceInfo()
+        if instanceID and C_DelvesUI.HasActiveDelve(instanceID) then
+            return true
+        end
     end
-    if C_LFGInfo.IsInLFGFollowerDungeon() then
-        return true
-    end
-    if C_DelvesUI and C_DelvesUI.HasActiveDelve() then
-        return true
-    end
+
     return self:IsInStandardDungeon() or self.dungeonStates.follower
 end
 
@@ -405,6 +436,11 @@ function DungeonHandler:ResetDungeonStatus()
         self.dungeonStates[k] = false
     end
     self.dungeonStates.lastDelveTime = GetTime()
+
+    if self.dungeonSegment then
+        self.dungeonSegment:EndCombat()
+        self.dungeonSegment = nil
+    end
 end
 
 function DungeonHandler:OnChallengeModeStart()
@@ -445,8 +481,7 @@ end
 function DungeonHandler:GetDungeonInfo()
     local name, _, difficultyID, difficultyName, _, _, _, instanceID = GetInstanceInfo()
 
-    -- Check if difficulty is in Delve range (201-212)
-    if difficultyID >= 201 and difficultyID <= 212 then
+    if C_DelvesUI and difficultyName == "Delves" and instanceID and C_DelvesUI.HasActiveDelve(instanceID) then
         return {
             name = name,
             difficultyName = "Delves",
@@ -507,11 +542,35 @@ function DungeonHandler:IsInProgressDungeon()
     return false
 end
 
+function DungeonHandler:HasDungeonStarted()
+    -- Check if keystone is active first
+    if C_ChallengeMode.IsChallengeModeActive() then
+        return true
+    end
+
+    -- Check for any meaningful combat data
+    local totalDamage = 0
+    local totalKills = 0
+
+    for playerName, _ in pairs(NCDungeon.RosterSnapshot) do
+        totalDamage = totalDamage + (NCDungeon:GetDamage(playerName) or 0)
+        totalKills = totalKills + (NCDungeon:GetKills(playerName) or 0)
+    end
+
+    -- If we have either significant damage (>10M) or 25 kills, dungeon has started
+    return totalDamage > 10000000 or totalKills > 25
+end
+
 function DungeonHandler:CheckStandardDungeonEnd()
     if not self:IsInStandardDungeon() then return end
 
     local inInstance, instanceType = IsInInstance()
     if not inInstance then
+        -- Don't end the dungeon if we haven't really started it
+        if not self:HasDungeonStarted() then
+            return
+        end
+
         -- Handle both normal dungeons and LFG dungeons
         if (self.dungeonStates.currentDifficulty and not C_ChallengeMode.IsChallengeModeActive()) or
            (self.dungeonStates.lfg and not IsInLFGDungeon()) then
@@ -535,14 +594,12 @@ function DungeonHandler:StartMythicPlus(dungeonInfo)
 end
 
 function DungeonHandler:CheckDelveStart(dungeonInfo)
-    if not dungeonInfo.instanceID or not C_DelvesUI then return end
+    if not C_DelvesUI or not dungeonInfo.instanceID then return end
 
-    local hasActiveDelve = C_DelvesUI.HasActiveDelve()
+    local hasActiveDelve = C_DelvesUI.HasActiveDelve(dungeonInfo.instanceID)
     if hasActiveDelve then
-        if not self.dungeonStates.delve or self.dungeonStates.currentDelveMapID ~= dungeonInfo.instanceID then
-            if self.dungeonStates.delve then
-                self:EndDelve()
-            end
+        -- Only start if we're not already tracking this delve
+        if not self.dungeonStates.delve then
             self.dungeonStates.delve = true
             self.dungeonStates.currentDelveMapID = dungeonInfo.instanceID
             self:StartDungeon(dungeonInfo.name, "DELVES")
@@ -550,13 +607,13 @@ function DungeonHandler:CheckDelveStart(dungeonInfo)
     end
 end
 
-function DungeonHandler:CheckDelveEnd(dungeonInfo)
+function DungeonHandler:CheckDelveEnd()
     if not self.dungeonStates.delve then return end
 
-    local isActive = C_DelvesUI and C_DelvesUI.HasActiveDelve(self.dungeonStates.currentDelveMapID)
-    local _, instanceType = IsInInstance()
-    if not isActive or dungeonInfo.difficultyName ~= "Delves" or instanceType ~= "party" then
-        self:EndDelve()
+    local isEligible = C_DelvesUI.IsEligibleForActiveDelveRewards("player")
+    if isEligible then
+        self:EndDelve(true)  -- Pass true to indicate success
+        self:EndDelve(false) -- Pass false to indicate failure
     end
 end
 
@@ -575,7 +632,33 @@ function DungeonHandler:OnLFGComplete()
     end
 end
 
--- Add this helper function for clarity
 function DungeonHandler:IsLFGDungeon()
     return self.dungeonStates.lfg
+end
+
+function DungeonHandler:OnShowDelvesDisplayUI()
+    -- Check if the Delves UI should be displayed
+    if not C_DelvesUI then return end
+
+    -- Ensure that a Delve is not already active
+    if not C_DelvesUI.HasActiveDelve() then
+        -- Get the current map ID and check if Delves are available for this map
+        local mapID = C_Map.GetBestMapForUnit("player")
+        if mapID then
+            local delves = C_AreaPoiInfo.GetDelvesForMap(mapID)
+            if delves and #delves > 0 then
+                for _, areaPoiID in ipairs(delves) do
+                    local poiInfo = C_AreaPoiInfo.GetAreaPOIInfo(mapID, areaPoiID)
+                    if poiInfo then
+                        -- Start the Delve if conditions are met
+                        local dungeonInfo = self:GetDungeonInfo()
+                        self:CheckDelveStart(dungeonInfo)
+                        return
+                    end
+                end
+            end
+        end
+    else
+        -- Delve is already active
+    end
 end

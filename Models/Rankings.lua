@@ -47,7 +47,6 @@ NCRankings = {
             sortedPlayers = {},
             lastUpdateTime = {},
             _segment = segment,
-            METRIC_APPLICABILITY = nil,
         }
 
         -- Initialize template structures
@@ -93,18 +92,24 @@ NCRankings = {
         local sorted = {}
         local isLowerBetter = self.METRICS[metricKey]
 
+        -- Only include players with valid values and applicable metrics
         for playerName, playerData in pairs(self._segment.RosterSnapshot) do
             local value = self.All[metricKey][playerName] or 0
-            table.insert(sorted, { name = playerName, value = value })
+            if value and type(value) == "number" and self:IsMetricApplicable(metricKey, playerName, nil) then
+                table.insert(sorted, { name = playerName, value = value })
+            end
         end
 
-        table.sort(sorted, function(a, b)
-            if isLowerBetter then
-                return a.value < b.value
-            else
-                return a.value > b.value
-            end
-        end)
+        -- Only sort if we have valid entries
+        if #sorted > 0 then
+            table.sort(sorted, function(a, b)
+                if isLowerBetter then
+                    return a.value < b.value
+                else
+                    return a.value > b.value
+                end
+            end)
+        end
 
         self.sortedPlayers[metricKey] = sorted
     end,
@@ -134,7 +139,12 @@ NCRankings = {
 
     RecalculateMetric = function(self, metricKey)
         local sorted = self.sortedPlayers[metricKey]
-        if #sorted < 2 then return end
+        if #sorted < 2 then
+            -- Reset the values if we don't have enough valid players
+            self.Top[metricKey] = { Player = nil, Value = 0, Delta = 0, DeltaPercent = 0 }
+            self.Bottom[metricKey] = { Player = nil, Value = 99999999, Delta = 0, DeltaPercent = 0 }
+            return
+        end
 
         local isLowerBetter = self.METRICS[metricKey]
         local bestPlayer = sorted[1]
@@ -163,22 +173,43 @@ NCRankings = {
         return self._segment:GetStats(playerName, metric)
     end,
 
-    IsMetricApplicable = function(self, metricKey, playerName)
+    IsMetricApplicable = function(self, metricKey, playerName, dungeonData)
+        -- Early validation
+        if not metricKey or not playerName or not self.METRIC_APPLICABILITY[metricKey] then
+            return false
+        end
+
         local playerRole
 
-        if self._segment and self._segment.RosterSnapshot and self._segment.RosterSnapshot[playerName] then
+        -- Check dungeon data first
+        if dungeonData and dungeonData.RosterSnapshot and
+           dungeonData.RosterSnapshot[playerName] and
+           dungeonData.RosterSnapshot[playerName].role then
+            playerRole = dungeonData.RosterSnapshot[playerName].role
+        -- Check segment data
+        elseif self._segment and self._segment.RosterSnapshot and
+               self._segment.RosterSnapshot[playerName] and
+               self._segment.RosterSnapshot[playerName].role then
             playerRole = self._segment.RosterSnapshot[playerName].role
-        elseif NCRuntime:GetLastCompletedDungeon() then
+        -- Check last completed dungeon
+        elseif NCRuntime:GetLastCompletedDungeon() and
+               NCRuntime:GetLastCompletedDungeon().RosterSnapshot and
+               NCRuntime:GetLastCompletedDungeon().RosterSnapshot[playerName] and
+               NCRuntime:GetLastCompletedDungeon().RosterSnapshot[playerName].role then
             playerRole = NCRuntime:GetLastCompletedDungeon().RosterSnapshot[playerName].role
         else
-            -- Fallback to current roster, which falls back to the cached roster
-            local rosterPlayer = groupRoster[playerName] or NCRuntime:GetRosterCache()[playerName]
+            -- Fallback to current roster or cached roster
+            local rosterPlayer = groupRoster[playerName]
+            if not rosterPlayer then
+                local cachedRoster = NCRuntime:GetRosterCache()
+                rosterPlayer = cachedRoster and cachedRoster[playerName]
+            end
             playerRole = rosterPlayer and rosterPlayer.role or UnitGroupRolesAssigned(playerName)
         end
 
-        -- If we couldn't determine the role, assume the metric is applicable
+        -- If we still couldn't determine the role, default to false
         if not playerRole then
-            return true
+            return false
         end
 
         return self.METRIC_APPLICABILITY[metricKey][playerRole] or false
